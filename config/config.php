@@ -3,7 +3,7 @@
 define('_DB_NAME_SG_', 'bds');
 define('_DB_HOST_SG_', 'localhost');
 define('_DB_USER_SG_', 'root');
-define('_DB_PASS_SG_', 'admin123');
+define('_DB_PASS_SG_', '');
 
 date_default_timezone_set('America/Caracas');
 setlocale(LC_TIME, 'es_ES.UTF-8');
