@@ -1,0 +1,317 @@
+/* -----------------------------Navegador Lateral----------------------------- */
+ul {
+    list-style: none;
+}
+
+.navegacion {
+    width: 100%;
+    max-height: calc(100vh - 80px);
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+}
+
+
+.nav_contenedor {
+    width: 95%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.nav_identificador {
+    width: 100%;
+    height: 30px;
+    margin: 20px 0px 0px 0px;
+}
+
+.identificador_span {
+    margin: 20px 0px 0px 15px;
+    font-size: .9rem;
+    color: var(--texto-principal);
+    font-weight: 600;
+}
+
+.nav_opciones {
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.opciones {
+    color: var(--texto-principal);
+    width: 80%;
+    padding: 10px 0px 10px 30px;
+    margin: 5px 0px 5px 10px;
+    border-radius: 10px;
+    font-size: .8rem;
+    font-weight: 600;
+    transition: .2s ease-in;
+}
+
+.selecto {
+    color: var(--texto-contraste);
+    background: var(--color-primario);
+}
+
+.opciones:hover {
+    color: var(--color-primario);
+
+}
+
+.selecto:hover {
+    color: var(--texto-contraste);
+    box-shadow: var(--boton-sombra);
+    text-shadow: var(--boton-texto-sombra);
+}
+
+.opciones>i {
+    position: relative;
+    font-size: 1.2rem;
+    top: 4px;
+    left: -5px;
+}
+
+/* -----------------------------------------Nevegador Superior----------------------------------------- */
+.contenedor_superior {
+    width: 100%;
+    height: 70px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.contenedor_logo {
+    grid-column: 1;
+    width: 100%;
+    height: 70px;
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    align-items: center;
+}
+
+.contenedor_usuario {
+    grid-column: 2;
+    width: 100%;
+    height: 70px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    place-items: end;
+    align-items: center;
+}
+
+.logo {
+    width: 70px;
+    margin-left: 20px;
+    grid-column: 1;
+}
+
+.nombre_negocio {
+    grid-column: 2;
+    color: var(--texto-principal);
+}
+
+.botones_usuario {
+    position: relative;
+    grid-column: 1;
+    margin-right: 20px;
+}
+
+.info_usuario {
+    position: relative;
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: auto;
+    align-items: center;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.info_usuario:hover .flecha_usuario{
+    color: var(--color-primario);
+    text-shadow: var(--texto-sombra);
+}
+
+.img_usuario {
+    position: relative;
+    grid-column: 1;
+    margin-right: 10px;
+    color: var(--color-primario);
+    font-size: 3rem;
+    top: 5px;
+}
+
+.contenedor_nombre {
+    grid-column: 2;
+    margin-right: 10px;
+}
+
+.flecha_usuario {
+    grid-column: 3;
+    margin: 0px 30px 0px 10px;
+    position: relative;
+    color: var(--texto-principal);
+    font-size: 1.5rem;
+    top: 5px;
+    transition: .2s ease-in;
+}
+
+.rotar{
+    transform: rotate(180deg);
+}
+
+.boton_usuario {
+    position: relative;
+    color: var(--texto-principal);
+    font-size: 1.5rem;
+    margin: 0px 8px;
+    top: 5px;
+    cursor: pointer;
+    transition: .2s ease-in;
+}
+
+
+.boton_usuario:hover {
+    color: var(--color-primario);
+    text-shadow: var(--texto-sombra);
+}
+
+.nombre_usuario {
+    font-size: 1.2rem;
+    color: var(--texto-principal);
+}
+
+.tipo_usuario {
+    font-size: .8rem;
+    color: var(--texto-principal);
+}
+
+.menu_superior {
+    position: absolute;
+    background: var(--fondo-principal);
+    width: 280px;
+    height: 80px;
+    top: 70px;
+    right: 15px;
+    border-radius: 0px 0px 10px 10px;
+    z-index: 1000;
+    box-shadow: 0px 5px 8px 0px rgba(62, 62, 62, 0.5);
+    display: grid;
+    grid-template-columns: 1fr;
+    place-items: center;
+}
+
+.nav_contenedor_superior {
+    grid-column: 1;
+    width: 90%;
+    height: auto;
+}
+
+.nav_opciones_superior {
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+    flex-direction: column;
+}
+.opciones_superior{
+    color: var(--texto-contraste);
+    background-color: var(--color-primario);
+    width: 90%;
+    padding: 15px 0px 15px 20px;
+    margin: 0px 0px 0px 0px;
+    border-radius: 10px;
+    font-size: .8rem;
+    font-weight: 600;
+    transition: .2s ease-in;
+    cursor: pointer;
+}
+.opciones_superior:hover{
+    box-shadow: var(--boton-sombra);
+    text-shadow: var(boton-texto-sombra);
+}
+.opciones_superior>i {
+    position: relative;
+    font-size: 1.2rem;
+    top: 4px;
+    left: -5px;
+}
+.contenedor_notificaciones{
+    position: absolute;
+    width: 400px;
+    height: 500px;
+    background: var(--fondo-principal);
+    top: 50px;
+    right: -200px;
+    border-radius: 0px 0px 10px 10px;
+    z-index: 1000;
+    box-shadow: 0px 5px 8px 0px rgba(62, 62, 62, 0.50);
+    overflow: auto;
+}
+
+/* ------------------------------------Notificaciones------------------------------------ */
+
+.lista_noti{
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    
+}
+.noti{
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 96%;
+    height: 70px;
+    margin: 5px 0px 5px 0px;
+    background-color: var(--fondo-contraste);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.noti:hover{
+    box-shadow: var(--boton-sombra);
+}
+
+.info_noti h2{
+    color: var(--texto-principal);
+    font-size: 1rem;
+}
+
+.info_noti h3{
+    color: var(--texto-principal);
+    font-size: .7rem;
+}
+
+.noti i{
+    color: var(--color-primario);
+    background-color: var(--color-claro);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 100%;
+}
+.noti span{
+    color: var(--texto-principal);
+    font-size: .7rem;
+}
+.titulo_noti{
+    width: 90%;
+    padding: 15px 0px 15px 0px;
+}
+.titulo_noti h1{
+    color: var(--texto-principal);
+    text-align: start;
+    font-size: 1.4rem;
+}

@@ -1,0 +1,17 @@
+{
+    "name": "owner/proyecto_2026",
+    "description": "Proyecto MVC PHP 2026",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Moises Torrellas",
+            "email": "moitcj@gmail.com"
+        }
+    ],
+    "require": {}
+}
