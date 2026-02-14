@@ -2,17 +2,16 @@
 
 namespace App\controlador;
 
-use App\interface\InterBitacora;
+use App\controlador\Base;
 use App\modelo\ModeloInicio;
 use Exception;
 
-class Inicio
+class Inicio extends Base
 {
-    private InterBitacora $bitacora;
 
-    public function __construct(InterBitacora $bitacora) // inyeccion de la bitacora
+    public function __construct($bitacora) // inyeccion de la bitacora
     {
-        $this->bitacora = $bitacora; // Asignar la instancia de la bitácora al controlador
+        parent::__construct($bitacora); // Llamar al constructor de la clase Base para inicializar la bitácora
     }
 
     public function ProcesarSolicitud(string $pagina): void //funcion principal del controlador, recibe el nombre de la pagina a cargar
@@ -57,7 +56,7 @@ class Inicio
         try {
             // Validar el token de seguridad para proteger contra ataques CSRF
             $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-            
+
             if (!hash_equals($_SESSION['token'], $tokenRecibido)) {
                 throw new Exception('Error de seguridad: Token inválido o expirado.');
             }
@@ -91,7 +90,18 @@ class Inicio
                 $_SESSION['rol'] = $respuesta['datos']['nombre_rol'];
                 $_SESSION['nombre'] = $respuesta['datos']['nombreUsuario'];
                 $_SESSION['apellido'] = $respuesta['datos']['apellidoUsuario'];
-                $_SESSION['permisos'] = $respuesta['permisos'];
+
+                $permisosIndexados = [];
+                foreach ($respuesta['permisos'] as $p) {
+                    $permisosIndexados[$p['id_modulo']] = [
+                        'incluir'  => ($p['incluir'] == 1),
+                        'modificar' => ($p['modificar'] == 1),
+                        'eliminar'  => ($p['eliminar'] == 1),
+                        'reporte'  => ($p['reporte'] == 1)
+                    ];
+                }
+                $_SESSION['permisos'] = $permisosIndexados;
+
                 $this->Bitacora('Inicio de sesión exitoso');
             }
             echo json_encode($respuesta);
@@ -112,9 +122,4 @@ class Inicio
         }
     }
 
-    private function Bitacora($mensaje): void
-    {
-        // Registrar la acción en la bitácora utilizando el método RegistrarAccion del modelo de bitácora
-        $this->bitacora->RegistrarAccion(_MD_INICIO_, $mensaje, $_SESSION['id']);
-    }
 }

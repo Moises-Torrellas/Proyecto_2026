@@ -1,4 +1,17 @@
 $(document).ready(function () {
+
+    const alerta = $('#alerta-backend');
+    
+    if (alerta.length > 0) {
+        // Extraemos los datos del dataset del div
+        const icono = alerta.data('icono');
+        const titulo = alerta.data('titulo');
+        const mensaje = alerta.data('mensaje');
+        
+        // Llamamos a tu función
+        muestraMensaje(icono, 2000, titulo, mensaje);
+    }
+
     const pasos = [
         {
             element: '#navegacion',

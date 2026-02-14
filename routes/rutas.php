@@ -38,6 +38,7 @@ function manejarRuta($pagina): void
     $rutas = [
         'Inicio' => 'Inicio',
         'Principal' => 'Principal',
+        'Usuarios' => 'Usuarios',
     ];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {

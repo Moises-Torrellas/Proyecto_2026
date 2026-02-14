@@ -38,13 +38,13 @@ class ModeloInicio extends Conexion
             $stmt->execute();
             $resultado = $stmt->fetch();
 
-            $sql ='SELECT permiso.id_modulo,permiso.eliminar,permiso.modificar,permiso.incluir 
+            $sql ='SELECT permiso.id_modulo,permiso.eliminar,permiso.modificar,permiso.incluir,permiso.reporte 
                             FROM `usuarios` 
                             INNER JOIN permiso ON permiso.id_rol=usuarios.id_rol WHERE usuarios.idUsuario=:id;';
             $stmt = $this->conexion->prepare($sql);
             $stmt->bindParam(':id', $resultado['idUsuario'], \PDO::PARAM_INT);
             $stmt->execute();
-            $permisos = $stmt->fetch();
+            $permisos = $stmt->fetchAll();
             
             if($resultado && $permisos){
                 if (password_verify($this->clave, $resultado['contraseña'])) {

@@ -2,15 +2,15 @@
 
 namespace App\controlador;
 use App\modelo\ModeloUsuarios;
-use App\interface\InterBitacora;
+use App\controlador\Base;
 use Exception;
 
-class Usuarios {
-    private InterBitacora $bitacora;
+class Usuarios extends Base{
 
-    public function __construct(InterBitacora $bitacora)
+    public function __construct($bitacora)
     {
-        $this->bitacora = $bitacora;
+        parent::__construct($bitacora);
+        $this->ProcesarPermisos(_MD_USUARIOS_);
     }
 
     private function ValidarPermisos(){

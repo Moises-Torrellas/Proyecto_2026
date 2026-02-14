@@ -6,7 +6,7 @@
     <title>Inicio</title>
 </head>
 
-<body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
+<body data-tema="">
     <?php include('complementos/loader.php'); ?>
     <section class="fondo_inicio">
         <div class="contenedor_inicio">
