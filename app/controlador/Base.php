@@ -76,4 +76,21 @@ class Base
         // Registrar la acción en la bitácora utilizando el método RegistrarAccion del modelo de bitácora
         $this->bitacora->RegistrarAccion($this->id_modulo, $mensaje, $_SESSION['id']);
     }
+
+    public function validar_datos(array $data): void
+    {
+        foreach ($data as $campo => $valor) {
+
+            if (!isset($_POST[$campo]) || empty(trim($_POST[$campo]))) {
+                throw new Exception("El campo $campo es obligatorio.");
+            }
+        }
+        foreach ($data as $campo => $valor) {
+            if (isset($valor['regla'])) {
+                if (!preg_match($valor['regla'], $_POST[$campo])) {
+                    throw new Exception($valor['mensaje']);
+                }
+            }
+        }
+    }
 }

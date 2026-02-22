@@ -1,13 +1,11 @@
 function consultar() {
     var datos = new FormData();
     datos.append('accion', 'consultar');
-    datos.append('token', $("#token").val());
     enviaAjax(datos);
 }
 function consultarModulo() {
     var datos = new FormData();
     datos.append('accion', 'consultarModulo');
-    datos.append('token', $("#token").val());
     enviaAjax(datos);
 }
 
@@ -15,14 +13,7 @@ $(document).ready(function () {
     consultar();
     consultarModulo();
 
-    $("#nombre").on("keypress", function (e) {
-        validarkeypress(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, e);
-    });
-
-    $("#nombre").on("keyup", function () {
-        validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-            $(this), $("#nombre_spam"), "Solo letras entre 3 y 30 caracteres");
-    });
+    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
 
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
@@ -71,7 +62,6 @@ $(document).ready(function () {
         allowClear: true,
     });
     $("#incluir").on("click", function () {
-        if (window.permisos.incluir) {
             limpia();
             limpia_Tablas();
             $("#proceso").data("accion", "incluir");
@@ -79,9 +69,6 @@ $(document).ready(function () {
             $("#titulo_modal").text("Registrar Rol");
             $('#modulo').val(null).trigger('change');
             abrirModal();
-        } else {
-            muestraMensaje("error", 3000, "Error", 'No tienes los permisos para registrar un rol.');
-        }
     });
 
     $("#generar").on("click", function () {
@@ -153,19 +140,13 @@ function validarEnvio() {
 }
 
 function buscar(id) {
-    if (window.permisos.modificar) {
         var datos = new FormData();
         datos.append('accion', 'buscar');
-        datos.append('token', $("#token").val());
         datos.append('id', id);
         enviaAjax(datos);
-    } else {
-        muestraMensaje("error", 3000, "Error", 'No tienes los permisos para modificar un rol.');
-    }
 }
 
 function modificar(datos) {
-    if (window.permisos.modificar) {
         limpia();
         limpia_Tablas();
         $("#proceso").data("accion", "modificar");
@@ -232,25 +213,17 @@ function modificar(datos) {
             $("#tabla_permisos").append(linea);
         });
         abrirModal();
-    } else {
-        muestraMensaje("error", 3000, "Error", 'No tienes los permisos para modificar un rol.');
-    }
 }
 
 function eliminar(id) {
-    if (window.permisos.eliminar) {
         confirmar('¿Está seguro que quiere eliminar este rol?', function (confirmado) {
             if (confirmado) {
                 var datos = new FormData();
                 datos.append('accion', 'eliminar');
-                datos.append('token', $("#token").val());
                 datos.append('id', id);
                 enviaAjax(datos);
             }
         });
-    } else {
-        muestraMensaje("error", 3000, "", 'No tienes los permisos para eliminar un rol.');
-    }
 }
 
 function crearConsulta(datos) {
@@ -363,6 +336,7 @@ function construirSelect(datos) {
     });
 }
 
+var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
         async: true,
@@ -372,7 +346,9 @@ function enviaAjax(datos) {
         data: datos,
         processData: false,
         cache: false,
-        beforeSend: function () { },
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
         timeout: 10000,
         success: function (respuesta) {
             try {
@@ -384,11 +360,7 @@ function enviaAjax(datos) {
                     construirSelect(lee.datos);
                 }
                 else if (lee.accion == "buscar") {
-                    if (lee.resultado == 1) {
-                        modificar(lee.datos);
-                    } else {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                    }
+                    modificar(lee.datos);
                 }
                 else if (lee.accion == "incluir") {
                     if (lee.resultado == 1) {

@@ -6,27 +6,29 @@ use App\modelo\ModeloUsuarios;
 use App\controlador\Base;
 use Exception;
 
-class Usuarios extends Base
+class Usuarios extends Base // Heredar de la clase Base para manejar la bitácora y permisos
 {
 
     public function __construct($bitacora)
     {
+        // Llamar al constructor de la clase base
         parent::__construct($bitacora, _MD_USUARIOS_);
-        $this->ProcesarPermisos();
+        $this->ProcesarPermisos();  // Llamar al método ProcesarPermisos()
     }
 
     public function ProcesarSolicitud(string $pagina): void
     {
-        $nombreClase = 'App\modelo\ModeloUsuarios';
+
+        $nombreClase = 'App\modelo\ModeloUsuarios'; // Verificar si la clase existe
         if (!class_exists($nombreClase)) {
             require_once(__DIR__ . '/../vista/complementos/404.php');
             exit();
         } else {
-            $obj = new ModeloUsuarios();
-            if ($this->ComprobarAjax() && !empty($_POST)) {
-                $this->ManejarSolicitud($obj);
+            $obj = new ModeloUsuarios(); // Crear una instancia de la clase ModeloUsuarios
+            if ($this->ComprobarAjax() && !empty($_POST)) { // Verificar si la solicitud es una solicitud AJAX
+                $this->ManejarSolicitud($obj); // Manejar la solicitud AJAX
             } else {
-                $this->CargarVista($pagina);
+                $this->CargarVista($pagina); // Cargar la vista
             }
         }
     }
@@ -34,13 +36,13 @@ class Usuarios extends Base
     private function ManejarSolicitud($obj): void
     {
         try {
-            $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+            $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''; // Obtener el token de seguridad
 
-            if (!hash_equals($_SESSION['token'], $tokenRecibido)) {
+            if (!hash_equals($_SESSION['token'], $tokenRecibido)) { // Validar el token de seguridad
                 throw new Exception('Error de seguridad: Token inválido o expirado.');
             }
             $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
-            switch ($accion) {
+            switch ($accion) { // Realizar la acción correspondiente
                 case 'consultar':
                     $this->Consultar($obj);
                     break;
@@ -77,14 +79,14 @@ class Usuarios extends Base
 
     private function Consultar($obj): void
     {
-        $filtro['filtro'] = $_POST['filtro'] ?? '';
-        $respuesta = $obj->Consultar($filtro);
+        $filtro['filtro'] = $_POST['filtro'] ?? ''; // Obtener el filtro de la solicitud para la busqueda
+        $respuesta = $obj->Consultar($filtro); // Realizar la consulta
         echo json_encode($respuesta);
     }
 
     private function ConsultarRoles($obj): void
     {
-        $roles = $obj->consultar();
+        $roles = $obj->consultar(); // Realizar la consulta
         $roles['accion'] = 'consultarRoles';
         echo json_encode($roles);
     }
@@ -92,18 +94,14 @@ class Usuarios extends Base
     {
         try {
             if ($this->modificar) {
-                $data = [
-                    'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']
-                ];
+                // Validar los datos
+                $data = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
 
-                $this->validar_datos($data);
+                $this->validar_datos($data); // Validar los datos
 
-                $datos = [
-                    'id' => $_POST['id'],
-                    'accion' => 'buscar'
-                ];
+                $datos = ['id' => $_POST['id'], 'accion' => 'buscar']; // Preparar los datos
 
-                $resultado = $obj->procesarDatos($datos);
+                $resultado = $obj->procesarDatos($datos); // Procesar los datos
                 echo json_encode($resultado);
             } else {
                 throw new Exception('No tiene permisos para modificar usuarios.');
@@ -127,10 +125,10 @@ class Usuarios extends Base
                     'contraseña' => ['regla' => '/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z!@#\$%\^\&*\)\(+=._-]{8,20}$/', 'mensaje' => 'Contraseña inválida. Debe tener entre 8 y 20 caracteres y contener al menos una mayúscula, una minúscula, un número y un símbolo especial.'],
                     'correo' => ['regla' => '/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br|ve)$/', 'mensaje' => 'Correo electrónico inválido.'],
                     'rol' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Rol inválido.']
-                ];
+                ]; // Validar los datos
 
-                $this->validar_datos($data);
-
+                $this->validar_datos($data); // Validar los datos
+ 
                 $datos = [
                     'cedula' => $_POST['cedula'],
                     'nombre' => $_POST['nombre'],
@@ -140,12 +138,12 @@ class Usuarios extends Base
                     'correo' => $_POST['correo'],
                     'roles_id' => $_POST['rol'],
                     'accion' => 'incluir'
-                ];
+                ]; // Preparar los datos
 
-                $resultado = $obj->procesarDatos($datos);
+                $resultado = $obj->procesarDatos($datos); // Procesar los datos
 
                 if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-                    $this->Bitacora('Registró un usuario de forma exitosa');
+                    $this->Bitacora('Registró un usuario de forma exitosa'); // Registrar la acción en la bitácora
                 }
                 echo json_encode($resultado);
             } else {
@@ -170,13 +168,13 @@ class Usuarios extends Base
                     'telefono' => ['regla' => '/^[0-9]{4}[-]{1}[0-9]{7}$/', 'mensaje' => 'Teléfono inválido. Debe contener entre 7 y 15 dígitos.'],
                     'correo' => ['regla' => '/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br|ve)$/', 'mensaje' => 'Correo electrónico inválido.'],
                     'rol' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Rol inválido.']
-                ];
+                ]; // Validar los datos
 
-                if (isset($_POST['contraseña']) && !empty($_POST['contraseña'])) {
+                if (isset($_POST['contraseña']) && !empty($_POST['contraseña'])) { // Validar la contraseña
                     $data['contraseña'] = ['regla' => '/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z!@#\$%\^\&*\)\(+=._-]{8,20}$/', 'mensaje' => 'Contraseña inválida. Debe tener entre 8 y 20 caracteres y contener al menos una mayúscula, una minúscula, un número y un símbolo especial.'];
-                }
+                } 
 
-                $this->validar_datos($data);
+                $this->validar_datos($data); // Validar los datos
 
                 $datos = [
                     'id' => $_POST['id'],
@@ -187,10 +185,10 @@ class Usuarios extends Base
                     'correo' => $_POST['correo'],
                     'roles_id' => $_POST['rol'],
                     'accion' => 'modificar'
-                ];
+                ]; // Preparar los datos
 
                 if (isset($_POST['contraseña']) && !empty($_POST['contraseña'])) {
-                    $datos['contraseña'] =  $_POST['contraseña'];
+                    $datos['contraseña'] =  $_POST['contraseña']; // Preparar la contraseña
                 }
 
                 $resultado = $obj->procesarDatos($datos);
@@ -312,20 +310,4 @@ class Usuarios extends Base
         }
     }
 
-    private function validar_datos(array $data): void
-    {
-        foreach ($data as $campo => $valor) {
-
-            if (!isset($_POST[$campo]) || empty(trim($_POST[$campo]))) {
-                throw new Exception("El campo $campo es obligatorio.");
-            }
-        }
-        foreach ($data as $campo => $valor) {
-            if (isset($valor['regla'])) {
-                if (!preg_match($valor['regla'], $_POST[$campo])) {
-                    throw new Exception($valor['mensaje']);
-                }
-            }
-        }
-    }
 }
