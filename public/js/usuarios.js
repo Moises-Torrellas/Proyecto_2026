@@ -1,28 +1,26 @@
+$('#busqueda').off('keyup').on('keyup', consultar);
+let timerBusqueda;
 function consultar() {
-    var datos = new FormData();
-    datos.append('accion', 'consultar');
-    datos.append('token', $("#token").val());
-    enviaAjax(datos);
+    clearTimeout(timerBusqueda);
+    timerBusqueda = setTimeout(function () {
+        let valorBusqueda = $('#busqueda').val();
+
+        let datos = new FormData();
+        datos.append('accion', 'consultar');
+        datos.append('filtro', valorBusqueda);
+
+        enviaAjax(datos);
+    }, 500);
 }
 function consultarRoles() {
     var datos = new FormData();
     datos.append('accion', 'consultarRoles');
-    datos.append('token', $("#token").val());
     enviaAjax(datos);
 }
 
 $(document).ready(function () {
     consultar();
     consultarRoles();
-
-    $("#cedula").on("keypress", function (e) {
-        validarkeypress(/^[0-9\b]*$/, e);
-    });
-
-    $("#cedula").on("keyup", function () {
-        validarkeyup(/^[0-9]{7,8}$/, $(this),
-            $("#cedula_spam"), "Minimo 7 maximo 8 digitos, solo numeros");
-    });
 
     $("#cedula").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
@@ -32,30 +30,6 @@ $(document).ready(function () {
         $(this).val(input);
     });
 
-    $("#nombre").on("keypress", function (e) {
-        validarkeypress(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, e);
-    });
-
-    $("#nombre").on("keyup", function () {
-        validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-            $(this), $("#nombre_spam"), "Solo letras entre 3 y 30 caracteres");
-    });
-    $("#apellido").on("keypress", function (e) {
-        validarkeypress(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, e);
-    });
-
-    $("#apellido").on("keyup", function () {
-        validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-            $(this), $("#apellido_spam"), "Solo letras entre 3 y 30 caracteres");
-    });
-    $("#telefono").on("keypress", function (e) {
-        validarkeypress(/^[0-9\-\b]*$/, e);
-    });
-
-    $("#telefono").on("keyup", function () {
-        validarkeyup(/^[0-9]{4}[-]{1}[0-9]{7}$/,
-            $(this), $("#telefono_spam"), "El formato es 0400-000000");
-    });
     $("#telefono").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
         if (input.length > 4) {
@@ -64,24 +38,23 @@ $(document).ready(function () {
         $(this).val(input);
     });
 
-    $("#contraseña").on("keypress", function (e) {
-        validarkeypress(/^[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]*$/, e);
-    });
+    // Validación de Cédula
+    Validacion("cedula", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Minimo 7 maximo 8 digitos, solo numeros", "proceso");
 
-    $("#contraseña").on("keyup", function () {
-        validarkeyup(/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/,
-            $(this), $("#contraseña_spam"), "Entre 8 y 20 caracteres, un número, una letra mayúscula, una letra minúscula y un carácter especial.");
-    });
+    // Validación de Nombre
+    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
 
-    // Solo permite teclas válidas (opcional)
-    $("#correo").on("keypress", function (e) {
-        validarkeypress(/^[a-zA-Z0-9@._\-]*$/, e);
-    });
+    // Validación de Apellido
+    Validacion("apellido", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
 
-    // Valida el formato del correo en tiempo real
-    $("#correo").on("keyup", function () {
-        validarkeyup(/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, $(this), $("#correo_spam"), "Correo no válido. Ejemplo: usuario@dominio.com");
-    });
+    // Validación de Teléfono
+    Validacion("telefono", /^[0-9\-\b]*$/, /^[0-9]{4}[-]{1}[0-9]{7}$/, "El formato es 0400-0000000");
+
+    // Validación de Correo
+    Validacion("correo", /^[a-zA-Z0-9@._\-]*$/, /^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, "Ejemplo: usuario@dominio.com");
+
+    // Validación de Contraseña
+    Validacion("contraseña", /^[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]*$/, /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/, "8-20 caracteres, incluye Mayúscula, Minúscula, Número y Carácter Especial");
 
 
     $('#proceso').on('click', function () {
@@ -93,9 +66,6 @@ $(document).ready(function () {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
                         enviaAjax(datos);
-                        for (var pair of datos.entries()) {
-                            console.log(pair[0] + ': ' + pair[1]);
-                        }
                     }
                 });
             }
@@ -128,17 +98,17 @@ $(document).ready(function () {
         allowClear: true,
     });
     $("#incluir").on("click", function () {
-        /* if (window.permisos.incluir) { */
         limpia();
         limpia_Tablas();
+
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Usuario");
         $("#titulo_modal").text("Registrar Usuario");
+        $('#contraseña').closest('.colum').show();
+        $('#telefono').closest('.colum').show();
+        $('#correo').closest('.colum').show();
         $('#roles').val(null).trigger('change');
         abrirModal();
-        /* } else {
-            muestraMensaje("error", 3000, "Error", 'No tienes los permisos para registrar un usuario.');
-        } */
     });
 
     $("#generar").on("click", function () {
@@ -147,6 +117,10 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
+        $('#contraseña').closest('.colum').hide();
+        $('#telefono').closest('.colum').hide();
+        $('#correo').closest('.colum').hide();
+        $('#roles').val(null).trigger('change');
         abrirModal();
     });
 
@@ -199,34 +173,34 @@ $(document).ready(function () {
 
 function validarEnvio(proceso) {
     if (validarkeyup(/^[0-9]{7,8}$/, $('#cedula'),
-        $("#cedula_spam"), "Minimo 7 maximo 8 digitos, solo numeros")) {
+        $("#cedula_spam"), "Minimo 7 maximo 8 digitos, solo numeros", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar una cedula valida");
         return false;
     }
     else if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-        $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres")) {
+        $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
         return false;
     }
     else if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-        $('#apellido'), $("#apellido_spam"), "Solo letras entre 3 y 30 caracteres")) {
+        $('#apellido'), $("#apellido_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar un apellido valido");
         return false;
     }
     else if (validarkeyup(/^[0-9]{4}[-]{1}[0-9]{7}$/,
-        $('#telefono'), $("#telefono_spam"), "El formato es 0400-000000")) {
+        $('#telefono'), $("#telefono_spam"), "El formato es 0400-000000", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar un telefono valido");
         return false;
     }
     else if (proceso == "incluir") {
         if (validarkeyup(/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/,
-            $('#contraseña'), $("#contraseña_spam"), "Entre 8 y 20 caracteres, un número, una letra mayúscula, una letra minúscula y un carácter especial.")) {
+            $('#contraseña'), $("#contraseña_spam"), "Entre 8 y 20 caracteres, un número, una letra mayúscula, una letra minúscula y un carácter especial.", true)) {
             muestraMensaje("error", 2000, "Error", "Tiene que ingresar una contraseña valido");
             return false;
         }
     }
     else if (validarkeyup(/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i,
-        $('#correo'), $("#correo_spam"), "Correo no válido. Ejemplo: usuario@dominio.com")) {
+        $('#correo'), $("#correo_spam"), "Correo no válido. Ejemplo: usuario@dominio.com", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar una correo valido");
         return false;
     }
@@ -238,53 +212,60 @@ function validarEnvio(proceso) {
 }
 
 function buscar(id) {
-    if (window.permisos.modificar) {
-        var datos = new FormData();
-        datos.append('accion', 'buscar');
-        datos.append('token', $("#token").val());
-        datos.append('id', id);
-        enviaAjax(datos);
-    } else {
-        muestraMensaje("error", 3000, "Error", 'No tienes los permisos para modificar un usuario.');
-    }
+    var datos = new FormData();
+    datos.append('accion', 'buscar');
+    datos.append('id', id);
+    enviaAjax(datos);
 }
 
 function modificar(datos) {
-    if (window.permisos.modificar) {
-        limpia();
-        $("#proceso").data("accion", "modificar");
-        $("#proceso").text("Modificar Usuario");
-        $("#titulo_modal").text("Modificar Usuario");
-        $('#roles').val(null).trigger('change');
-        $('#id').val(datos[0].idUsuario);
-        $('#cedula').val(datos[0].cedulaUsuario);
-        $('#nombre').val(datos[0].nombreUsuario);
-        $('#apellido').val(datos[0].apellidoUsuario);
-        $('#telefono').val(datos[0].telefonoUsuario);
-        $('#correo').val(datos[0].correo);
-        $('#roles').val(datos[0].id_rol);
-        abrirModal();
-    } else {
-        muestraMensaje("error", 3000, "Error", 'No tienes los permisos para modificar un usuario.');
-    }
+    limpia();
+
+    $("#proceso").data("accion", "modificar");
+    $("#proceso").text("Modificar Usuario");
+    $("#titulo_modal").text("Modificar Usuario");
+    $('#contraseña').closest('.colum').show();
+    $('#telefono').closest('.colum').show();
+    $('#correo').closest('.colum').show();
+    $('#roles').val(null).trigger('change');
+    $('#id').val(datos[0].idUsuario);
+    $('#cedula').val(datos[0].cedulaUsuario);
+    $('#nombre').val(datos[0].nombreUsuario);
+    $('#apellido').val(datos[0].apellidoUsuario);
+    $('#telefono').val(datos[0].telefonoUsuario);
+    $('#correo').val(datos[0].correo);
+    $('#roles').val(datos[0].id_rol).trigger('change');
+
+    abrirModal();
 }
 
 function eliminar(id) {
-    if (window.permisos.eliminar) {
-        confirmar('¿Está seguro que quiere eliminar este Usuario?', function (confirmado) {
-            if (confirmado) {
-                var datos = new FormData();
-                datos.append('accion', 'eliminar');
-                datos.append('token', $("#token").val());
-                datos.append('id', id);
-                enviaAjax(datos);
-            }
-        });
-    } else {
-        muestraMensaje("error", 3000, "Error", 'No tienes los permisos para eliminar un usuario.');
-    }
-
+    confirmar('¿Está seguro que quiere eliminar este Usuario?', function (confirmado) {
+        if (confirmado) {
+            var datos = new FormData();
+            datos.append('accion', 'eliminar');
+            datos.append('id', id);
+            enviaAjax(datos);
+        }
+    });
 }
+let botonPresionado = null
+function bloquear(id, b, elemento) {
+    let texto = (b == 1) ? 'bloquear' : 'desbloquear';
+    confirmar(`¿Está seguro que quiere ${texto} este Usuario?`, function (confirmado) {
+        if (confirmado) {
+            botonPresionado = elemento;
+            var datos = new FormData();
+            datos.append('accion', 'bloquear');
+            datos.append('id', id);
+            datos.append('bloqueo', b);
+            enviaAjax(datos);
+
+        }
+    });
+}
+
+const icon = 'fi-sr-lock';
 
 function crearConsulta(datos) {
     var tablaBody = $('#resultadoconsulta');
@@ -294,17 +275,21 @@ function crearConsulta(datos) {
     datos.forEach(dato => {
 
         let botones = '';
-        if (window.permisos.modificar || window.permisos.eliminar) {
-            botones += `<td>`;
-            if (window.permisos.modificar) {
-                botones += `<button class="btn_t cbt_v" id="cbt_v" onclick="buscar(${dato.idUsuario})"><i class="fi fi-sr-pencil"></i></button>`;
-            }
-            if (window.permisos.eliminar) {
-                botones += `<button class="btn_t cbt_r" id="cbt_r" onclick="eliminar(${dato.idUsuario})"><i class="fi fi-sr-trash-xmark"></i></button>`;
-            }
-            botones += `</td>`;
-            colspan = 6;
-        }
+
+        let icon = dato.bloqueo == 1 ? 'fi-sr-unlock' : 'fi-sr-lock';
+        let color = dato.bloqueo == 1 ? 'cbt_g' : 'cbt_a';
+
+
+        botones += `<td>`;
+
+        botones += `<button class="btn_t cbt_v" onclick="buscar(${dato.idUsuario})"><i class="fi fi-sr-pencil"></i></button>`;
+        botones += `<button class="btn_t cbt_r" onclick="eliminar(${dato.idUsuario})"><i class="fi fi-sr-trash-xmark"></i></button>`;
+        botones += `<button class="btn_t ${color}" onclick="bloquear(${dato.idUsuario}, ${dato.bloqueo}, this)"><i class="fi ${icon}"></i>
+            </button>`;
+
+        botones += `</td>`;
+        colspan = 6;
+
 
         var linea = `<tr>
                         <td>${dato.cedulaUsuario}</td>
@@ -317,6 +302,14 @@ function crearConsulta(datos) {
 
         tablaBody.append(linea);
     });
+
+    if (cantidadRegistros == 0) {
+        colspan = 6;
+        var linea = `<tr>
+                        <td colspan='${colspan}'>No se encontraron registros</td>
+                    </tr>`;
+        tablaBody.append(linea);
+    }
 
     if (cantidadRegistros >= 100) {
         linea = ``
@@ -359,7 +352,7 @@ function construirSelect(datos) {
         select.append(linea);
     });
 }
-
+var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
         async: true,
@@ -369,12 +362,13 @@ function enviaAjax(datos) {
         data: datos,
         processData: false,
         cache: false,
-        beforeSend: function () { },
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
         timeout: 10000,
         success: function (respuesta) {
             try {
                 var lee = JSON.parse(respuesta);
-                console.log(lee);
                 if (lee.accion == "consultar") {
                     crearConsulta(lee.datos);
                 }
@@ -382,41 +376,61 @@ function enviaAjax(datos) {
                     construirSelect(lee.datos);
                 }
                 else if (lee.accion == "buscar") {
-                    if (lee.resultado == 1) {
-                        modificar(lee.datos);
-                    } else {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                    }
+                    modificar(lee.datos);
                 }
                 else if (lee.accion == "incluir") {
-                    if (lee.resultado == 1) {
-                        muestraMensaje("success", 2000, "Correcto", lee.mensaje);
-                        consultar();
-                        limpia();
-                        cerrarModal();
-                    } else {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                    }
-
+                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    consultar();
+                    limpia();
                 } else if (lee.accion == "modificar") {
-                    if (lee.resultado == 1) {
-                        muestraMensaje("success", 2000, "Correcto", lee.mensaje);
-                        consultar();
-                        limpia();
-                        cerrarModal();
-                    } else {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                    }
-
+                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    consultar();
+                    limpia();
+                    cerrarModal();
                 } else if (lee.accion == "eliminar") {
-                    if (lee.resultado == 1) {
-                        muestraMensaje("success", 2000, "Correcto", lee.mensaje);
-                        consultar();
+                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    consultar();
+
+                }
+                else if (lee.accion == "reporte") {
+                    cerrarAlertaEspara();
+                    muestraMensaje("success", 2000, "Correcto", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        window.open(lee.archivo, '_blank');
+                    }, 2000);
+                    limpia();
+                } else if (lee.accion == "bloquear") {
+                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+
+                    if (botonPresionado) {
+                        let btn = $(botonPresionado);
+                        let icono = btn.find('i');
+
+                        let estadoAnterior = btn.attr('onclick').match(/,\s*(\d+),/)[1];
+                        let nuevoEstado = (estadoAnterior == 1) ? 2 : 1;
+
+                        if (nuevoEstado == 1) {
+                            btn.removeClass('cbt_a').addClass('cbt_g');
+                            icono.removeClass('fi-sr-lock').addClass('fi-sr-unlock');
+                        } else {
+
+                            btn.removeClass('cbt_g').addClass('cbt_a');
+                            icono.removeClass('fi-sr-unlock').addClass('fi-sr-lock');
+                        }
+
+                        // Actualizamos el onclick para el siguiente click
+                        let idUsuario = btn.attr('onclick').match(/bloquear\((\d+),/)[1];
+                        btn.attr('onclick', `bloquear(${idUsuario}, ${nuevoEstado}, this)`);
+
+                        botonPresionado = null; // Limpiamos la variable
                     } else {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
+                        // Si por alguna razón no hay referencia, recargamos la tabla (respaldo)
+                        consultar();
                     }
 
-                } else if (lee.accion == "error") {
+                }
+                else if (lee.accion == "error") {
+                    cerrarAlertaEspara();
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }
             } catch (e) {

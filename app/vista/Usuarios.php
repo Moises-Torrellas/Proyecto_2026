@@ -24,9 +24,8 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if($this->permiso_incluir):?>
                             <button class="btn btn_azul" id="incluir">Nuevo Usuario</button>
-                            <?php endif?>
+
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
@@ -40,9 +39,9 @@
                                         <th>Telefono</th>
                                         <th>Correo</th>
                                         <th>Rol</th>
-                                        <?php if($this->permiso_modificar || $this->permiso_eliminar) :?>
+
                                         <th>Opciones</th>
-                                        <?php endif?>
+
                                     </tr>
                                 </thead>
                                 <tbody id="resultadoconsulta">
@@ -65,7 +64,6 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
-                    <input type="hidden" id="token" name="token" value="<?php echo $_SESSION['token']; ?>">
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
@@ -84,7 +82,7 @@
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="apellido" name="apellido">
-                                <label for="Prueba" class="titulo_formulario">Apellido</label>
+                                <label for="apellido" class="titulo_formulario">Apellido</label>
                                 <span class="mensaje" id="apellido_spam"></span>
                             </div>
                         </div>
@@ -127,6 +125,7 @@
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
+                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
                         </div>
                     </div>
                 </form>

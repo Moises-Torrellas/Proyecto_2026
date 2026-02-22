@@ -7,6 +7,7 @@ define('_DB_PASS_SG_', '');
 
 date_default_timezone_set('America/Caracas');
 setlocale(LC_TIME, 'es_ES.UTF-8');
+setlocale(LC_CTYPE, 'es_ES.UTF-8');
 
 define('_URL_', '/Proyecto_2026/public/');
 
@@ -19,6 +20,7 @@ const _MD_BITACORA_ = 3;
 const _MD_INICIO_   = 4;
 const _MD_CERRAR_   = 5;
 const _MD_PRODUCTOS_= 6;
+const _MD_RECUPERACION_ = 7;
 
 if (session_status() === PHP_SESSION_NONE) {
     // Configuramos la sesión antes de iniciarla

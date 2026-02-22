@@ -31,7 +31,7 @@ function manejarRuta($pagina): void
         // Finalmente, destruimos la sesión
         session_destroy();
         // Redirigimos al usuario a la página de inicio después de cerrar sesión
-        header("Location: " . _URL_ );
+        header("Location: " . _URL_);
         exit();
     }
     // Definimos las rutas disponibles en el sistema
@@ -39,11 +39,12 @@ function manejarRuta($pagina): void
         'Inicio' => 'Inicio',
         'Principal' => 'Principal',
         'Usuarios' => 'Usuarios',
+        'Recuperacion' => 'Recuperacion',
     ];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {
         // Verificamos si el usuario está autenticado antes de permitir el acceso a otras páginas
-        if (!isset($_SESSION['id']) && $pagina !== 'Inicio') {
+        if (!isset($_SESSION['id']) && $pagina !== 'Inicio' && $pagina !== 'Recuperacion') {
             // Si el usuario no está autenticado, redirigimos a la página de inicio
             header("Location: " . _URL_);
             exit();
@@ -54,7 +55,7 @@ function manejarRuta($pagina): void
         if (class_exists($classNombre)) {
             // Creamos una instancia de la bitácora para inyectarla en el controlador
             $bitacora = new \App\modelo\ModeloBitacora();
-            $controlador = new $classNombre($bitacora); // Inyección de la bitácora en el controlador
+            $controlador = new $classNombre($bitacora);
             $controlador->ProcesarSolicitud($rutas[$pagina]); // Pasamos la ruta al método del controlador
         }
     } else {

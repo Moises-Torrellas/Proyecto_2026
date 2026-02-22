@@ -10,7 +10,6 @@
 <script src="libraries/js/select2.min.js"></script>
 <script src="libraries/js/chart.min.js"></script>
 <script src="libraries/driver.js-stable/dist/driver.min.js"></script>
-<script src="libraries/node_modules/just-validate/dist/just-validate.production.min.js"></script>
 <link href="css/main.css" rel="stylesheet">
 <link href="css/navbar.css" rel="stylesheet">
 <link href="css/modal.css" rel="stylesheet">

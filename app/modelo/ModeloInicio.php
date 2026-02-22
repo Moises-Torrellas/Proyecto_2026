@@ -29,8 +29,8 @@ class ModeloInicio extends Conexion
     private function IniciarSesion(): array
     {
         try {
-            $this->conexion = self::getConexSG();
-            $sql = 'SELECT usuarios.idUsuario,usuarios.nombreUsuario,usuarios.apellidoUsuario,roles.nombre_rol,roles.id_rol,usuarios.contraseña 
+            $this->conexion = self::conexSG();
+            $sql = 'SELECT usuarios.idUsuario,usuarios.nombreUsuario,usuarios.apellidoUsuario,roles.nombre_rol,roles.id_rol,usuarios.contraseña,usuarios.bloqueo  
                             FROM `usuarios` 
                             INNER JOIN roles ON roles.id_rol=usuarios.id_rol WHERE cedulaUsuario = :cedula;';
             $stmt = $this->conexion->prepare($sql);
@@ -38,7 +38,11 @@ class ModeloInicio extends Conexion
             $stmt->execute();
             $resultado = $stmt->fetch();
 
-            $sql ='SELECT permiso.id_modulo,permiso.eliminar,permiso.modificar,permiso.incluir,permiso.reporte 
+            if($resultado['bloqueo'] == 0){
+                return ['accion' => 'denegado','resultado' => 0 , 'mensaje' => 'Usted tiene bloqueado el acceso.'];
+            }
+
+            $sql ='SELECT permiso.id_modulo,permiso.eliminar,permiso.modificar,permiso.incluir,permiso.reporte,permiso.otros 
                             FROM `usuarios` 
                             INNER JOIN permiso ON permiso.id_rol=usuarios.id_rol WHERE usuarios.idUsuario=:id;';
             $stmt = $this->conexion->prepare($sql);

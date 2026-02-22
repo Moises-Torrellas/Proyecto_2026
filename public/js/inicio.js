@@ -1,13 +1,9 @@
 $(document).ready(function () {
 
-    $("#cedula").on("keypress", function (e) {
-        validarkeypress(/^[0-9\b]*$/, e);
-    });
 
-    $("#cedula").on("keyup", function () {
-        validarkeyup(/^[0-9]{7,8}$/, $(this),
-            $("#cedula_spam"), "Minimo 7 maximo 8 digitos, solo numeros");
-    });
+    Validacion("cedula", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Minimo 7 maximo 8 digitos, solo numeros");
+    
+    Validacion("contraseña", /^[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]*$/, /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/, "8-20 caracteres, incluye Mayúscula, Minúscula, Número y Carácter Especial");
 
     $("#cedula").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
@@ -16,14 +12,7 @@ $(document).ready(function () {
         }
         $(this).val(input);
     });
-    $("#contraseña").on("keypress", function (e) {
-        validarkeypress(/^[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]*$/, e);
-    });
 
-    $("#contraseña").on("keyup", function () {
-        validarkeyup(/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/,
-            $(this), $("#contraseña_spam"), "Entre 8 y 20 caracteres, un número, una letra mayúscula, una letra minúscula y un carácter especial.");
-    });
 
     $('#ingreso').on('click', function () {
         if (validarEnvio()) {
@@ -80,6 +69,9 @@ function enviaAjax(datos) {
                         muestraMensaje("error", 2000, "Error", lee.mensaje);
                         $("#contraseña").addClass("denegado");
                     }
+                } else if (lee.accion == "denegado") {
+                    muestraMensaje("error", 20000, "Error", lee.mensaje);
+                    limpia();
                 } else if (lee.accion == "error") {
                     muestraMensaje("error", 20000, "Error", lee.mensaje);
                 }

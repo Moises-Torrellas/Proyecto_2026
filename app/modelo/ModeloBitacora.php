@@ -20,7 +20,7 @@ class ModeloBitacora extends Conexion implements InterBitacora
     public function RegistrarAccion($id_modulo, $accion, $id_usuario)
     {
         try{
-            $this->conexion = self::getConexSG();
+            $this->conexion = self::conexSG();
             $sql = 'INSERT INTO `bitacora`(`id_modulo`, `acciones`, `fecha`, `hora`, `idUsuario`) 
                             VALUES (:modulo,:accion,:fecha,:hora,:usuario)';
             $stmt = $this->conexion->prepare($sql);
@@ -31,13 +31,7 @@ class ModeloBitacora extends Conexion implements InterBitacora
                 ':hora' => date('H:i:s'),
                 ':usuario' => $id_usuario
             ];
-            $respuesta = $stmt->execute($parametros);
-
-            if($respuesta){
-                return ['accion' => 'incluir', 'resultado' => 1, 'mensaje' => 'Acción registrada en la bitácora'];
-            } else {
-                return ['accion' => 'incluir', 'resultado' => 0, 'mensaje' => 'No se pudo registrar la acción en la bitácora'];
-            }
+            $stmt->execute($parametros);
 
         }catch(PDOException $e){
             echo "Error al registrar la acción en la bitácora: " . $e->getMessage();

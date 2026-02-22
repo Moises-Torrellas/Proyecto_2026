@@ -8,15 +8,6 @@ $(document).ready(function () {
     // Inicial: solo mostrar sec_1
     sec_1();
 
-    $("#cedula").on("keypress", function (e) {
-        validarkeypress(/^[0-9\b]*$/, e);
-    });
-
-    $("#cedula").on("keyup", function () {
-        validarkeyup(/^[0-9]{7,8}$/, $(this),
-            $("#cedula_spam"), "Minimo 7 maximo 8 digitos, solo numeros");
-    });
-
     $("#cedula").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
         if (input.length > 4) {
@@ -41,24 +32,11 @@ $(document).ready(function () {
         }
         $(this).val(input);
     });
+    Validacion("codigo", /^[0-9\b]*$/, /^[0-9]{6}$/, "solo 6 numeros");
+    Validacion("cedula", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Minimo 7 maximo 8 digitos, solo numeros");
+    Validacion("contraseña", /^[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]*$/, /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/, "8-20 caracteres, incluye Mayúscula, Minúscula, Número y Carácter Especial");
+    Validacion("contraseña_r", /^[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]*$/, /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/, "8-20 caracteres, incluye Mayúscula, Minúscula, Número y Carácter Especial");
 
-    $("#contraseña").on("keypress", function (e) {
-        validarkeypress(/^[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]*$/, e);
-    });
-
-    $("#contraseña").on("keyup", function () {
-        validarkeyup(/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/,
-            $(this), $("#contraseña_spam"), "Entre 8 y 20 caracteres, un número, una letra mayúscula, una letra minúscula y un carácter especial.");
-    });
-
-    $("#contraseña_r").on("keypress", function (e) {
-        validarkeypress(/^[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]*$/, e);
-    });
-
-    $("#contraseña_r").on("keyup", function () {
-        validarkeyup(/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/,
-            $(this), $("#contraseña_r_spam"), "Entre 8 y 20 caracteres, un número, una letra mayúscula, una letra minúscula y un carácter especial.");
-    });
 
     // Al hacer clic en Enviar Código (sec_1 → sec_2)
     $("#comprobar").click(function () {
@@ -87,12 +65,16 @@ $(document).ready(function () {
 
     $("#cambiar").click(function () {
         if ($('#contraseña').val() === $('#contraseña_r').val()) {
-            var datos = new FormData($('#f')[0]);
-            datos.append('accion', 'cambiar');
-            enviaAjax(datos);
+            confirmar('¿Está seguro que quiere cambiar la contraseña?', function (confirmado) {
+                if (confirmado) {
+                    var datos = new FormData($('#f')[0]);
+                    datos.append('accion', 'cambiar');
+                    enviaAjax(datos);
+                }
+            })
         }
         else {
-            muestraMensaje("success", 2000, "Error", 'Las contraseñas ingresadas no coinciden. Por favor, verifíquelas.');
+            muestraMensaje("error", 2000, "Error", 'Las contraseñas ingresadas no coinciden. Por favor, verifíquelas.');
         }
     });
 });
@@ -152,7 +134,7 @@ function sec_3() {
     $("#sec_3").removeClass("slide-right-in").addClass("visible");
     iniciarContador();
 }
-
+var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
         async: true,
@@ -162,40 +144,28 @@ function enviaAjax(datos) {
         data: datos,
         processData: false,
         cache: false,
-        beforeSend: function () { },
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
         timeout: 20000,
         success: function (respuesta) {
             try {
                 var lee = JSON.parse(respuesta);
 
                 if (lee.accion == "comprobar") {
-                    if (lee.resultado == 1) {
-                        cerrarAlertaEspara();
-                        muestraMensaje("success", 2000, "Enviado", lee.mensaje);
-                        sec_2();
-                    } else {
-                        cerrarAlertaEspara();
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                    }
+                    cerrarAlertaEspara();
+                    muestraMensaje("success", 2000, "Enviado", lee.mensaje);
+                    sec_2();
 
                 } else if (lee.accion == "comprobarCodigo") {
-                    if (lee.resultado == 1) {
-                        muestraMensaje("success", 2000, "Validado", lee.mensaje);
-                        sec_3();
-                    } else {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                    }
-
+                    muestraMensaje("success", 2000, "Validado", lee.mensaje);
+                    sec_3();
                 }
                 else if (lee.accion == "cambiar") {
-                    if (lee.resultado == 1) {
-                        muestraMensaje("success", 2000, "Validado", lee.mensaje);
-                        setTimeout(function () {
-                            window.location.href = "/Proyecto_Plantilla/public/";
-                        }, 2000)
-                    } else {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                    }
+                    muestraMensaje("success", 2000, "Validado", lee.mensaje);
+                    setTimeout(function () {
+                        window.location.href = lee.url;
+                    }, 2000)
 
                 } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);

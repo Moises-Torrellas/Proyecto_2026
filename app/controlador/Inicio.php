@@ -4,14 +4,14 @@ namespace App\controlador;
 
 use App\controlador\Base;
 use App\modelo\ModeloInicio;
+use App\interface\InterBitacora;
 use Exception;
 
 class Inicio extends Base
 {
-
-    public function __construct($bitacora) // inyeccion de la bitacora
+    public function __construct(InterBitacora $bitacora) // inyeccion de la bitacora
     {
-        parent::__construct($bitacora); // Llamar al constructor de la clase Base para inicializar la bitácora
+        parent::__construct($bitacora, _MD_INICIO_); // llamar al constructor de la clase base para inicializar la bitacora
     }
 
     public function ProcesarSolicitud(string $pagina): void //funcion principal del controlador, recibe el nombre de la pagina a cargar
@@ -26,29 +26,14 @@ class Inicio extends Base
             // Si la clase del modelo existe, crear una instancia de la clase del modelo
             $obj = new ModeloInicio();
             // Construir la ruta del archivo de vista correspondiente a la página
-            $archivoVista = sprintf(__DIR__ . '/../vista/%s.php', $pagina);
-            if (is_file($archivoVista)) {
-                // Si el archivo de vista existe, verificar si la solicitud es una solicitud AJAX y si se han enviado datos por POST
-                if ($this->ComprobarAjax() && !empty($_POST)) {
-                    $this->ManejarSolicitud($obj); // Manejar la solicitud AJAX utilizando el objeto del modelo
-                } else {
-                    // Si no es una solicitud AJAX, generar un token de seguridad para la sesión y cargar el archivo de vista
-                    $_SESSION['token'] = bin2hex(random_bytes(32));
-                    // Cargar el archivo de vista correspondiente a la página
-                    require_once($archivoVista);
-                }
+            // Si el archivo de vista existe, verificar si la solicitud es una solicitud AJAX y si se han enviado datos por POST
+            if ($this->ComprobarAjax() && !empty($_POST)) {
+                $this->ManejarSolicitud($obj); // Manejar la solicitud AJAX utilizando el objeto del modelo
             } else {
-                // Si el archivo de vista no existe, mostrar una página de error 404
-                require_once(__DIR__ . '/../vista/complementos/404.php');
-                exit();
+                // Cargar la vista correspondiente a la página utilizando el método CargarVista de la clase base
+                $this->CargarVista($pagina);
             }
         }
-    }
-
-    private function ComprobarAjax(): bool
-    {
-        // Verificar si la solicitud es una solicitud AJAX comprobando el encabezado HTTP_X_REQUESTED_WITH
-        return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
     private function ManejarSolicitud($obj): void
@@ -97,7 +82,8 @@ class Inicio extends Base
                         'incluir'  => ($p['incluir'] == 1),
                         'modificar' => ($p['modificar'] == 1),
                         'eliminar'  => ($p['eliminar'] == 1),
-                        'reporte'  => ($p['reporte'] == 1)
+                        'reporte'  => ($p['reporte'] == 1),
+                        'otros'  => ($p['otros'] == 1)
                     ];
                 }
                 $_SESSION['permisos'] = $permisosIndexados;
@@ -121,5 +107,4 @@ class Inicio extends Base
             throw new Exception('Contraseña inválida. Debe tener entre 8 y 20 caracteres y contener al menos una mayúscula, una minúscula, un número y un símbolo especial.');
         }
     }
-
 }

@@ -6,12 +6,7 @@ window.onload = function () {
 
 };
 
-/* document.addEventListener('DOMContentLoaded', function () {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
-}); */
+
 
 
 $(".ojo").click(function () {
@@ -49,7 +44,9 @@ $(document).ready(function () {
     if (window.mensajeError) {
         muestraMensaje("error", 3000, "Acceso Denegado", window.mensajeError.mensaje);
     }
-
+    $('#limpiar').on('click', function () {
+        limpia();
+    });
     var titulo = $("#titulo").text().trim();
 
     $(".opciones").each(function () {
@@ -63,7 +60,7 @@ $(document).ready(function () {
     let circle = $('#circle-transition');
 
     // Inicializar tema según icono
-    
+
 
     $('#modo_oscuro').on('click', function () {
         if (icono.hasClass('fi-sr-moon')) {
@@ -132,10 +129,10 @@ $(document).ready(function () {
     $("#salir").on("click", function () {
         confirmar('¿Está seguro de que quieres salir?', function (confirmado) {
             if (confirmado) {
-                muestraMensaje("success", 1500, "Cerrando sesión");
+                muestraMensaje("success", 2000, "Cerrando sesión");
                 setTimeout(function () {
                     location.href = "CerrarSesion";
-                }, 1500)
+                }, 2000)
             }
         });
     });
@@ -143,125 +140,26 @@ $(document).ready(function () {
 
 function inicializarPaginador() {
     const $table = $('#tablageneral');
-    const $rows = $table.find('tbody tr');
+    const $rows = $table.find('tbody tr').not(':has(td[colspan])'); // Excluimos la fila de "Cargar más"
     const $rowsPerPageSelect = $('#rowsPerPage');
     const $paginationContainer = $('#botonera');
 
     let currentPage = 1;
-    let rowsPerPage = parseInt($rowsPerPageSelect.val());
+    let rowsPerPage = parseInt($rowsPerPageSelect.val()) || 10;
 
-    function renderPagination(filteredRows) {
-        const totalRows = filteredRows.length;
-        const pageCount = Math.ceil(totalRows / rowsPerPage);
-        $paginationContainer.empty();
-
-        if (pageCount === 1) {
-            // Solo una página: mostrar botón 1 activo
-            const $btn = $('<button class="boton active">').text(1);
-            $paginationContainer.append($btn);
-            return;
-        }
-        if (pageCount < 1) {
-            // No hay páginas, no mostrar nada
-            return;
-        }
-
-        const renderedPages = new Set();
-        const $addButton = (num) => {
-            if (renderedPages.has(num)) return;
-            renderedPages.add(num);
-            const $btn = $('<button class="boton">').text(num);
-            if (num === currentPage) $btn.addClass('active');
-            $btn.on('click', function () {
-                currentPage = num;
-                showPage(filteredRows);
-                renderPagination(filteredRows);
-            });
-            $paginationContainer.append($btn);
-        };
-        const $addDots = () => $paginationContainer.append('<span class="puntos">...</span>');
-
-        $addButton(1);
-        if (currentPage > 4) $addDots();
-
-        let start = Math.max(2, currentPage - 1);
-        let end = Math.min(pageCount - 1, currentPage + 1);
-        if (currentPage <= 3) { start = 2; end = Math.min(4, pageCount - 1); }
-        if (currentPage >= pageCount - 2) { start = Math.max(2, pageCount - 3); end = pageCount - 1; }
-
-        for (let i = start; i <= end; i++) $addButton(i);
-        if (currentPage < pageCount - 3) $addDots();
-        if (pageCount > 1) $addButton(pageCount);
-    }
-
-    function showPage(filteredRows) {
-        const start = (currentPage - 1) * rowsPerPage;
+    // Función para cambiar de página
+    function showPage(page) {
+        const start = (page - 1) * rowsPerPage;
         const end = start + rowsPerPage;
+
         $rows.hide();
-        filteredRows.slice(start, end).show();
+        $rows.slice(start, end).show();
     }
 
-    function updateTable() {
-        const searchTerm = $('#busqueda').val().toLowerCase().trim();
-        const keywords = searchTerm.split(/\s+/);
-
-        const filteredRows = $rows.filter(function () {
-            const rowText = $(this).text().toLowerCase();
-            return keywords.every(kw => rowText.includes(kw));
-        });
-
-        currentPage = 1;
-        const thCount = $('#tablageneral thead th').length;
-        if (filteredRows.length === 0) {
-            $rows.hide();
-            $('#tablageneral tbody').html(`<tr><td colspan="${thCount}" style="text-align:center;">No se consiguió ningún registro</td></tr>`);
-            $paginationContainer.empty();
-        } else {
-            $('#tablageneral tbody').empty().append($rows);
-            renderPagination(filteredRows);
-            showPage(filteredRows);
-        }
-    }
-
-    function countRecords() {
-        const searchTerm = $('#busqueda').val().toLowerCase().trim();
-        const keywords = searchTerm.split(/\s+/);
-
-        const filteredRows = $rows.filter(function () {
-            const rowText = $(this).text().toLowerCase();
-            return keywords.every(kw => rowText.includes(kw));
-        });
-
-        $('#cantidadRegistros').text(filteredRows.length);
-    }
-
-    $('#busqueda').off('keyup').on('keyup', function () {
-        updateTable();
-        countRecords();
-    });
-
-    $rowsPerPageSelect.off('change').on('change', function () {
-        rowsPerPage = parseInt($(this).val());
-        updateTable();
-        countRecords();
-    });
-
-    updateTable();
-    countRecords();
-}
-
-function inicializarPaginadorCartas() {
-    const $contenedor = $('.contenedor_cartas');
-    const $cartas = $contenedor.find('.carta');
-    const $rowsPerPageSelect = $('#rowsPerPage');
-    const $paginationContainer = $('#botonera');
-
-    let currentPage = 1;
-    let rowsPerPage = parseInt($rowsPerPageSelect.val());
-
-    function renderPagination(filteredCards) {
-        const totalCards = filteredCards.length;
-        const pageCount = Math.ceil(totalCards / rowsPerPage);
+    // Función para dibujar los botones
+    function renderPagination() {
+        const totalRows = $rows.length;
+        const pageCount = Math.ceil(totalRows / rowsPerPage);
         $paginationContainer.empty();
 
         if (pageCount <= 1) {
@@ -272,87 +170,51 @@ function inicializarPaginadorCartas() {
             return;
         }
 
-        const renderedPages = new Set();
         const $addButton = (num) => {
-            if (renderedPages.has(num)) return;
-            renderedPages.add(num);
             const $btn = $('<button class="boton">').text(num);
             if (num === currentPage) $btn.addClass('active');
             $btn.on('click', function () {
                 currentPage = num;
-                showPage(filteredCards);
-                renderPagination(filteredCards);
+                showPage(currentPage);
+                renderPagination();
             });
             $paginationContainer.append($btn);
         };
+
         const $addDots = () => $paginationContainer.append('<span class="puntos">...</span>');
 
+        // Lógica de botones (1 ... actual ... último)
         $addButton(1);
-        if (currentPage > 4) $addDots();
+        if (currentPage > 3) $addDots();
 
         let start = Math.max(2, currentPage - 1);
         let end = Math.min(pageCount - 1, currentPage + 1);
-        if (currentPage <= 3) { start = 2; end = Math.min(4, pageCount - 1); }
-        if (currentPage >= pageCount - 2) { start = Math.max(2, pageCount - 3); end = pageCount - 1; }
 
-        for (let i = start; i <= end; i++) $addButton(i);
-        if (currentPage < pageCount - 3) $addDots();
+        if (currentPage <= 2) end = Math.min(4, pageCount - 1);
+        if (currentPage >= pageCount - 1) start = Math.max(2, pageCount - 3);
+
+        for (let i = start; i <= end; i++) {
+            $addButton(i);
+        }
+
+        if (currentPage < pageCount - 2) $addDots();
         $addButton(pageCount);
     }
 
-    function showPage(filteredCards) {
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        $cartas.hide();
-        filteredCards.slice(start, end).show();
-    }
-
-    function updateCards() {
-        const searchTerm = $('#busqueda').val().toLowerCase().trim();
-        const keywords = searchTerm.split(/\s+/);
-
-        const filteredCards = $cartas.filter(function () {
-            const cardText = $(this).text().toLowerCase();
-            return keywords.every(kw => cardText.includes(kw));
-        });
-
-        currentPage = 1;
-        if (filteredCards.length === 0) {
-            $cartas.hide();
-            $contenedor.html(`<p style="text-align:center; width:100%;">No se consiguió ningún registro</p>`);
-            $paginationContainer.empty();
-        } else {
-            $('.contenedor_cartas').html(filteredCards);
-            renderPagination(filteredCards);
-            showPage(filteredCards);
-        }
-    }
-
-    function countRecords() {
-        const searchTerm = $('#busqueda').val().toLowerCase().trim();
-        const keywords = searchTerm.split(/\s+/);
-
-        const filteredCards = $cartas.filter(function () {
-            const cardText = $(this).text().toLowerCase();
-            return keywords.every(kw => cardText.includes(kw));
-        });
-
-        $('#cantidadRegistros').text(filteredCards.length);
-    }
-
-    $('#busqueda').off('keyup').on('keyup', function () {
-        updateCards();
-        countRecords();
-    });
-
+    // Evento para cambiar cantidad de filas a ver
     $rowsPerPageSelect.off('change').on('change', function () {
         rowsPerPage = parseInt($(this).val());
-        updateCards();
-        countRecords();
+        currentPage = 1;
+        showPage(currentPage);
+        renderPagination();
     });
 
-    updateCards();
-    countRecords();
+    // Ejecución inicial
+    showPage(currentPage);
+    renderPagination();
+
+    // Actualizar contador visual de registros cargados actualmente
+    $('#cantidadRegistros').text($rows.length);
 }
 
 
@@ -393,36 +255,69 @@ function muestraMensajeMini(icono, tiempo, titulo) {
     });
 }
 
-function validarkeypress(er, e) {
-    key = e.keyCode;
-    tecla = String.fromCharCode(key);
-    a = er.test(tecla);
-    if (!a) {
-        e.preventDefault();
-        muestraMensajeMini('error', 2000, 'Carácter no permitido')
-    }
-}
 
-function quitarClase($etiqueta) {
+
+/* function quitarClase($etiqueta) {
 
     $etiqueta.on('blur', function () {
         $(this).removeClass('denegado');
     });
+} */
+
+// Se mantiene igual, sirve para RESTRINGIR caracteres mientras se presiona la tecla
+function validarkeypress(er, e) {
+    let key = e.keyCode || e.which;
+    let tecla = String.fromCharCode(key);
+    let a = er.test(tecla);
+    if (!a) {
+        e.preventDefault();
+        muestraMensajeMini('error', 2000, 'Carácter no permitido');
+    }
 }
 
-function validarkeyup(er, etiqueta, etiquetamensaje, mensaje) {
-    a = er.test(etiqueta.val());
+// CAMBIO: Ahora esta función tiene una lógica inteligente
+function validarkeyup(er, etiqueta, etiquetamensaje, mensaje, mostrarError = false) {
+    let a = er.test(etiqueta.val());
+    
     if (a) {
-        etiquetamensaje.text(""); // Borra el mensaje solo si el contenido es válido
-        etiqueta.removeClass("denegado"); // Quita la clase del input
+        // Si es válido: Limpiamos todo
+        etiquetamensaje.text("");
+        etiqueta.removeClass("denegado");
         return false;
     } else {
-        etiquetamensaje.text(mensaje);
-        etiqueta.addClass("denegado");
+        // Si es inválido:
+        if (mostrarError) {
+            // Solo ponemos el rojo si salimos del foco (blur) o damos clic en enviar
+            etiquetamensaje.text(mensaje);
+            etiqueta.addClass("denegado");
+        }
         return true;
     }
 }
 
+function Validacion(idInput, erKeyPress, erKeyUp, mensajeAyuda, boton = null) {
+    const $input = $(`#${idInput}`);
+    const $spam = $(`#${idInput}_spam`);
+
+    $input.on("keypress", function (e) {
+        validarkeypress(erKeyPress, e);
+    });
+
+    $input.on("keyup", function () {
+        validarkeyup(erKeyUp, $(this), $spam, "");
+    });
+
+    $input.on("focus", function () {
+        $spam.text(mensajeAyuda);
+        $(this).removeClass("denegado");
+    });
+
+    $input.on("blur", function () {
+        let accion = boton ? $(`#${boton}`).data("accion") : null;
+        let forzarError = (accion === "generar") ? false : true;
+        validarkeyup(erKeyUp, $(this), $spam, mensajeAyuda, forzarError);
+    });
+}
 
 function confirmar(titulo, callback) {
     Swal.fire({
@@ -455,6 +350,11 @@ function abrirAlertaEspara(titulo, texto) {
         title: titulo,
         text: texto,
         allowOutsideClick: false,
+        customClass: {
+            popup: "mi-popup",
+            title: "mi-titulo",
+            content: "mi-contenido"
+        },
         didOpen: () => {
             Swal.showLoading();
         }
