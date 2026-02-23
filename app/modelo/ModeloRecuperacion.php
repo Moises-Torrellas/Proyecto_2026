@@ -19,7 +19,7 @@ class ModeloRecuperacion extends Conexion
 
     public function __construct() {}
 
-    public function ProcesarDatos(array $datos) : array
+    public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
@@ -27,7 +27,7 @@ class ModeloRecuperacion extends Conexion
 
         $this->codigo = $datos['codigo'] ?? '';
         $this->cedula = trim($datos['cedula'] ?? '');
-        if(!empty($datos['contraseña'])) {
+        if (!empty($datos['contraseña'])) {
             $this->contraseña = password_hash($datos['contraseña'], PASSWORD_BCRYPT);
         }
 
@@ -75,7 +75,7 @@ class ModeloRecuperacion extends Conexion
         }
     }
 
-    public function Reenviar() : array
+    public function Reenviar(): array
     {
         try {
             return $this->enviarCorreo('Se le envio otro código al correo.');
@@ -85,7 +85,7 @@ class ModeloRecuperacion extends Conexion
         }
     }
 
-    public function ComprobarCodigo() : array
+    public function ComprobarCodigo(): array
     {
         try {
             if ($this->codigo == $_SESSION['codigo_verificacion']) {
@@ -103,7 +103,7 @@ class ModeloRecuperacion extends Conexion
         }
     }
 
-    public function CambiarContraseña() : array
+    public function CambiarContraseña(): array
     {
         try {
 
@@ -141,39 +141,78 @@ class ModeloRecuperacion extends Conexion
         return $resultado;
     }
 
-    private function enviarCorreo($mensaje) : array
+    private function enviarCorreo($mensaje): array
     {
         $mail = new PHPMailer(true);
+
         try {
-            $codigo = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT); // Asegura que tenga 6 dígitos
+            // 1. Generar código y obtener datos de sesión
+            $codigo = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
             $correo = $_SESSION['correo'];
             $destinatario = $_SESSION['destinatario'];
-            // 2. Configurar el servidor SMTP
+
+            // 2. Configuración del Servidor SMTP (Gmail)
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'moitcj@gmail.com';            // Cambia por tu correo real
-            $mail->Password   = 'dcotyzvsafgxnfjt';      // Usa una clave de aplicación si usas Gmail
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+            $mail->Username   = 'soporte.sigmasell@gmail.com'; // Tu cuenta de Gmail
+            $mail->Password   = 'tfutvwetzdkevpwu';           // Tu Contraseña de Aplicación (16 letras)
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;   // SSL para puerto 465
             $mail->Port       = 465;
+            $mail->CharSet    = 'UTF-8';                       // Asegura tildes y eñes
 
-            // 3. Configurar remitente y destinatario
-            $mail->setFrom('moitcj@gmail.com', 'Moises Torrellas');
+            // 3. Remitente y Destinatario
+            $mail->setFrom('soporte.sigmasell@gmail.com', 'Soporte de SigmaSell');
             $mail->addAddress($correo, $destinatario);
 
-            // 4. Contenido del mensaje
+            // 4. Diseño del Cuerpo del Correo (HTML)
             $mail->isHTML(true);
-            $mail->Subject = 'Tu codigo de verificacion';
-            $mail->Body    = "<p>Tu código de verificación es:</p><h2>$codigo</h2>";
-            $mail->AltBody = "Tu código de verificación es: $codigo";
+            $mail->Subject = 'Código de Verificación - SigmaSell';
 
-            // 5. Enviar correo
+            // Estilos usando tus variables: --color-primario: #0041f2, --fondo-principal: #f2f3f5, etc.
+            $mail->Body = "
+        <div style='background-color: #f2f3f5; padding: 40px; font-family: sans-serif;'>
+            <div style='max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
+                
+                <div style='background-color: #0041f2; padding: 25px; text-align: center;'>
+                    <h1 style='color: #ffffff; margin: 0; font-size: 26px; letter-spacing: 1px;'>SIGMASELL</h1>
+                </div>
+
+                <div style='padding: 35px; text-align: center; color: #3a4750;'>
+                    <h2 style='color: #0041f2; margin-top: 0;'>Verificación de Seguridad</h2>
+                    <p style='font-size: 16px; line-height: 1.6; color: #3a4750;'>Hola, <strong>$destinatario</strong>.</p>
+                    <p style='font-size: 14px; color: #555;'>Has solicitado acceso o un cambio de contraseña en SigmaSell. Por favor, utiliza el siguiente código para continuar:</p>
+                    
+                    <div style='margin: 30px 0; padding: 20px; background-color: #e0e3e7; border-radius: 8px; border: 1px dashed #92c5ff;'>
+                        <span style='font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #0041f2;'>$codigo</span>
+                    </div>
+                    
+                    <p style='font-size: 12px; color: #92c5ff; margin-top: 25px;'>
+                        Este código es de un solo uso y expirará pronto por motivos de seguridad.
+                    </p>
+                </div>
+
+                <div style='background-color: #f9f9f9; padding: 20px; text-align: center; border-top: 1px solid #e0e3e7;'>
+                    <p style='font-size: 11px; color: #3a4750; margin: 0; line-height: 1.4;'>
+                        ¿No solicitaste este código? Puedes ignorar este mensaje.<br>
+                        <strong>SigmaSell System</strong> - Gestión de Ventas Inteligente
+                    </p>
+                </div>
+            </div>
+        </div>
+        ";
+
+            // Versión en texto plano para dispositivos que no soportan HTML
+            $mail->AltBody = "SigmaSell: Tu código de verificación es $codigo. Si no solicitaste este cambio, ignora este mensaje.";
+
+            // 5. Envío y Respuesta
             $mail->send();
             $_SESSION['codigo_verificacion'] = $codigo;
+
             return ['accion' => 'comprobar', 'mensaje' => $mensaje];
         } catch (Exception $e) {
-            error_log($e->getMessage());
-            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
+            error_log("Error en PHPMailer: " . $e->getMessage());
+            return ['accion' => 'error', 'mensaje' => "No se pudo enviar el correo. Error: {$mail->ErrorInfo}"];
         }
     }
 }
