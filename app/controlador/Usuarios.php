@@ -143,7 +143,7 @@ class Usuarios extends Base // Heredar de la clase Base para manejar la bitácor
                 $resultado = $obj->procesarDatos($datos); // Procesar los datos
 
                 if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-                    $this->Bitacora('Registró un usuario de forma exitosa'); // Registrar la acción en la bitácora
+                    $this->Bitacora('Registró el usuario: ' . $_POST['cedula'] . ', ' . $_POST['nombre'] . ' ' . $_POST['apellido'] . ''); // Registrar la acción en la bitácora
                 }
                 echo json_encode($resultado);
             } else {
@@ -280,6 +280,7 @@ class Usuarios extends Base // Heredar de la clase Base para manejar la bitácor
 
     private function GenerarReporte($obj, $reporte): void
     {
+        if($this->reporte){
         $data = [];
         $datos = [];
         if (!empty($_POST['cedula'])) {
@@ -307,6 +308,9 @@ class Usuarios extends Base // Heredar de la clase Base para manejar la bitácor
             echo json_encode($respuesta);
         } else {
             echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron registros.']);
+        }
+        }else{
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No tienes los permisos para generar un reporte.']);
         }
     }
 

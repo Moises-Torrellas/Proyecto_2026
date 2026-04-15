@@ -17,7 +17,7 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina" id="titulo">Gestionar Usuarios</h2>
+                            <h2 class="titulo_pagina" id="titulo">Usuarios</h2>
                         </div>
                         <div class="contenedor_busqueda">
                             <input type="text" placeholder="Buscar..." autocomplete="off" id="busqueda">

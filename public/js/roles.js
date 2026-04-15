@@ -165,7 +165,7 @@ function modificar(datos) {
 
             var linea = `<tr>
                             <td style="display: none;">
-                                <input type="hidden" name="modulo_id[]" value="${dato.id_modulo}">
+                                <input type="hidden" name="id_modulo[]" value="${dato.id_modulo}">
                             </td>
                             <td>${escapeHTML(dato.nombre_modulo)}</td>
                                 
@@ -261,7 +261,7 @@ $('#add').on('click', function () {
         if (modulo_existe) {
             var lin = `<tr>
                             <td style="display: none;">
-                                <input type="hidden" name="modulo_id[]" value="${id}">
+                                <input type="hidden" name="id_modulo[]" value="${id}">
                             </td>
                                 
                             <td>${nombre}</td>
@@ -363,35 +363,20 @@ function enviaAjax(datos) {
                     modificar(lee.datos);
                 }
                 else if (lee.accion == "incluir") {
-                    if (lee.resultado == 1) {
                         muestraMensaje("success", 2000, "Correcto", lee.mensaje);
                         consultar();
                         limpia();
                         limpia_Tablas();
                         cerrarModal();
-                    } else {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                    }
-
                 } else if (lee.accion == "modificar") {
-                    if (lee.resultado == 1) {
                         muestraMensaje("success", 2000, "Correcto", lee.mensaje);
                         consultar();
                         limpia();
                         limpia_Tablas();
                         cerrarModal();
-                    } else {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                    }
-
                 } else if (lee.accion == "eliminar") {
-                    if (lee.resultado == 1) {
                         muestraMensaje("success", 2000, "Correcto", lee.mensaje);
                         consultar();
-                    } else {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                    }
-
                 } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }

@@ -93,4 +93,32 @@ class Base
             }
         }
     }
+
+    public function validarArrays(array $data): void
+{
+    foreach ($data as $campo => $valor) {
+        // 1. Verificar si el campo existe en el POST
+        if (!isset($_POST[$campo])) {
+            throw new Exception("El campo $campo es obligatorio.");
+        }
+
+        $datosRecibidos = $_POST[$campo];
+
+        // 2. Si es un array, validamos cada elemento interno
+        if (is_array($datosRecibidos)) {
+            foreach ($datosRecibidos as $indice => $contenido) {
+                if (isset($valor['regla'])) {
+                    if (!preg_match($valor['regla'], (string)$contenido)) {
+                        throw new Exception("Error en $campo: " . $valor['mensaje']);
+                    }
+                }
+            }
+        } else {
+            // 3. Si por error no es un array, lo validamos como campo simple
+            if (isset($valor['regla']) && !preg_match($valor['regla'], (string)$datosRecibidos)) {
+                throw new Exception($valor['mensaje']);
+            }
+        }
+    }
+}
 }

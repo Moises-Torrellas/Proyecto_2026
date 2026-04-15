@@ -19,7 +19,6 @@ const _MD_ROLES_    = 2;
 const _MD_BITACORA_ = 3;
 const _MD_INICIO_   = 4;
 const _MD_CERRAR_   = 5;
-const _MD_PRODUCTOS_= 6;
 const _MD_RECUPERACION_ = 7;
 
 if (session_status() === PHP_SESSION_NONE) {

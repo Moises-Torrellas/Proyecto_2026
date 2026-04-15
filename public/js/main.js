@@ -26,6 +26,11 @@ $('#cerrar_modal').on("click", function () {
     cerrarModal();
 });
 
+$('#cerrar_modal_asistente').on("click", function () {
+    cerrarModalAsistente();
+});
+
+
 function cerrarModal() {
     $("#modal").removeClass("expandir")
     $("#contenedor_modal").css('opacity', '0')
@@ -39,7 +44,44 @@ function abrirModal() {
     $("#modal").addClass("expandir")
 }
 
+function abrirModalAsistente() {
+    $("#asistente_modal_contenedor").css('opacity', '1')
+    $("#asistente_modal_contenedor").css('visibility', 'visible')
+    $("#asistente_modal").addClass("expandir")
+}
+
+function cerrarModalAsistente() {
+    $("#asistente_modal").removeClass("expandir")
+    $("#asistente_modal_contenedor").css('opacity', '0')
+    $("#asistente_modal_contenedor").css('visibility', 'hidden')
+}
+
 $(document).ready(function () {
+
+    lucide.createIcons();
+
+    tippy('[data-tippy-content]', { theme: 'light' });
+
+    let scrollTimers = {}; // Objeto para guardar los timers de cada contenedor
+
+    $('.contenido_modulo, .navegacion').on('scroll', function () {
+        let $this = $(this);
+        let id = $this.attr('class'); // Usamos la clase como identificador simple
+
+        // Agregamos la clase al contenedor que se está moviendo
+        $this.addClass('is-scrolling');
+
+        // Limpiamos el timer específico de este contenedor
+        if (scrollTimers[id]) {
+            clearTimeout(scrollTimers[id]);
+        }
+
+        // Ocultamos el scroll después de 1.2 segundos de inactividad
+        scrollTimers[id] = setTimeout(function () {
+            $this.removeClass('is-scrolling');
+            delete scrollTimers[id];
+        }, 1200);
+    });
 
     if (window.mensajeError) {
         muestraMensaje("error", 3000, "Acceso Denegado", window.mensajeError.mensaje);
@@ -55,25 +97,30 @@ $(document).ready(function () {
         }
     });
 
-    let icono = $('#modo_oscuro i');
+
     let body = $('body');
     let circle = $('#circle-transition');
-
-    // Inicializar tema según icono
-
-
     $('#modo_oscuro').on('click', function () {
-        if (icono.hasClass('fi-sr-moon')) {
+
+        let esOscuro = body.attr('data-tema') === 'oscuro';
+
+        if (!esOscuro) {
             // Expandir círculo con color oscuro
-            circle.css('background-color', '#1f2a36'); // fondo oscuro de tu tema
-            circle.css('clip-path', 'circle(150% at 50% 50%)');
+            //circle.css('background-color', '#1f2a36'); // fondo oscuro de tu tema
+            //circle.css('clip-path', 'circle(150% at 50% 50%)');
 
             setTimeout(() => {
                 // Cambiar tema a oscuro
                 body.attr('data-tema', 'oscuro');
-                icono.removeClass('fi-sr-moon').addClass('fi-sr-sun');
+                $('#modo_oscuro').find('svg').remove();
+                // 2. Metemos la etiqueta <i> de Lucide al principio del botón
+                $('#modo_oscuro').prepend('<i class="opciones_i" data-lucide="sun"></i> ');
+                // 3. Le decimos a Lucide que dibuje el icono
+                lucide.createIcons({
+                    root: document.getElementById('modo_oscuro')
+                });
                 // Contraer círculo
-                circle.css('clip-path', 'circle(0% at 50% 50%)');
+                //circle.css('clip-path', 'circle(0% at 50% 50%)');
                 const tema = 'oscuro';
                 let fecha = new Date();
                 fecha.setTime(fecha.getTime() + (30 * 24 * 60 * 60 * 1000));
@@ -81,15 +128,19 @@ $(document).ready(function () {
             }, 400); // espera transición clip-path
         } else {
             // Expandir círculo con color claro
-            circle.css('background-color', '#f2f3f5'); // fondo claro de tu tema
-            circle.css('clip-path', 'circle(150% at 50% 50%)');
+            //circle.css('background-color', '#f2f3f5'); // fondo claro de tu tema
+            //circle.css('clip-path', 'circle(150% at 50% 50%)');
 
             setTimeout(() => {
                 // Cambiar tema a claro
                 body.attr('data-tema', 'claro');
-                icono.removeClass('fi-sr-sun').addClass('fi-sr-moon');
+                $('#modo_oscuro').find('svg').remove();
+                $('#modo_oscuro').prepend('<i class="opciones_i" data-lucide="moon"></i> ');
+                lucide.createIcons({
+                    root: document.getElementById('modo_oscuro')
+                });
                 // Contraer círculo
-                circle.css('clip-path', 'circle(0% at 50% 50%)');
+                //circle.css('clip-path', 'circle(0% at 50% 50%)');
 
                 const tema = 'claro';
                 let fecha = new Date();
@@ -99,22 +150,37 @@ $(document).ready(function () {
         }
     });
 
+    $('#info_usuario').on('click', function (e) {
+        e.stopPropagation();
+        // Cerramos el de notificaciones por si estaba abierto
+        $('#contenedor_notificaciones').removeClass('expandir');
 
-
-
-
-    $('#info_usuario').on('click', function () {
+        // Toggle al de usuario
         $('#menu_superior').toggleClass('expandir');
         $('#flecha').toggleClass('rotar');
     });
-    $('#noti').on('click', function () {
+
+    $('#noti').on('click', function (e) {
+        e.stopPropagation();
+        // Cerramos el menú de usuario y reseteamos la flecha
+        $('#menu_superior').removeClass('expandir');
+        $('#flecha').removeClass('rotar');
+
+        // Toggle al de notificaciones
         $('#contenedor_notificaciones').toggleClass('expandir');
     });
+
+    $('#asistente').on('click', function (e) {
+        abrirModalAsistente();
+    });
+
     $(document).on('click', function (e) {
+        // Si el clic no es en el área de usuario, cerrar menú usuario
         if (!$(e.target).closest('#info_usuario, #menu_superior').length) {
             $('#menu_superior').removeClass('expandir');
             $('#flecha').removeClass('rotar');
         }
+        // Si el clic no es en notificaciones, cerrar notificaciones
         if (!$(e.target).closest('#noti, #contenedor_notificaciones').length) {
             $('#contenedor_notificaciones').removeClass('expandir');
         }
@@ -278,7 +344,7 @@ function validarkeypress(er, e) {
 // CAMBIO: Ahora esta función tiene una lógica inteligente
 function validarkeyup(er, etiqueta, etiquetamensaje, mensaje, mostrarError = false) {
     let a = er.test(etiqueta.val());
-    
+
     if (a) {
         // Si es válido: Limpiamos todo
         etiquetamensaje.text("");

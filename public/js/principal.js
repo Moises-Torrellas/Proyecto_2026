@@ -22,18 +22,10 @@ $(document).ready(function () {
             }
         },
         {
-            element: '#casa',
+            element: '#asistente',
             popover: {
-                title: 'Pagina Principal',
-                description: 'Aquí puedes dar click para ir a la pagina principal.',
-                position: 'bottom'
-            }
-        },
-        {
-            element: '#modo_oscuro',
-            popover: {
-                title: 'Modo Oscuro',
-                description: 'Aquí puedes dar click para activar o desactivar el modo oscuro.',
+                title: 'Sydney',
+                description: 'Aqui puedes interactuar con Sydney su asistente virtual.',
                 position: 'bottom'
             }
         },

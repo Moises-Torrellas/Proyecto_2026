@@ -2,26 +2,30 @@
     /* Modo claro */
     --fuente: sans-serif;
     --fondo-principal: #f2f3f5;
-    --fondo-contraste: #e0e3e7;
-    --color-primario: #0041f2;
-    --color-claro: #92c5ff;
+    --fondo-contraste: #e9ecf1;
+    --color-primario: #32AF0A;
+    --fondo-translucido:rgba(144, 234, 166, 0.142);
+    --color-claro: #7e7e7e;
     --color-secundario: #3a4750;
     --color-oscuro: #2a2e35;
-    --texto-principal: #2a2e35;
+    --texto-principal: #1F283B;
     --texto-contraste: #f4f4f4;
-    --borde-color: #0041f2;
+    --borde-color: #32AF0A;
     --color-peligro: #ff4d4f;
     --texto-sombra: 0px 0px 8px rgba(0, 65, 242, 0.4);
+
+    --fondo-form: #f8f8f8;
+    --borde-form: #c8d1e0;
 
     /* Para botones, tablas, etc */
     --boton-fondo: var(--color-primario);
     --boton-texto: var(--texto-contraste);
-    --boton-sombra: 0px 0px 8px 0px rgba(0, 65, 242, 0.4);
+    --boton-sombra: 0px 0px 8px 0px rgba(66, 204, 100, 0.4);
     --boton-texto-sombra: 0px 0px 8px rgba(255, 255, 255, 0.4);
 
     --boton-fondo-secundario: var(--color-secundario);
     --boton-texto-secundario: var(--texto-contraste);
-    --boton-sombra-secundario: 0px 0px 8px 0px rgba(0, 65, 242, 0.4);
+    --boton-sombra-secundario: 0px 0px 8px 0px rgba(66, 204, 100, 0.4);
     --boton-texto-sombra-secundario: 0px 0px 8px rgba(255, 255, 255, 0.3);
 
     --tabla-encabezado-fondo: var(--color-primario);
@@ -30,7 +34,7 @@
     --tabla-fila-texto: var(--color-oscuro);
 
 
-    --color_loader: #0041f2;
+    --color_loader: #32AF0A;
     --fondo_loader: #f2f3f5;
 }
 
@@ -39,24 +43,27 @@
     --fuente: sans-serif;
     --fondo-principal: #1f2a36;
     --fondo-contraste: #2b3a48;
-    --color-primario: #31c7e6;
-    --color-claro: #3a4750;
+    --color-primario: #32AF0A;
+    --color-claro: #828282;
     --color-secundario: #3a4750;
     --color-oscuro: #cfd8dc;
     --texto-principal: #cfd8dc;
-    --texto-contraste: #1f2a36;
-    --borde-color: #31c7e6;
+    --texto-contraste: #1F283B;
+    --borde-color: #32AF0A;
     --color-peligro: #ff4d4f;
     --texto-sombra: 0px 0px 8px #31c7e666;
 
+    --fondo-form: #e4eae3;
+    --borde-form: #c8d1e0;
+
     --boton-fondo: var(--color-primario);
     --boton-texto: var(--texto-contraste);
-    --boton-sombra: 0px 0px 8px 0px #31c7e666;
+    --boton-sombra: 0px 0px 8px 0px rgba(66, 204, 100, 0.4);
     --boton-texto-sombra: 0px 0px 8px rgba(255, 255, 255, 0.3);
 
     --boton-fondo-secundario: var(--color-secundario);
     --boton-texto-secundario: var(--texto-principal);
-    --boton-sombra-secundario: 0px 0px 8px 0px #31c7e666;
+    --boton-sombra-secundario: 0px 0px 8px 0px rgba(66, 204, 100, 0.4);
     --boton-texto-sombra-secundario: 0px 0px 8px rgba(255, 255, 255, 0.3);
 
     --tabla-encabezado-fondo: var(--color-primario);
@@ -64,7 +71,7 @@
     --tabla-fila-fondo: #2b3a48;
     --tabla-fila-texto: var(--texto-principal);
 
-    --color_loader: #31c7e6;
+    --color_loader: #32AF0A;
     --fondo_loader: #1f2a36;
 }
 
@@ -123,18 +130,41 @@ option {
 
 
 ::-webkit-scrollbar {
-    width: 2px;
+    width: 4px;
     height: 10px;
 }
 
+/* 2. El track siempre transparente */
 ::-webkit-scrollbar-track {
     background: transparent;
 }
 
-
+/* 3. El "pulgar" transparente por defecto */
 ::-webkit-scrollbar-thumb {
-    background: var(--color-primario);
+    background: transparent; 
     border-radius: 10px;
+    transition: background 0.5s ease-in; /* Nota: esto funciona en algunos navegadores modernos, pero el truco real es el hover del padre */
+}
+/* 4. El "pulgar" en hover */
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primario);
+}
+
+/* El pulgar es transparente por defecto en ambos contenedores */
+.contenido_modulo::-webkit-scrollbar-thumb,
+.navegacion::-webkit-scrollbar-thumb {
+    background: transparent; 
+    border-radius: 10px;
+    transition: background 0.5s ease-in;
+}
+
+/* Mostramos el scroll cuando el contenedor tiene la clase 'is-scrolling' 
+   o cuando el mouse está encima del propio scroll */
+.contenido_modulo.is-scrolling::-webkit-scrollbar-thumb,
+.navegacion.is-scrolling::-webkit-scrollbar-thumb,
+.contenido_modulo::-webkit-scrollbar-thumb:hover,
+.navegacion::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primario);
 }
 
 .contentLoader {
@@ -197,16 +227,18 @@ option {
         transform: scale(1.2)
     }
 }
-.ocultar{
+
+.ocultar {
     display: none;
 }
+
 .contenedor {
     width: 100%;
     height: 100vh;
     display: grid;
-    grid-template-columns: 250px auto;
+    grid-template-columns: 230px auto;
     /* Barra lateral + Contenido */
-    grid-template-rows: 70px auto;
+    grid-template-rows: 60px auto;
     /* Barra superior + Resto */
 }
 
@@ -216,7 +248,7 @@ option {
     /* Ocupa toda la fila superior */
     grid-row: 1;
     background: var(--fondo-principal);
-    height: 70px;
+    height: 60px;
     user-select: none;
 }
 
@@ -226,36 +258,39 @@ option {
     grid-row: 2;
     background: var(--fondo-principal);
     user-select: none;
+    padding-top: 10px;
 }
 
 .contenido {
     grid-column: 2;
     grid-row: 2;
     background: var(--fondo-principal);
-    height: calc(100vh - 70px);
+    height: calc(100vh - 60px);
+    width: 100;
     display: flex;
     justify-content: center;
     align-items: start;
 }
 
 .contenido_modulo {
-    width: 95%;
-    padding: 20px;
-    height: calc(100vh - 120px);
+    width: 100%;
+    padding: 16px;
+    height: calc(100vh - 96px);
     background-color: var(--fondo-contraste);
-    border-radius: 40px;
+    border-radius: 20px 0px 0px 0px;
+    border-top: 4px solid var(--fondo-contraste);
     display: grid;
-    place-items: center;
+    place-items: start;
+    overflow: auto;
 }
 
 .contenedor_funciones {
     width: 100%;
-    height: 100%;
-    background-color: var(--fondo-principal);
-    border-radius: 20px;
-    overflow: auto;
+    height: auto;
+    background-color: transparent;
+    border-radius: 10px;
     display: grid;
-    grid-template-rows: 100px auto 70px;
+    grid-template-rows: 70px auto 60px;
 }
 
 .contenedor_opciones {
@@ -337,6 +372,14 @@ option {
     cursor: pointer;
     transition: .2s ease-in;
     user-select: none;
+}
+
+.btn:hover {
+    transform: scale(1.01);
+}
+
+.btn:active {
+    transform: scale(.9);
 }
 
 .btn_azul {
@@ -509,10 +552,12 @@ option {
     box-shadow: 0px 0px 8px 0px rgba(0, 210, 38, 0.50);
     text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.5);
 }
+
 .cbt_a:hover {
     box-shadow: 0px 0px 8px 0px rgba(0, 65, 242, 0.50);
     text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.5);
 }
+
 .cbt_g:hover {
     box-shadow: 0px 0px 8px 0px rgba(88, 88, 88, 0.50);
     text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.5);
@@ -643,7 +688,7 @@ option {
     flex: 1;
     padding: 20px;
     border-radius: 10px;
-    background: var(--fondo-contraste);
+    background: var(--fondo-principal);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
@@ -681,6 +726,8 @@ option {
 .graficos {
     display: flex;
     width: 90%;
+    background-color: var(--fondo-principal);
+    border-radius: 10px;
 }
 
 .chart-container {
