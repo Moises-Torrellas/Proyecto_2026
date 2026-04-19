@@ -62,13 +62,13 @@ $(document).ready(function () {
         allowClear: true,
     });
     $("#incluir").on("click", function () {
-            limpia();
-            limpia_Tablas();
-            $("#proceso").data("accion", "incluir");
-            $("#proceso").text("Registrar Rol");
-            $("#titulo_modal").text("Registrar Rol");
-            $('#modulo').val(null).trigger('change');
-            abrirModal();
+        limpia();
+        limpia_Tablas();
+        $("#proceso").data("accion", "incluir");
+        $("#proceso").text("Registrar Rol");
+        $("#titulo_modal").text("Registrar Rol");
+        $('#modulo').val(null).trigger('change');
+        abrirModal();
     });
 
     $("#generar").on("click", function () {
@@ -140,30 +140,30 @@ function validarEnvio() {
 }
 
 function buscar(id) {
-        var datos = new FormData();
-        datos.append('accion', 'buscar');
-        datos.append('id', id);
-        enviaAjax(datos);
+    var datos = new FormData();
+    datos.append('accion', 'buscar');
+    datos.append('id', id);
+    enviaAjax(datos);
 }
 
 function modificar(datos) {
-        limpia();
-        limpia_Tablas();
-        $("#proceso").data("accion", "modificar");
-        $("#proceso").text("Modificar Rol");
-        $("#titulo_modal").text("Modificar Rol");
-        $('#id').val(datos[0].id_rol);
-        $('#nombre').val(datos[0].nombre_rol);
-        $('#modulo').val(null).trigger('change');
+    limpia();
+    limpia_Tablas();
+    $("#proceso").data("accion", "modificar");
+    $("#proceso").text("Modificar Rol");
+    $("#titulo_modal").text("Modificar Rol");
+    $('#id').val(datos[0].id_rol);
+    $('#nombre').val(datos[0].nombre_rol);
+    $('#modulo').val(null).trigger('change');
 
-        datos.forEach(dato => {
-            var incluirChecked = dato.incluir == 1 ? 'checked' : '';
-            var modificarChecked = dato.modificar == 1 ? 'checked' : '';
-            var eliminarChecked = dato.eliminar == 1 ? 'checked' : '';
-            var reporteChecked = dato.reporte == 1 ? 'checked' : '';
-            var otrosChecked = dato.otros == 1 ? 'checked' : '';
+    datos.forEach(dato => {
+        var incluirChecked = dato.incluir == 1 ? 'checked' : '';
+        var modificarChecked = dato.modificar == 1 ? 'checked' : '';
+        var eliminarChecked = dato.eliminar == 1 ? 'checked' : '';
+        var reporteChecked = dato.reporte == 1 ? 'checked' : '';
+        var otrosChecked = dato.otros == 1 ? 'checked' : '';
 
-            var linea = `<tr>
+        var linea = `<tr>
                             <td style="display: none;">
                                 <input type="hidden" name="id_modulo[]" value="${dato.id_modulo}">
                             </td>
@@ -210,23 +210,23 @@ function modificar(datos) {
                         </tr>`;
 
 
-            $("#tabla_permisos").append(linea);
-        });
-        abrirModal();
+        $("#tabla_permisos").append(linea);
+    });
+    abrirModal();
 }
 
 function eliminar(id) {
-        confirmar('¿Está seguro que quiere eliminar este rol?', function (confirmado) {
-            if (confirmado) {
-                var datos = new FormData();
-                datos.append('accion', 'eliminar');
-                datos.append('id', id);
-                enviaAjax(datos);
-            }
-        });
+    confirmar('¿Está seguro que quiere eliminar este rol?', function (confirmado) {
+        if (confirmado) {
+            var datos = new FormData();
+            datos.append('accion', 'eliminar');
+            datos.append('id', id);
+            enviaAjax(datos);
+        }
+    });
 }
 
-function crearConsulta(datos) {
+/* function crearConsulta(datos) {
     var tablaBody = $('#resultadoconsulta');
     tablaBody.empty();
     datos.forEach(dato => {
@@ -241,6 +241,43 @@ function crearConsulta(datos) {
 
         tablaBody.append(linea);
     });
+    inicializarPaginador();
+} */
+
+function crearConsulta(datos) {
+    const contenedor = $('#resultadoconsulta');
+    contenedor.empty();
+
+    if (datos.length === 0) {
+        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
+    } else {
+        datos.forEach(dato => {
+            let registro = `
+                <div class="listado_contenedor_grupal">
+                    <div class="listado_item">
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Codigo</small>
+                            <span>${dato.id_rol}</span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Nombre</small>
+                            <span>${dato.nombre_rol}</span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <button class="btn_t cbt_v" onclick="buscar(${dato.id_rol})"><i class="fi fi-sr-pencil"></i></button>
+                        <button class="btn_t cbt_r" onclick="eliminar(${dato.id_rol})"><i class="fi fi-sr-trash-xmark"></i></button>
+                    </div>
+                </div>
+                </div>
+            `;
+            contenedor.append(registro);
+        });
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     inicializarPaginador();
 }
 
@@ -363,20 +400,20 @@ function enviaAjax(datos) {
                     modificar(lee.datos);
                 }
                 else if (lee.accion == "incluir") {
-                        muestraMensaje("success", 2000, "Correcto", lee.mensaje);
-                        consultar();
-                        limpia();
-                        limpia_Tablas();
-                        cerrarModal();
+                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    consultar();
+                    limpia();
+                    limpia_Tablas();
+                    cerrarModal();
                 } else if (lee.accion == "modificar") {
-                        muestraMensaje("success", 2000, "Correcto", lee.mensaje);
-                        consultar();
-                        limpia();
-                        limpia_Tablas();
-                        cerrarModal();
+                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    consultar();
+                    limpia();
+                    limpia_Tablas();
+                    cerrarModal();
                 } else if (lee.accion == "eliminar") {
-                        muestraMensaje("success", 2000, "Correcto", lee.mensaje);
-                        consultar();
+                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    consultar();
                 } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }

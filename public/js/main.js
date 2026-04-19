@@ -106,8 +106,8 @@ $(document).ready(function () {
 
         if (!esOscuro) {
             // Expandir círculo con color oscuro
-            //circle.css('background-color', '#1f2a36'); // fondo oscuro de tu tema
-            //circle.css('clip-path', 'circle(150% at 50% 50%)');
+            circle.css('background-color', '#1f2a36'); // fondo oscuro de tu tema
+            circle.css('clip-path', 'circle(150% at 50% 50%)');
 
             setTimeout(() => {
                 // Cambiar tema a oscuro
@@ -120,7 +120,7 @@ $(document).ready(function () {
                     root: document.getElementById('modo_oscuro')
                 });
                 // Contraer círculo
-                //circle.css('clip-path', 'circle(0% at 50% 50%)');
+                circle.css('clip-path', 'circle(0% at 50% 50%)');
                 const tema = 'oscuro';
                 let fecha = new Date();
                 fecha.setTime(fecha.getTime() + (30 * 24 * 60 * 60 * 1000));
@@ -128,8 +128,8 @@ $(document).ready(function () {
             }, 400); // espera transición clip-path
         } else {
             // Expandir círculo con color claro
-            //circle.css('background-color', '#f2f3f5'); // fondo claro de tu tema
-            //circle.css('clip-path', 'circle(150% at 50% 50%)');
+            circle.css('background-color', '#f2f3f5'); // fondo claro de tu tema
+            circle.css('clip-path', 'circle(150% at 50% 50%)');
 
             setTimeout(() => {
                 // Cambiar tema a claro
@@ -140,7 +140,7 @@ $(document).ready(function () {
                     root: document.getElementById('modo_oscuro')
                 });
                 // Contraer círculo
-                //circle.css('clip-path', 'circle(0% at 50% 50%)');
+                circle.css('clip-path', 'circle(0% at 50% 50%)');
 
                 const tema = 'claro';
                 let fecha = new Date();
@@ -202,34 +202,91 @@ $(document).ready(function () {
             }
         });
     });
+
+    function enviarMensaje() {
+        let texto = $('#chat_mensaje').val().trim();
+        if (texto !== "") {
+            // 1. Añadir mensaje del usuario con las NUEVAS clases
+            $('#chat_historial').append(`
+            <div class="asistente_msg asistente_usuario">
+                <div class="asistente_burbuja">${texto}</div>
+            </div>
+        `);
+
+            // Limpiar input
+            $('#chat_mensaje').val('');
+
+            // Scroll automático al fondo
+            let historial = $('#chat_historial');
+            historial.scrollTop(historial[0].scrollHeight);
+
+            // 2. Simular respuesta del Bot con las NUEVAS clases
+            setTimeout(() => {
+                $('#chat_historial').append(`
+                <div class="asistente_msg asistente_bot">
+                    <div class="asistente_burbuja">Entendido, estoy procesando tu solicitud sobre: "${texto}"...</div>
+                </div>
+            `);
+                historial.scrollTop(historial[0].scrollHeight);
+            }, 1000);
+        }
+    }
+
+    // Eventos (Se mantienen igual, solo asegúrate de que los IDs coincidan)
+    $('#enviar_mensaje').on('click', enviarMensaje);
+
+    $('#chat_mensaje').on('keydown', function (e) {
+        if (e.which === 13 && !e.shiftKey) {
+            e.preventDefault();
+            enviarMensaje();
+        }
+    });
 });
 
 function inicializarPaginador() {
-    const $table = $('#tablageneral');
-    const $rows = $table.find('tbody tr').not(':has(td[colspan])'); // Excluimos la fila de "Cargar más"
+    const $contenedorListado = $('#resultadoconsulta');
+    
+    // CAMBIO CLAVE: Ahora buscamos el CONTENEDOR GRUPAL, no solo el item.
+    // Esto asegura que se oculte el borde verde y el panel de detalle también.
+    const $items = $contenedorListado.find('.listado_contenedor_grupal'); 
+    
+    // Si tienes tablas sin tree (donde usas listado_item directo), 
+    // esta línea detectará ambos casos:
+    const $registros = $items.length > 0 ? $items : $contenedorListado.find('.listado_item');
+
     const $rowsPerPageSelect = $('#rowsPerPage');
     const $paginationContainer = $('#botonera');
 
     let currentPage = 1;
-    let rowsPerPage = parseInt($rowsPerPageSelect.val()) || 10;
+    let itemsPerPage = parseInt($rowsPerPageSelect.val()) || 10;
 
-    // Función para cambiar de página
     function showPage(page) {
-        const start = (page - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
 
-        $rows.hide();
-        $rows.slice(start, end).show();
+        // Ocultamos todos los contenedores completos
+        $registros.hide();
+        
+        // Mostramos solo los de la página actual
+        // Si es el tree, usamos block (porque el flex está dentro, en el listado_item)
+        // Si es la tabla simple, usamos flex.
+        $registros.slice(start, end).each(function() {
+            if ($(this).hasClass('listado_contenedor_grupal')) {
+                $(this).css('display', 'block'); 
+            } else {
+                $(this).css('display', 'flex');
+            }
+        });
     }
 
-    // Función para dibujar los botones
+    // --- El resto de tu función renderPagination se mantiene igual ---
     function renderPagination() {
-        const totalRows = $rows.length;
-        const pageCount = Math.ceil(totalRows / rowsPerPage);
+        const totalItems = $registros.length;
+        const pageCount = Math.ceil(totalItems / itemsPerPage);
         $paginationContainer.empty();
 
         if (pageCount <= 1) {
-            if (pageCount === 1) {
+            if (pageCount === 1 && totalItems > 0) {
                 const $btn = $('<button class="boton active">').text(1);
                 $paginationContainer.append($btn);
             }
@@ -249,7 +306,6 @@ function inicializarPaginador() {
 
         const $addDots = () => $paginationContainer.append('<span class="puntos">...</span>');
 
-        // Lógica de botones (1 ... actual ... último)
         $addButton(1);
         if (currentPage > 3) $addDots();
 
@@ -267,20 +323,17 @@ function inicializarPaginador() {
         $addButton(pageCount);
     }
 
-    // Evento para cambiar cantidad de filas a ver
     $rowsPerPageSelect.off('change').on('change', function () {
-        rowsPerPage = parseInt($(this).val());
+        itemsPerPage = parseInt($(this).val());
         currentPage = 1;
         showPage(currentPage);
         renderPagination();
     });
 
-    // Ejecución inicial
     showPage(currentPage);
     renderPagination();
 
-    // Actualizar contador visual de registros cargados actualmente
-    $('#cantidadRegistros').text($rows.length);
+    $('#cantidadRegistros').text($registros.length);
 }
 
 
@@ -462,6 +515,18 @@ function iniciarTourConPasos(pasos) {
     return driver;
 }
 
+function toggleDetalles(elemento) {
+    const contenedorActual = $(elemento).closest('.listado_contenedor_grupal');
+    const panelActual = contenedorActual.find('.listado_detalle_oculto');
+    
+    // 1. Buscamos todos los demás contenedores que estén expandidos y los cerramos
+    $('.listado_contenedor_grupal.expandido').not(contenedorActual).each(function() {
+        $(this).removeClass('expandido');
+        $(this).find('.listado_detalle_oculto').slideUp(300);
+    });
 
-
+    // 2. Toggle del registro actual (lo que ya tenías)
+    contenedorActual.toggleClass('expandido');
+    panelActual.slideToggle(300);
+}
 

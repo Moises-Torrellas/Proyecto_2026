@@ -11,7 +11,6 @@ ul {
     justify-content: center;
 }
 
-
 .nav_contenedor {
     width: 95%;
     height: 100%;
@@ -103,9 +102,10 @@ ul {
 .contenedor_logo {
     grid-column: 1;
     width: 100%;
-    display: grid;
-    grid-template-columns: 110px 1fr;
+    display: flex;
+    justify-content: start;
     align-items: center;
+    /* padding-left:20PX ; */
 }
 
 .contenedor_usuario {
@@ -121,12 +121,14 @@ ul {
 .logo {
     width: 50px;
     margin-left: 20px;
-    grid-column: 1;
 }
 
 .nombre_negocio {
-    grid-column: 2;
     color: var(--texto-principal);
+    font-family: 'FeastOfFlesh', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.2rem;
+    margin-left: 10px;
 }
 
 .botones_usuario {
@@ -385,3 +387,194 @@ ul {
 .ver_todas_notificaciones:hover{
     background-color: var(--fondo-translucido)
 }
+
+/*---------------------------------ASISTENTE VIRTUA--------------------------------- */
+/* --- Capa de fondo (Overlay) --- */
+.asistente_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Clase para activar el modal desde JS */
+.asistente_overlay.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* --- Ventana Principal --- */
+.asistente_ventana {
+    width: 30%;
+    height: 80%;
+    background: var(--fondo-contraste); /* Fondo oscuro sólido */
+    border-radius: 12px;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+}
+
+/* --- Cabecera Fija --- */
+.asistente_cabecera {
+    flex-shrink: 0;
+    height: 70px;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--fondo-contraste);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.asistente_info_perfil {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.asistente_icon_bot {
+    width: 24px;
+    height: 24px;
+    color: var(--color-primario);
+}
+
+.asistente_nombre_titulo {
+    color: var(--texto-principal);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.asistente_boton_cerrar {
+    color: var(--texto-principal);
+    font-size: 2rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1;
+    transition: 0.2s;
+}
+
+.asistente_boton_cerrar:hover {
+    color: var(--color-primario);
+}
+
+/* --- Contenedor Interno (Cuerpo) --- */
+.asistente_cuerpo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Permite que el historial haga scroll correctamente */
+    background: var(--fondo-principal);
+}
+
+/* Historial de Mensajes */
+.asistente_historial {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* --- Estilo de Mensajes --- */
+.asistente_msg {
+    display: flex;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+/* Alineación */
+.asistente_bot { justify-content: flex-start; }
+.asistente_usuario { justify-content: flex-end; }
+
+/* La burbuja base */
+.asistente_burbuja {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 15px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* Estilo específico Bot */
+.asistente_bot .asistente_burbuja {
+    background: var(--fondo-translucido); /* Gris azulado */
+    color: var(--texto-principal);
+    border-bottom-left-radius: 2px;
+}
+
+/* Estilo específico Usuario (El que te faltaba) */
+.asistente_usuario .asistente_burbuja {
+    background: var(--fondo-contraste); /* Tu verde característico */
+    color: var(--texto-principal); /* Texto oscuro para mejor contraste sobre verde */
+    border-bottom-right-radius: 2px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* --- Footer / Entrada de texto --- */
+.asistente_editor {
+    flex-shrink: 0;
+    padding: 15px 20px;
+    background: var(--fondo-contraste);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.asistente_input {
+    flex: 1;
+    background: var(--fondo-form);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 14px;
+    color: var(--texto-principal);
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.asistente_btn_enviar {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    border: none;
+    background: var(--fondo-translucido);
+    color: var(--color-primario);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.asistente_btn_enviar:hover {
+    transform: scale(1.1);
+}
+
+/* --- Scrollbar Personalizado --- */
+.asistente_historial::-webkit-scrollbar {
+    width: 5px;
+}
+
+.asistente_historial::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+/* --- ESTILOS DE LOS MENSAJES (Burbujas) --- */

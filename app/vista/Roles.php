@@ -28,20 +28,8 @@
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
-                    <div class="contenedor_tabla">
-                        <div class="tabla" id="tabla">
-                            <table class="" id="tablageneral">
-                                <thead>
-                                    <tr>
-                                        <th>Codigo</th>
-                                        <th>Nombre</th>
-                                        <th>Opciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="resultadoconsulta">
-
-                                </tbody>
-                            </table>
+                    <div class="contenedor_resultados">
+                        <div id="resultadoconsulta" class="resultadoconsulta">
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>

@@ -11,7 +11,6 @@
     <section class="fondo_inicio">
         <div class="contenedor_inicio">
             <div class="contenedor_logo_inicio">
-                <!-- <img class="logo_inicio" src="img/logo.svg" alt=""> -->
                 <img src="img/logo.png" alt="" class="logo_inicio">
             </div>
             <div class="contenedor_titulo_login">

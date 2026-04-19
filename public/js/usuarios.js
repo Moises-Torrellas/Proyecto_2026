@@ -267,7 +267,7 @@ function bloquear(id, b, elemento) {
 
 const icon = 'fi-sr-lock';
 
-function crearConsulta(datos) {
+/* function crearConsulta(datos) {
     var tablaBody = $('#resultadoconsulta');
     tablaBody.empty();
     var cantidadRegistros = datos.length;
@@ -321,6 +321,81 @@ function crearConsulta(datos) {
         tablaBody.append(linea);
     }
     inicializarPaginador();
+} */
+
+function crearConsulta(datos) {
+    const contenedor = $('#resultadoconsulta');
+    contenedor.empty();
+
+    if (datos.length === 0) {
+        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
+    } else {
+        datos.forEach(dato => {
+            let icon = dato.bloqueo == 1 ? 'fi-sr-unlock' : 'fi-sr-lock';
+            let color = dato.bloqueo == 1 ? 'cbt_g' : 'cbt_a';
+
+            let fotoHTML = dato.foto
+                ? `<img src="${dato.foto}" class="listado_avatar" alt="Perfil">`
+                : `<div class="listado_avatar_null"><i data-lucide="circle-user"></i></div>`;
+
+            let registro = `
+                <div class="listado_contenedor_grupal">
+                    <div class="listado_item" onclick="toggleDetalles(this)">
+                        <div class="listado_col_principal">
+                            ${fotoHTML}
+                            <div class="listado_info_base">
+                                <span class="listado_titulo">${escapeHTML(dato.nombreUsuario)} ${escapeHTML(dato.apellidoUsuario)}</span>
+                                <span class="listado_subtitulo">${dato.correo}</span>
+                            </div>
+                        </div>
+
+                        <div class="listado_col_datos">
+                            <div class="listado_dato_grupo">
+                                <small>Cédula</small>
+                                <span>${dato.cedulaUsuario}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Telefono</small>
+                                <span>${escapeHTML(dato.telefonoUsuario)}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Rol</small>
+                                <span class="listado_resaltado">${escapeHTML(dato.nombre_rol)}</span>
+                            </div>
+                        </div>
+
+                        <div class="listado_col_acciones">
+                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                <button class="btn_t cbt_v" onclick="buscar(${dato.idUsuario})"><i class="fi fi-sr-pencil"></i></button>
+                                <button class="btn_t cbt_r" onclick="eliminar(${dato.idUsuario})"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button class="btn_t ${color}" onclick="bloquear(${dato.idUsuario}, ${dato.bloqueo}, this)"><i class="fi ${icon}"></i></button>
+                            </div>
+                            <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                        </div>
+                    </div>
+
+                    <div class="listado_detalle_oculto">
+                        <div class="listado_detalle_contenido">
+                            <div class="detalle_grid">
+                                <div class="detalle_info">
+                                    <strong><i data-lucide="calendar"></i> Registro</strong>
+                                    <span>${dato.fecha_registro || 'N/A'}</span>
+                                </div>
+                                <div class="detalle_info">
+                                    <strong><i data-lucide="info"></i> Información Extra</strong>
+                                    <span>Detalles adicionales del usuario aquí...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            contenedor.append(registro);
+        });
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
 }
 
 function CargarRegistros() {

@@ -3,6 +3,7 @@
     <div class="contenedor_superior">
         <div class="contenedor_logo">
             <img src="img/logo.png" class="logo">
+            <h2 class="nombre_negocio">CANNIBALS LARA</h2>
         </div>
 
         <div class="contenedor_usuario">
@@ -66,14 +67,31 @@
 
     </div>
 </div>
-<section class="contenedor_modal" id="asistente_modal_contenedor">
-    <div class="modal modal_pequeño ocultar" id="asistente_modal">
-        <div class="cabecera_modal">
-            <h2 class="titulo_modal" id="titulo_modal"></h2>
-            <a type="button" class="cerrar_modal" id="cerrar_modal_asistente">&times;</a>
+<section class="asistente_overlay" id="asistente_modal_contenedor">
+    <div class="asistente_ventana ocultar" id="asistente_modal">
+        <div class="asistente_cabecera">
+            <div class="asistente_info_perfil">
+                <i data-lucide="bot-message-square" class="asistente_icon_bot"></i>
+                <h2 class="asistente_nombre_titulo">Asistente Virtual</h2>
+            </div>
+            <a type="button" class="asistente_boton_cerrar" id="cerrar_modal_asistente">&times;</a>
         </div>
-        <div class="contenido_modal">
 
+        <div class="asistente_cuerpo">
+            <div class="asistente_historial" id="chat_historial">
+                <div class="asistente_msg asistente_bot">
+                    <div class="asistente_burbuja">
+                        ¡Hola! Soy Sydney, tu asistente virtual. ¿En qué puedo ayudarte hoy?
+                    </div>
+                </div>
+            </div>
+
+            <div class="asistente_editor">
+                <textarea id="chat_mensaje" class="asistente_input" placeholder="Escribe un mensaje..." rows="1"></textarea>
+                <button id="enviar_mensaje" class="asistente_btn_enviar">
+                    <i data-lucide="send-horizontal"></i>
+                </button>
+            </div>
         </div>
     </div>
 </section>

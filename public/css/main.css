@@ -1,10 +1,19 @@
+@font-face {
+    font-family: 'FeastOfFlesh';
+    src: url('fuente/FEASFBRG.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+    /* Esto ayuda a que el texto cargue rápido */
+}
+
 :root {
     /* Modo claro */
     --fuente: sans-serif;
     --fondo-principal: #f2f3f5;
     --fondo-contraste: #e9ecf1;
     --color-primario: #32AF0A;
-    --fondo-translucido:rgba(144, 234, 166, 0.142);
+    --fondo-translucido: rgba(144, 234, 166, 0.274);
     --color-claro: #7e7e7e;
     --color-secundario: #3a4750;
     --color-oscuro: #2a2e35;
@@ -53,7 +62,7 @@
     --color-peligro: #ff4d4f;
     --texto-sombra: 0px 0px 8px #31c7e666;
 
-    --fondo-form: #e4eae3;
+    --fondo-form: #212A36;
     --borde-form: #c8d1e0;
 
     --boton-fondo: var(--color-primario);
@@ -141,10 +150,12 @@ option {
 
 /* 3. El "pulgar" transparente por defecto */
 ::-webkit-scrollbar-thumb {
-    background: transparent; 
+    background: transparent;
     border-radius: 10px;
-    transition: background 0.5s ease-in; /* Nota: esto funciona en algunos navegadores modernos, pero el truco real es el hover del padre */
+    transition: background 0.5s ease-in;
+    /* Nota: esto funciona en algunos navegadores modernos, pero el truco real es el hover del padre */
 }
+
 /* 4. El "pulgar" en hover */
 ::-webkit-scrollbar-thumb:hover {
     background: var(--color-primario);
@@ -153,7 +164,7 @@ option {
 /* El pulgar es transparente por defecto en ambos contenedores */
 .contenido_modulo::-webkit-scrollbar-thumb,
 .navegacion::-webkit-scrollbar-thumb {
-    background: transparent; 
+    background: transparent;
     border-radius: 10px;
     transition: background 0.5s ease-in;
 }
@@ -281,7 +292,9 @@ option {
     border-top: 4px solid var(--fondo-contraste);
     display: grid;
     place-items: start;
-    overflow: auto;
+    overflow-y: auto;
+    /* Esto evita que el contenido se mueva al aparecer el scroll */
+    scrollbar-gutter: stable both-edges;
 }
 
 .contenedor_funciones {
@@ -411,7 +424,7 @@ option {
 
 /*-------------------------------------------Estilos Tabla-------------------------------------------*/
 
-.tabla {
+/* .tabla {
     width: 95%;
     height: auto;
 }
@@ -428,11 +441,8 @@ option {
 .tabla table td,
 .tabla table th {
     max-width: 100px;
-    /* máximo ancho permitido */
     white-space: normal;
-    /* permite saltos de línea */
     overflow-wrap: break-word;
-    /* rompe palabras largas si es necesario */
     word-wrap: break-word;
 }
 
@@ -506,23 +516,166 @@ option {
     padding: 5px;
     border-radius: 5px;
     display: inline-block;
+}*/
+
+/* 1. CONTENEDORES DE ESTRUCTURA */
+/* 1. CONTENEDORES DE ESTRUCTURA */
+.contenedor_resultados {
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
 }
 
+.resultadoconsulta {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    margin-top: 15px;
+    gap: 10px;
+}
+
+/* 2. EL CONTENEDOR "TREE" (PADRE) */
+.listado_contenedor_grupal {
+    width: 85%;
+    background: var(--fondo-principal);
+    border: 1px solid var(--borde-color);
+    border-radius: 12px;
+    transition: border-color 0.3s ease, box-shadow 0.3s easeñ
+}
+
+.listado_contenedor_grupal.expandido {
+    border-color: #34d314;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 3. EL RENGLÓN PRINCIPAL (CABECERA) */
+.listado_item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    min-height: 70px;
+
+    /* Configuración para cuando NO hay tree */
+    width: 100%;
+    background: var(--fondo-principal);
+    border: 1px solid var(--borde-color);
+    border-radius: 12px;
+}
+
+/* RESET CUANDO SÍ HAY TREE: 
+   Si el item está dentro de un contenedor grupal, 
+   le quitamos sus propios bordes y ancho fijo para que no choque */
+.listado_contenedor_grupal .listado_item {
+    border: none;
+    background: transparent;
+    border-radius: 0;
+}
+
+.listado_item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: #34d314;
+    /* Solo se nota cuando no tiene tree */
+}
+
+/* 4. COLUMNAS ALINEADAS */
+.listado_col_principal {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1.5;
+    min-width: 250px;
+}
+
+.listado_col_datos {
+    display: flex;
+    flex: 3;
+    justify-content: space-around;
+    align-items: center;
+    min-width: 0;
+}
+
+.listado_col_acciones {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0.8;
+    justify-content: flex-end;
+}
+
+/* 5. DISEÑO DE TEXTOS Y DATOS */
+.listado_info_base {
+    display: flex;
+    flex-direction: column;
+}
+
+.listado_titulo {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--texto-principal);
+}
+
+.listado_subtitulo {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.listado_dato_grupo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    padding: 0 10px;
+}
+
+.listado_dato_grupo small {
+    color: #666;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.listado_dato_grupo span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--texto-principal);
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.listado_resaltado {
+    color: #34d314 !important;
+    font-weight: 800 !important;
+}
+
+/* 6. BOTONES */
 .btn_t {
     color: var(--blanco_letra);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     width: 35px;
     height: 35px;
-    border-radius: 5px;
+    border-radius: 6px;
     border: none;
     cursor: pointer;
     transition: .2s ease-in;
-    margin: 0px 2px 0px 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn_t i {
     position: relative;
-    top: 2px;
+    top: 1px;
     color: var(--boton-texto-secundario);
 }
 
@@ -542,25 +695,50 @@ option {
     background: rgb(88, 88, 88);
 }
 
-
-.cbt_r:hover {
-    box-shadow: 0px 0px 8px 0px rgba(255, 0, 0, 0.50);
-    text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.5);
+.btn_t:hover {
+    filter: brightness(1.2);
+    box-shadow: 0px 0px 8px rgba(255, 255, 255, 0.2);
 }
 
-.cbt_v:hover {
-    box-shadow: 0px 0px 8px 0px rgba(0, 210, 38, 0.50);
-    text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.5);
+/* 7. PANEL DE DETALLE (EL TREE) */
+.listado_detalle_oculto {
+    display: none;
+    background: rgba(0, 0, 0, 0.15);
+    border-top: 1px dashed var(--borde-color);
 }
 
-.cbt_a:hover {
-    box-shadow: 0px 0px 8px 0px rgba(0, 65, 242, 0.50);
-    text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.5);
+.listado_detalle_contenido {
+    padding: 20px;
 }
 
-.cbt_g:hover {
-    box-shadow: 0px 0px 8px 0px rgba(88, 88, 88, 0.50);
-    text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.5);
+/* 8. AVATARES Y FLECHA */
+.listado_avatar,
+.listado_avatar_null {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.listado_avatar_null {
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #34d314;
+}
+
+.icono_flecha_detalle {
+    transition: transform 0.3s ease;
+    color: #555;
+    width: 20px;
+    margin-left: 10px;
+}
+
+.expandido .icono_flecha_detalle {
+    transform: rotate(180deg);
+    color: #34d314;
 }
 
 .contenedor_botonera {
