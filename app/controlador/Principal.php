@@ -1,17 +1,10 @@
 <?php
 
-namespace App\controlador;
-use App\controlador\Base;
-use Exception;
+// 1. Cargamos las funciones base
+require_once(__DIR__."/Base.php");
 
-class Principal extends Base{
-
-    public function __construct($bitacora) // inyeccion de la bitacora
-    {
-        
-    }
-
-    public function ProcesarSolicitud(string $pagina) : void{
-        $this->CargarVista($pagina);
-    }
+    if (comprobarAjax() && !empty($_POST)) {
+    manejarSolicitudInicio($objModelo, $id_modulo, $bitacora ?? null);
+} else {
+    cargarVista($pagina);
 }

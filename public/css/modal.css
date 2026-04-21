@@ -59,7 +59,7 @@
     grid-column: 1;
     place-items: start;
     margin-left: 40px;
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 600;
     user-select: none;
     color: var(--texto-principal);
@@ -176,7 +176,7 @@
 
 .mensaje {
     position: absolute;
-    top: 45px;
+    top: 50px;
     left: 14px;
     font-weight: 600;
     color: var(--texto-principal);

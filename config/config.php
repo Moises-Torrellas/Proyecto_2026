@@ -5,6 +5,11 @@ define('_DB_HOST_SG_', 'localhost');
 define('_DB_USER_SG_', 'root');
 define('_DB_PASS_SG_', '');
 
+define('_DB_NAME_', 'cannibalsbd');
+define('_DB_HOST_', 'localhost');
+define('_DB_USER_', 'root');
+define('_DB_PASS_', '');
+
 date_default_timezone_set('America/Caracas');
 setlocale(LC_TIME, 'es_ES.UTF-8');
 setlocale(LC_CTYPE, 'es_ES.UTF-8');
@@ -28,3 +33,12 @@ if (session_status() === PHP_SESSION_NONE) {
     session_name('SISTEMA_SG_SESSION');
     session_start();
 }
+
+global $permisosGenerales;
+$permisosGenerales = [
+    'incluir'   => false,
+    'modificar' => false,
+    'eliminar'  => false,
+    'reporte'   => false,
+    'otros'     => false
+];

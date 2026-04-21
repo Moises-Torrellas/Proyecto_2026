@@ -12,7 +12,7 @@ class Conexion
 
     private function __construct() {}
 
-    /* public static function getConex()
+    public static function getConex()
 	{
 		if (self::$instancia === null) {
 			$host = _DB_HOST_;
@@ -24,7 +24,7 @@ class Conexion
 		}
 
 		return self::$instancia;
-	} */
+	}
 
     public static function getConexSG()
     {
@@ -40,10 +40,10 @@ class Conexion
         return self::$instanciaSG;
     }
 
-    /* public static function conex()
+    public static function conex()
 	{
 		return self::getConex();
-	} */
+	}
 
     public static function conexSG()
     {

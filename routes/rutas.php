@@ -52,13 +52,18 @@ function manejarRuta($pagina): void
             exit();
         }
         // Construimos el nombre completo de la clase del controlador
-        $classNombre = "App\\controlador\\" . $rutas[$pagina];
+        $archivoControlador = __DIR__ . "/../app/controlador/" . $rutas[$pagina] . ".php";
         // Verificamos si la clase del controlador existe antes de instanciarla
-        if (class_exists($classNombre)) {
-            // Creamos una instancia de la bitácora para inyectarla en el controlador
+        if (file_exists($archivoControlador)) {
+            // Instancias necesarias que el script del controlador pueda usar globalmente
             $bitacora = new \App\modelo\ModeloBitacora();
-            $controlador = new $classNombre($bitacora);
-            $controlador->ProcesarSolicitud($rutas[$pagina]); // Pasamos la ruta al método del controlador
+
+            // Incluimos el archivo que ejecutará la lógica
+            $pagina = $rutas[$pagina];
+            require_once $archivoControlador;
+            
+        } else {
+            require_once(__DIR__ . "/../app/vista/complementos/404.php");
         }
     } else {
         require_once(__DIR__ . "/../app/vista/complementos/404.php");

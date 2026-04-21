@@ -1,100 +1,91 @@
 <?php
 
-namespace App\controlador;
-
-use App\interface\InterBitacora;
-use Exception;
-
-class Base
+function procesarPermisos(int $id_modulo, $bitacora = null): void
 {
+    global $permisosGenerales;
 
-    private InterBitacora $bitacora;
-    private int $id_modulo;
-    public bool $incluir;
-    public bool $modificar;
-    public bool $eliminar;
-    public bool $reporte;
-    public bool $otros;
+    if (isset($_SESSION['permisos'][$id_modulo])) {
+        $permisos = $_SESSION['permisos'][$id_modulo];
+        
+        $permisosGenerales['incluir'] = $permisos['incluir'] == 1 ? true : false;
+        $permisosGenerales['modificar'] = $permisos['modificar'] == 1 ? true : false;
+        $permisosGenerales['eliminar'] = $permisos['eliminar'] == 1 ? true : false;
+        $permisosGenerales['reporte'] = $permisos['reporte'] == 1 ? true : false;
+        $permisosGenerales['otros'] = $permisos['otros'] == 1 ? true : false;
 
-    public function __construct(InterBitacora $bitacora, int $id_modulo)
-    {
-        $this->bitacora = $bitacora;
-        $this->id_modulo = $id_modulo;
+        // Registrar en bitácora si no es una petición AJAX y se pasó el objeto bitácora
+        if (!comprobarAjax() && $bitacora !== null) {
+            registrarBitacora($bitacora, $id_modulo, "Accedió al módulo");
+        }
+    } else {
+        $_SESSION['alerta'] = [
+            'icono' => 'error',
+            'titulo' => 'Acceso denegado',
+            'mensaje' => 'No tienes permisos para acceder a este módulo.'
+        ];
+        header("Location:" . _URL_ . "Principal");
+        exit();
     }
+}
 
-    public function ProcesarPermisos(): void
-    {
-        $this->incluir = false;
-        $this->modificar = false;
-        $this->eliminar = false;
-        $this->reporte = false;
+/**
+ * Carga la vista solicitada.
+ */
+function cargarVista(string $pagina): void
+{
+    $archivoVista = sprintf(__DIR__ . '/../vista/%s.php', $pagina);
+    
+    if (is_file($archivoVista)) {
+        // Generar un token de seguridad para la sesión
+        $_SESSION['token'] = bin2hex(random_bytes(32));
+        require_once($archivoVista);
+    } else {
+        require_once(__DIR__ . '/../vista/complementos/404.php');
+        exit();
+    }
+}
 
-        if (isset($_SESSION['permisos'][$this->id_modulo])) {
-            $permisos = $_SESSION['permisos'][$this->id_modulo];
-            $this->incluir = $permisos['incluir'] == 1 ? true : false;
-            $this->modificar = $permisos['modificar'] == 1 ? true : false;
-            $this->eliminar = $permisos['eliminar'] == 1 ? true : false;
-            $this->reporte = $permisos['reporte'] == 1 ? true : false;
-            $this->otros = $permisos['otros'] == 1 ? true : false;
-            if(!$this->ComprobarAjax()){
-                $this->Bitacora("Accedio al modulo");
-            }
-        } else {
-            $_SESSION['alerta'] = [
-                'icono' => 'error',
-                'titulo' => 'Acceso denegado',
-                'mensaje' => 'No tienes permisos para acceder a este módulo.'
-            ];
-            header("Location:" . _URL_ . "Principal");
-            exit();
+/**
+ * Comprueba si la solicitud es AJAX.
+ */
+function comprobarAjax(): bool
+{
+    return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+}
+
+/**
+ * Registra una acción en la bitácora.
+ */
+function registrarBitacora($bitacora, int $id_modulo, string $mensaje): void
+{
+    if (isset($_SESSION['id']) && $bitacora !== null) {
+        $bitacora->RegistrarAccion($id_modulo, $mensaje, $_SESSION['id']);
+    }
+}
+
+/**
+ * Valida un arreglo de datos simples contra expresiones regulares.
+ */
+function validar_datos(array $data): void
+{
+    foreach ($data as $campo => $valor) {
+        if (!isset($_POST[$campo]) || empty(trim($_POST[$campo]))) {
+            throw new Exception("El campo $campo es obligatorio.");
         }
     }
-
-    public function CargarVista(string $pagina): void
-    {
-        $archivoVista = sprintf(__DIR__ . '/../vista/%s.php', $pagina);
-        if (is_file($archivoVista)) {
-            // Si no es una solicitud AJAX, generar un token de seguridad para la sesión y cargar el archivo de vista
-            $_SESSION['token'] = bin2hex(random_bytes(32));
-            // Cargar el archivo de vista correspondiente a la página
-            require_once($archivoVista);
-        } else {
-            // Si el archivo de vista no existe, mostrar una página de error 404
-            require_once(__DIR__ . '/../vista/complementos/404.php');
-            exit();
-        }
-    }
-
-    public function ComprobarAjax(): bool
-    {
-        // Verificar si la solicitud es una solicitud AJAX comprobando el encabezado HTTP_X_REQUESTED_WITH
-        return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-    }
-
-    public function Bitacora($mensaje): void
-    {
-        // Registrar la acción en la bitácora utilizando el método RegistrarAccion del modelo de bitácora
-        $this->bitacora->RegistrarAccion($this->id_modulo, $mensaje, $_SESSION['id']);
-    }
-
-    public function validar_datos(array $data): void
-    {
-        foreach ($data as $campo => $valor) {
-
-            if (!isset($_POST[$campo]) || empty(trim($_POST[$campo]))) {
-                throw new Exception("El campo $campo es obligatorio.");
-            }
-        }
-        foreach ($data as $campo => $valor) {
-            if (isset($valor['regla'])) {
-                if (!preg_match($valor['regla'], $_POST[$campo])) {
-                    throw new Exception($valor['mensaje']);
-                }
+    foreach ($data as $campo => $valor) {
+        if (isset($valor['regla'])) {
+            if (!preg_match($valor['regla'], $_POST[$campo])) {
+                throw new Exception($valor['mensaje']);
             }
         }
     }
+}
 
-    public function validarArrays(array $data): void
+/**
+ * Valida datos que vienen en formato de arreglo desde el formulario.
+ */
+function validarArrays(array $data): void
 {
     foreach ($data as $campo => $valor) {
         // 1. Verificar si el campo existe en el POST
@@ -120,5 +111,4 @@ class Base
             }
         }
     }
-}
 }

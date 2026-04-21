@@ -1,241 +1,203 @@
 <?php
 
-namespace App\controlador;
-
 use App\modelo\ModeloRoles;
-use App\controlador\Base;
-use Exception;
 
-class Roles extends Base
+// 1. Cargamos las funciones base (donde están procesarPermisos, validar_datos, etc.)
+require_once __DIR__ . '/Base.php';
+
+// 2. Configuración del módulo
+$id_modulo = _MD_ROLES_;
+
+// 3. Procesar permisos (llena la variable global $permisosGenerales)
+// El objeto $bitacora debe venir del router/index
+procesarPermisos($id_modulo, $bitacora ?? null);
+
+// 4. Lógica de despacho (Router interno del controlador)
+$nombreClaseModelo = 'App\modelo\ModeloRoles';
+
+if (!class_exists($nombreClaseModelo)) {
+    require_once(__DIR__ . '/../vista/complementos/404.php');
+    exit();
+}
+
+$objModelo = new ModeloRoles();
+
+if (comprobarAjax() && !empty($_POST)) {
+    manejarSolicitudRoles($objModelo, $id_modulo, $bitacora ?? null);
+} else {
+    cargarVista($pagina);
+}
+
+/**
+ * --- FUNCIONES DEL CONTROLADOR ---
+ */
+
+function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj): void
 {
-    public function __construct($bitacora)
-    {
-        parent::__construct($bitacora, _MD_ROLES_);
-        $this->ProcesarPermisos();
+    try {
+        $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
+            throw new Exception('Error de seguridad: Token inválido o expirado.');
+        }
+
+        $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
+
+        switch ($accion) {
+            case 'consultar':
+                consultarRolesData($obj);
+                break;
+            case 'consultarModulo':
+                consultarModuloData($obj);
+                break;
+            case 'buscar':
+                buscarRolesData($obj);
+                break;
+            case 'incluir':
+                incluirRolesData($obj, $id_modulo, $bitacoraObj);
+                break;
+            case 'modificar':
+                modificarRolesData($obj, $id_modulo, $bitacoraObj);
+                break;
+            default:
+                throw new Exception('Acción no reconocida.');
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function consultarRolesData($obj): void
+{
+    $roles = $obj->consultar();
+    echo json_encode($roles);
+}
+
+function consultarModuloData($obj): void
+{
+    $modulos = $obj->consultarModulo();
+    echo json_encode($modulos);
+}
+
+function buscarRolesData($obj): void
+{
+    global $permisosGenerales;
+
+    if (!$permisosGenerales['modificar']) {
+        throw new Exception('No tiene permisos para modificar roles.');
     }
 
-    public function ProcesarSolicitud(string $pagina)
-    {
-        $nombreClase = 'App\modelo\ModeloRoles';
-        if (!class_exists($nombreClase)) {
-            require_once(__DIR__ . '/../vista/complementos/404.php');
-            exit();
-        } else {
-            $obj = new ModeloRoles();
-            if ($this->ComprobarAjax() && !empty($_POST)) {
-                $this->ManejarSolicitud($obj);
-            } else {
-                $this->CargarVista($pagina);
-            }
+    validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+
+    $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+    echo json_encode($resultado);
+}
+
+function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
+{
+    global $permisosGenerales;
+
+    if (!$permisosGenerales['incluir']) {
+        throw new Exception('No tiene permisos para incluir roles.');
+    }
+
+    // Validar nombre del rol
+    validar_datos(['nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido. Solo letras y espacios.']]);
+
+    // Validar permisos enviados
+    $reglasPermisos = [
+        'id_modulo'       => ['regla' => '/^[1-9]+$/', 'mensaje' => 'ID de módulo inválido.'],
+        'check_incluir'   => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
+        'check_modificar' => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
+        'check_eliminar'  => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
+        'check_reporte'   => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
+        'check_otros'     => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.']
+    ];
+
+    $aValidar = array_intersect_key($reglasPermisos, $_POST);
+    if (!empty($aValidar)) {
+        // Asumiendo que validar_datos maneja múltiples campos o tienes validarArrays
+        validar_datos($aValidar); 
+    }
+
+    $datos = [
+        'accion' => 'incluir',
+        'nombre' => $_POST['nombre'],
+    ];
+
+    $mapeoPermisos = [
+        'id_modulo'       => 'id_modulo',
+        'check_incluir'   => 'c_incluir',
+        'check_modificar' => 'c_modificar',
+        'check_eliminar'  => 'c_eliminar',
+        'check_reporte'   => 'c_reporte',
+        'check_otros'     => 'c_otros'
+    ];
+
+    foreach ($mapeoPermisos as $postKey => $dataKey) {
+        if (isset($_POST[$postKey])) {
+            $datos[$dataKey] = $_POST[$postKey];
         }
     }
 
-    private function ManejarSolicitud($obj): void
-    {
-        try {
-            $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    $respuesta = $obj->procesarDatos($datos);
 
-            if (!hash_equals($_SESSION['token'], $tokenRecibido)) {
-                throw new Exception('Error de seguridad: Token inválido o expirado.');
-            }
-            $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
-            switch ($accion) {
-                case 'consultar':
-                    $this->Consultar($obj);
-                    break;
-                case 'consultarModulo':
-                    $this->ConsultarModulo($obj);
-                    break;
-                case 'buscar':
-                    $this->BuscarRoles($obj);
-                    break;
-                case 'incluir':
-                    $this->IncluirRoles($obj);
-                    break;
-                case 'modificar':
-                    $this->ModificarRoles($obj);
-                    break;
-            }
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
-            return;
+    if (isset($respuesta['accion']) && $respuesta['accion'] == 'incluir') {
+        registrarBitacora($bitacoraObj, $id_modulo, 'Registró el rol: ' . $_POST['nombre']);
+    }
+
+    echo json_encode($respuesta);
+}
+
+function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
+{
+    global $permisosGenerales;
+
+    if (!$permisosGenerales['modificar']) {
+        throw new Exception('No tiene permisos para modificar roles.');
+    }
+
+    validar_datos(['nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido.']]);
+
+    $reglasPermisos = [
+        'id_modulo'       => ['regla' => '/^[1-9]+$/', 'mensaje' => 'ID de módulo inválido.'],
+        'check_incluir'   => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
+        'check_modificar' => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
+        'check_eliminar'  => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
+        'check_reporte'   => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
+        'check_otros'     => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.']
+    ];
+
+    $aValidar = array_intersect_key($reglasPermisos, $_POST);
+    if (!empty($aValidar)) {
+        validar_datos($aValidar);
+    }
+
+    $datos = [
+        'accion' => 'modificar',
+        'nombre' => $_POST['nombre'],
+    ];
+
+    $mapeoPermisos = [
+        'id_modulo'       => 'id_modulo',
+        'check_incluir'   => 'c_incluir',
+        'check_modificar' => 'c_modificar',
+        'check_eliminar'  => 'c_eliminar',
+        'check_reporte'   => 'c_reporte',
+        'check_otros'     => 'c_otros'
+    ];
+
+    foreach ($mapeoPermisos as $postKey => $dataKey) {
+        if (isset($_POST[$postKey])) {
+            $datos[$dataKey] = $_POST[$postKey];
         }
     }
 
-    private function Consultar($obj): void
-    {
-        $roles = $obj->consultar();
-        echo json_encode($roles);
-    }
-    private function ConsultarModulo($obj): void
-    {
-        $modulos = $obj->consultarModulo();
-        echo json_encode($modulos);
+    $respuesta = $obj->procesarDatos($datos);
+
+    if (isset($respuesta['accion']) && $respuesta['accion'] == 'modificar') {
+        registrarBitacora($bitacoraObj, $id_modulo, 'Modificó el rol: ' . $_POST['nombre']);
     }
 
-    private function BuscarRoles($obj): void
-    {
-        try {
-            if ($this->modificar) {
-                $data['id'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'];
-
-                $this->validar_datos($data);
-
-                $datos = ['id' => $_POST['id'], 'accion' => 'buscar']; // Preparar los datos
-
-                $resultado = $obj->procesarDatos($datos); // Procesar los datos
-                echo json_encode($resultado);
-            } else {
-                throw new Exception('No tiene permisos para modificar roles.');
-            }
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
-        }
-    }
-
-    private function IncluirRoles($obj)
-    {
-        try {
-            if ($this->incluir) {
-                $data = ['nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido. Solo se permiten letras y espacios.'],];
-
-                $this->validar_datos($data);
-
-                $array = [
-                    'id_modulo' => [
-                        'regla' => '/^[1-9]+$/',
-                        'mensaje' => 'ID de módulo debe ser numérico.'
-                    ],
-                    'check_incluir' => [
-                        'regla' => '/^[0-1]$/',
-                        'mensaje' => 'Valor de permiso inválido.'
-                    ],
-                    'check_modificar' => [
-                        'regla' => '/^[0-1]$/',
-                        'mensaje' => 'Valor de permiso inválido.'
-                    ],
-                    'check_eliminar' => [
-                        'regla' => '/^[0-1]$/',
-                        'mensaje' => 'Valor de permiso inválido.'
-                    ],
-                    'check_reporte' => [
-                        'regla' => '/^[0-1]$/',
-                        'mensaje' => 'Valor de permiso inválido.'
-                    ],
-                    'check_otros' => [
-                        'regla' => '/^[0-1]$/',
-                        'mensaje' => 'Valor de permiso inválido.'
-                    ]
-                ];
-                $arrayValidar = array_intersect_key($array, $_POST);
-                if (!empty($arrayValidar)) {
-                    $this->validarArrays($arrayValidar);
-                }
-
-                $datos = [
-                    'accion' => 'incluir',
-                    'nombre' => $_POST['nombre'],
-                ];
-                $camposPermisos = [
-                    'id_modulo'       => 'id_modulo',
-                    'check_incluir'   => 'c_incluir',
-                    'check_modificar' => 'c_modificar',
-                    'check_eliminar'  => 'c_eliminar',
-                    'check_reporte'   => 'c_reporte',
-                    'check_otros'     => 'c_otros'
-                ];
-
-                foreach ($camposPermisos as $postKey => $dataKey) {
-                    if (isset($_POST[$postKey])) {
-                        $datos[$dataKey] = $_POST[$postKey];
-                    }
-                }
-
-                $respuesta = $obj->procesarDatos($datos);
-                if ($respuesta['accion'] == 'incluir') {
-                    $this->Bitacora('Registro el rol: ' . $_POST['nombre']);
-                }
-                echo json_encode($respuesta);
-            } else {
-                throw new Exception('No tiene permisos para incluir roles.');
-            }
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
-        }
-    }
-
-    private function ModificarRoles($obj): void
-    {
-        try {
-            if ($this->modificar) {
-                $data = ['nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido. Solo se permiten letras y espacios.'],];
-
-                $this->validar_datos($data);
-
-                $array = [
-                    'id_modulo' => [
-                        'regla' => '/^[1-9]+$/',
-                        'mensaje' => 'ID de módulo debe ser numérico.'
-                    ],
-                    'check_incluir' => [
-                        'regla' => '/^[0-1]$/',
-                        'mensaje' => 'Valor de permiso inválido.'
-                    ],
-                    'check_modificar' => [
-                        'regla' => '/^[0-1]$/',
-                        'mensaje' => 'Valor de permiso inválido.'
-                    ],
-                    'check_eliminar' => [
-                        'regla' => '/^[0-1]$/',
-                        'mensaje' => 'Valor de permiso inválido.'
-                    ],
-                    'check_reporte' => [
-                        'regla' => '/^[0-1]$/',
-                        'mensaje' => 'Valor de permiso inválido.'
-                    ],
-                    'check_otros' => [
-                        'regla' => '/^[0-1]$/',
-                        'mensaje' => 'Valor de permiso inválido.'
-                    ]
-                ];
-                $arrayValidar = array_intersect_key($array, $_POST);
-                if (!empty($arrayValidar)) {
-                    $this->validarArrays($arrayValidar);
-                }
-
-                $datos = [
-                    'accion' => 'modificar',
-                    'nombre' => $_POST['nombre'],
-                ];
-                $camposPermisos = [
-                    'id_modulo'       => 'id_modulo',
-                    'check_incluir'   => 'c_incluir',
-                    'check_modificar' => 'c_modificar',
-                    'check_eliminar'  => 'c_eliminar',
-                    'check_reporte'   => 'c_reporte',
-                    'check_otros'     => 'c_otros'
-                ];
-
-                foreach ($camposPermisos as $postKey => $dataKey) {
-                    if (isset($_POST[$postKey])) {
-                        $datos[$dataKey] = $_POST[$postKey];
-                    }
-                }
-
-                $respuesta = $obj->procesarDatos($datos);
-                if ($respuesta['accion'] == 'modificar') {
-                    $this->Bitacora('Modifico el rol: ' . $_POST['nombre']);
-                }
-                echo json_encode($respuesta);
-            } else {
-                throw new Exception('No tiene permisos para modificar roles.');
-            }
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
-        }
-    }
+    echo json_encode($respuesta);
 }
