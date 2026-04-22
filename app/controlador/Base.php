@@ -1,8 +1,13 @@
 <?php
-
-function procesarPermisos(int $id_modulo, $bitacora = null): void
+$permisosGenerales = [
+    'incluir'   => false,
+    'modificar' => false,
+    'eliminar'  => false,
+    'reporte'   => false,
+    'otros'     => false
+];
+function procesarPermisos(int $id_modulo, $bitacora = null, array $permisosGenerales = []): void
 {
-    global $permisosGenerales;
 
     if (isset($_SESSION['permisos'][$id_modulo])) {
         $permisos = $_SESSION['permisos'][$id_modulo];

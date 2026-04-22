@@ -4,7 +4,7 @@ $(document).ready(function () {
         accion = $(this).data("accion");
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere registrar este usuario?', function (confirmado) {
+                confirmar('¿Está seguro que quiere registrar este representante?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
@@ -15,7 +15,7 @@ $(document).ready(function () {
         }
         else if (accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar este usuario?', function (confirmado) {
+                confirmar('¿Está seguro que quiere modificar este representante?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
@@ -36,7 +36,7 @@ $(document).ready(function () {
         }
     });
 
-    $('#roles').select2({
+    $('#nacionalidad').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
     });
@@ -49,7 +49,7 @@ $(document).ready(function () {
         $('#contraseña').closest('.colum').show();
         $('#telefono').closest('.colum').show();
         $('#correo').closest('.colum').show();
-        $('#roles').val(null).trigger('change');
+        $('#nacionalidad').val(null).trigger('change');
         abrirModal();
     });
 
@@ -62,7 +62,7 @@ $(document).ready(function () {
         $('#contraseña').closest('.colum').hide();
         $('#telefono').closest('.colum').hide();
         $('#correo').closest('.colum').hide();
-        $('#roles').val(null).trigger('change');
+        $('#nacionalidad').val(null).trigger('change');
         abrirModal();
     });
 

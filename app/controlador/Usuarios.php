@@ -11,8 +11,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_USUARIOS_;
 
 // 3. Procesar permisos (esto llena la variable global $permisosGenerales)
-// Se asume que $bitacora es instanciada en el index o router y llega aquí
-procesarPermisos($id_modulo, $bitacora ?? null);
+procesarPermisos($id_modulo, $bitacora ?? null, $permisosGenerales);
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloUsuarios';
@@ -30,12 +29,11 @@ if (comprobarAjax() && !empty($_POST)) {
     cargarVista($pagina);
 }
 
-/**
- * --- FUNCIONES DEL CONTROLADOR ---
- */
-
 function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj): void
 {
+    // Centralizamos la variable global de permisos aquí
+    global $permisosGenerales;
+
     try {
         $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
@@ -44,33 +42,48 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj): void
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
+        // Validamos permisos antes de ejecutar las funciones
         switch ($accion) {
             case 'consultar':
                 consultarUsuarios($obj);
                 break;
+                
             case 'consultarRoles':
                 $modeloRoles = new ModeloRoles();
                 consultarRoles($modeloRoles);
                 break;
+                
             case 'incluir':
+                if (!$permisosGenerales['incluir']) throw new Exception('No tienes permisos para registrar usuarios.');
                 incluirUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
+                
             case 'modificar':
+                if (!$permisosGenerales['modificar']) throw new Exception('No tienes permisos para modificar usuarios.');
                 modificarUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
+                
             case 'eliminar':
+                if (!$permisosGenerales['eliminar']) throw new Exception('No tiene permisos para eliminar usuarios.');
                 eliminarUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
+                
             case 'buscar':
+                if (!$permisosGenerales['modificar']) throw new Exception('No tiene permisos para buscar/ver detalles.');
                 buscarUsuario($obj);
                 break;
+                
             case 'bloquear':
+                if (!$permisosGenerales['otros']) throw new Exception('No tiene permisos para bloquear usuarios.');
                 bloquearUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
+                
             case 'generar':
+                if (!$permisosGenerales['reporte']) throw new Exception('No tienes permisos para reportes.');
                 $reporte = new ReporteUsuario();
                 generarReporteUsuarios($obj, $reporte);
                 break;
+                
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -96,12 +109,6 @@ function consultarRoles($obj): void
 
 function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 {
-    global $permisosGenerales;
-
-    if (!$permisosGenerales['incluir']) {
-        throw new Exception('No tienes permisos para registrar usuarios.');
-    }
-
     $validaciones = [
         'cedula' => ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cédula inválida. Debe contener de 7 a 8 dígitos.'],
         'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido. Solo letras y espacios.'],
@@ -136,12 +143,6 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 
 function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
 {
-    global $permisosGenerales;
-
-    if (!$permisosGenerales['modificar']) {
-        throw new Exception('No tienes permisos para modificar usuarios.');
-    }
-
     $validaciones = [
         'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
         'cedula' => ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cédula inválida.'],
@@ -184,12 +185,6 @@ function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
 
 function eliminarUsuario($obj, $id_modulo, $bitacoraObj): void
 {
-    global $permisosGenerales;
-
-    if (!$permisosGenerales['eliminar']) {
-        throw new Exception('No tiene permisos para eliminar usuarios.');
-    }
-
     validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
 
     if ($_POST['id'] == $_SESSION['id']) {
@@ -207,12 +202,6 @@ function eliminarUsuario($obj, $id_modulo, $bitacoraObj): void
 
 function buscarUsuario($obj): void
 {
-    global $permisosGenerales;
-
-    if (!$permisosGenerales['modificar']) {
-        throw new Exception('No tiene permisos.');
-    }
-
     validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
 
     $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
@@ -221,12 +210,6 @@ function buscarUsuario($obj): void
 
 function bloquearUsuario($obj, $id_modulo, $bitacoraObj): void
 {
-    global $permisosGenerales;
-
-    if (!$permisosGenerales['otros']) {
-        throw new Exception('No tiene permisos para bloquear usuarios.');
-    }
-
     validar_datos([
         'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
         'bloqueo' => ['regla' => '/^[1-2]+$/', 'mensaje' => 'Error interno de bloqueo.']
@@ -247,13 +230,6 @@ function bloquearUsuario($obj, $id_modulo, $bitacoraObj): void
 
 function generarReporteUsuarios($obj, $reporte): void
 {
-    global $permisosGenerales;
-
-    if (!$permisosGenerales['reporte']) {
-        echo json_encode(['accion' => 'error', 'mensaje' => 'No tienes permisos para reportes.']);
-        return;
-    }
-
     $validacionesReporte = [];
     $datosFiltro = ['accion' => 'reporte'];
 
@@ -274,7 +250,10 @@ function generarReporteUsuarios($obj, $reporte): void
         $datosFiltro['roles_id'] = $_POST['rol'];
     }
 
-    validar_datos($validacionesReporte);
+    // Solo valida si se envió algún filtro, de lo contrario asume reporte general
+    if (!empty($validacionesReporte)) {
+        validar_datos($validacionesReporte);
+    }
 
     $resultado = $obj->procesarDatos($datosFiltro);
 
@@ -282,6 +261,6 @@ function generarReporteUsuarios($obj, $reporte): void
         $respuesta = $reporte->crearPdfUsuarios($resultado['datos']);
         echo json_encode($respuesta);
     } else {
-        echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron registros para el reporte.']);
+        throw new Exception('No se encontraron registros para el reporte.');
     }
 }
