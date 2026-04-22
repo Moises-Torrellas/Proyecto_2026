@@ -34,11 +34,3 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-global $permisosGenerales;
-$permisosGenerales = [
-    'incluir'   => false,
-    'modificar' => false,
-    'eliminar'  => false,
-    'reporte'   => false,
-    'otros'     => false
-];
