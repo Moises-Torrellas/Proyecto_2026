@@ -41,7 +41,8 @@ function manejarRuta($pagina): void
         'Usuarios' => 'Usuarios',
         'Recuperacion' => 'Recuperacion',
         'Roles' => 'Roles',
-        'Representantes' => 'Representantes'
+        'Representantes' => 'Representantes',
+        
 
     ];
     // Verificamos si la página solicitada existe en las rutas definidas
