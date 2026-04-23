@@ -1,0 +1,12 @@
+# Ignorar dependencias de Composer
+/vendor/
+
+# Ignorar archivos dentro de la carpeta logs
+/logs/*
+# Excepto el archivo .gitkeep (si quieres mantener la carpeta vacía en GitHub)
+!/logs/.gitkeep
+
+# Otros archivos recomendados para tu entorno (XAMPP/Windows)
+.DS_Store
+Thumbs.db
+.vscode/
