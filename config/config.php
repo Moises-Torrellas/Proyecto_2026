@@ -24,8 +24,22 @@ const _MD_ROLES_    = 2;
 const _MD_BITACORA_ = 3;
 const _MD_INICIO_   = 4;
 const _MD_CERRAR_   = 5;
-const _MD_RECUPERACION_ = 7;
-const _MD_REPRESENTANTES_ = 8;
+const _MD_RECUPERACION_ = 8;
+const _MD_REPRESENTANTES_ = 9;
+const _MD_POSICIONES_ = 10;
+const _MD_CATEGORIAS_ = 11;
+const _MD_CUENTAS_ = 12;
+const _MD_PAGOS_ = 13;
+const _MD_METODOS_ = 14;
+const _MD_EQUIPAMIENTO_ = 15;
+const _MD_CATALOGO_ = 16;
+const _MD_ASIGNACIONES_ = 17;
+const _MD_DEVOLUCIONES_ = 18;
+const _MD_TORNEOS_ = 19;
+const _MD_EQUIPOS_ = 20;
+const _MD_PREMIOS_ = 21;
+const _MD_PALMARES_ = 22;
+const _MD_ESTADISTICAS_ = 23;
 
 if (session_status() === PHP_SESSION_NONE) {
     // Configuramos la sesión antes de iniciarla
