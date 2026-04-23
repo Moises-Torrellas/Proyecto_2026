@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 23-04-2026 a las 20:57:03
+-- Tiempo de generación: 24-04-2026 a las 00:45:30
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -67,7 +67,11 @@ INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `fecha`, `hora`,
 (88, 8, 'Eliminó al representante: 1', '2026-04-23', '14:05:36', 1),
 (89, 8, 'Registró al representante: 12345678', '2026-04-23', '14:07:37', 1),
 (90, 4, 'Inicio de sesión exitoso', '2026-04-23', '14:46:21', 1),
-(91, 8, 'Registró al representante: 87654321', '2026-04-23', '14:52:44', 1);
+(91, 8, 'Registró al representante: 87654321', '2026-04-23', '14:52:44', 1),
+(92, 4, 'Inicio de sesión exitoso', '2026-04-23', '15:12:50', 1),
+(93, 5, 'Cierre de sesión.', '2026-04-23', '15:13:07', 1),
+(94, 4, 'Inicio de sesión exitoso', '2026-04-23', '16:12:51', 1),
+(95, 4, 'Inicio de sesión exitoso', '2026-04-23', '17:32:40', 1);
 
 -- --------------------------------------------------------
 
@@ -92,7 +96,21 @@ INSERT INTO `modulo` (`id_modulo`, `nombre_modulo`, `estatus`) VALUES
 (4, 'Inicio de Sesion', 1),
 (5, 'Cerrar Sesion', 1),
 (8, 'Recuperación De Contraseña', 1),
-(9, 'Representantes', 1);
+(9, 'Representantes', 1),
+(10, 'Posiciones', 1),
+(11, 'Categorias', 1),
+(12, 'Cuentas por Cobrar', 1),
+(13, 'Pagos', 1),
+(14, 'Metodos de Pago', 1),
+(15, 'Equipamientos', 1),
+(16, 'Catalogo', 1),
+(17, 'Asignaciones', 1),
+(18, 'Devoluciones', 1),
+(19, 'Torneos', 1),
+(20, 'Equipos', 1),
+(21, 'Premios', 1),
+(22, 'Palmares', 1),
+(23, 'Estadisticas', 1);
 
 -- --------------------------------------------------------
 
@@ -208,13 +226,13 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
+  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
 
 --
 -- AUTO_INCREMENT de la tabla `modulo`
 --
 ALTER TABLE `modulo`
-  MODIFY `id_modulo` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id_modulo` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT de la tabla `permiso`
