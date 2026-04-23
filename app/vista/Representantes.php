@@ -56,7 +56,7 @@
                                     <option value="P" selected>Pasaporte</option>
                                 </select>
                                 <label for="nacionalidad" class="titulo_formulario">Nacionalidad</label>
-                                <span class="mensaje" id="rol_span"></span>
+                                <span class="mensaje" id="nacionalidad_span"></span>
                             </div>
                         </div>
                         <div class="colum">
@@ -95,7 +95,7 @@
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="direccion" name="direccion">
                                 <label for="direccion" class="titulo_formulario">Direccion</label>
-                                <span class="mensaje" id="contraseña_spam"></span>
+                                <span class="mensaje" id="direccion_spam"></span>
                             </div>
                         </div>
                     </div>

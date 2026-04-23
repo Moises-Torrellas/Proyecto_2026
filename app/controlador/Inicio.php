@@ -82,6 +82,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         $_SESSION['rol']      = $respuesta['datos']['nombre_rol'];
         $_SESSION['nombre']    = $respuesta['datos']['nombreUsuario'];
         $_SESSION['apellido']  = $respuesta['datos']['apellidoUsuario'];
+        $_SESSION['nivel_rol']  = $respuesta['datos']['nivel_rol'];
 
         // Indexar permisos para acceso rápido en el resto del sistema
         $permisosIndexados = [];

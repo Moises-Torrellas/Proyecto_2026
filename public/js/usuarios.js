@@ -1,10 +1,16 @@
-$('#busqueda').off('keyup').on('keyup', consultar);
+$('#busqueda').off('keyup').on('keyup', busqueda);
 let timerBusqueda;
 function consultar() {
+
+    let datos = new FormData();
+    datos.append('accion', 'consultar');
+
+    enviaAjax(datos);
+}
+function busqueda() {
     clearTimeout(timerBusqueda);
     timerBusqueda = setTimeout(function () {
         let valorBusqueda = $('#busqueda').val();
-
         let datos = new FormData();
         datos.append('accion', 'consultar');
         datos.append('filtro', valorBusqueda);

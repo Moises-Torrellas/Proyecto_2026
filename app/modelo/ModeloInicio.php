@@ -30,7 +30,7 @@ class ModeloInicio extends Conexion
     {
         try {
             $this->conexion = self::conexSG();
-            $sql = 'SELECT usuarios.idUsuario,usuarios.nombreUsuario,usuarios.apellidoUsuario,roles.nombre_rol,roles.id_rol,usuarios.contraseña,usuarios.bloqueo  
+            $sql = 'SELECT usuarios.idUsuario,usuarios.nombreUsuario,usuarios.apellidoUsuario,roles.nombre_rol,roles.id_rol,roles.nivel_rol,usuarios.contraseña,usuarios.bloqueo  
                             FROM `usuarios` 
                             INNER JOIN roles ON roles.id_rol=usuarios.id_rol WHERE cedulaUsuario = :cedula;';
             $stmt = $this->conexion->prepare($sql);
@@ -50,7 +50,7 @@ class ModeloInicio extends Conexion
             $stmt->execute();
             $permisos = $stmt->fetchAll();
             
-            if($resultado && $permisos){
+            if($resultado){
                 if (password_verify($this->clave, $resultado['contraseña'])) {
                     return ['accion' => 'inicio', 'resultado' => 1, 'datos' => $resultado, 'permisos' => $permisos, 'mensaje' => 'BIENVENIDO', 'url' => _URL_.'Principal'];
                 } else {

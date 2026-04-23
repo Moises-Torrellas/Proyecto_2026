@@ -25,6 +25,7 @@ const _MD_BITACORA_ = 3;
 const _MD_INICIO_   = 4;
 const _MD_CERRAR_   = 5;
 const _MD_RECUPERACION_ = 7;
+const _MD_REPRESENTANTES_ = 8;
 
 if (session_status() === PHP_SESSION_NONE) {
     // Configuramos la sesión antes de iniciarla

@@ -1,45 +1,61 @@
 <?php
-$permisosGenerales = [
-    'incluir'   => false,
-    'modificar' => false,
-    'eliminar'  => false,
-    'reporte'   => false,
-    'otros'     => false
-];
-function procesarPermisos(int $id_modulo, $bitacora = null, array $permisosGenerales = []): void
+function procesarPermisos(int $id_modulo, $bitacora = null): array
 {
+    $nivelUsuario = $_SESSION['nivel_rol'] ?? 99;
+
+    $modulosProhibidos = [_MD_USUARIOS_, _MD_ROLES_, _MD_BITACORA_];
+
+    if ($nivelUsuario === 2 && in_array($id_modulo, $modulosProhibidos)) {
+        $_SESSION['alerta'] = [
+            'icono'   => 'error',
+            'titulo'  => 'Acceso denegado',
+            'mensaje' => 'No tienes permisos asignados para este módulo.'
+        ];
+        header("Location:" . _URL_ . "Principal");
+        exit();
+    }
+
+    if ($nivelUsuario === 1 || $nivelUsuario === 2) {
+        return [
+            'incluir'   => true,
+            'modificar' => true,
+            'eliminar'  => true,
+            'reporte'   => true,
+            'otros'     => true
+        ];
+    }
 
     if (isset($_SESSION['permisos'][$id_modulo])) {
-        $permisos = $_SESSION['permisos'][$id_modulo];
-        
-        $permisosGenerales['incluir'] = $permisos['incluir'] == 1 ? true : false;
-        $permisosGenerales['modificar'] = $permisos['modificar'] == 1 ? true : false;
-        $permisosGenerales['eliminar'] = $permisos['eliminar'] == 1 ? true : false;
-        $permisosGenerales['reporte'] = $permisos['reporte'] == 1 ? true : false;
-        $permisosGenerales['otros'] = $permisos['otros'] == 1 ? true : false;
+        $p = $_SESSION['permisos'][$id_modulo];
 
-        // Registrar en bitácora si no es una petición AJAX y se pasó el objeto bitácora
+        $permisos = [
+            'incluir'   => $p['incluir'] == 1,
+            'modificar' => $p['modificar'] == 1,
+            'eliminar'  => $p['eliminar'] == 1,
+            'reporte'   => $p['reporte'] == 1,
+            'otros'     => $p['otros'] == 1
+        ];
+
         if (!comprobarAjax() && $bitacora !== null) {
             registrarBitacora($bitacora, $id_modulo, "Accedió al módulo");
         }
+
+        return $permisos;
     } else {
         $_SESSION['alerta'] = [
-            'icono' => 'error',
-            'titulo' => 'Acceso denegado',
-            'mensaje' => 'No tienes permisos para acceder a este módulo.'
+            'icono'   => 'error',
+            'titulo'  => 'Acceso denegado',
+            'mensaje' => 'No tienes permisos asignados para este módulo.'
         ];
         header("Location:" . _URL_ . "Principal");
         exit();
     }
 }
 
-/**
- * Carga la vista solicitada.
- */
 function cargarVista(string $pagina): void
 {
     $archivoVista = sprintf(__DIR__ . '/../vista/%s.php', $pagina);
-    
+
     if (is_file($archivoVista)) {
         // Generar un token de seguridad para la sesión
         $_SESSION['token'] = bin2hex(random_bytes(32));
@@ -116,4 +132,22 @@ function validarArrays(array $data): void
             }
         }
     }
+}
+
+function logs(string $modulo, string $mensaje, string $origen = ''): void
+{
+    // Ruta: /tu_proyecto/logs/modulo_nombre.log
+    $directorio = __DIR__ . '/../../logs/';
+    $archivo = $directorio . "log_" . strtolower($modulo) . ".log";
+
+    // Crear carpeta si no existe
+    if (!is_dir($directorio)) {
+        mkdir($directorio, 0777, true);
+    }
+
+    $fecha = date('Y-m-d H:i:s');
+    $log = "[$fecha] [$origen] ERROR: $mensaje" . PHP_EOL;
+
+    // Escribir al final del archivo (FILE_APPEND)
+    file_put_contents($archivo, $log, FILE_APPEND);
 }
