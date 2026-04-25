@@ -8,7 +8,7 @@
 
         <div class="contenedor_usuario">
             <div class="botones_usuario">
-                <a type="button" class="boton_usuario asistente" id="asistente" data-tippy-content="Sydney"><i class="icon_boton_usuario" data-lucide="bot-message-square"></i></a>
+                <a type="button" class="boton_usuario asistente" id="asistente" data-tippy-content="Cani"><i class="icon_boton_usuario" data-lucide="bot-message-square"></i></a>
                 <a type="button" class="boton_usuario" id="ayuda" data-tippy-content="Ayuda"><i class="icon_boton_usuario" data-lucide="circle-question-mark"></i></a>
                 <a type="button" class="boton_usuario" id="noti" data-tippy-content="Notificaciones"><i class="icon_boton_usuario" data-lucide="bell"></i></a>
 
@@ -81,7 +81,7 @@
             <div class="asistente_historial" id="chat_historial">
                 <div class="asistente_msg asistente_bot">
                     <div class="asistente_burbuja">
-                        ¡Hola! Soy Sydney, tu asistente virtual. ¿En qué puedo ayudarte hoy?
+                        ¡Hola! Soy Cani, tu asistente virtual. ¿En qué puedo ayudarte hoy?
                     </div>
                 </div>
             </div>
