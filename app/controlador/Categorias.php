@@ -47,19 +47,19 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
                 consultar($obj);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar categorias.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar representantes.');
+                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar categorias.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar representantes.');
+                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar categorias.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar categorias.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
 

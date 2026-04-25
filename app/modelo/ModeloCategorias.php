@@ -66,7 +66,7 @@ class ModeloCategorias extends ModeloBase
                 $params[':nombre'] = trim($this->nombre) . "%";
             }
 
-            // 4. Orden (Asegúrate de usar una columna que exista, como id_representante)
+            // 4. Orden (Asegúrate de usar una columna que exista, como id_categorias)
             $sentencia .= " ORDER BY id_categorias ASC";
 
             $stmt = $conex->prepare($sentencia);
