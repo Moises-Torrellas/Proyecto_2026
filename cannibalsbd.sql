@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 23-04-2026 a las 20:57:32
+-- Tiempo de generación: 25-04-2026 a las 05:20:36
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -294,15 +294,19 @@ CREATE TABLE `participaciones` (
 
 CREATE TABLE `posiciones` (
   `id_posicion` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL
+  `nombre` varchar(50) NOT NULL,
+  `abreviatura` varchar(4) NOT NULL,
+  `descripcion` varchar(150) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `posiciones`
 --
 
-INSERT INTO `posiciones` (`id_posicion`, `nombre`) VALUES
-(1, 'Delantero');
+INSERT INTO `posiciones` (`id_posicion`, `nombre`, `abreviatura`, `descripcion`) VALUES
+(1, 'Delantero', 'DC', ''),
+(5, 'Defensa', 'DF', ''),
+(6, 'Portero', 'PR', '');
 
 -- --------------------------------------------------------
 
@@ -571,7 +575,7 @@ ALTER TABLE `catalogos`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id_categorias` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_categorias` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `conceptos`
@@ -649,7 +653,7 @@ ALTER TABLE `participaciones`
 -- AUTO_INCREMENT de la tabla `posiciones`
 --
 ALTER TABLE `posiciones`
-  MODIFY `id_posicion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_posicion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `premios`
