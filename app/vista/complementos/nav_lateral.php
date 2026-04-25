@@ -8,7 +8,7 @@
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="circle-star"></i> Atletas</a>
                 <a type="button" href="/Proyecto_2026/public/Representantes" class="opciones "><i class="opciones_i" data-lucide="user-star"></i> Representantes</a>
                 <a type="button" href="#" class="opciones "><i class="opciones_i" data-lucide="land-plot"></i> Posiciones</a>
-                <a type="button" href="#" class="opciones "><i class="opciones_i" data-lucide="tags"></i> Categorias</a>
+                <a type="button" href="/Proyecto_2026/public/Categorias" class="opciones "><i class="opciones_i" data-lucide="tags"></i> Categorias</a>
             </li>
             <li class="nav_identificador">Cobranzas</li>
             <li class="nav_opciones">
