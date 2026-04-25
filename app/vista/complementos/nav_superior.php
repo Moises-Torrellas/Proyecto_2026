@@ -3,7 +3,8 @@
     <div class="contenedor_superior">
         <div class="contenedor_logo">
             <img src="img/logo.png" class="logo">
-            <h2 class="nombre_negocio">CANNIBALS LARA</h2>
+            <img src="img/logo_2.png" class="nombre_negocio">
+            
         </div>
 
         <div class="contenedor_usuario">

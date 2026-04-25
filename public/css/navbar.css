@@ -124,11 +124,8 @@ ul {
 }
 
 .nombre_negocio {
-    color: var(--texto-principal);
-    font-family: 'FeastOfFlesh', sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.2rem;
     margin-left: 10px;
+    width: 120px;
 }
 
 .botones_usuario {

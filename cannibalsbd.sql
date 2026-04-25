@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-04-2026 a las 05:20:36
+-- Tiempo de generación: 25-04-2026 a las 23:30:52
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -34,7 +34,9 @@ CREATE TABLE `asignaciones` (
   `id_atleta` int(11) NOT NULL,
   `id_equipamiento` int(11) NOT NULL,
   `fecha_asignacion` date NOT NULL,
-  `id_estado` int(11) NOT NULL
+  `fecha_devolucion` date DEFAULT NULL,
+  `id_estado` int(11) NOT NULL,
+  `estatus` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 -- --------------------------------------------------------
@@ -47,10 +49,9 @@ CREATE TABLE `atletas` (
   `id_atleta` int(11) NOT NULL,
   `nombres` varchar(60) NOT NULL,
   `apellidos` varchar(60) NOT NULL,
-  `cedula` varchar(13) NOT NULL,
+  `doc_identidad` varchar(13) NOT NULL,
   `genero` enum('H','M') NOT NULL,
   `fecha_nac` date NOT NULL,
-  `nacionalidad` enum('V','E','P') NOT NULL,
   `foto` varchar(100) NOT NULL,
   `id_posicion` int(11) NOT NULL,
   `id_categoria` int(11) NOT NULL,
@@ -61,8 +62,8 @@ CREATE TABLE `atletas` (
 -- Volcado de datos para la tabla `atletas`
 --
 
-INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `cedula`, `genero`, `fecha_nac`, `nacionalidad`, `foto`, `id_posicion`, `id_categoria`, `id_representante`) VALUES
-(2, 'dffd', 'dfdf', '12345678', 'H', '2004-05-12', 'V', 'FOTO', 1, 1, 2);
+INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`) VALUES
+(2, 'dffd', 'dfdf', '12345678', 'H', '2004-05-12', 'FOTO', 1, 1, 2);
 
 -- --------------------------------------------------------
 
@@ -87,6 +88,8 @@ CREATE TABLE `catalogos` (
   `id_catalogo` int(11) NOT NULL,
   `nombre` varchar(150) NOT NULL,
   `stock_minimo` varchar(10) NOT NULL,
+  `id_categoria` int(11) NOT NULL,
+  `talla` varchar(10) DEFAULT NULL,
   `id_posicion` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
@@ -113,12 +116,25 @@ INSERT INTO `categorias` (`id_categorias`, `nombre`, `edad_min`, `edad_max`) VAL
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `categoria_catalogo`
+--
+
+CREATE TABLE `categoria_catalogo` (
+  `id_categoria` int(11) NOT NULL,
+  `nombre` varchar(30) NOT NULL,
+  `descripcion` varchar(150) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `conceptos`
 --
 
 CREATE TABLE `conceptos` (
   `id_conceptos` int(11) NOT NULL,
-  `conceptos` varchar(100) NOT NULL,
+  `nombre` varchar(50) NOT NULL,
+  `monto` decimal(10,0) NOT NULL,
   `estatus` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
@@ -132,9 +148,9 @@ CREATE TABLE `cuentas_cobrar` (
   `id_cobrar` int(11) NOT NULL,
   `id_concepto` int(11) NOT NULL,
   `id_atleta` int(11) NOT NULL,
-  `monto_total` decimal(10,0) NOT NULL,
-  `monto_pendiente` decimal(10,0) NOT NULL,
+  `monto_personalizado` decimal(10,0) DEFAULT NULL,
   `fecha_emision` date NOT NULL,
+  `fecha_vencimiento` date DEFAULT NULL,
   `estatus` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
@@ -153,31 +169,14 @@ CREATE TABLE `detalles_equipos` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `devoluciones`
---
-
-CREATE TABLE `devoluciones` (
-  `id_devoluciones` int(11) NOT NULL,
-  `id_atleta` int(11) NOT NULL,
-  `fecha_devolucion` date NOT NULL,
-  `id_equipamiento` int(11) NOT NULL,
-  `id_estado` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
-
--- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `equipamientos`
 --
 
 CREATE TABLE `equipamientos` (
   `id_equipamiento` int(11) NOT NULL,
   `id_catalogo` int(11) NOT NULL,
-  `nombre` varchar(150) NOT NULL,
-  `stock` varchar(10) NOT NULL,
-  `stock_minimo` varchar(10) NOT NULL,
-  `talla` varchar(150) NOT NULL,
-  `id_estados` int(11) NOT NULL
+  `id_estados` int(11) NOT NULL,
+  `estatus` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 -- --------------------------------------------------------
@@ -189,7 +188,7 @@ CREATE TABLE `equipamientos` (
 CREATE TABLE `equipos` (
   `id_equipos` int(11) NOT NULL,
   `id_categoria` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL
+  `nombre` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 -- --------------------------------------------------------
@@ -200,7 +199,7 @@ CREATE TABLE `equipos` (
 
 CREATE TABLE `equipos_premios` (
   `id_e_premios` int(11) NOT NULL,
-  `id_torneos` int(11) NOT NULL,
+  `id_torneo` int(11) NOT NULL,
   `id_equipo` int(11) NOT NULL,
   `id_premio` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
@@ -215,10 +214,10 @@ CREATE TABLE `estadisticas` (
   `id_estadisticas` int(11) NOT NULL,
   `id_torneo` int(11) NOT NULL,
   `id_atleta` int(11) NOT NULL,
-  `goles` varchar(150) NOT NULL,
-  `asistencias` varchar(150) NOT NULL,
-  `penalizaciones` varchar(150) NOT NULL,
-  `goles_contra` varchar(150) NOT NULL,
+  `goles` int(10) NOT NULL,
+  `asistencias` int(10) NOT NULL,
+  `penalizaciones` int(10) NOT NULL,
+  `goles_contra` int(10) NOT NULL,
   `average` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
@@ -230,7 +229,8 @@ CREATE TABLE `estadisticas` (
 
 CREATE TABLE `estado_equipamiento` (
   `id_estado` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL
+  `nombre` varchar(30) NOT NULL,
+  `nivel_estado` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 -- --------------------------------------------------------
@@ -242,6 +242,7 @@ CREATE TABLE `estado_equipamiento` (
 CREATE TABLE `metodos_pago` (
   `id_metodos` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
+  `nec_referencia` tinyint(4) NOT NULL DEFAULT 0,
   `estatus` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
@@ -294,7 +295,7 @@ CREATE TABLE `participaciones` (
 
 CREATE TABLE `posiciones` (
   `id_posicion` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL,
+  `nombre` varchar(30) NOT NULL,
   `abreviatura` varchar(4) NOT NULL,
   `descripcion` varchar(150) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
@@ -317,7 +318,7 @@ INSERT INTO `posiciones` (`id_posicion`, `nombre`, `abreviatura`, `descripcion`)
 CREATE TABLE `premios` (
   `id_premio` int(11) NOT NULL,
   `id_tipo` int(11) NOT NULL,
-  `nombre` int(11) NOT NULL
+  `nombre` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 -- --------------------------------------------------------
@@ -352,7 +353,7 @@ INSERT INTO `representantes` (`id_representante`, `nombre`, `apellido`, `cedula`
 
 CREATE TABLE `tipos_premios` (
   `id_tipo` int(11) NOT NULL,
-  `nombre` varchar(100) NOT NULL
+  `nombre` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 -- --------------------------------------------------------
@@ -363,11 +364,11 @@ CREATE TABLE `tipos_premios` (
 
 CREATE TABLE `torneos` (
   `id_torneo` int(11) NOT NULL,
-  `nombre` varchar(150) NOT NULL,
+  `nombre` varchar(30) NOT NULL,
   `fecha_inicio` date NOT NULL,
   `fecha_fin` date NOT NULL,
   `ubicacion` varchar(150) NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(3) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
@@ -406,13 +407,20 @@ ALTER TABLE `atleta_premios`
 --
 ALTER TABLE `catalogos`
   ADD PRIMARY KEY (`id_catalogo`),
-  ADD KEY `id_posicion` (`id_posicion`);
+  ADD KEY `id_posicion` (`id_posicion`),
+  ADD KEY `id_categoria` (`id_categoria`);
 
 --
 -- Indices de la tabla `categorias`
 --
 ALTER TABLE `categorias`
   ADD PRIMARY KEY (`id_categorias`);
+
+--
+-- Indices de la tabla `categoria_catalogo`
+--
+ALTER TABLE `categoria_catalogo`
+  ADD PRIMARY KEY (`id_categoria`);
 
 --
 -- Indices de la tabla `conceptos`
@@ -437,15 +445,6 @@ ALTER TABLE `detalles_equipos`
   ADD KEY `id_equipo` (`id_equipo`);
 
 --
--- Indices de la tabla `devoluciones`
---
-ALTER TABLE `devoluciones`
-  ADD PRIMARY KEY (`id_devoluciones`),
-  ADD KEY `id_atleta` (`id_atleta`),
-  ADD KEY `id_equipamiento` (`id_equipamiento`),
-  ADD KEY `id_estado` (`id_estado`);
-
---
 -- Indices de la tabla `equipamientos`
 --
 ALTER TABLE `equipamientos`
@@ -467,7 +466,7 @@ ALTER TABLE `equipos_premios`
   ADD PRIMARY KEY (`id_e_premios`),
   ADD KEY `id_equipo` (`id_equipo`),
   ADD KEY `id_premio` (`id_premio`),
-  ADD KEY `id_torneos` (`id_torneos`);
+  ADD KEY `id_torneos` (`id_torneo`);
 
 --
 -- Indices de la tabla `estadisticas`
@@ -711,7 +710,8 @@ ALTER TABLE `atleta_premios`
 -- Filtros para la tabla `catalogos`
 --
 ALTER TABLE `catalogos`
-  ADD CONSTRAINT `catalogos_ibfk_1` FOREIGN KEY (`id_posicion`) REFERENCES `posiciones` (`id_posicion`);
+  ADD CONSTRAINT `catalogos_ibfk_1` FOREIGN KEY (`id_posicion`) REFERENCES `posiciones` (`id_posicion`),
+  ADD CONSTRAINT `catalogos_ibfk_2` FOREIGN KEY (`id_categoria`) REFERENCES `categoria_catalogo` (`id_categoria`);
 
 --
 -- Filtros para la tabla `cuentas_cobrar`
@@ -726,14 +726,6 @@ ALTER TABLE `cuentas_cobrar`
 ALTER TABLE `detalles_equipos`
   ADD CONSTRAINT `detalles_equipos_ibfk_1` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `detalles_equipos_ibfk_2` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipos`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Filtros para la tabla `devoluciones`
---
-ALTER TABLE `devoluciones`
-  ADD CONSTRAINT `devoluciones_ibfk_1` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `devoluciones_ibfk_2` FOREIGN KEY (`id_equipamiento`) REFERENCES `equipamientos` (`id_equipamiento`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `devoluciones_ibfk_3` FOREIGN KEY (`id_estado`) REFERENCES `estado_equipamiento` (`id_estado`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `equipamientos`
@@ -754,7 +746,7 @@ ALTER TABLE `equipos`
 ALTER TABLE `equipos_premios`
   ADD CONSTRAINT `equipos_premios_ibfk_1` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipos`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `equipos_premios_ibfk_2` FOREIGN KEY (`id_premio`) REFERENCES `premios` (`id_premio`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `equipos_premios_ibfk_3` FOREIGN KEY (`id_torneos`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `equipos_premios_ibfk_3` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `estadisticas`
