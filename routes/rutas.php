@@ -42,6 +42,7 @@ function manejarRuta($pagina): void
         'Recuperacion' => 'Recuperacion',
         'Roles' => 'Roles',
         'Representantes' => 'Representantes',
+        'Posiciones' => 'Posiciones'
         
 
     ];
