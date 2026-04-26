@@ -29,7 +29,7 @@
             </li>
             <li class="nav_identificador">Competencias</li>
             <li class="nav_opciones">
-                <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Torneos</a>
+                <a type="button" href="/Proyecto_2026/public/Torneos" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Torneos</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="shield-half"></i> Equipos</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="shield-check"></i> Participaciones</a>
             </li>

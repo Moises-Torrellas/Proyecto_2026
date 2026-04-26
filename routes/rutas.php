@@ -44,6 +44,7 @@ function manejarRuta($pagina): void
         'Representantes' => 'Representantes',
         'Posiciones' => 'Posiciones',
         'Categorias' => 'Categorias',
+        'Torneos' => 'Torneos',
     ];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {

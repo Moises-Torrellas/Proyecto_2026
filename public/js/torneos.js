@@ -1,0 +1,287 @@
+$('#busqueda').off('keyup').on('keyup', busqueda);
+let timerBusqueda;
+
+function consultar() {
+    let datos = new FormData();
+    datos.append('accion', 'consultar');
+    enviaAjax(datos);
+}
+
+function busqueda() {
+    clearTimeout(timerBusqueda);
+    timerBusqueda = setTimeout(function () {
+        let valorBusqueda = $('#busqueda').val();
+        let datos = new FormData();
+        datos.append('accion', 'consultar');
+        datos.append('filtro', valorBusqueda);
+        enviaAjax(datos);
+    }, 500);
+}
+
+$(document).ready(function () {
+    // 1. Cargar la tabla al iniciar
+    consultar();
+
+    // 2. Validaciones en tiempo real
+    Validacion("nombre", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres", "proceso");
+    Validacion("ubicacion", /^[A-Za-z0-9\s.,#-]*$/, /^[A-Za-z0-9\s.,#-]{5,150}$/, "Permitido entre 5 y 150 caracteres", "proceso");
+
+    // 3. Lógica de los Botones Guardar/Modificar
+    $('#proceso').on('click', function () {
+        let accion = $(this).data("accion");
+        
+        if (accion == "incluir") {
+            if (validarEnvio(accion)) {
+                confirmar('¿Está seguro que quiere registrar este torneo?', function (confirmado) {
+                    if (confirmado) {
+                        var datos = new FormData($('#f')[0]);
+                        datos.append('accion', 'incluir');
+                        enviaAjax(datos);
+                    }
+                });
+            }
+        }
+        else if (accion == "modificar") {
+            if (validarEnvio(accion)) {
+                confirmar('¿Está seguro que quiere modificar este torneo?', function (confirmado) {
+                    if (confirmado) {
+                        var datos = new FormData($('#f')[0]);
+                        datos.append('accion', 'modificar');
+                        enviaAjax(datos);
+                    }
+                });
+            }
+        }
+        else if (accion == "generar") {
+            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
+                if (confirmado) {
+                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento')
+                    var datos = new FormData($('#f')[0]);
+                    datos.append('accion', 'generar');
+                    enviaAjax(datos);
+                }
+            });
+        }
+    });
+
+    // 4. Botones de la vista (Abrir Modales)
+    $("#incluir").on("click", function () {
+        limpia(); // Limpia el formulario
+        $("#id").val("");
+        $('#estatus').val("").trigger('change'); // Limpia el select
+        $("#proceso").data("accion", "incluir");
+        $("#proceso").text("Registrar Torneo");
+        $("#titulo_modal").text("Registrar Nuevo Torneo");
+        abrirModal();
+    });
+
+    $("#generar").on("click", function () {
+        limpia();
+        $("#proceso").data("accion", "generar");
+        $("#proceso").text("Generar Reporte");
+        $("#titulo_modal").text("Generar Reporte");
+        abrirModal();
+    });
+});
+
+// --- FUNCIONES LÓGICAS GLOBALES ---
+
+function buscar(id) {
+    var datos = new FormData();
+    datos.append('accion', 'buscar');
+    datos.append('id', id);
+    enviaAjax(datos);
+}
+
+function eliminar(id) {
+    confirmar('¿Está seguro que quiere eliminar este torneo?', function (confirmado) {
+        if (confirmado) {
+            var datos = new FormData();
+            datos.append('accion', 'eliminar');
+            datos.append('id', id);
+            enviaAjax(datos);
+        }
+    });
+}
+
+function validarEnvio(proceso) {
+    // Validar Select de Estatus
+    if ($('#estatus option:selected').val() === "") {
+        muestraMensaje("error", 2000, "Error", "Tiene que elegir el estatus del torneo");
+        return false;
+    }
+    // Validar Nombre
+    if (validarkeyup(/^[A-Za-z0-9\-\b\s]{2,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 2 y 30 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de torneo válido");
+        return false;
+    }
+    // Validar Fechas Vacías
+    if ($('#fecha_inicio').val() === "") {
+        muestraMensaje("error", 2000, "Error", "Debe seleccionar una fecha de inicio");
+        return false;
+    }
+    if ($('#fecha_fin').val() === "") {
+        muestraMensaje("error", 2000, "Error", "Debe seleccionar una fecha de fin");
+        return false;
+    }
+    
+    // Validación lógica: Fecha inicio no puede ser mayor a la fecha final
+    let fechaInicio = new Date($('#fecha_inicio').val());
+    let fechaFin = new Date($('#fecha_fin').val());
+    
+    if (fechaInicio > fechaFin) {
+        muestraMensaje("error", 3500, "Error de Fechas", "La fecha de inicio no puede ser posterior a la fecha de finalización");
+        return false;
+    }
+
+    // Validar Ubicación
+    if (validarkeyup(/^[A-Za-z0-9\s.,#-]{5,150}$/, $("#ubicacion"), $("#ubicacion_spam"), "Permitido entre 5 y 150 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar una ubicación válida");
+        return false;
+    }
+
+    return true;
+}
+
+function modificar(datos) {
+    $("#proceso").data("accion", "modificar");
+    $("#proceso").text("Modificar Torneo");
+    $("#titulo_modal").text("Modificar Torneo");
+    
+    // Llenamos el formulario con los datos de la BD
+    $('#id').val(datos[0].id_torneo);
+    $('#nombre').val(datos[0].nombre);
+    $('#fecha_inicio').val(datos[0].fecha_inicio);
+    $('#fecha_fin').val(datos[0].fecha_fin);
+    $('#ubicacion').val(datos[0].ubicacion);
+    $('#estatus').val(datos[0].estatus).trigger('change');
+
+    abrirModal();
+}
+
+function crearConsulta(datos) {
+    const contenedor = $('#resultadoconsulta');
+    contenedor.empty();
+
+    if (datos.length === 0) {
+        contenedor.append('<div class="listado_vacio"><p>No se encontraron torneos registrados</p></div>');
+    } else {
+        datos.forEach(dato => {
+            // Etiqueta visual para el estatus
+            let badgeEstatus = dato.estatus == 1 
+                ? '<span style="background-color: #00cc00; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">Activo</span>'
+                : '<span style="background-color: #6c757d; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">Finalizado</span>';
+
+            let registro = `
+                <div class="listado_contenedor_grupal">
+                    <div class="listado_item" onclick="toggleDetalles(this)">
+                        <div class="listado_col_datos">
+                            <div class="listado_dato_grupo" style="width: 25%;">
+                                <small>Torneo</small>
+                                <span style="font-weight: bold; color: #00cc00;">${escapeHTML(dato.nombre)}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Fecha Inicio</small>
+                                <span>${dato.fecha_inicio}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Fecha Fin</small>
+                                <span>${dato.fecha_fin}</span>
+                            </div>
+                            <div class="listado_dato_grupo" style="width: 30%;">
+                                <small>Ubicación</small>
+                                <span>${escapeHTML(dato.ubicacion)}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Estatus</small>
+                                <span>${badgeEstatus}</span>
+                            </div>
+                        </div>
+
+                        <div class="listado_col_acciones">
+                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_torneo})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_torneo})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            contenedor.append(registro);
+        });
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
+}
+
+function escapeHTML(texto) {
+    if (!texto) return "";
+    var caracteres = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return texto.replace(/[&<>"']/g, m => caracteres[m]);
+}
+
+var token = $('meta[name="csrf-token"]').attr('content');
+
+function enviaAjax(datos) {
+    $.ajax({
+        async: true,
+        url: "", // Se envía a la misma ruta actual (/Torneos)
+        type: "POST",
+        contentType: false,
+        data: datos,
+        processData: false,
+        cache: false,
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
+        timeout: 10000,
+        success: function (respuesta) {
+            try {
+                var lee = JSON.parse(respuesta);
+                
+                if (lee.accion == "consultar") {
+                    crearConsulta(lee.datos);
+                } 
+                else if (lee.accion == "incluir") {
+                    consultar();
+                    limpia();
+                    cerrarModal(); 
+                    muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
+                } 
+                else if (lee.accion == "eliminar") {
+                    consultar();
+                    muestraMensaje("success", 2000, "Eliminación Exitosa", lee.mensaje);
+                } 
+                else if (lee.accion == "modificar") {
+                    consultar();
+                    limpia();
+                    cerrarModal();
+                    muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
+                } 
+                else if (lee.accion == "buscar") {
+                    modificar(lee.datos);
+                }
+                else if (lee.accion == "error") {
+                    muestraMensaje("error", 3000, "Error", lee.mensaje);
+                }
+            } catch (e) {
+                alert("Error procesando los datos: " + e.message);
+                console.error(respuesta);
+            }
+        },
+        error: function (request, status, err) {
+            if (status == "timeout") {
+                muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
+            } else {
+                muestraMensaje("error", 3000, "Error de Conexión", "Revisa la consola. Código: " + request.status);
+            }
+        }
+    });
+}
