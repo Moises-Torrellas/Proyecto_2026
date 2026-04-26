@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 24-04-2026 a las 00:45:30
+-- Tiempo de generación: 26-04-2026 a las 19:53:14
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -71,7 +71,46 @@ INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `fecha`, `hora`,
 (92, 4, 'Inicio de sesión exitoso', '2026-04-23', '15:12:50', 1),
 (93, 5, 'Cierre de sesión.', '2026-04-23', '15:13:07', 1),
 (94, 4, 'Inicio de sesión exitoso', '2026-04-23', '16:12:51', 1),
-(95, 4, 'Inicio de sesión exitoso', '2026-04-23', '17:32:40', 1);
+(95, 4, 'Inicio de sesión exitoso', '2026-04-23', '17:32:40', 1),
+(96, 4, 'Inicio de sesión exitoso', '2026-04-24', '07:43:09', 1),
+(97, 4, 'Inicio de sesión exitoso', '2026-04-24', '11:00:15', 1),
+(98, 4, 'Inicio de sesión exitoso', '2026-04-24', '11:30:57', 1),
+(99, 4, 'Inicio de sesión exitoso', '2026-04-24', '21:15:48', 1),
+(100, 9, 'Registró la pasición: DELANTERO', '2026-04-24', '22:33:48', 1),
+(101, 9, 'Registró la pasición: delantero', '2026-04-24', '22:38:19', 1),
+(102, 9, 'Registró la pasición: defensa', '2026-04-24', '22:39:02', 1),
+(103, 9, 'Registró la pasición: defensa', '2026-04-24', '22:42:07', 1),
+(104, 9, 'Registró la pasición: portero', '2026-04-24', '22:42:17', 1),
+(105, 9, 'Registró la pasición: mediocentro', '2026-04-24', '22:42:33', 1),
+(106, 9, 'Eliminó la posición: 7', '2026-04-24', '22:53:58', 1),
+(107, 11, 'Registró la categoría: U-10', '2026-04-24', '23:18:14', 1),
+(108, 11, 'Eliminó la categoría: 2', '2026-04-24', '23:18:31', 1),
+(109, 5, 'Cierre de sesión.', '2026-04-24', '23:23:01', 1),
+(110, 4, 'Inicio de sesión exitoso', '2026-04-25', '12:13:17', 1),
+(111, 4, 'Inicio de sesión exitoso', '2026-04-25', '19:08:40', 1),
+(112, 1, 'Modificó un usuario ID: 21', '2026-04-25', '22:55:54', 1),
+(113, 1, 'Modificó un usuario ID: 21', '2026-04-25', '22:57:23', 1),
+(114, 5, 'Cierre de sesión.', '2026-04-25', '23:25:34', 1),
+(115, 4, 'Inicio de sesión exitoso', '2026-04-25', '23:26:16', 21),
+(116, 5, 'Cierre de sesión.', '2026-04-25', '23:30:05', 21),
+(117, 4, 'Inicio de sesión exitoso', '2026-04-25', '23:30:18', 1),
+(118, 1, 'Modificó un usuario ID: 21', '2026-04-25', '23:30:41', 1),
+(119, 5, 'Cierre de sesión.', '2026-04-25', '23:30:51', 1),
+(120, 4, 'Inicio de sesión exitoso', '2026-04-25', '23:31:00', 1),
+(121, 5, 'Cierre de sesión.', '2026-04-25', '23:31:27', 1),
+(122, 4, 'Inicio de sesión exitoso', '2026-04-25', '23:32:35', 21),
+(123, 5, 'Cierre de sesión.', '2026-04-25', '23:34:24', 21),
+(124, 4, 'Inicio de sesión exitoso', '2026-04-26', '11:06:12', 1),
+(125, 19, 'Registró el torneo: Torneo Nacional', '2026-04-26', '11:12:07', 1),
+(126, 19, 'Modificó el torneo: TORNEO NACIONAL', '2026-04-26', '11:12:38', 1),
+(127, 19, 'Eliminó el torneo ID: 1', '2026-04-26', '11:12:40', 1),
+(128, 1, 'Modificó un usuario ID: 1', '2026-04-26', '11:15:52', 1),
+(129, 5, 'Cierre de sesión.', '2026-04-26', '11:16:13', 1),
+(130, 4, 'Inicio de sesión exitoso', '2026-04-26', '11:16:27', 1),
+(131, 5, 'Cierre de sesión.', '2026-04-26', '12:12:56', 1),
+(132, 4, 'Inicio de sesión exitoso', '2026-04-26', '13:26:11', 1),
+(133, 5, 'Cierre de sesión.', '2026-04-26', '13:26:30', 1),
+(134, 4, 'Inicio de sesión exitoso', '2026-04-26', '13:41:19', 1);
 
 -- --------------------------------------------------------
 
@@ -161,6 +200,7 @@ CREATE TABLE `usuarios` (
   `cedulaUsuario` varchar(10) NOT NULL,
   `nombreUsuario` varchar(35) NOT NULL,
   `apellidoUsuario` varchar(35) NOT NULL,
+  `foto` varchar(255) DEFAULT NULL,
   `telefonoUsuario` varchar(15) NOT NULL,
   `contraseña` varchar(255) NOT NULL,
   `correo` varchar(60) NOT NULL,
@@ -173,9 +213,9 @@ CREATE TABLE `usuarios` (
 -- Volcado de datos para la tabla `usuarios`
 --
 
-INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `telefonoUsuario`, `contraseña`, `correo`, `id_rol`, `estatus`, `bloqueo`) VALUES
-(1, '12345678', 'Admin', 'Admin', '0000-0000000', '$2y$10$z9rD8xGPyg4.JegVpLgfi.WEi2HPKEKGvOQYRDZfZPqwlzxRqS.y.', 'admin@gmail.com', 1, 1, 1),
-(21, '29506932', 'Moises', 'Torrellas', '0000-0000000', '$2y$10$iT6mg6QOCrcz9dSL/JFi.eieRvOc0c4z8I7ObS75m04ZWuhTxr9lS', 'moitcj@gmail.com', 2, 1, 1);
+INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `foto`, `telefonoUsuario`, `contraseña`, `correo`, `id_rol`, `estatus`, `bloqueo`) VALUES
+(1, '12345678', 'Admin', 'Admin', 'user_12345678_1777216552.png', '0000-0000000', '$2y$10$z9rD8xGPyg4.JegVpLgfi.WEi2HPKEKGvOQYRDZfZPqwlzxRqS.y.', 'admin@gmail.com', 1, 1, 1),
+(21, '29506932', 'Moises', 'Torrellas', 'user_29506932_1777174241.png', '0000-0000000', '$2y$10$iT6mg6QOCrcz9dSL/JFi.eieRvOc0c4z8I7ObS75m04ZWuhTxr9lS', 'moitcj@gmail.com', 2, 1, 1);
 
 --
 -- Índices para tablas volcadas
@@ -226,7 +266,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
+  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
 
 --
 -- AUTO_INCREMENT de la tabla `modulo`
@@ -250,7 +290,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `idUsuario` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `idUsuario` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- Restricciones para tablas volcadas

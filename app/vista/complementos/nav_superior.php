@@ -4,7 +4,7 @@
         <div class="contenedor_logo">
             <img src="img/logo.png" class="logo">
             <img src="img/logo_2.png" class="nombre_negocio">
-            
+
         </div>
 
         <div class="contenedor_usuario">
@@ -47,7 +47,11 @@
                 </div>
             </div>
             <div class="info_usuario" id="info_usuario">
-                <i data-lucide="circle-user" class="img_usuario"></i>
+                <?php if (isset($_SESSION['foto']) && $_SESSION['foto'] !== 'default.png' && $_SESSION['foto'] !== ''): ?>
+                    <img src="img/usuarios/<?php echo $_SESSION['foto']; ?>" alt="Perfil" class="img_usuario foto_perfil_navbar">
+                <?php else: ?>
+                    <i data-lucide="circle-user" class="img_usuario"></i>
+                <?php endif; ?>
                 <div class="contenedor_nombre">
                     <h3 class="nombre_usuario"><?php echo $_SESSION['nombre'] . ' ' . $_SESSION['apellido']; ?></h3>
                     <h4 class="tipo_usuario"><?php echo $_SESSION['rol']; ?></h4>
@@ -58,7 +62,6 @@
                 <ul class="nav_contenedor_superior">
                     <li class="nav_opciones nav_opciones_superior">
                         <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="user-cog"></i> Mi Perfil</a>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="settings"></i> Configuraciones</a>
                         <a type="button" href="#" id="modo_oscuro" class="opciones"><i class="opciones_i" data-lucide="<?php echo _TEMA_ === 'oscuro' ? 'sun' : 'moon' ?>"></i> Modo Oscuro</a>
                         <a type="button" href="#" id="salir" class="opciones"><i class="opciones_i" data-lucide="log-out"></i> Cerrar Sesión</a>
                     </li>

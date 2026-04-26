@@ -13,6 +13,7 @@
 <script src="libraries/js/popper.min.js"></script>
 <script src="libraries/js/tippy.min.js"></script>
 <script src="libraries/js/chart.min.js"></script>
+<script src="libraries/js/cropper.min.js"></script>
 
 <script src="libraries/driver.js-stable/dist/driver.min.js"></script>
 <link href="css/main.css" rel="stylesheet">
@@ -24,4 +25,5 @@
 <link href="libraries/css/select2.min.css" rel="stylesheet" />
 <link href="libraries/css/tippy.css" rel="stylesheet" />
 <link href="libraries/css/tippy-animation.css" rel="stylesheet" />
+<link href="libraries/css/cropper.min.css" rel="stylesheet" />
 <link rel="shortcut icon" href="img/logo.ico">

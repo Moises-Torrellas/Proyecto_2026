@@ -134,6 +134,55 @@ function validarArrays(array $data): void
     }
 }
 
+function subirImagen ($archivo, $prefijo, $cedula, $carpeta_destino, $foto_actual = 'default.png') {
+    // Si no hay archivo o viene con error, devolvemos el nombre de la foto actual
+    if (!isset($archivo) || $archivo['error'] !== UPLOAD_ERR_OK) {
+        return $foto_actual;
+    }
+
+    $file_tmp  = $archivo['tmp_name'];
+    $file_name = $archivo['name'];
+    $file_size = $archivo['size'];
+    $file_ext  = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+
+    // 1. Validación de Tipo
+    $extensiones_permitidas = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!in_array($file_ext, $extensiones_permitidas)) {
+        throw new Exception('Extensión no permitida (solo JPG, PNG, WEBP).');
+    }
+
+    // 2. Validación de Tamaño (2MB)
+    if ($file_size > 5 * 1024 * 1024) {
+        throw new Exception('La imagen supera el límite de 2MB.');
+    }
+
+    // 3. Definir Rutas
+    $ruta_absoluta = __DIR__ . '/../../public/img/' . $carpeta_destino . '/';
+    
+    // Crear carpeta si no existe
+    if (!is_dir($ruta_absoluta)) {
+        mkdir($ruta_absoluta, 0777, true);
+    }
+
+    // 4. Limpieza: Borrar foto anterior si no es la default
+    if ($foto_actual !== 'default.png' && !empty($foto_actual)) {
+        $ruta_vieja = $ruta_absoluta . $foto_actual;
+        if (file_exists($ruta_vieja)) {
+            unlink($ruta_vieja);
+        }
+    }
+
+    // 5. Generar nuevo nombre y mover
+    $nombre = $prefijo . "_" . $cedula . "_" . time() . "." . $file_ext;
+    $ruta_final = $ruta_absoluta . $nombre;
+
+    if (move_uploaded_file($file_tmp, $ruta_final)) {
+        return $nombre;
+    }
+
+    throw new Exception('Error al subir la imagen al servidor.');
+}
+
 function logs(string $modulo, string $mensaje, string $origen = ''): void
 {
     // Ruta: /tu_proyecto/logs/modulo_nombre.log
