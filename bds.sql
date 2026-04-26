@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 26-04-2026 a las 19:53:14
+-- Tiempo de generación: 26-04-2026 a las 20:03:13
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -110,7 +110,9 @@ INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `fecha`, `hora`,
 (131, 5, 'Cierre de sesión.', '2026-04-26', '12:12:56', 1),
 (132, 4, 'Inicio de sesión exitoso', '2026-04-26', '13:26:11', 1),
 (133, 5, 'Cierre de sesión.', '2026-04-26', '13:26:30', 1),
-(134, 4, 'Inicio de sesión exitoso', '2026-04-26', '13:41:19', 1);
+(134, 4, 'Inicio de sesión exitoso', '2026-04-26', '13:41:19', 1),
+(135, 5, 'Cierre de sesión.', '2026-04-26', '14:02:42', 1),
+(136, 4, 'Inicio de sesión exitoso', '2026-04-26', '14:02:52', 1);
 
 -- --------------------------------------------------------
 
@@ -214,8 +216,8 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `foto`, `telefonoUsuario`, `contraseña`, `correo`, `id_rol`, `estatus`, `bloqueo`) VALUES
-(1, '12345678', 'Admin', 'Admin', 'user_12345678_1777216552.png', '0000-0000000', '$2y$10$z9rD8xGPyg4.JegVpLgfi.WEi2HPKEKGvOQYRDZfZPqwlzxRqS.y.', 'admin@gmail.com', 1, 1, 1),
-(21, '29506932', 'Moises', 'Torrellas', 'user_29506932_1777174241.png', '0000-0000000', '$2y$10$iT6mg6QOCrcz9dSL/JFi.eieRvOc0c4z8I7ObS75m04ZWuhTxr9lS', 'moitcj@gmail.com', 2, 1, 1);
+(1, '12345678', 'Admin', 'Admin', 'default.png', '0000-0000000', '$2y$10$z9rD8xGPyg4.JegVpLgfi.WEi2HPKEKGvOQYRDZfZPqwlzxRqS.y.', 'admin@gmail.com', 1, 1, 1),
+(21, '29506932', 'Moises', 'Torrellas', 'default.png', '0000-0000000', '$2y$10$iT6mg6QOCrcz9dSL/JFi.eieRvOc0c4z8I7ObS75m04ZWuhTxr9lS', 'moitcj@gmail.com', 2, 1, 1);
 
 --
 -- Índices para tablas volcadas
@@ -266,7 +268,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
+  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=137;
 
 --
 -- AUTO_INCREMENT de la tabla `modulo`
