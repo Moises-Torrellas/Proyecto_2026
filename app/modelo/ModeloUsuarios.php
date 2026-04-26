@@ -17,6 +17,7 @@ class ModeloUsuarios extends Conexion
     private $contraseña;
     private $correo;
     private $rol;
+    private $foto;
     private $bloqueo;
 
     private $actualizar_contraseña = false;
@@ -46,6 +47,7 @@ class ModeloUsuarios extends Conexion
         $this->telefono = trim($datos['telefono'] ?? '');
         $this->correo = mb_strtolower(trim($datos['correo'] ?? ''), "UTF-8");
         $this->rol = $datos['roles_id'] ?? null;
+        $this->foto = $datos['foto'] ?? null;
 
         if (isset($datos['contraseña']) && !empty($datos['contraseña'])) {
             $this->contraseña = password_hash($datos['contraseña'], PASSWORD_BCRYPT);
@@ -77,6 +79,7 @@ class ModeloUsuarios extends Conexion
                         u.cedulaUsuario,
                         u.nombreUsuario,
                         u.apellidoUsuario,
+                        u.foto,
                         u.telefonoUsuario,
                         u.correo,
                         u.bloqueo,
@@ -157,7 +160,7 @@ class ModeloUsuarios extends Conexion
                 return ['accion' => 'error', 'mensaje' => 'El correo ya está registrado.'];
             }
             if (!$this->verificarRol($this->rol)) {
-                return ['accion' => 'error', 'mensaje' => 'El rol no existe.'];
+                return ['accion' => 'error', 'mensaje' => 'El rol no existe.'.$this->rol];
             }
 
             // 2. Determinar si es UPDATE o INSERT
@@ -170,6 +173,7 @@ class ModeloUsuarios extends Conexion
                 $sql = "UPDATE `usuarios` SET 
                             `nombreUsuario` = :nombre,
                             `apellidoUsuario` = :apellido,
+                            `foto` = :foto,
                             `telefonoUsuario` = :telefono,
                             `contraseña` = :contra,
                             `correo` = :correo,
@@ -178,15 +182,16 @@ class ModeloUsuarios extends Conexion
                             WHERE cedulaUsuario = :cedula";
             } else {
                 $sql = "INSERT INTO `usuarios`
-                            (`cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `telefonoUsuario`, `contraseña`,`correo`, `id_rol`, `estatus`) 
+                            (`cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`,`foto`, `telefonoUsuario`, `contraseña`,`correo`, `id_rol`, `estatus`) 
                             VALUES 
-                            (:cedula, :nombre, :apellido, :telefono, :contra, :correo, :rol, 1)";
+                            (:cedula, :nombre, :apellido,:foto, :telefono, :contra, :correo, :rol, 1)";
             }
 
             $stmt = $this->conexion->prepare($sql);
             $stmt->bindValue(':cedula', $this->cedula, \PDO::PARAM_STR);
             $stmt->bindValue(':nombre', $this->nombre, \PDO::PARAM_STR);
             $stmt->bindValue(':apellido', $this->apellido, \PDO::PARAM_STR);
+            $stmt->bindValue(':foto', $this->foto, \PDO::PARAM_STR);
             $stmt->bindValue(':telefono', $this->telefono, \PDO::PARAM_STR);
             $stmt->bindValue(':contra', $this->contraseña, \PDO::PARAM_STR);
             $stmt->bindValue(':correo', $this->correo, \PDO::PARAM_STR);
@@ -244,6 +249,7 @@ class ModeloUsuarios extends Conexion
                         `cedulaUsuario` = :cedula,
                         `nombreUsuario` = :nombre,
                         `apellidoUsuario` = :apellido,
+                        `foto` = :foto,
                         `correo` = :correo,
                         `telefonoUsuario` = :telefono,
                         `id_rol` = :rol";
@@ -259,6 +265,7 @@ class ModeloUsuarios extends Conexion
             $stmt->bindValue(':cedula', $this->cedula, \PDO::PARAM_STR);
             $stmt->bindValue(':nombre', $this->nombre, \PDO::PARAM_STR);
             $stmt->bindValue(':apellido', $this->apellido, \PDO::PARAM_STR);
+            $stmt->bindValue(':foto', $this->foto, \PDO::PARAM_STR);
             $stmt->bindValue(':telefono', $this->telefono, \PDO::PARAM_STR);
             $stmt->bindValue(':correo', $this->correo, \PDO::PARAM_STR);
             $stmt->bindValue(':rol', $this->rol, \PDO::PARAM_INT);
@@ -377,8 +384,8 @@ class ModeloUsuarios extends Conexion
     {
         try {
             $this->conexion = self::conexSG();
-            $sentencia = 'SELECT usuarios.idUsuario,usuarios.cedulaUsuario,usuarios.nombreUsuario,usuarios.apellidoUsuario,usuarios.telefonoUsuario,usuarios.correo,usuarios.id_rol FROM `usuarios` 
-            WHERE usuarios.idUsuario=:id AND usuarios.estatus=1;';
+            $sentencia = 'SELECT * FROM `usuarios` 
+            WHERE idUsuario=:id AND estatus=1;';
             $str = $this->conexion->prepare($sentencia);
             $str->bindParam(':id', $this->id);
             $str->execute();

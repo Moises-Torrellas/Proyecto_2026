@@ -45,7 +45,7 @@
                 <a type="button" class="cerrar_modal" id="cerrar_modal">&times;</a>
             </div>
             <div class="contenido_modal">
-                <form id="f" autocomplete="off">
+                <form id="f" autocomplete="off" enctype="multipart/form-data">
                     <input type="hidden" id="id" name="id">
                     <div class="row">
                         <div class="colum">
@@ -102,6 +102,24 @@
                                 </select>
                                 <label for="roles" class="titulo_formulario">Rol</label>
                                 <span class="mensaje" id="rol_span"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario subir_foto">
+
+                                <div class="preview_contenedor">
+                                    <img id="foto_previa" src="public/img/camara.png">
+                                </div>
+
+                                <input type="file" class="input_foto_oculto" id="foto" name="foto" accept="image/*">
+
+                                <label for="foto" class="btn_subir_foto">
+                                    <i data-lucide="upload-cloud"></i> Seleccionar Foto
+                                </label>
+
+                                <span class="mensaje" id="foto_spam"></span>
                             </div>
                         </div>
                     </div>

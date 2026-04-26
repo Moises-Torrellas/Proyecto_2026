@@ -30,7 +30,7 @@ class ModeloInicio extends Conexion
     {
         try {
             $this->conexion = self::conexSG();
-            $sql = 'SELECT usuarios.idUsuario,usuarios.nombreUsuario,usuarios.apellidoUsuario,roles.nombre_rol,roles.id_rol,roles.nivel_rol,usuarios.contraseña,usuarios.bloqueo  
+            $sql = 'SELECT usuarios.idUsuario,usuarios.nombreUsuario,usuarios.apellidoUsuario,usuarios.foto,roles.nombre_rol,roles.id_rol,roles.nivel_rol,usuarios.contraseña,usuarios.bloqueo  
                             FROM `usuarios` 
                             INNER JOIN roles ON roles.id_rol=usuarios.id_rol WHERE cedulaUsuario = :cedula;';
             $stmt = $this->conexion->prepare($sql);

@@ -46,43 +46,43 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
             case 'consultar':
                 consultarUsuarios($obj);
                 break;
-                
+
             case 'consultarRoles':
                 $modeloRoles = new ModeloRoles();
                 consultarRoles($modeloRoles);
                 break;
-                
+
             case 'incluir':
                 if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar usuarios.');
                 incluirUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
-                
+
             case 'modificar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar usuarios.');
                 modificarUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
-                
+
             case 'eliminar':
                 if (!$permisos['eliminar']) throw new Exception('No tiene permisos para eliminar usuarios.');
                 eliminarUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
-                
+
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tiene permisos para buscar/ver detalles.');
                 buscarUsuario($obj);
                 break;
-                
+
             case 'bloquear':
                 if (!$permisos['otros']) throw new Exception('No tiene permisos para bloquear usuarios.');
                 bloquearUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
-                
+
             case 'generar':
                 if (!$permisos['reporte']) throw new Exception('No tienes permisos para reportes.');
                 $reporte = new ReporteUsuario();
                 generarReporteUsuarios($obj, $reporte);
                 break;
-                
+
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -106,82 +106,101 @@ function consultarRoles($obj): void
     echo json_encode($roles);
 }
 
+
 function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 {
-    $validaciones = [
-        'cedula' => ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cédula inválida. Debe contener de 7 a 8 dígitos.'],
-        'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido. Solo letras y espacios.'],
-        'apellido' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Apellido inválido. Solo letras y espacios.'],
-        'telefono' => ['regla' => '/^[0-9]{4}[-]{1}[0-9]{7}$/', 'mensaje' => 'Teléfono inválido.'],
-        'contraseña' => ['regla' => '/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z!@#\$%\^\&*\)\(+=._-]{8,20}$/', 'mensaje' => 'Contraseña inválida (requiere mayúscula, minúscula, número y símbolo).'],
-        'correo' => ['regla' => '/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br|ve)$/', 'mensaje' => 'Correo electrónico inválido.'],
-        'rol' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Rol inválido.']
-    ];
+    try {
+        $validaciones = [
+            'cedula' => ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cédula inválida. Debe contener de 7 a 8 dígitos.'],
+            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido. Solo letras y espacios.'],
+            'apellido' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Apellido inválido. Solo letras y espacios.'],
+            'telefono' => ['regla' => '/^[0-9]{4}[-]{1}[0-9]{7}$/', 'mensaje' => 'Teléfono inválido.'],
+            'contraseña' => ['regla' => '/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z!@#\$%\^\&*\)\(+=._-]{8,20}$/', 'mensaje' => 'Contraseña inválida (requiere mayúscula, minúscula, número y símbolo).'],
+            'correo' => ['regla' => '/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br|ve)$/', 'mensaje' => 'Correo electrónico inválido.'],
+            'rol' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Rol inválido.']
+        ];
 
-    validar_datos($validaciones);
+        validar_datos($validaciones);
 
-    $datos = [
-        'cedula' => $_POST['cedula'],
-        'nombre' => $_POST['nombre'],
-        'apellido' => $_POST['apellido'],
-        'telefono' => $_POST['telefono'],
-        'contraseña' => $_POST['contraseña'],
-        'correo' => $_POST['correo'],
-        'roles_id' => $_POST['rol'],
-        'accion' => 'incluir'
-    ];
+        $foto_nombre = subirImagen($_FILES['foto'], 'user', $_POST['cedula'], 'usuarios',);
 
-    $resultado = $obj->procesarDatos($datos);
+        // 3. Preparación de datos para el Modelo
+        $datos = [
+            'cedula'     => $_POST['cedula'],
+            'nombre'     => $_POST['nombre'],
+            'apellido'   => $_POST['apellido'],
+            'telefono'   => $_POST['telefono'],
+            'contraseña' => $_POST['contraseña'], // Recuerda usar password_hash en el modelo
+            'correo'     => $_POST['correo'],
+            'roles_id'   => $_POST['rol'],
+            'foto'       => $foto_nombre, // Se envía el nombre del archivo
+            'accion'     => 'incluir'
+        ];
 
-    if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-        registrarBitacora($bitacoraObj, $id_modulo, "Registró el usuario: " . $_POST['cedula']);
+        // 4. Ejecución en el Modelo
+        $resultado = $obj->procesarDatos($datos);
+
+        // 5. Auditoría y Respuesta
+        if (isset($resultado['resultado']) && $resultado['resultado'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró el usuario: " . $_POST['cedula']);
+        }
+
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Usuarios', $e->getMessage(), 'Controlador_Incluir');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
-
-    echo json_encode($resultado);
 }
 
 function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
 {
-    $validaciones = [
-        'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-        'cedula' => ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cédula inválida.'],
-        'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-        'apellido' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Apellido inválido.'],
-        'telefono' => ['regla' => '/^[0-9]{4}[-]{1}[0-9]{7}$/', 'mensaje' => 'Teléfono inválido.'],
-        'correo' => ['regla' => '/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br|ve)$/', 'mensaje' => 'Correo electrónico inválido.'],
-        'rol' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Rol inválido.']
-    ];
+    try {
+        $validaciones = [
+            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
+            'cedula' => ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cédula inválida.'],
+            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
+            'apellido' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Apellido inválido.'],
+            'telefono' => ['regla' => '/^[0-9]{4}[-]{1}[0-9]{7}$/', 'mensaje' => 'Teléfono inválido.'],
+            'correo' => ['regla' => '/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br|ve)$/', 'mensaje' => 'Correo electrónico inválido.'],
+            'rol' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Rol inválido.']
+        ];
 
-    if (!empty($_POST['contraseña'])) {
-        $validaciones['contraseña'] = ['regla' => '/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z!@#\$%\^\&*\)\(+=._-]{8,20}$/', 'mensaje' => 'Contraseña inválida.'];
+        if (!empty($_POST['contraseña'])) {
+            $validaciones['contraseña'] = ['regla' => '/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z!@#\$%\^\&*\)\(+=._-]{8,20}$/', 'mensaje' => 'Contraseña inválida.'];
+        }
+
+        validar_datos($validaciones);
+
+        $foto_nombre = subirImagen($_FILES['foto'], 'user', $_POST['cedula'], 'usuarios', $_POST['foto_actual']);
+
+        $datos = [
+            'id' => $_POST['id'],
+            'cedula' => $_POST['cedula'],
+            'nombre' => $_POST['nombre'],
+            'apellido' => $_POST['apellido'],
+            'foto' => $foto_nombre,
+            'telefono' => $_POST['telefono'],
+            'correo' => $_POST['correo'],
+            'roles_id' => $_POST['rol'],
+            'accion' => 'modificar'
+        ];
+
+        if (!empty($_POST['contraseña'])) {
+            $datos['contraseña'] = $_POST['contraseña'];
+        }
+
+        $resultado = $obj->procesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó un usuario ID: " . $_POST['id']);
+        }
+
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Usuarios', $e->getMessage(), 'Controlador_Incluir');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
-
-    validar_datos($validaciones);
-
-    $datos = [
-        'id' => $_POST['id'],
-        'cedula' => $_POST['cedula'],
-        'nombre' => $_POST['nombre'],
-        'apellido' => $_POST['apellido'],
-        'telefono' => $_POST['telefono'],
-        'correo' => $_POST['correo'],
-        'roles_id' => $_POST['rol'],
-        'accion' => 'modificar'
-    ];
-
-    if (!empty($_POST['contraseña'])) {
-        $datos['contraseña'] = $_POST['contraseña'];
-    }
-
-    $resultado = $obj->procesarDatos($datos);
-
-    if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') {
-        registrarBitacora($bitacoraObj, $id_modulo, "Modificó un usuario ID: " . $_POST['id']);
-    }
-
-    echo json_encode($resultado);
 }
-
 function eliminarUsuario($obj, $id_modulo, $bitacoraObj): void
 {
     validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);

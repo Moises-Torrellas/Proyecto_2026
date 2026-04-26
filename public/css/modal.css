@@ -327,3 +327,63 @@
     visibility: hidden !important;
     display: block !important;
 }
+
+/* Contenedor principal con diseño de tarjeta/zona de carga */
+.subir_foto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    border: 2px dashed #ccc; /* Borde punteado profesional */
+    border-radius: 12px;
+    background-color: var(--fondo-form);
+    transition: all 0.3s ease;
+}
+
+/* Efecto al pasar el mouse por la zona */
+.subir_foto:hover {
+    border-color: var(--color-primario);
+}
+
+/* Ocultar el feo input por defecto del navegador */
+.input_foto_oculto {
+    display: none;
+}
+
+/* Estilos de la foto redonda */
+.preview_contenedor {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%; /* Círculo perfecto */
+    overflow: hidden;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Sombreado elegante */
+    background-color: var(--fondo-form);
+}
+
+.preview_contenedor img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Evita que las fotos rectangulares se aplasten */
+}
+
+/* El Label convertido en Botón */
+.btn_subir_foto {
+    background-color: var(--color-primario); /* Color del botón */
+    color: var(--boton-texto);
+    padding: 10px 24px;
+    border-radius: 10px; /* Bordes redondeados modernos */
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn_subir_foto:hover {
+    transform: translateY(-2px); /* Pequeño salto al pasar el mouse */
+}
+

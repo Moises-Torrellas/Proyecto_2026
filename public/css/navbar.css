@@ -163,6 +163,14 @@ ul {
     height: 45px;
 }
 
+.foto_perfil_navbar {
+    width: 45px; /* Ajusta este valor al tamaño que tenía tu ícono */
+    height: 45px;
+    border-radius: 50%; /* La hace un círculo perfecto */
+    object-fit: cover; /* Evita que las fotos rectangulares se aplasten o deformen */
+    border: 2px solid var(--color-primario); /* Opcional: un bordecito para que resalte */
+}
+
 .contenedor_nombre {
     grid-column: 2;
     margin-right: 5px;

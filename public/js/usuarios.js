@@ -81,6 +81,9 @@ $(document).ready(function () {
                 confirmar('¿Está seguro que quiere modificar este usuario?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
+
+                        var fotoActual = $("#proceso").data("foto_actual")
+                        datos.append('foto_actual', fotoActual);
                         datos.append('accion', 'modificar');
                         enviaAjax(datos);
                     }
@@ -241,6 +244,7 @@ function modificar(datos) {
     $('#telefono').val(datos[0].telefonoUsuario);
     $('#correo').val(datos[0].correo);
     $('#roles').val(datos[0].id_rol).trigger('change');
+    $("#proceso").data("foto_actual", datos[0].foto);
 
     abrirModal();
 }
@@ -273,62 +277,6 @@ function bloquear(id, b, elemento) {
 
 const icon = 'fi-sr-lock';
 
-/* function crearConsulta(datos) {
-    var tablaBody = $('#resultadoconsulta');
-    tablaBody.empty();
-    var cantidadRegistros = datos.length;
-    var colspan = 5;
-    datos.forEach(dato => {
-
-        let botones = '';
-
-        let icon = dato.bloqueo == 1 ? 'fi-sr-unlock' : 'fi-sr-lock';
-        let color = dato.bloqueo == 1 ? 'cbt_g' : 'cbt_a';
-
-
-        botones += `<td>`;
-
-        botones += `<button class="btn_t cbt_v" onclick="buscar(${dato.idUsuario})"><i class="fi fi-sr-pencil"></i></button>`;
-        botones += `<button class="btn_t cbt_r" onclick="eliminar(${dato.idUsuario})"><i class="fi fi-sr-trash-xmark"></i></button>`;
-        botones += `<button class="btn_t ${color}" onclick="bloquear(${dato.idUsuario}, ${dato.bloqueo}, this)"><i class="fi ${icon}"></i>
-            </button>`;
-
-        botones += `</td>`;
-        colspan = 6;
-
-
-        var linea = `<tr>
-                        <td>${dato.cedulaUsuario}</td>
-                        <td>${escapeHTML(dato.nombreUsuario)}  ${escapeHTML(dato.apellidoUsuario)}</td>
-                        <td>${dato.telefonoUsuario}</td>
-                        <td>${dato.correo}</td>
-                        <td>${escapeHTML(dato.nombre_rol)}</td>
-                        ${botones}
-                    </tr>`;
-
-        tablaBody.append(linea);
-    });
-
-    if (cantidadRegistros == 0) {
-        colspan = 6;
-        var linea = `<tr>
-                        <td colspan='${colspan}'>No se encontraron registros</td>
-                    </tr>`;
-        tablaBody.append(linea);
-    }
-
-    if (cantidadRegistros >= 100) {
-        linea = ``
-        linea = `<tr>
-                    <td colspan='${colspan}'>
-                        <button class="btn btn_azul" onclick="CargarRegistros()">Cargar Mas Registros</button>
-                    </td>
-                </tr>`;
-        tablaBody.append(linea);
-    }
-    inicializarPaginador();
-} */
-
 function crearConsulta(datos) {
     const contenedor = $('#resultadoconsulta');
     contenedor.empty();
@@ -340,9 +288,9 @@ function crearConsulta(datos) {
             let icon = dato.bloqueo == 1 ? 'fi-sr-unlock' : 'fi-sr-lock';
             let color = dato.bloqueo == 1 ? 'cbt_g' : 'cbt_a';
 
-            let fotoHTML = dato.foto
-                ? `<img src="${dato.foto}" class="listado_avatar" alt="Perfil">`
-                : `<div class="listado_avatar_null"><i data-lucide="circle-user"></i></div>`;
+            let fotoHTML = dato.foto == 'default.png'
+                ? `<div class="listado_avatar_null"><i data-lucide="circle-user"></i></div>` 
+                : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil">`;
 
             let registro = `
                 <div class="listado_contenedor_grupal">
@@ -531,4 +479,22 @@ function enviaAjax(datos) {
         complete: function () { },
     });
 }
+
+// Escuchamos cuando el usuario selecciona un archivo
+document.getElementById('foto').addEventListener('change', function(event) {
+    const archivo = event.target.files[0];
+    
+    if (archivo) {
+        // Creamos el objeto para leer el archivo
+        const reader = new FileReader();
+        
+        // Cuando termine de leer, cambiamos el 'src' de la imagen
+        reader.onload = function(e) {
+            document.getElementById('foto_previa').src = e.target.result;
+        }
+        
+        // Inicia la lectura del archivo como una URL de datos
+        reader.readAsDataURL(archivo);
+    }
+});
 

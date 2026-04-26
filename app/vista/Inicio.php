@@ -50,7 +50,7 @@
             </div>
         </div>
         <div class="contenedor_imagen">
-            <img src="img/login-3.jpg" class="imagen_login" alt="Login">
+            <img src="img/login.png" class="imagen_login" alt="Login">
         </div>
     </section>
     <script src="js/main.js"></script>
