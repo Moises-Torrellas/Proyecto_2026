@@ -19,10 +19,10 @@ class ModeloTorneos extends ModeloBase
         parent::__construct();
         // Agregamos 'nombre' al whitelist para evitar el error al Modificar
         $this->campoWhitelist = [
-            'id' => 'id_torneo', // Corregido a singular según la base de datos
+            'id' => 'id_torneo', 
             'nombre' => 'nombre'
         ];
-        $this->llavePrimaria = 'id_torneo'; // Corregido a singular
+        $this->llavePrimaria = 'id_torneo'; 
     }
 
     public function ProcesarDatos(array $datos): array
@@ -37,7 +37,7 @@ class ModeloTorneos extends ModeloBase
         $this->fecha_fin = $datos['fecha_fin'] ?? null;
         // Convertimos la ubicación a formato Título o Mayúsculas para mantener orden
         $this->ubicacion = mb_convert_case(trim($datos['ubicacion'] ?? ''), MB_CASE_TITLE, "UTF-8");
-        $this->estatus = $datos['estatus'] ?? null; // Se eliminó el espacio accidental que tenía 'estatus '
+        $this->estatus = $datos['estatus'] ?? null; 
         
         $accion = $datos['accion'] ?? null;
         
@@ -46,7 +46,7 @@ class ModeloTorneos extends ModeloBase
             'eliminar'  => $this->Eliminar(),
             'buscar'    => $this->Buscar(),
             'modificar' => $this->Modificar(),
-            'consultar' => $this->Consultar(), // Añadido para el listado general
+            'consultar' => $this->Consultar(), 
             default => throw new Exception('La acción no es válida')
         };
     }
@@ -72,7 +72,7 @@ class ModeloTorneos extends ModeloBase
                 $params[':nombre'] = trim($this->nombre) . "%";
             }
 
-            // ORDEN (Corregido a id_torneo en singular)
+            // ORDEN 
             $sentencia .= " ORDER BY id_torneo ASC";
 
             $stmt = $conex->prepare($sentencia);
@@ -123,7 +123,6 @@ class ModeloTorneos extends ModeloBase
                 }
             }
             $conex = $this->conex();
-            // Corregido a id_torneo en singular
             $sentencia = "UPDATE torneos SET 
             nombre = :nombre, 
             fecha_inicio = :fecha_inicio, 
@@ -154,7 +153,6 @@ class ModeloTorneos extends ModeloBase
     {
         try {
             $conex = $this->conex();
-            // Corregido a id_torneo en singular
             $sentencia = "SELECT * FROM torneos WHERE id_torneo = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
@@ -183,7 +181,6 @@ class ModeloTorneos extends ModeloBase
             }
 
             $conex = $this->conex();
-            // Corregido a id_torneo en singular
             $sentencia = "DELETE FROM torneos WHERE id_torneo = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
