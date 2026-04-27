@@ -23,7 +23,7 @@
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="boxes"></i> Equipamientos</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="clipboard-pen-line"></i> Catalogo</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="layers-plus"></i> Categoria de Equipamientos</a>
-                <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="badge-check"></i> Calidad</a>
+                <a type="button" href="/Proyecto_2026/public/Calidad" class="opciones"><i class="opciones_i" data-lucide="badge-check"></i> Calidad</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="list-plus"></i> Asignaciones</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="list-restart"></i> Devoluciones</a>
             </li>
