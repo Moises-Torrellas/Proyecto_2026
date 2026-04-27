@@ -12,14 +12,14 @@ $id_modulo = _MD_CATEGORIAS_;
 $permisos = procesarPermisos($id_modulo, $bitacora ?? null);
 
 // 4. Lógica de despacho (Router interno)
-$nombreClaseModelo = 'App\modelo\ModeloCategorias';
+$nombreClaseModelo = 'App\modelo\ModeloCalidad';
 
 if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
     exit();
 }
 
-$objModelo = new ModeloCategorias();
+$objModelo = new ModeloCalidad();
 
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudCategorias($objModelo, $id_modulo, $bitacora ?? null, $permisos);
@@ -70,4 +70,11 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
         error_log($e->getMessage());
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
+}
+
+function consultar($obj): void
+{
+    $filtro['filtro'] = $_POST['filtro'] ?? '';
+    $registros = $obj->consultar($filtro);
+    echo json_encode($registros);
 }
