@@ -51,7 +51,7 @@
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="nombre" name="nombre">
-                                <label for="nombre" class="titulo_formulario">Nombre (Ej: U-12)</label>
+                                <label for="nombre" class="titulo_formulario">Nombre</label>
                                 <span class="mensaje" id="nombre_spam"></span>
                             </div>
                         </div>

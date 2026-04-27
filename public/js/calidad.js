@@ -24,7 +24,8 @@ $(document).ready(function () {
 
     // 3. Validaciones en tiempo real para Categorías
     // Nombre: Letras, números, espacios y guiones (Ej: "U-12", "Sub 20")
-    Validacion("nombre", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras, números y guiones)", "proceso");
+    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
+
 
 
     // 4. Lógica de los Botones Guardar/Modificar
@@ -105,7 +106,7 @@ function eliminar(id) {
 }
 
 function validarEnvio(proceso) {
-    if (validarkeyup(/^[A-Za-z0-9\-\b\s]{2,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 2 y 30 caracteres (letras, números y guiones)", true)) {
+    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 3 y 30 caracteres solo letras", true)) {
         muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de calidad válido");
         return false;
     }
@@ -123,10 +124,9 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Calidad");
     
     // Llenamos el formulario con los datos recibidos de la BD
-    $('#id').val(datos[0].id_categorias);
+    $('#id').val(datos[0].id_estado);
     $('#nombre').val(datos[0].nombre);
-    $('#edad_min').val(datos[0].edad_min);
-    $('#edad_max').val(datos[0].edad_max);
+    $('#nivel').val(datos[0].nivel_estado);
 
     abrirModal();
 }
@@ -136,9 +136,10 @@ function crearConsulta(datos) {
     contenedor.empty();
 
     if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron categorías registradas</p></div>');
+        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
     } else {
         datos.forEach(dato => {
+            var nivel = dato.nivel_estado == 1 ? "Buena Calidad" : (dato.nivel_estado == 2 ? "Media Calidad" : "Mala Calidad"); 
             let registro = `
                 <div class="listado_contenedor_grupal">
                     <div class="listado_item" onclick="toggleDetalles(this)">
@@ -148,15 +149,15 @@ function crearConsulta(datos) {
                                 <span style="font-weight: bold; color: #2ec135;">${escapeHTML(dato.nombre)}</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Edad Mínima</small>
-                                <span>${dato.edad_min} años</span>
+                                <small>Nivel De Calidad</small>
+                                <span>${nivel}</span>
                             </div>
                         </div>
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_categorias})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_categorias})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_estado})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_estado})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             </div>
                         </div>
                     </div>
