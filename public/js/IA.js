@@ -43,14 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
             formData.append('pregunta', pregunta);
 
             // IMPORTANTE: Asegúrate de apuntar a la ruta correcta de tu enrutador
-            const respuesta = await fetch('?pagina=ia', { 
+            const respuesta = await fetch('?pagina=Ia', { 
                 method: 'POST',
                 body: formData,
                 headers: {
-                    // Si tu sistema usa CSRF tokens en JS, agrégalo aquí
+                    // Si usamos CSRF tokens en JS, agrégalo aquí
                     // 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     
-                    // Este header es crucial para que tu función PHP comprobarAjax() devuelva TRUE
+                    // Este header es crucial para que la función PHP comprobarAjax() devuelva TRUE
                     'X-Requested-With': 'XMLHttpRequest' 
                 }
             });

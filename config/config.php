@@ -40,6 +40,7 @@ const _MD_EQUIPOS_ = 20;
 const _MD_PREMIOS_ = 21;
 const _MD_PALMARES_ = 22;
 const _MD_ESTADISTICAS_ = 23;
+const _MD_IA_ = 99;
 
 if (session_status() === PHP_SESSION_NONE) {
     // Configuramos la sesión antes de iniciarla

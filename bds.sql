@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 26-04-2026 a las 20:03:13
--- Versión del servidor: 10.4.28-MariaDB
--- Versión de PHP: 8.2.4
+-- Tiempo de generación: 01-05-2026 a las 05:54:37
+-- Versión del servidor: 10.4.32-MariaDB
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `bds`
 --
-CREATE DATABASE IF NOT EXISTS `bds` DEFAULT CHARACTER SET utf8 COLLATE utf8_spanish2_ci;
-USE `bds`;
 
 -- --------------------------------------------------------
 
@@ -112,7 +110,15 @@ INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `fecha`, `hora`,
 (133, 5, 'Cierre de sesión.', '2026-04-26', '13:26:30', 1),
 (134, 4, 'Inicio de sesión exitoso', '2026-04-26', '13:41:19', 1),
 (135, 5, 'Cierre de sesión.', '2026-04-26', '14:02:42', 1),
-(136, 4, 'Inicio de sesión exitoso', '2026-04-26', '14:02:52', 1);
+(136, 4, 'Inicio de sesión exitoso', '2026-04-26', '14:02:52', 1),
+(137, 4, 'Inicio de sesión exitoso', '2026-04-26', '21:12:08', 1),
+(138, 4, 'Inicio de sesión exitoso', '2026-04-30', '20:01:07', 1),
+(139, 19, 'Registró el torneo: Invitacional', '2026-04-30', '20:02:16', 1),
+(140, 19, 'Modificó el torneo: INVITACIONAL', '2026-04-30', '20:02:29', 1),
+(141, 4, 'Inicio de sesión exitoso', '2026-04-30', '21:31:24', 1),
+(143, 99, 'Interactuó con el asistente virtual Cani.', '2026-04-30', '22:59:05', 1),
+(144, 99, 'Interactuó con el asistente virtual Cani.', '2026-04-30', '23:08:42', 1),
+(145, 99, 'Interactuó con el asistente virtual Cani.', '2026-04-30', '23:14:23', 1);
 
 -- --------------------------------------------------------
 
@@ -151,7 +157,8 @@ INSERT INTO `modulo` (`id_modulo`, `nombre_modulo`, `estatus`) VALUES
 (20, 'Equipos', 1),
 (21, 'Premios', 1),
 (22, 'Palmares', 1),
-(23, 'Estadisticas', 1);
+(23, 'Estadisticas', 1),
+(99, 'Inteligencia Artificial', 1);
 
 -- --------------------------------------------------------
 
@@ -268,13 +275,13 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=137;
+  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=146;
 
 --
 -- AUTO_INCREMENT de la tabla `modulo`
 --
 ALTER TABLE `modulo`
-  MODIFY `id_modulo` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id_modulo` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT de la tabla `permiso`

@@ -204,34 +204,84 @@ $(document).ready(function () {
     });
 
     function enviarMensaje() {
-        let texto = $('#chat_mensaje').val().trim();
-        if (texto !== "") {
-            // 1. Añadir mensaje del usuario con las NUEVAS clases
-            $('#chat_historial').append(`
-            <div class="asistente_msg asistente_usuario">
-                <div class="asistente_burbuja">${texto}</div>
-            </div>
-        `);
+    let textoFormulario = $('#chat_mensaje').val().trim();
+    if (textoFormulario === '') return;
 
-            // Limpiar input
-            $('#chat_mensaje').val('');
+    // 1. Mostrar mensaje del usuario
+    $('#chat_historial').append(`
+        <div class="asistente_msg asistente_usuario">
+            <div class="asistente_burbuja">${textoFormulario}</div>
+        </div>
+    `);
+    
+    // Limpiar input y bajar el scroll
+    $('#chat_mensaje').val('');
+    let historial = $('#chat_historial');
+    historial.scrollTop(historial[0].scrollHeight);
 
-            // Scroll automático al fondo
-            let historial = $('#chat_historial');
-            historial.scrollTop(historial[0].scrollHeight);
+    // 2. Mostrar "Cani está pensando..."
+    let idCargando = 'cargando_' + Date.now();
+    $('#chat_historial').append(`
+        <div id="${idCargando}" class="asistente_msg asistente_bot">
+            <div class="asistente_burbuja"><i>Cani está pensando...</i></div>
+        </div>
+    `);
+    historial.scrollTop(historial[0].scrollHeight);
 
-            // 2. Simular respuesta del Bot con las NUEVAS clases
-            setTimeout(() => {
+    // 3. CONEXIÓN AJAX REAL CON PHP Y PYTHON
+    $.ajax({
+        url: 'IA', // Asegúrarse de que esta ruta apunte al enrutador PHP
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            accion: 'generar',
+            pregunta: textoFormulario
+        },
+        success: function(respuesta) {
+            // Borramos el cartel de "pensando..."
+            $('#' + idCargando).remove();
+            
+            if (respuesta.status === 'success') {
+                // Convertimos saltos de línea y mostramos respuesta
+                let textoGemini = respuesta.data.replace(/\n/g, "<br>");
                 $('#chat_historial').append(`
+                    <div class="asistente_msg asistente_bot">
+                        <div class="asistente_burbuja">${textoGemini}</div>
+                    </div>
+                `);
+            } else {
+                $('#chat_historial').append(`
+                    <div class="asistente_msg asistente_bot">
+                        <div class="asistente_burbuja">Uy, ocurrió un error: ${respuesta.mensaje}</div>
+                    </div>
+                `);
+            }
+            historial.scrollTop(historial[0].scrollHeight);
+        },
+        error: function(xhr, status, error) {
+            $('#' + idCargando).remove();
+            console.error("Fallo AJAX:", error);
+            $('#chat_historial').append(`
                 <div class="asistente_msg asistente_bot">
-                    <div class="asistente_burbuja">Entendido, estoy procesando tu solicitud sobre: "${texto}"...</div>
+                    <div class="asistente_burbuja">Error de conexión. Revisa la consola (F12).</div>
                 </div>
             `);
-                historial.scrollTop(historial[0].scrollHeight);
-            }, 1000);
+            historial.scrollTop(historial[0].scrollHeight);
         }
-    }
+    });
+} // <-- FIN DE LA FUNCIÓN enviarMensaje
 
+// Disparadores de eventos para enviar el mensaje
+$('#enviar_mensaje').off('click').on('click', enviarMensaje);
+
+$('#chat_mensaje').off('keydown').on('keydown', function (e) {
+    if (e.which === 13 && !e.shiftKey) {
+        e.preventDefault();
+        enviarMensaje();
+    }
+});
+
+$(document).ready(function () {
     // Eventos (Se mantienen igual, solo asegúrate de que los IDs coincidan)
     $('#enviar_mensaje').on('click', enviarMensaje);
 
@@ -241,6 +291,7 @@ $(document).ready(function () {
             enviarMensaje();
         }
     });
+});
 });
 
 function inicializarPaginador() {
