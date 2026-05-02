@@ -2,13 +2,11 @@
 
 namespace App\modelo;
 
-use App\modelo\Conexion;
+use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloRoles extends Conexion
+class ModeloRoles extends ModeloBase
 {
-    private $conexion = null;
-
     private int $id;
     private string $nombre;
     private array $id_modulo;
@@ -18,12 +16,16 @@ class ModeloRoles extends Conexion
     private array $c_reporte;
     private array $c_otros;
 
-    public function __construct() {}
-
-    private array $campoWhitelist = [
-        'id_rol' => 'id_rol',
-        'nombre_rol' => 'nombre_rol'
-    ];
+    public function __construct()
+    {
+        parent::__construct();
+        $this->campoWhitelist = [
+            'nombre' => 'nombre_rol',
+            'id_modulo' => 'id_modulo',
+            'id' => 'id_rol',
+        ];
+        $this->llavePrimaria = 'id_rol';
+    }
 
     public function procesarDatos(array $datos)
     {
@@ -47,20 +49,22 @@ class ModeloRoles extends Conexion
             'incluir'   => $this->Incluir(),
             'modificar' => $this->Modificar(),
             'buscar'    => $this->Buscar(),
+            'eliminar'    => $this->Eliminar(),
             default     => throw new Exception("Acción no válida."),
         };
     }
     public function consultar()
     {
         try {
-            $this->conexion = parent::conexSG();
-            $sentencia = 'SELECT * FROM roles';
-            $stmt = $this->conexion->prepare($sentencia);
+            $conex = null;
+            $conex = $this->conexSG();
+            $sentencia = 'SELECT * FROM roles WHERE nivel_rol != 1';
+            $stmt = $conex->prepare($sentencia);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             return ['accion' => 'consultar', 'datos' => $datos];
         } catch (Exception $e) {
-            error_log($e->getMessage());
+            logs('Roles', $e->getMessage(), 'Modelo_Consultar');
             return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         }
     }
@@ -68,14 +72,14 @@ class ModeloRoles extends Conexion
     public function consultarModulo()
     {
         try {
-            $this->conexion = parent::conexSG();
-            $sentencia = 'SELECT modulo.id_modulo, modulo.nombre_modulo FROM `modulo` WHERE modulo.id_modulo NOT IN (4, 5, 8)';
-            $stmt = $this->conexion->prepare($sentencia);
+            $conex = $this->conexSG();
+            $sentencia = 'SELECT modulo.id_modulo, modulo.nombre_modulo FROM `modulo` WHERE modulo.id_modulo NOT IN (4, 5, 8, 1, 2, 3)';
+            $stmt = $conex->prepare($sentencia);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             $resultado = array('accion' => 'consultarModulo', 'datos' => $datos);
         } catch (Exception $e) {
-            error_log($e->getMessage());
+            logs('Roles', $e->getMessage(), 'Modelo_ConsultarModulos');
             $resultado = array('accion' => 'error', 'mensaje' => $e->getMessage());
         }
         return $resultado;
@@ -84,18 +88,18 @@ class ModeloRoles extends Conexion
     public function Buscar()
     {
         try {
-            $this->conexion = self::conexSG();
+            $conex = $this->conexSG();
             $sentencia = 'SELECT roles.id_rol,roles.nombre_rol,permiso.eliminar,permiso.modificar,permiso.incluir,permiso.reporte,permiso.otros,modulo.nombre_modulo,modulo.id_modulo FROM `roles` 
             INNER JOIN permiso ON roles.id_rol=permiso.id_rol 
             INNER JOIN modulo ON permiso.id_modulo=modulo.id_modulo 
             WHERE roles.id_rol=:id';
-            $stmt = $this->conexion->prepare($sentencia);
+            $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             $resultado = array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
-            error_log($e->getMessage());
+            logs('Roles', $e->getMessage(), 'Modelo_Buscar');
             $resultado = array('accion' => 'error', 'mensaje' => $e->getMessage());
         }
         return $resultado;
@@ -104,27 +108,35 @@ class ModeloRoles extends Conexion
     private function Incluir()
     {
         try {
+            $conex = null;
 
-            if ($this->verificarExistencia('nombre_rol', $this->nombre, 1)) {
-                return ['accion' => 'error', 'mensaje' => 'El rol ya existe'];
+            foreach ($this->id_modulo as $id) {
+                if (!$this->verificarExistencia('id_modulo', $id, 'modulo', NULL, 'sg')) {
+                    throw new Exception(ASSOCIATES);
+                }
+            }
+            $idsProtegidos = [1, 2, 3, 4, 5, 8];
+            if (!empty(array_intersect($this->id_modulo, $idsProtegidos))) {
+                throw new Exception(ASSOCIATES);
             }
 
-            if (!$this->verificarModulo($this->id_modulo)) {
-                return ['accion' => 'error', 'mensaje' => 'Un modulo no existe o es restringido'];
+            $conex = $this->conexSG();
+            $conex->beginTransaction();
+
+            if ($this->verificarExistencia('nombre', $this->nombre, 'roles', 1, 'sg', bloquear: true)) {
+                throw new Exception(DUPLICATE_NAME);
             }
 
-            $this->conexion = self::conexSG();
-            $this->conexion->beginTransaction();
 
             $sql = 'INSERT INTO `roles`(`nombre_rol`, `estatus`) VALUES (:nombre, 1)';
-            $stmt = $this->conexion->prepare($sql);
+            $stmt = $conex->prepare($sql);
             $stmt->execute([':nombre' => $this->nombre]);
 
-            $id_rol = $this->conexion->lastInsertId();
+            $id_rol = $conex->lastInsertId();
 
             $sentencia = "INSERT INTO `permiso`(`id_rol`, `id_modulo`, `eliminar`, `modificar`, `incluir`, `reporte`, `otros`) 
                         VALUES (:id_rol, :id_modulo, :eliminar, :modificar, :incluir, :reporte, :otros)";
-            $stmtPermiso = $this->conexion->prepare($sentencia);
+            $stmtPermiso = $conex->prepare($sentencia);
 
             foreach ($this->id_modulo as $modulo) {
                 $stmtPermiso->execute([
@@ -138,35 +150,42 @@ class ModeloRoles extends Conexion
                 ]);
             }
 
-            // SI LLEGA AQUÍ, TODO SE GUARDA
-            $this->conexion->commit();
-            return ['accion' => 'incluir', 'mensaje' => 'Rol registrado correctamente'];
+            $conex->commit();
+            return ['accion' => 'exito'];
         } catch (Exception $e) {
-            // SI ALGO FALLA, SE BORRA EL ROL TAMBIÉN
-            if ($this->conexion && $this->conexion->inTransaction()) {
-                $this->conexion->rollBack();
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
             }
-            error_log("Error crítico en Incluir: " . $e->getMessage());
-            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
+            logs('Roles', $e->getMessage(), 'Modelo_Incluir');
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
         } finally {
-            $this->conexion = null;
+            $conex = null;
         }
     }
 
-    private function Modificar(){
+    private function Modificar()
+    {
         try {
-            if(!$this->verificarExistenciaPropia('nombre_rol', $this->nombre, $this->id)){
-                if($this->verificarExistencia('nombre_rol', $this->nombre, 1)){
-                    return ['accion' => 'error', 'mensaje' => 'El rol ya existe'];
+            $conex = null;
+            foreach ($this->id_modulo as $id) {
+                if (!$this->verificarExistencia('id_modulo', $id, 'modulo', NULL, 'sg')) {
+                    throw new Exception(ASSOCIATES);
                 }
             }
-            if (!$this->verificarModulo($this->id_modulo)) {
-                return ['accion' => 'error', 'mensaje' => 'Un modulo no existe o es restringido'];
+            $idsProtegidos = [1, 2, 3, 4, 5, 8];
+            if (!empty(array_intersect($this->id_modulo, $idsProtegidos))) {
+                throw new Exception(ASSOCIATES);
             }
-            $this->conexion = self::conexSG();
-            $this->conexion->beginTransaction();
+            $conex = $this->conexSG();
+            $conex->beginTransaction();
+
+            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'roles', 1, 'sg', true)) {
+                if ($this->verificarExistencia('nombre', $this->nombre, 'roles', 1, 'sg', bloquear: true)) {
+                    throw new Exception(DUPLICATE_NAME);
+                }
+            }
             $sql = 'UPDATE `roles` SET `nombre_rol`=:nombre WHERE id_rol=:id';
-            $stmt =$this->conexion->prepare($sql);
+            $stmt = $conex->prepare($sql);
             $parametros = [
                 ':id' => $this->id,
                 ':nombre' => $this->nombre
@@ -174,12 +193,12 @@ class ModeloRoles extends Conexion
             $stmt->execute($parametros);
 
             $sql = 'DELETE FROM `permiso` WHERE `id_rol` = :id';
-            $stmt= $this->conexion->prepare($sql);
+            $stmt = $conex->prepare($sql);
             $stmt->execute([':id' => $this->id]);
 
             $sql = 'INSERT INTO `permiso`(`id_rol`, `id_modulo`, `eliminar`, `modificar`, `incluir`, `reporte`, `otros`) 
                                 VALUES (:id_rol,:id_modulo,:eliminar,:modificar,:incluir,:reporte,:otros)';
-            $stmt = $this->conexion->prepare($sql);
+            $stmt = $conex->prepare($sql);
 
             foreach ($this->id_modulo as $modulo) {
                 $stmt->execute([
@@ -193,105 +212,52 @@ class ModeloRoles extends Conexion
                 ]);
             }
 
-            $this->conexion->commit();
-            return ['accion' => 'modificar', 'mensaje' => 'Rol modificado correctamente'];
-        }catch (Exception $e) {
-            if ($this->conexion && $this->conexion->inTransaction()) {
-                $this->conexion->rollBack();
+            $conex->commit();
+            return ['accion' => 'exito'];
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
             }
-            error_log("Error crítico en Incluir: " . $e->getMessage());
-            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
-        }finally {
-            $this->conexion = null;
+            logs('Roles', $e->getMessage(), 'Modelo_Modificar');
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+        } finally {
+            $conex = null;
         }
     }
 
-    private function verificarExistencia($campo, $valor, $estatus): bool
+    private function Eliminar()
     {
         try {
-            // Validar campo contra whitelist
-            if (!array_key_exists($campo, $this->campoWhitelist)) {
-                throw new Exception('Campo no permitido.');
+            $conex = null;
+            $idsProtegidos = [1, 2];
+            if (!empty(array_intersect($this->id_modulo, $idsProtegidos))) {
+                throw new Exception(INVALID_ID);
             }
 
-            $columna = $this->campoWhitelist[$campo];
+            $conex = $this->conexSG();
+            $conex->beginTransaction();
+            if ($this->verificarExistencia('id', $this->id, 'usuarios', 1, bloquear: true)) {
+                throw new Exception(ASSOCIATES);
+            }
+            if ($this->verificarExistencia('id', $this->id, 'roles', NULL, bloquear: true)) {
+                throw new Exception(INVALID_ID.'0');
+            }
+            
+            $sentencia = 'DELETE FROM roles WHERE id_rol = :id';
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindParam(':id', $this->id);
+            $stmt->execute();
 
-            $this->conexion = self::conexSG();
-            $sentencia = "SELECT COUNT(*) FROM `roles` WHERE $columna = :valor AND estatus = :estatus";
-            $str = $this->conexion->prepare($sentencia);
-            $str->bindValue(':valor', $valor);
-            $str->bindValue(':estatus', $estatus, \PDO::PARAM_INT);
-            $str->execute();
-
-            $count = (int)$str->fetchColumn();
-            return $count > 0;
+            $conex->commit();
+            return ['accion' => 'exito'];
         } catch (Exception $e) {
-            error_log("roles " . $e->getMessage());
-            return false;
-        }
-    }
-
-    private function verificarExistenciaPropia($campo, $valor, $id): bool
-    {
-
-        try {
-            if (!array_key_exists($campo, $this->campoWhitelist)) {
-                throw new Exception('Campo no permitido.');
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
             }
-
-            $columna = $this->campoWhitelist[$campo];
-
-            $this->conexion = self::conexSG();
-            $sentencia = "SELECT roles.id_rol FROM `roles` WHERE roles.id_rol=:id AND $campo = :valor AND roles.estatus=1;";
-            $str = $this->conexion->prepare($sentencia);
-            $str->bindParam(':id', $id,);
-            $str->bindParam(':valor', $valor);
-            $str->execute();
-
-            $respuesta = $str->fetchAll();
-            if ($respuesta) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (Exception $e) {
-            error_log("Error en coincide Roles: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    private function verificarModulo($modulo): bool
-    {
-        try {
-            if (empty($modulo)) return false;
-
-            $this->conexion = self::conexSG();
-
-            // Limpiamos el array para asegurar que solo haya valores únicos y numéricos
-            $idsUnicos = array_unique(array_map('intval', $modulo));
-            $placeholders = implode(',', array_fill(0, count($idsUnicos), '?'));
-
-            $sentencia = "SELECT COUNT(id_modulo) as total FROM `modulo` 
-                        WHERE id_modulo IN ($placeholders) 
-                        AND id_modulo NOT IN (4, 5, 8)";
-
-            $str = $this->conexion->prepare($sentencia);
-            $str->execute(array_values($idsUnicos));
-            $resultado = $str->fetch();
-
-            // Log para depurar si falla
-            $totalDB = (int)($resultado['total'] ?? 0);
-            $totalEnviado = count($idsUnicos);
-
-            if ($totalDB !== $totalEnviado) {
-                error_log("Fallo validación: DB tiene $totalDB y se enviaron $totalEnviado");
-                return false;
-            }
-
-            return true;
-        } catch (Exception $e) {
-            error_log("Error en verificarModulos: " . $e->getMessage());
-            return false;
+            logs('Roles', $e->getMessage(), 'Modelo_Eliminar');
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+        } finally {
+            $conex = null;
         }
     }
 }
