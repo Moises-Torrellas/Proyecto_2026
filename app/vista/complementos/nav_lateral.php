@@ -39,12 +39,14 @@
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="trophy"></i> Palmares</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="chart-area"></i> Estadisticas</a>
             </li>
+            <?php if($_SESSION['nivel_rol'] == 1){?>
             <li class="nav_identificador">General</li>
             <li class="nav_opciones">
                 <a type="button" href="/Proyecto_2026/public/Usuarios" class="opciones"><i class="opciones_i" data-lucide="users"></i> Usuarios</a>
                 <a type="button" href="/Proyecto_2026/public/Roles" class="opciones"><i class="opciones_i" data-lucide="user-key"></i> Roles</a>
                 <a type="button" href="/Proyecto_2026/public/Bitacora" class="opciones "><i class="opciones_i" data-lucide="notebook"></i> Bitacora</a>
             </li>
+            <?php }?>
             <li class="nav_identificador">Soporte</li>
             <li class="nav_opciones">
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="info"></i> Preguntas Frecuentes</a>

@@ -226,23 +226,7 @@ function eliminar(id) {
     });
 }
 
-/* function crearConsulta(datos) {
-    var tablaBody = $('#resultadoconsulta');
-    tablaBody.empty();
-    datos.forEach(dato => {
-        var linea = `<tr>
-                        <td>${dato.id_rol}</td>
-                        <td>${escapeHTML(dato.nombre_rol)}</td>
-                        <td>
-                            <button class="btn_t cbt_v" id="cbt_v" onclick="buscar(${dato.id_rol})"><i class="fi fi-sr-pencil"></i></button>
-                            <button class="btn_t cbt_r" id="cbt_r" onclick="eliminar(${dato.id_rol})"><i class="fi fi-sr-trash-xmark"></i></button>
-                        </td>
-                    </tr>`;
 
-        tablaBody.append(linea);
-    });
-    inicializarPaginador();
-} */
 
 function crearConsulta(datos) {
     const contenedor = $('#resultadoconsulta');
