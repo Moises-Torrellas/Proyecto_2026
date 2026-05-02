@@ -162,40 +162,40 @@ class ModeloRecuperacion extends Conexion
             $mail->CharSet    = 'UTF-8';                       // Asegura tildes y eñes
 
             // 3. Remitente y Destinatario
-            $mail->setFrom('soporte.sigmasell@gmail.com', 'Soporte de SigmaSell');
+            $mail->setFrom('soporte.sigmasell@gmail.com', 'Soporte de Cannibals Lara');
             $mail->addAddress($correo, $destinatario);
 
             // 4. Diseño del Cuerpo del Correo (HTML)
             $mail->isHTML(true);
-            $mail->Subject = 'Código de Verificación - SigmaSell';
+            $mail->Subject = 'Código de Verificación - Cannibals Lara';
 
-            // Estilos usando tus variables: --color-primario: #0041f2, --fondo-principal: #f2f3f5, etc.
+            // Estilos usando tus variables: --color-primario: #32AF0A, --fondo-principal: #f2f3f5, etc.
             $mail->Body = "
         <div style='background-color: #f2f3f5; padding: 40px; font-family: sans-serif;'>
             <div style='max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
                 
-                <div style='background-color: #0041f2; padding: 25px; text-align: center;'>
-                    <h1 style='color: #ffffff; margin: 0; font-size: 26px; letter-spacing: 1px;'>SIGMASELL</h1>
+                <div style='background-color: #32AF0A; padding: 25px; text-align: center;'>
+                    <h1 style='color: #ffffff; margin: 0; font-size: 26px; letter-spacing: 1px;'>CANNIBALS LARA</h1>
                 </div>
 
                 <div style='padding: 35px; text-align: center; color: #3a4750;'>
-                    <h2 style='color: #0041f2; margin-top: 0;'>Verificación de Seguridad</h2>
+                    <h2 style='color: #32AF0A; margin-top: 0;'>Verificación de Seguridad</h2>
                     <p style='font-size: 16px; line-height: 1.6; color: #3a4750;'>Hola, <strong>$destinatario</strong>.</p>
-                    <p style='font-size: 14px; color: #555;'>Has solicitado acceso o un cambio de contraseña en SigmaSell. Por favor, utiliza el siguiente código para continuar:</p>
+                    <p style='font-size: 14px; color: #555;'>Has solicitado acceso o un cambio de contraseña. Por favor, utiliza el siguiente código para continuar:</p>
                     
                     <div style='margin: 30px 0; padding: 20px; background-color: #e0e3e7; border-radius: 8px; border: 1px dashed #92c5ff;'>
-                        <span style='font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #0041f2;'>$codigo</span>
+                        <span style='font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #32AF0A;'>$codigo</span>
                     </div>
                     
                     <p style='font-size: 12px; color: #92c5ff; margin-top: 25px;'>
-                        Este código es de un solo uso y expirará pronto por motivos de seguridad.
+                        Este código es de un solo uso y expirará en los proximos 30 minutos por motivos de seguridad.
                     </p>
                 </div>
 
                 <div style='background-color: #f9f9f9; padding: 20px; text-align: center; border-top: 1px solid #e0e3e7;'>
                     <p style='font-size: 11px; color: #3a4750; margin: 0; line-height: 1.4;'>
                         ¿No solicitaste este código? Puedes ignorar este mensaje.<br>
-                        <strong>SigmaSell System</strong> - Gestión de Ventas Inteligente
+                        <strong>Cannibals Lara System</strong> - Gestión del Club Cannibals Lara
                     </p>
                 </div>
             </div>
@@ -203,7 +203,7 @@ class ModeloRecuperacion extends Conexion
         ";
 
             // Versión en texto plano para dispositivos que no soportan HTML
-            $mail->AltBody = "SigmaSell: Tu código de verificación es $codigo. Si no solicitaste este cambio, ignora este mensaje.";
+            $mail->AltBody = "Cannibals Lara: Tu código de verificación es $codigo. Si no solicitaste este cambio, ignora este mensaje.";
 
             // 5. Envío y Respuesta
             $mail->send();

@@ -14,6 +14,7 @@
 <script src="libraries/js/tippy.min.js"></script>
 <script src="libraries/js/chart.min.js"></script>
 <script src="libraries/js/cropper.min.js"></script>
+<script src="libraries/js/fullCalendar.min.js"></script>
 
 <script src="libraries/driver.js-stable/dist/driver.min.js"></script>
 <link href="css/main.css" rel="stylesheet">

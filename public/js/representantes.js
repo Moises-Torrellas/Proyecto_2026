@@ -87,10 +87,6 @@ $(document).ready(function () {
         }
     });
 
-    $('#nacionalidad').select2({
-        placeholder: "Selecciona una opción",
-        allowClear: true,
-    });
     $("#incluir").on("click", function () {
         limpia();
 
@@ -99,7 +95,6 @@ $(document).ready(function () {
         $("#titulo_modal").text("Registrar Representante");
         $('#direccion').closest('.colum').show();
         $('#telefono').closest('.colum').show();
-        $('#nacionalidad').val(null).trigger('change');
         abrirModal();
     });
 
@@ -111,7 +106,6 @@ $(document).ready(function () {
         $("#titulo_modal").text("Generar Reporte");
         $('#telefono').closest('.colum').hide();
         $('#direccion').closest('.colum').hide();
-        $('#nacionalidad').val(null).trigger('change');
         abrirModal();
     });
 
@@ -217,14 +211,12 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Representante");
     $('#direccion').closest('.colum').show();
     $('#telefono').closest('.colum').show();
-    $('#nacionalidad').val(null).trigger('change');
     $('#id').val(datos[0].id_representante);
     $('#cedula').val(datos[0].cedula);
     $('#nombre').val(datos[0].nombre);
     $('#apellido').val(datos[0].apellido);
     $('#telefono').val(datos[0].telefono);
     $('#direccion').val(datos[0].direccion);
-    $('#nacionalidad').val(datos[0].nacionalidad).trigger('change');
 
     abrirModal();
 }

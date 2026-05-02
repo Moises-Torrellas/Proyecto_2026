@@ -2,13 +2,12 @@
 
 namespace App\modelo;
 
-use App\modelo\Conexion;
+use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloUsuarios extends Conexion
+class ModeloUsuarios extends ModeloBase
 {
 
-    private $conexion = null;
     private $id;
     private $cedula;
     private $nombre;
@@ -22,14 +21,18 @@ class ModeloUsuarios extends Conexion
 
     private $actualizar_contraseña = false;
 
-    private array $campoWhitelist = [
-        'idUsuario' => 'idUsuario',
-        'cedulaUsuario' => 'cedulaUsuario',
-        'correo' => 'correo',
-        'id_rol' => 'id_rol'
-    ];
-
-    public function __construct() {}
+    public function __construct()
+    {
+        parent::__construct();
+        $this->campoWhitelist = [
+            'cedula' => 'cedulaUsuario',
+            'telefono' => 'telefonoUsuario',
+            'correo' => 'correo',
+            'id' => 'idUsuario',
+            'rol' => 'id_rol',
+        ];
+        $this->llavePrimaria = 'idUsuario';
+    }
 
     public function procesarDatos(array $datos): array
     {
@@ -57,10 +60,10 @@ class ModeloUsuarios extends Conexion
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
             'incluir'   => $this->Incluir(),
-            'eliminar'  => $this->Eliminar(),
+            /* 'eliminar'  => $this->Eliminar(),
             'modificar' => $this->Modificar(),
             'buscar' => $this->Buscar(),
-            'bloquear' => $this->Bloquear(),
+            'bloquear' => $this->Bloquear(), */
             'reporte' => $this->Consultar(),
             default     => throw new Exception("Acción no válida."),
         };
@@ -70,7 +73,7 @@ class ModeloUsuarios extends Conexion
     public function Consultar(array $filtro = []): array
     {
         try {
-            $this->conexion = self::conexSG();
+            $conex = $this->conexSG();
             $params = []; // Array para acumular todos los parámetros
 
             // 1. Base de la consulta
@@ -126,23 +129,20 @@ class ModeloUsuarios extends Conexion
                 $params[':rol'] = (int)$this->rol; // Forzamos a entero
             }
 
-            // 4. Orden
             $sentencia .= " ORDER BY u.idUsuario ASC";
 
-            $str = $this->conexion->prepare($sentencia);
+            $str = $conex->prepare($sentencia);
 
-            // 5. EJECUCIÓN: Pasamos el array $params directamente
-            // Esto vincula automáticamente todos los :f1, :cedula, etc.
             $str->execute($params);
 
             $datos = $str->fetchAll();
 
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
-            error_log("Error en consultar Usuarios: " . $e->getMessage());
-            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+            logs('Usuarios', $e->getMessage(), 'Modelo_Consultar');
+            return array('accion' => 'error', 'mensaje' => 'Ocurrio un error al listar los usuarios');
         } finally {
-            $this->conexion = null;
+            $conex = null;
         }
     }
 
@@ -153,21 +153,24 @@ class ModeloUsuarios extends Conexion
             if (!$this->actualizar_contraseña) {
                 return ['accion' => 'error', 'mensaje' => 'Debe proporcionar una contraseña al crear el usuario.'];
             }
-            if ($this->verificarExistencia('cedulaUsuario', $this->cedula, 1)) {
-                return ['accion' => 'error', 'mensaje' => 'La cédula ya está registrada.'];
-            }
-            if ($this->verificarExistencia('correo', $this->correo, 1)) {
-                return ['accion' => 'error', 'mensaje' => 'El correo ya está registrado.'];
-            }
-            if (!$this->verificarRol($this->rol)) {
-                return ['accion' => 'error', 'mensaje' => 'El rol no existe.'.$this->rol];
+            if (!$this->verificarExistencia('rol', $this->rol, 'roles', NULL, 'sg')) {
+                return ['accion' => 'error', 'mensaje' => 'El rol no existe.' . $this->rol];
             }
 
-            // 2. Determinar si es UPDATE o INSERT
-            $Reactivacion = $this->verificarExistencia('cedulaUsuario', $this->cedula, 0);
+            $conex = $this->conexSG();
+            $conex->beginTransaction();
 
-            $this->conexion = self::conexSG();
-            $this->conexion->beginTransaction();
+            if ($this->verificarExistencia('cedula', $this->cedula, 'usuarios', 1, 'sg')) {
+                return ['accion' => 'error', 'mensaje' => 'La cédula ingresada ya pertenece a un usuario registrado.'];
+            }
+            if ($this->verificarExistencia('correo', $this->correo, 'usuarios', 1, 'sg')) {
+                return ['accion' => 'error', 'mensaje' => 'El correo ingresado ya pertenece a un usuario registrado.'];
+            }
+            if ($this->verificarExistencia('telefono', $this->telefono, 'usuarios', 1, 'sg')) {
+                return ['accion' => 'error', 'mensaje' => 'El telefono ingresado ya pertenece a un usuario registrado.'];
+            }
+
+            $Reactivacion = $this->verificarExistencia('cedula', $this->cedula, 'usuarios', 0, 'sg');
 
             if ($Reactivacion) {
                 $sql = "UPDATE `usuarios` SET 
@@ -187,7 +190,7 @@ class ModeloUsuarios extends Conexion
                             (:cedula, :nombre, :apellido,:foto, :telefono, :contra, :correo, :rol, 1)";
             }
 
-            $stmt = $this->conexion->prepare($sql);
+            $stmt = $conex->prepare($sql);
             $stmt->bindValue(':cedula', $this->cedula, \PDO::PARAM_STR);
             $stmt->bindValue(':nombre', $this->nombre, \PDO::PARAM_STR);
             $stmt->bindValue(':apellido', $this->apellido, \PDO::PARAM_STR);
@@ -199,25 +202,25 @@ class ModeloUsuarios extends Conexion
             $respuesta = $stmt->execute();
 
             if ($respuesta) {
-                $this->conexion->commit();
+                $conex->commit();
                 return ['accion' => 'incluir', 'mensaje' => "Usuario registrado exitosamente."];
             } else {
-                $this->conexion->rollBack();
+                $conex->rollBack();
                 throw new Exception('No se pudo registrar el usuario.');
             }
         } catch (Exception $e) {
-            if ($this->conexion && $this->conexion->inTransaction()) {
-                $this->conexion->rollBack();
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
             }
-            error_log("Error en incluir Usuarios: " . $e->getMessage());
-            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
+            logs('Usuarios', $e->getMessage(), 'Modelo_Incluir');
+            return ['accion' => 'error', 'mensaje' => 'Ocurrio un error al registrar el usuario'];
         } finally {
-            $this->conexion = null;
+            $conex = null;
         }
     }
 
 
-    private function Modificar(): array
+    /*private function Modificar(): array
     {
         try {
             if ($this->id == 1 && $this->rol != 1) {
@@ -243,8 +246,8 @@ class ModeloUsuarios extends Conexion
                     return ['accion' => 'error', 'mensaje' => 'El correo ya pertenece a otro usuario activo.'];
                 }
             }
-            $this->conexion = self::conexSG();
-            $this->conexion->beginTransaction();
+            $conex = $this->conexSG();
+            $conex->beginTransaction();
             $sql = "UPDATE `usuarios` SET 
                         `cedulaUsuario` = :cedula,
                         `nombreUsuario` = :nombre,
@@ -260,7 +263,7 @@ class ModeloUsuarios extends Conexion
 
             $sql .= " WHERE idUsuario = :id";
 
-            $stmt = $this->conexion->prepare($sql);
+            $stmt = $conex->prepare($sql);
             $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
             $stmt->bindValue(':cedula', $this->cedula, \PDO::PARAM_STR);
             $stmt->bindValue(':nombre', $this->nombre, \PDO::PARAM_STR);
@@ -275,24 +278,24 @@ class ModeloUsuarios extends Conexion
             $respuesta = $stmt->execute();
 
             if ($respuesta) {
-                $this->conexion->commit();
+                $conex->commit();
                 return ['accion' => 'modificar', 'mensaje' => "Usuario modificado exitosamente."];
             } else {
-                $this->conexion->rollBack();
+                $conex->rollBack();
                 throw new Exception('No se pudo modificar el usuario.');
             }
         } catch (Exception $e) {
-            if ($this->conexion && $this->conexion->inTransaction()) {
-                $this->conexion->rollBack();
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
             }
             error_log("Error en modificar Usuarios: " . $e->getMessage());
             return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         } finally {
-            $this->conexion = null;
+            $conex = null;
         }
     }
 
-    private function Eliminar(): array
+    /*private function Eliminar(): array
     {
         try {
             if ($this->id == 1) {
@@ -302,32 +305,32 @@ class ModeloUsuarios extends Conexion
                 throw new Exception('El usuario que intenta eliminar no existe.');
             }
 
-            $this->conexion = self::conexSG();
-            $this->conexion->beginTransaction();
+            $conex = $this->conexSG();
+            $conex->beginTransaction();
             $sql = "UPDATE `usuarios` SET 
                             `estatus` = 0
                             WHERE idUsuario = :id";
-            $stmt = $this->conexion->prepare($sql);
+            $stmt = $conex->prepare($sql);
             $parametros = [
                 ':id' => $this->id
             ];
             $respuesta = $stmt->execute($parametros);
 
             if ($respuesta) {
-                $this->conexion->commit();
+                $conex->commit();
                 return ['accion' => 'eliminar', 'mensaje' => "Usuario eliminado exitosamente."];
             } else {
-                $this->conexion->rollBack();
+                $conex->rollBack();
                 throw new Exception('No se pudo eliminar el usuario.');
             }
         } catch (Exception $e) {
-            if ($this->conexion && $this->conexion->inTransaction()) {
-                $this->conexion->rollBack();
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
             }
             error_log("Error en eliminar Usuarios: " . $e->getMessage());
             return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         } finally {
-            $this->conexion = null;
+            $conex = null;
         }
     }
 
@@ -342,15 +345,15 @@ class ModeloUsuarios extends Conexion
                 throw new Exception('El usuario no existe o ya está eliminado.');
             }
 
-            $this->conexion = self::conexSG();
-            $this->conexion->beginTransaction();
+            $conex = $this->conexSG();
+            $conex->beginTransaction();
 
             $nuevoEstado = ($this->bloqueo == 1) ? 2 : 1;
             $mensajeExito = ($nuevoEstado == 2) ? "Usuario bloqueado exitosamente." : "Usuario desbloqueado exitosamente.";
             $mensajeError = ($nuevoEstado == 2) ? "No se pudo bloquear al usuario." : "No se pudo desbloquear al usuario.";
 
             $sql = "UPDATE `usuarios` SET `bloqueo` = :estado WHERE idUsuario = :id";
-            $stmt = $this->conexion->prepare($sql);
+            $stmt = $conex->prepare($sql);
 
             $respuesta = $stmt->execute([
                 ':estado' => $nuevoEstado,
@@ -359,34 +362,34 @@ class ModeloUsuarios extends Conexion
 
             if ($respuesta) {
                 if ($nuevoEstado == 2) {
-                    $this->conexion->commit();
+                    $conex->commit();
                     return ['accion' => 'bloquear', 'tipo' => 'bloquear', 'mensaje' => $mensajeExito];
                 } else {
-                    $this->conexion->commit();
+                    $conex->commit();
                     return ['accion' => 'bloquear', 'tipo' => 'desbloquear', 'mensaje' => $mensajeExito];
                 }
             } else {
-                $this->conexion->rollBack();
+                $conex->rollBack();
                 throw new Exception($mensajeError);
             }
         } catch (Exception $e) {
-            if ($this->conexion && $this->conexion->inTransaction()) {
-                $this->conexion->rollBack();
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
             }
             error_log("Error en Bloquear/Desbloquear Usuarios: " . $e->getMessage());
             return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         } finally {
-            $this->conexion = null;
+            $conex = null;
         }
     }
 
     private function Buscar(): array
     {
         try {
-            $this->conexion = self::conexSG();
+            $conex = $this->conexSG();
             $sentencia = 'SELECT * FROM `usuarios` 
             WHERE idUsuario=:id AND estatus=1;';
-            $str = $this->conexion->prepare($sentencia);
+            $str = $conex->prepare($sentencia);
             $str->bindParam(':id', $this->id);
             $str->execute();
             $datos = $str->fetchAll();
@@ -395,7 +398,7 @@ class ModeloUsuarios extends Conexion
             error_log("Error en buscar Usuarios: $" . $e->getMessage());
             $resultado = array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
-            $this->conexion = null;
+            $conex = null;
         }
         return $resultado;
     }
@@ -472,5 +475,5 @@ class ModeloUsuarios extends Conexion
             error_log("Error en verificarRol Usuarios: " . $e->getMessage());
             return false;
         }
-    }
+    } */
 }

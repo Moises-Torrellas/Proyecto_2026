@@ -80,6 +80,9 @@ function consultar($obj): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
+    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+        $respuesta['mensaje'] ='Error al listar los representantes';
+    }
     echo json_encode($respuesta);
 }
 
@@ -97,7 +100,7 @@ function buscar($obj): void
         $resultado = $obj->procesarDatos($datos);
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('Representantes', $e->getMessage(), 'Controlador');
+        logs('Representantes', $e->getMessage(), 'Controlador_Buscar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -128,13 +131,24 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
 
-        if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró al representante: " . $_POST['cedula']);
-        }
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
 
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró al representante: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido']);
+            $resultado = array('accion' => 'incluir', 'mensaje' => 'Representante registrado exitosamente.');
+
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                DUPLICATE_CEDULA => 'Ya existe un representante registrado con esta cédula.',
+                DUPLICATE_PHONE  => 'Ya existe un representante registrado con este teléfono.',
+                default          => 'Ocurrió un error inesperado en el registro.'
+            };
+
+        }
         echo json_encode($resultado);
+
     } catch (Exception $e) {
-        logs('Representantes', $e->getMessage(), 'Controlador');
+        logs('Representantes', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -166,8 +180,19 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
 
-        if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-            registrarBitacora($bitacoraObj, $id_modulo, "modificó al representante: " . $_POST['cedula']);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico al representante: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido']);
+            $resultado = array('accion' => 'modificar', 'mensaje' => 'Representante modificado exitosamente.');
+
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                DUPLICATE_CEDULA => 'Ya existe un representante registrado con esta cédula.',
+                DUPLICATE_PHONE  => 'Ya existe un representante registrado con este teléfono.',
+                default          => 'Ocurrió un error inesperado en la modificacion.'
+            };
+
         }
 
         echo json_encode($resultado);
@@ -188,12 +213,23 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         ];
 
         $resultado = $obj->procesarDatos($datos);
-        if (isset($resultado['accion']) && $resultado['accion'] === 'eliminar') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó al representante: " . $_POST['id']);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino al representante: " . $_POST['id']);
+            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Representante eliminado exitosamente.');
+
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                INVALID_ID => 'El representante no existe.',
+                ASSOCIATES  => 'El representante tiene atletas asociados.',
+                default          => 'Ocurrió un error inesperado en la eliminacion.'
+            };
+
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('Representantes', $e->getMessage(), 'Controlador');
+        logs('Representantes', $e->getMessage(), 'Controlador_Eliminar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

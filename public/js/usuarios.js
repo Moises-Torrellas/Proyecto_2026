@@ -116,6 +116,7 @@ $(document).ready(function () {
         $('#contraseña').closest('.colum').show();
         $('#telefono').closest('.colum').show();
         $('#correo').closest('.colum').show();
+        $('#foto').closest('.colum').show();
         $('#roles').val(null).trigger('change');
         abrirModal();
     });
@@ -129,6 +130,7 @@ $(document).ready(function () {
         $('#contraseña').closest('.colum').hide();
         $('#telefono').closest('.colum').hide();
         $('#correo').closest('.colum').hide();
+        $('#foto').closest('.colum').hide();
         $('#roles').val(null).trigger('change');
         abrirModal();
     });
@@ -236,6 +238,7 @@ function modificar(datos) {
     $('#contraseña').closest('.colum').show();
     $('#telefono').closest('.colum').show();
     $('#correo').closest('.colum').show();
+    $('#foto').closest('.colum').show();
     $('#roles').val(null).trigger('change');
     $('#id').val(datos[0].idUsuario);
     $('#cedula').val(datos[0].cedulaUsuario);
@@ -289,7 +292,7 @@ function crearConsulta(datos) {
             let color = dato.bloqueo == 1 ? 'cbt_g' : 'cbt_a';
 
             let fotoHTML = dato.foto == 'default.png'
-                ? `<div class="listado_avatar_null"><i data-lucide="circle-user"></i></div>` 
+                ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>` 
                 : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil">`;
 
             let registro = `

@@ -684,7 +684,7 @@ option {
 }
 
 .cbt_v {
-    background: rgb(0, 210, 38);
+    background: var(--color-primario);
 }
 
 .cbt_a {
@@ -727,6 +727,12 @@ option {
     align-items: center;
     justify-content: center;
     color: #34d314;
+    font-size: 10rem;
+}
+
+.icon_con {
+    width: 40px;
+    height: 40px;
 }
 
 .icono_flecha_detalle {
@@ -874,6 +880,20 @@ option {
     border-bottom: 4px solid #ddd;
 }
 
+.info_card {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+}
+
+.icon_card {
+    font-size: 20px;
+
+    padding: 10px;
+    border-radius: 10px;
+    margin-right: 10px;
+}
+
 .card h3 {
     margin: 0;
     font-size: 14px;
@@ -886,36 +906,64 @@ option {
     color: var(--texto-principal);
 }
 
-.progress-bar {
-    width: 100%;
-    background: #e9ecef;
-    height: 8px;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 10px;
-}
-
-.progress {
-    height: 8px;
-    background: #17a2b8;
-    transition: width 0.4s ease;
-}
-
 .graficos {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
     width: 90%;
+    margin-top: 10px;
+    align-items: stretch;
+    /* Asegura que la columna derecha mida lo mismo que la izquierda */
+}
+
+.calendario-seccion {
+    grid-column: span 3;
+}
+
+/* NUEVA CLASE: Gestiona la columna de la derecha */
+.columna-derecha-stats {
+    grid-column: span 1;
+    display: flex;
+    flex-direction: column;
+    /* Apila uno arriba y otro abajo */
+    gap: 20px;
+    /* Separación entre los dos gráficos pequeños */
+}
+
+/* Ajustes para que las cards internas se distribuyan bien */
+.chart-container {
     background-color: var(--fondo-principal);
     border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+.chart-container h1{
+    color: var(--texto-principal)
 }
 
-.chart-container {
+
+.grafico-lateral,
+.card_grafico {
     flex: 1;
-    padding: 20px;
-    border-radius: 10px;
+    /* Hace que ambos gráficos midan lo mismo de alto */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilos para la lista de stats */
+.item_stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
 }
 
 .graficos h4 {
     margin-bottom: 20px;
+    text-align: left;
     color: var(--texto-principal);
 }
 
@@ -1097,4 +1145,60 @@ option {
     padding: 4px 8px;
     border-radius: 4px;
     white-space: nowrap;
+}
+
+/* CALENDARIO */
+
+/* Contenedor principal del calendario */
+#calendario_eventos {
+    background-color: var(--fondo-principal);
+    color: var(--texto-principal);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+/* Encabezados de los días (L, M, X...) */
+.fc-col-header-cell {
+    background-color: var(--fondo-contraste);
+    color: var(--texto-principal);
+}
+
+/* Celdas de los días */
+.fc-daygrid-day {
+    background-color: var(--fondo-principal);
+}
+
+/* Números de los días */
+.fc-daygrid-day-number {
+    color: var(--texto-principal) !important;
+    padding: 5px !important;
+}
+
+/* Bordes del calendario */
+.fc td, .fc th, .fc .fc-scrollgrid {
+    border-color: var(--borde-form) !important;
+}
+
+/* Día actual */
+.fc-day-today {
+    background-color: var(--fondo-translucido) !important;
+}
+
+/* Botones del calendario (Siguiente, Anterior, Hoy) */
+.fc-button-primary {
+    background-color: var(--boton-fondo) !important;
+    border-color: var(--borde-color) !important;
+    color: var(--boton-texto) !important;
+    text-transform: capitalize;
+}
+
+.fc-button-primary:hover {
+    filter: brightness(1.1);
+}
+
+/* Título del mes/año */
+.fc-toolbar-title {
+    color: var(--texto-principal);
+    font-size: 1.5rem !important;
+    font-weight: 600;
 }

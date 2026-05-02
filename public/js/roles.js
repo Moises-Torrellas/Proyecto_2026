@@ -349,7 +349,7 @@ $('#add').on('click', function () {
             $("#tabla_permisos").append(lin);
         }
     } else if (id == null) {
-        muestraMensaje("error", 2000, "Error", "Tienes que seleccionar un modulo antes de agregarlo.");
+        muestraMensajeMini("error", 2000, "Tiene que seleccionar un modulo");
     }
 });
 

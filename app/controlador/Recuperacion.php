@@ -8,10 +8,6 @@ require_once __DIR__ . '/Base.php';
 // 2. Configuración del módulo
 $id_modulo = _MD_RECUPERACION_;
 
-// 3. Procesar permisos (llena la variable global $permisosGenerales)
-// Se asume que $bitacora llega desde el router/index
-procesarPermisos($id_modulo, $bitacora ?? null);
-
 // 4. Lógica de despacho
 $nombreClaseModelo = 'App\modelo\ModeloRecuperacion';
 
