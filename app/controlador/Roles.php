@@ -79,14 +79,14 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
     }
 }
 
-/**
- * --- LÓGICA DE CADA ACCIÓN ---
- */
-
 function consultarRolesData($obj): void
 {
-    $roles = $obj->consultar();
-    echo json_encode($roles);
+    $filtro['filtro'] = $_POST['filtro'] ?? '';
+    $respuesta = $obj->Consultar($filtro);
+    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+        $respuesta['mensaje'] ='Error al listar los representantes';
+    }
+    echo json_encode($respuesta);
 }
 
 function consultarModuloData($obj): void
@@ -97,9 +97,18 @@ function consultarModuloData($obj): void
 
 function buscarRolesData($obj): void
 {
-    validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
-    $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
-    echo json_encode($resultado);
+    try {
+        validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+        $idsProtegidos = [1, 2];
+        if (in_array($_POST['id'], $idsProtegidos)) {
+            throw new Exception('Este rol no puede ser modificado');
+        }
+        $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Roles', $e->getMessage(), 'Controlador_Buscar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
 }
 
 function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
@@ -164,7 +173,6 @@ function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
             };
         }
         echo json_encode($resultado);
-
     } catch (Exception $e) {
         logs('Roles', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
@@ -174,8 +182,10 @@ function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
 function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido.'],
-                        'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
+        $validaciones = [
+            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido.'],
+            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']
+        ];
 
         validar_datos($validaciones);
 
@@ -233,7 +243,6 @@ function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
             };
         }
         echo json_encode($resultado);
-
     } catch (Exception $e) {
         logs('Roles', $e->getMessage(), 'Controlador_Modificar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
@@ -241,7 +250,8 @@ function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
 }
 
 
-function eliminarRolesData($obj, $id_modulo, $bitacoraObj){
+function eliminarRolesData($obj, $id_modulo, $bitacoraObj)
+{
     try {
         $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
 
@@ -261,16 +271,13 @@ function eliminarRolesData($obj, $id_modulo, $bitacoraObj){
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'No puedes eliminar roles protegidos.',
                 ASSOCIATES  => 'El rol tiene usuarios asociados.',
-                ASSOCIATES.'0'  => 'El rol que intenta eliminar no existe',
+                ASSOCIATES . '0'  => 'El rol que intenta eliminar no existe',
                 default          => 'Ocurrió un error inesperado en el registro del rol.'
             };
         }
         echo json_encode($resultado);
-
     } catch (Exception $e) {
         logs('Roles', $e->getMessage(), 'Controlador_Eliminar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
-
-
