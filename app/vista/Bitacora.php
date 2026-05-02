@@ -3,7 +3,7 @@
 
 <head>
     <?php include('complementos/head.php'); ?>
-    <title>Gestionar Bitacora</title>
+    <title>Bitacora</title>
 </head>
 
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
@@ -17,7 +17,7 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina" id="titulo">Gestionar Bitacora</h2>
+                            <h2 class="titulo_pagina" id="titulo">Bitacora</h2>
                         </div>
                         <div class="contenedor_busqueda">
                             <input type="text" placeholder="Buscar..." autocomplete="off" id="busqueda">
@@ -27,24 +27,8 @@
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
-                    <div class="contenedor_tabla">
-                        <div class="tabla" id="tabla">
-                            <table class="" id="tablageneral">
-                                <thead>
-                                    <tr>
-                                        <th>Codigo</th>
-                                        <th>Usuario</th>
-                                        <th>Modulo</th>
-                                        <th>Accion</th>
-                                        <th>Fecha</th>
-                                        <th>Hora</th>
-                                        <th>Opciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="resultadoconsulta">
-                                    
-                                </tbody>
-                            </table>
+                    <div class="contenedor_resultados">
+                        <div id="resultadoconsulta" class="resultadoconsulta">
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
@@ -53,14 +37,20 @@
         </div>
     </section>
     <section class="contenedor_modal" id="contenedor_modal">
-        <div class="modal ocultar" id="modal">
+        <div class="modal modal_grande ocultar" id="modal">
             <div class="cabecera_modal">
-                <h2 class="titulo_modal">Titulo Modal</h2>
+                <h2 class="titulo_modal" id="titulo_modal"></h2>
                 <a type="button" class="cerrar_modal" id="cerrar_modal">&times;</a>
             </div>
             <div class="contenido_modal">
-                <form id="f" autocomplete="off">
-                    <input type="hidden" id="token" name="token" value="<?php echo $_SESSION['token']; ?>">
+                <form id="f" autocomplete="off" enctype="multipart/form-data">
+                    <input type="hidden" id="id" name="id">
+                    <div class="row">
+                        <div class="colum">
+                            <button type="button" class="btn btn_azul" id="proceso"></button>
+                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>

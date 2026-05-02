@@ -1,8 +1,20 @@
+$('#busqueda').off('keyup').on('keyup', busqueda);
+let timerBusqueda;
 function consultar() {
-    var datos = new FormData();
+    let datos = new FormData();
     datos.append('accion', 'consultar');
-    datos.append('token', $("#token").val());
     enviaAjax(datos);
+}
+function busqueda() {
+    clearTimeout(timerBusqueda);
+    timerBusqueda = setTimeout(function () {
+        let valorBusqueda = $('#busqueda').val();
+        let datos = new FormData();
+        datos.append('accion', 'consultar');
+        datos.append('filtro', valorBusqueda);
+
+        enviaAjax(datos);
+    }, 500);
 }
 $(document).ready(function () {
     consultar();
@@ -39,12 +51,8 @@ $(document).ready(function () {
                 popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
             },
             {
-                element: '#tabla',
+                element: '#resultadoconsulta',
                 popover: { title: 'Registros', description: 'Aqui se mostraran todos los registros.', position: 'top' }
-            },
-            {
-                element: '#cbt_r',
-                popover: { title: 'Eliminar Registro', description: 'Si pulsa aqui eliminara el registro seleccionado.', position: 'left' }
             },
             {
                 element: '#rowsPerPage',
@@ -84,47 +92,60 @@ function eliminar(id) {
 }
 
 function crearConsulta(datos) {
-    var tablaBody = $('#resultadoconsulta');
-    tablaBody.empty();
+    const contenedor = $('#resultadoconsulta');
+    contenedor.empty();
 
-    var cantidadRegistros = datos.length;
-    var colspan = 7;
-    datos.forEach(dato => {
+    if (datos.length === 0) {
+        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
+    } else {
+        datos.forEach(dato => {
+            var fechaPartes = dato.fecha.split('-'); // ["2025", "05", "26"]
+            var fechaLocal = new Date(fechaPartes[0], fechaPartes[1] - 1, fechaPartes[2]); // Año, mes (0-index), día
+            var fechaFormateada = fechaLocal.toLocaleDateString('es-ES');
 
-        var fechaPartes = dato.fecha.split('-'); // ["2025", "05", "26"]
-        var fechaLocal = new Date(fechaPartes[0], fechaPartes[1] - 1, fechaPartes[2]); // Año, mes (0-index), día
-        var fechaFormateada = fechaLocal.toLocaleDateString('es-ES');
-
-        var horaFormateada = new Date('1970-01-01T' + dato.hora).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
+            var horaFormateada = new Date('1970-01-01T' + dato.hora).toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            let registro = `
+                <div class="listado_contenedor_grupal">
+                    <div class="listado_item" onclick="toggleDetalles(this)">
+                        <div class="listado_col_datos">
+                            <div class="listado_dato_grupo">
+                                <small>Codigo</small>
+                                <span>${dato.id_bitacora}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Usuario</small>
+                                <span>${dato.nombreUsuario} ${dato.apellidoUsuario}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Cedula</small>
+                                <span>${dato.cedulaUsuario}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Modulo</small>
+                                <span>${dato.nombre_modulo}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Accion</small>
+                                <span>${escapeHTML(dato.acciones)}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Hora y Fecha</small>
+                                <span>${horaFormateada} ${fechaFormateada}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            contenedor.append(registro);
         });
-
-        var linea = `<tr>
-                        <td>${dato.id_bitacora}</td>
-                        <td>${escapeHTML(dato.nombreUsuario)}  ${escapeHTML(dato.apellidoUsuario)} CI:${dato.cedulaUsuario}</td>
-                        <td>${escapeHTML(dato.nombre_modulo)}</td>
-                        <td>${escapeHTML(dato.acciones)}</td>
-                        <td>${fechaFormateada}</td>
-                        <td>${horaFormateada}</td>
-                        <td>
-                            <button class="btn_t cbt_r" id="cbt_r" onclick="eliminar(${dato.id_bitacora})"><i class="fi fi-sr-trash-xmark"></i></button>
-                        </td>
-                    </tr>`;
-
-        tablaBody.append(linea);
-    });
-    if (cantidadRegistros >= 100) {
-        linea = ``
-        linea = `<tr>
-                    <td colspan='${colspan}'>
-                        <button class="btn btn_azul" onclick="CargarRegistros()">Cargar Mas Registros</button>
-                    </td>
-                </tr>`;
-        tablaBody.append(linea);
     }
-    inicializarPaginador();
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
 }
 
 
@@ -138,7 +159,7 @@ function escapeHTML(texto) {
     };
     return texto.replace(/[&<>"']/g, m => caracteres[m]);
 }
-
+var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
         async: true,
@@ -148,7 +169,9 @@ function enviaAjax(datos) {
         data: datos,
         processData: false,
         cache: false,
-        beforeSend: function () { },
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
         timeout: 10000,
         success: function (respuesta) {
             try {
