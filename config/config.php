@@ -48,6 +48,7 @@ const INVALID_ID     = "003";
 const DUPLICATE_NAME  = "004";
 const DUPLICATE_PHONE  = "005";
 const ASSOCIATES  = "006";
+const VALIDATION = "007";
 const DB_CONNECTION    = "500";
 
 if (session_status() === PHP_SESSION_NONE) {

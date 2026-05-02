@@ -411,28 +411,28 @@ function enviaAjax(datos) {
                     modificar(lee.datos);
                 }
                 else if (lee.accion == "incluir") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                     consultar();
                     limpia();
                 } else if (lee.accion == "modificar") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                     consultar();
                     limpia();
                     cerrarModal();
                 } else if (lee.accion == "eliminar") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Eliminacion Exitosa", lee.mensaje);
                     consultar();
 
                 }
                 else if (lee.accion == "reporte") {
                     cerrarAlertaEspara();
-                    muestraMensaje("success", 2000, "Correcto", 'Se ha generado el reporte');
+                    muestraMensaje("success", 2000, "Creado Exitosamente", 'Se ha generado el reporte');
                     setTimeout(function () {
                         window.open(lee.archivo, '_blank');
                     }, 2000);
                     limpia();
                 } else if (lee.accion == "bloquear") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Accion Exitosa", lee.mensaje);
 
                     if (botonPresionado) {
                         let btn = $(botonPresionado);
