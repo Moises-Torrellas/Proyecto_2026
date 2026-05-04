@@ -5,7 +5,7 @@
             <a type="button" href="/Proyecto_2026/public/Principal" class="opciones"><i class="opciones_i" data-lucide="layout-dashboard"></i> Panel de Control</a>
             <li class="nav_identificador">Administracion</li>
             <li class="nav_opciones">
-                <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="circle-star"></i> Atletas</a>
+                <a type="button" href="/Proyecto_2026/public/Atletas" class="opciones"><i class="opciones_i" data-lucide="circle-star"></i> Atletas</a>
                 <a type="button" href="/Proyecto_2026/public/Representantes" class="opciones "><i class="opciones_i" data-lucide="user-star"></i> Representantes</a>
                 <a type="button" href="/Proyecto_2026/public/Posiciones" class="opciones "><i class="opciones_i" data-lucide="land-plot"></i> Posiciones</a>
                 <a type="button" href="/Proyecto_2026/public/Categorias" class="opciones "><i class="opciones_i" data-lucide="bring-to-front"></i> Categorías</a>

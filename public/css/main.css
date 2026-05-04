@@ -150,33 +150,30 @@ option {
 
 /* 3. El "pulgar" transparente por defecto */
 ::-webkit-scrollbar-thumb {
-    background: transparent;
+    background: var(--color-primario);
     border-radius: 10px;
     transition: background 0.5s ease-in;
     /* Nota: esto funciona en algunos navegadores modernos, pero el truco real es el hover del padre */
 }
 
 /* 4. El "pulgar" en hover */
-::-webkit-scrollbar-thumb:hover {
-    background: var(--color-primario);
-}
 
-/* El pulgar es transparente por defecto en ambos contenedores */
-.contenido_modulo::-webkit-scrollbar-thumb,
+
+
+/* .contenido_modulo::-webkit-scrollbar-thumb,
 .navegacion::-webkit-scrollbar-thumb {
     background: transparent;
     border-radius: 10px;
     transition: background 0.5s ease-in;
 }
 
-/* Mostramos el scroll cuando el contenedor tiene la clase 'is-scrolling' 
-   o cuando el mouse está encima del propio scroll */
+
 .contenido_modulo.is-scrolling::-webkit-scrollbar-thumb,
 .navegacion.is-scrolling::-webkit-scrollbar-thumb,
 .contenido_modulo::-webkit-scrollbar-thumb:hover,
 .navegacion::-webkit-scrollbar-thumb:hover {
     background: var(--color-primario);
-}
+} */
 
 .contentLoader {
     width: 100%;
@@ -539,15 +536,16 @@ option {
 
 /* 2. EL CONTENEDOR "TREE" (PADRE) */
 .listado_contenedor_grupal {
-    width: 85%;
+    width: 90%; /* Ajustado para mejor aire lateral */
     background: var(--fondo-principal);
     border: 1px solid var(--borde-color);
     border-radius: 12px;
-    transition: border-color 0.3s ease, box-shadow 0.3s easeñ
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden; /* Importante para que el detalle no rompa el radio del borde */
 }
 
 .listado_contenedor_grupal.expandido {
-    border-color: #34d314;
+    border-color: var(--borde-color);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -556,17 +554,13 @@ option {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 20px;
+    padding: 15px 25px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-    min-height: 70px;
-
-    /* Configuración para cuando NO hay tree */
-    width: 100%;
-    background: var(--fondo-principal);
-    border: 1px solid var(--borde-color);
-    border-radius: 12px;
+    transition: background 0.2s ease;
+    height: 80px;
+    min-height: 80px;
+    max-height: 80px;
+    background: transparent;
 }
 
 /* RESET CUANDO SÍ HAY TREE: 
@@ -590,7 +584,6 @@ option {
     align-items: center;
     gap: 15px;
     flex: 1.5;
-    min-width: 250px;
 }
 
 .listado_col_datos {
@@ -598,13 +591,12 @@ option {
     flex: 3;
     justify-content: space-around;
     align-items: center;
-    min-width: 0;
 }
 
 .listado_col_acciones {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     flex: 0.8;
     justify-content: flex-end;
 }
@@ -703,12 +695,102 @@ option {
 /* 7. PANEL DE DETALLE (EL TREE) */
 .listado_detalle_oculto {
     display: none;
-    background: rgba(0, 0, 0, 0.15);
+    background-color: var(--fondo-principal);
     border-top: 1px dashed var(--borde-color);
 }
 
 .listado_detalle_contenido {
-    padding: 20px;
+    padding: 15px;
+}
+
+
+.detalle_expandido_container {
+    padding: 10px;
+}
+.detalle_grid_moderno {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+.detalle_fila {
+    display: flex;
+    flex-wrap: wrap; /* Permite que bajen en móviles */
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 12px;
+    margin-top: 12px;
+}
+
+.detalle_fila .detalle_card {
+    flex: 1; 
+    min-width: 250px; /* Evita que se compriman demasiado */
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px;
+    background: var(--fondo-contraste);
+    border-radius: 10px;
+    border: 1px solid var(--borde-color);
+}
+
+.detalle_card_txt label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #666;
+    font-weight: 800;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.detalle_card_txt span {
+    font-size: 0.95rem;
+    color: var(--texto-principal);
+    font-weight: 600;
+}
+
+.detalle_card_icon {
+    color: #34d314;
+    display: flex;
+    margin-top: 3px;
+}
+
+.detalle_card_icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.detalle_card_txt {
+    display: flex;
+    flex-direction: column;
+}
+
+.detalle_card_txt label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #666;
+    font-weight: 800;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+.detalle_card_txt span {
+    font-size: 0.95rem;
+    color: var(--texto-principal);
+    font-weight: 600;
+}
+
+.detalle_card_txt small {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 2px;
+}
+
+.listado_contenedor_grupal, 
+.listado_contenedor_grupal *, 
+.listado_contenedor_grupal *::before, 
+.listado_contenedor_grupal *::after {
+    box-sizing: border-box;
 }
 
 /* 8. AVATARES Y FLECHA */

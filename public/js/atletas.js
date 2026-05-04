@@ -1,0 +1,577 @@
+$('#busqueda').off('keyup').on('keyup', busqueda);
+let timerBusqueda;
+function consultar() {
+    let datos = new FormData();
+    datos.append('accion', 'consultar');
+    enviaAjax(datos);
+}
+function consultarR() {
+    let datos = new FormData();
+    datos.append('accion', 'consultarR');
+    enviaAjax(datos);
+}
+function consultarP() {
+    let datos = new FormData();
+    datos.append('accion', 'consultarP');
+    enviaAjax(datos);
+}
+function consultarC() {
+    let datos = new FormData();
+    datos.append('accion', 'consultarC');
+    enviaAjax(datos);
+}
+function busqueda() {
+    clearTimeout(timerBusqueda);
+    timerBusqueda = setTimeout(function () {
+        let valorBusqueda = $('#busqueda').val();
+        let datos = new FormData();
+        datos.append('accion', 'consultar');
+        datos.append('filtro', valorBusqueda);
+
+        enviaAjax(datos);
+    }, 500);
+}
+
+
+
+$(document).ready(function () {
+    consultar();
+    consultarR();
+    consultarP();
+    consultarC();
+
+    $("#doc_i").on("input", function () {
+        var input = $(this).val().replace(/[^0-9]/g, '');
+        if (input.length > 4) {
+            input = input.substring(0, 8);
+        }
+        $(this).val(input);
+    });
+
+    $("#telefono").on("input", function () {
+        var input = $(this).val().replace(/[^0-9]/g, '');
+        if (input.length > 4) {
+            input = input.substring(0, 4) + '-' + input.substring(4, 11);
+        }
+        $(this).val(input);
+    });
+
+    Validacion("fecha_nac", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "proceso");
+    Validacion("nombre", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras, mínimo 3 caracteres", "proceso");
+    Validacion("apellido", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras, mínimo 3 caracteres", "proceso");
+    Validacion("doc_i", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Mínimo 7 máximo 8 dígitos, solo números", "proceso");
+    Validacion("telefono", /^[0-9\b-]*$/, /^[0-9]{4}-[0-9]{7}$/, "Formato inválido (XXXX-XXXXXXX)", "proceso");
+    Validacion("direccion", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, /^.{5,150}$/, "Dirección muy corta o inválida", "proceso");
+
+    $('#proceso').on('click', function () {
+        accion = $(this).data("accion");
+        if (accion == "incluir") {
+            if (validarEnvio(accion)) {
+                confirmar('¿Está seguro que quiere registrar este atleta?', function (confirmado) {
+                    if (confirmado) {
+                        var datos = new FormData($('#f')[0]);
+                        datos.append('accion', 'incluir');
+                        enviaAjax(datos);
+                    }
+                });
+            }
+        }
+        else if (accion == "modificar") {
+            if (validarEnvio(accion)) {
+                confirmar('¿Está seguro que quiere modificar este atleta?', function (confirmado) {
+                    if (confirmado) {
+                        var datos = new FormData($('#f')[0]);
+                        datos.append('accion', 'modificar');
+                        enviaAjax(datos);
+                    }
+                });
+            }
+        }
+        else if (accion == "generar") {
+            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
+                if (confirmado) {
+                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento')
+                    var datos = new FormData($('#f')[0]);
+                    datos.append('accion', 'generar');
+                    enviaAjax(datos);
+                }
+            });
+        }
+    });
+
+
+    $('#representante').select2({
+        placeholder: "Selecciona una opción",
+        allowClear: true,
+    });
+
+    $('#posicion').select2({
+        placeholder: "Selecciona una opción",
+        allowClear: true,
+    });
+
+    $('#categoria').select2({
+        placeholder: "Selecciona una opción",
+        allowClear: true,
+    });
+
+    $("#incluir").on("click", function () {
+        limpia();
+
+        $("#proceso").data("accion", "incluir");
+        $("#proceso").text("Registrar Atleta");
+        $("#titulo_modal").text("Registrar Atleta");
+
+        $('#representante').val(null).trigger('change');
+        $('#posicion').val(null).trigger('change');
+        $('#categoria').val(null).trigger('change');
+        abrirModal();
+    });
+
+    $("#generar").on("click", function () {
+        limpia();
+
+        $("#proceso").data("accion", "generar");
+        $("#proceso").text("Generar Reporte");
+        $("#titulo_modal").text("Generar Reporte");
+        abrirModal();
+    });
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            {
+                element: '#busqueda',
+                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar al Atleta que necesites.', position: 'bottom' }
+            },
+            {
+                element: '#incluir',
+                popover: { title: 'Nuevo Atleta', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevo Atleta', position: 'bottom' }
+            },
+            {
+                element: '#generar',
+                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta',
+                popover: { title: 'Atletas Registrados', description: 'Aqui se mostraran todos los Atletas registrados.', position: 'top' }
+            },
+            {
+                element: '#cbt_v',
+                popover: { title: 'Modificar Atletas', description: 'Si pulsa aqui se abrira un modal para modificar el Atleta seleccionado.', position: 'left' }
+            },
+            {
+                element: '#cbt_r',
+                popover: { title: 'Eliminar Atleta', description: 'Si pulsa aqui eliminara el Atleta seleccionado.', position: 'left' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de representantes cargados.', position: 'top' }
+            },
+        ];
+
+        const driver = iniciarTourConPasos(pasos);
+        driver.start();
+    });
+
+
+    // --- Lógica de validación de edad y activación de campos ---
+    $("#fecha_nac").on("change", function () {
+        validarEdadAtleta($(this).val());
+    });
+
+});
+
+function validarEdadAtleta(fechaValor) {
+    if (!fechaValor) return;
+
+    const hoy = new Date();
+    const nacimiento = new Date(fechaValor);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+    }
+
+    const $doc_i = $("#doc_i");
+    const $representante = $("#representante");
+    const $telefono = $("#telefono");
+    const $direccion = $("#direccion");
+    const $btnProceso = $("#proceso");
+
+    // 1. Regla: Mínimo 4 años
+    if (edad < 4) {
+        muestraMensaje("error", 3000, "Edad insuficiente", "El atleta debe tener al menos 4 años.");
+        $btnProceso.prop("disabled", true).addClass("btn_bloqueado");
+        return;
+    } else {
+        $btnProceso.prop("disabled", false).removeClass("btn_bloqueado");
+    }
+
+    // 2. Regla: Placeholder de Cédula
+    if (edad < 9) {
+        $doc_i.attr("placeholder", "Cédula del representante");
+    } else {
+        $doc_i.attr("placeholder", "Cédula del atleta");
+    }
+
+    // 3. Regla: Representante (SOLO DESHABILITAR, NO OCULTAR)
+    if (edad < 18) {
+        // Es menor: Requiere representante
+        $representante.prop("disabled", false).parent().removeClass("campo_deshabilitado");
+
+        // Deshabilita tlf y dirección propios
+        $telefono.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
+        $direccion.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
+    } else {
+        // Es adulto: Se deshabilita representante pero permanece visible
+        $representante.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
+
+        // Habilita tlf y dirección propios
+        $telefono.prop("disabled", false).parent().removeClass("campo_deshabilitado");
+        $direccion.prop("disabled", false).parent().removeClass("campo_deshabilitado");
+    }
+}
+
+function validarEnvio(proceso) {
+    // 1. Fecha de Nacimiento (Primero en tu HTML)
+    if ($('#fecha_nac').val() == "" || $('#fecha_nac').val() == null) {
+        muestraMensaje("error", 2000, "Error", "La fecha de nacimiento es obligatoria");
+        return false;
+    }
+
+    // 2. Nombre
+    if (validarkeyup(/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre válido");
+        return false;
+    }
+
+    // 3. Apellido
+    if (validarkeyup(/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,30}$/, $('#apellido'), $("#apellido_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un apellido válido");
+        return false;
+    }
+
+    // 4. Categoría (Select)
+    if ($('#categoria').val() == "" || $('#categoria').val() == null) {
+        muestraMensaje("error", 2000, "Error", "Debe elegir una categoría");
+        return false;
+    }
+
+    // 5. Posición (Select)
+    if ($('#posicion').val() == "" || $('#posicion').val() == null) {
+        muestraMensaje("error", 2000, "Error", "Debe elegir una posición");
+        return false;
+    }
+
+    // 6. Género (Select)
+    if ($('#genero').val() == "" || $('#genero').val() == null) {
+        muestraMensaje("error", 2000, "Error", "Debe elegir el género");
+        return false;
+    }
+
+    // 7. Representante (Solo si NO está deshabilitado)
+    if (!$("#representante").prop("disabled")) {
+        if ($('#representante').val() == "" || $('#representante').val() == null) {
+            muestraMensaje("error", 2000, "Error", "Debe seleccionar un representante");
+            return false;
+        }
+    }
+
+    // 8. Documento de Identidad (Cédula)
+    if (validarkeyup(/^[0-9]{7,8}$/, $('#doc_i'), $("#doc_i_spam"), "Mínimo 7 máximo 8 dígitos", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar una cédula válida");
+        return false;
+    }
+
+    // 9. Teléfono (Solo si NO está deshabilitado)
+    if (!$("#telefono").prop("disabled")) {
+        if (validarkeyup(/^[0-9]{4}[-]{1}[0-9]{7}$/, $('#telefono'), $("#telefono_spam"), "Formato: 0400-0000000", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un teléfono válido");
+            return false;
+        }
+    }
+
+    // 10. Dirección (Solo si NO está deshabilitado)
+    if (!$("#direccion").prop("disabled")) {
+        if ($('#direccion').val().trim().length < 5) {
+            muestraMensaje("error", 2000, "Error", "La dirección debe tener al menos 5 caracteres");
+            return false;
+        }
+    }
+
+    if ($('#foto').val() == "" || $('#foto')[0].files.length === 0) {
+        muestraMensaje("error", 2000, "Error", "Debe seleccionar una foto para el atleta");
+        return false;
+    }
+
+    // Si todo pasó las validaciones
+    return true;
+}
+
+function buscar(id) {
+    var datos = new FormData();
+    datos.append('accion', 'buscar');
+    datos.append('id', id);
+    enviaAjax(datos);
+}
+function eliminar(id) {
+    confirmar('¿Está seguro que quiere eliminar este atleta?', function (confirmado) {
+        if (confirmado) {
+            var datos = new FormData();
+            datos.append('accion', 'eliminar');
+            datos.append('id', id);
+            enviaAjax(datos);
+        }
+    });
+}
+
+function modificar(datos) {
+    $("#proceso").data("accion", "modificar");
+    $("#proceso").text("Modificar Atleta");
+    $("#titulo_modal").text("Modificar Atleta");
+
+    $('#representante').val(null).trigger('change');
+    $('#posicion').val(null).trigger('change');
+    $('#categoria').val(null).trigger('change');
+
+    abrirModal();
+}
+
+function crearConsulta(datos) {
+    const contenedor = $('#resultadoconsulta');
+    contenedor.empty();
+
+    if (datos.length === 0) {
+        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
+    } else {
+        const anioActual = new Date().getFullYear();
+
+        datos.forEach(dato => {
+            const anioNacimiento = new Date(dato.fecha_nac).getFullYear();
+            const edadCalendario = anioActual - anioNacimiento;
+
+            const fotoHTML = (dato.foto === 'default.png' || !dato.foto)
+                ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>`
+                : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil">`;
+
+            // Lógica para el representante: Si no existe, no se crea el HTML de la tarjeta
+            let tarjetaRepresentante = "";
+            if (dato.nombre_rep && dato.nombre_rep.trim() !== "") {
+                tarjetaRepresentante = `
+                    <div class="detalle_card">
+                        <div class="detalle_card_icon"><i data-lucide="user-star"></i></div>
+                        <div class="detalle_card_txt">
+                            <label>Representante</label>
+                            <span>${escapeHTML(dato.nombre_rep)} ${escapeHTML(dato.apellido_rep)}</span>
+                            <small>${dato.cedula_rep || ''}</small>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let registro = `
+                <div class="listado_contenedor_grupal">
+                    <div class="listado_item" onclick="toggleDetalles(this)">
+                        <div class="listado_col_principal">
+                            ${fotoHTML}
+                            <div class="listado_info_base">
+                                <span class="listado_titulo">${escapeHTML(dato.nombres)} ${escapeHTML(dato.apellidos)}</span>
+                            </div>
+                        </div>
+
+                        <div class="listado_col_datos">
+                            <div class="listado_dato_grupo">
+                                <small>Identificación</small>
+                                <span>${dato.doc_identidad}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Edad (Año Cal.)</small>
+                                <span class="listado_resaltado">${edadCalendario} años</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Teléfono</small>
+                                <span>${escapeHTML(dato.telefono)}</span>
+                            </div>
+                        </div>
+
+                        <div class="listado_col_acciones">
+                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                <button class="btn_t cbt_v" onclick="buscar(${dato.id_atleta})"><i class="fi fi-sr-pencil"></i></button>
+                                <button class="btn_t cbt_r" onclick="eliminar(${dato.id_atleta})"><i class="fi fi-sr-trash-xmark"></i></button>
+                            </div>
+                            <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                        </div>
+                    </div>
+
+                    <div class="listado_detalle_oculto">
+                        <div class="detalle_expandido_container">
+                            <!-- Fila Superior Dinámica -->
+                            <div class="detalle_fila">
+                                <div class="detalle_card">
+                                    <div class="detalle_card_icon"><i data-lucide="bring-to-front"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Categoría Deportiva</label>
+                                        <span>${escapeHTML(dato.nombre_categoria)}</span>
+                                        <small>Rango: ${dato.edad_min}-${dato.edad_max} años</small>
+                                    </div>
+                                </div>
+
+                                ${tarjetaRepresentante}
+
+                                <div class="detalle_card">
+                                    <div class="detalle_card_icon"><i data-lucide="land-plot"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Posición Técnica</label>
+                                        <span>${escapeHTML(dato.nombre_posicion)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="detalle_fila">
+                                <div class="detalle_card">
+                                    <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Dirección</label>
+                                        <span>${escapeHTML(dato.direccion)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            contenedor.append(registro);
+        });
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
+}
+
+function escapeHTML(texto) {
+    var caracteres = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return texto.replace(/[&<>"']/g, m => caracteres[m]);
+}
+
+function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3 = null) {
+    var select = $('#' + idSelect);
+    select.empty();
+    select.append('');
+
+    datos.forEach(dato => {
+        let textoMostrar = "";
+
+        if (idSelect === 'representante' && campo1 && campo2 && campo3) {
+            textoMostrar = `${escapeHTML(dato[campo1])} ${escapeHTML(dato[campo2])} — ${dato[campo3]}`;
+        }
+        else if (idSelect === 'posicion' && campo1 && campo2) {
+            textoMostrar = `${escapeHTML(dato[campo1])} (${escapeHTML(dato[campo2])})`;
+        }
+        else if (idSelect === 'categoria' && campo1 && campo2 && campo3) {
+            textoMostrar = `${escapeHTML(dato[campo1])} (${dato[campo2]} a ${dato[campo3]} años)`;
+        }
+        else {
+            textoMostrar = escapeHTML(String(dato[campo1]));
+        }
+
+        var linea = `<option value="${dato[campoId]}">${textoMostrar}</option>`;
+        select.append(linea);
+    });
+}
+
+var token = $('meta[name="csrf-token"]').attr('content');
+function enviaAjax(datos) {
+    $.ajax({
+        async: true,
+        url: "",
+        type: "POST",
+        contentType: false,
+        data: datos,
+        processData: false,
+        cache: false,
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
+        timeout: 10000,
+        success: function (respuesta) {
+            try {
+                var lee = JSON.parse(respuesta);
+                if (lee.accion == "consultar") {
+                    crearConsulta(lee.datos);
+                } else if (lee.accion == "consultarR") {
+                    // Para Representantes: ID, Nombre, Apellido, Cédula
+                    construirSelect('representante', lee.datos, 'id_representante', 'nombre', 'apellido', 'cedula');
+
+                } else if (lee.accion == "consultarP") {
+                    // Para Posiciones: ID, Nombre, Abreviatura
+                    construirSelect('posicion', lee.datos, 'id_posicion', 'nombre', 'abreviatura');
+
+                } else if (lee.accion == "consultarC") {
+                    // Para Categorías: ID, Nombre, Edad Mínima, Edad Máxima
+                    construirSelect('categoria', lee.datos, 'id_categoria', 'nombre', 'edad_min', 'edad_max');
+                } else if (lee.accion == "incluir") {
+                    consultar();
+                    limpia();
+                    muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
+                } else if (lee.accion == "eliminar") {
+                    consultar();
+                    muestraMensaje("success", 2000, "Eliminacion Exitosa", lee.mensaje);
+                } else if (lee.accion == "modificar") {
+                    consultar();
+                    limpia();
+                    cerrarModal();
+
+                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
+                } else if (lee.accion == "buscar") {
+                    modificar(lee.datos);
+                }
+                else if (lee.accion == "error") {
+                    muestraMensaje("error", 2000, "Error", lee.mensaje);
+                }
+            } catch (e) {
+                alert("Error en JSON " + e.name);
+            }
+        },
+
+
+        error: function (request, status, err) {
+
+            if (status == "timeout") {
+                muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
+            } else {
+                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + request + status + err);
+            }
+        },
+        complete: function () { },
+    });
+}
+
+document.getElementById('foto').addEventListener('change', function (event) {
+    const archivo = event.target.files[0];
+    const vistaPrevia = document.getElementById('foto_previa');
+
+    if (archivo) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            vistaPrevia.src = e.target.result;
+        }
+        reader.readAsDataURL(archivo);
+    } else {
+        // Si el usuario cancela la selección, volvemos a poner la cámara
+        vistaPrevia.src = '';
+    }
+});
