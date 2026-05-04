@@ -10,7 +10,7 @@ class PromptRequest(BaseModel):
 @app.post("/api/generar-respuesta")
 def generar_respuesta_ia(request: PromptRequest):
     # 1. Configuración de API Key y URL de Gemini
-    api_key = "AIzaSyConTzKH0aFlRwdBEawrdkRriNuFdPXlzU"
+    api_key = "AIzaSyBx9OFmcKYBmNopg8oZMAITAJmicoBKiq0"
     modelo = "gemini-3-flash-preview"  # Asegúrate de usar el nombre correcto del modelo que obtuviste con ver_modelos.py
     
     # 3. LA URL CORREGIDA)

@@ -2,12 +2,13 @@
 
 use App\servicios\Microservices;
 use App\modelo\ModeloCategorias; 
+use App\modelo\ModeloTorneos;
 
 require_once __DIR__ . '/Base.php';
 require_once __DIR__ . '/../servicios/Microservices.php';
 
-// CORRECCIÓN 1: Sin comillas
-$id_modulo = _MD_IA_;                                      
+// ID del módulo definido en config.php
+$id_modulo = _MD_IA_; 
 
 $permisos = procesarPermisos($id_modulo, $bitacora ?? null);
 
@@ -22,10 +23,10 @@ if (comprobarAjax() && !empty($_POST)) {
  * --- FUNCIONES DEL CONTROLADOR ---
  */
 
-function manejarSolicitudIA($obj, $id_modulo, $bitacoraObj, array $permisos): void                    
+function manejarSolicitudIA($obj, $id_modulo, $bitacoraObj, array $permisos): void 
 {
     try {
-        // CORRECCIÓN 2: Comentamos la seguridad del Token temporalmente para la prueba
+        // Seguridad del Token (Comentada para pruebas según tu versión actual)
         /*
         $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
@@ -37,7 +38,7 @@ function manejarSolicitudIA($obj, $id_modulo, $bitacoraObj, array $permisos): vo
 
         switch ($accion) {
             case 'generar':
-            //    if (!$permisos['consultar']) throw new Exception('No tienes permisos para usar la IA.');
+                // if (!$permisos['consultar']) throw new Exception('No tienes permisos para usar la IA.');
                 generarRespuesta($id_modulo, $bitacoraObj); 
                 break;
 
@@ -46,7 +47,6 @@ function manejarSolicitudIA($obj, $id_modulo, $bitacoraObj, array $permisos): vo
         }
     } catch (Exception $e) {
         error_log($e->getMessage());
-        // Ajustado a 'status' para que tu JS lo entienda correctamente
         echo json_encode(['status' => 'error', 'mensaje' => $e->getMessage()]); 
     }
 }
@@ -55,7 +55,6 @@ function manejarSolicitudIA($obj, $id_modulo, $bitacoraObj, array $permisos): vo
  * Acciones específicas
  */
 
-// Quitamos el $obj de los parámetros ya que usaremos el Servicio localmente
 function generarRespuesta($id_modulo, $bitacoraObj): void
 {
     try {
@@ -66,46 +65,76 @@ function generarRespuesta($id_modulo, $bitacoraObj): void
 
         $preguntaUsuario = trim($_POST['pregunta']);
 
-        // 1. OBTENER DATOS DE LA BASE DE DATOS
-        // Instanciamos tu modelo y llamamos a tu método Consultar
+        // 1. OBTENER DATOS DE CATEGORÍAS
         $objCategorias = new ModeloCategorias();
-        $resultadoConsulta = $objCategorias->Consultar([]); 
+        $resCategorias = $objCategorias->Consultar([]); 
         
-        // Verificamos si la consulta fue exitosa
         $datosCategorias = [];
-        if (isset($resultadoConsulta['accion']) && $resultadoConsulta['accion'] === 'consultar') {
-            $datosCategorias = $resultadoConsulta['datos'];
+        if (isset($resCategorias['accion']) && $resCategorias['accion'] === 'consultar') {
+            $datosCategorias = $resCategorias['datos'];
         }
 
-        // 2. FORMATEAR DATOS PARA LA IA
-        // Convertimos el array de PHP en un texto legible para Gemini
+        // 2. OBTENER DATOS DE TORNEOS
+        $objTorneos = new ModeloTorneos();
+        $resTorneos = $objTorneos->Consultar([]);
+
+        $datosTorneos = [];
+        if (isset($resTorneos['accion']) && $resTorneos['accion'] === 'consultar') {
+            $datosTorneos = $resTorneos['datos'];
+        }
+
+        // 3. FORMATEAR DATOS DE CATEGORÍAS PARA LA IA
         $textoCategorias = "";
         $totalCategorias = count($datosCategorias);
         
         if ($totalCategorias > 0) {
             foreach ($datosCategorias as $cat) {
-                // Usamos los campos exactos de tu base de datos: nombre, edad_min, edad_max
                 $textoCategorias .= "- {$cat['nombre']} (Para atletas de {$cat['edad_min']} a {$cat['edad_max']} años).\n";
             }
         } else {
-            $textoCategorias = "Actualmente no hay ninguna categoría registrada en el sistema.";
+            $textoCategorias = "No hay categorías registradas.";
         }
 
-        // 3. CONSTRUIR EL "SUPER PROMPT"
+        // 4. FORMATEAR DATOS DE TORNEOS PARA LA IA
+        $textoTorneos = "";
+        $totalTorneos = count($datosTorneos);
+
+        if ($totalTorneos > 0) {
+            foreach ($datosTorneos as $tor) {
+                // Convertimos el estatus numérico a texto para la IA
+                $estatusTexto = ($tor['estatus'] == 1) ? "Activo/Abierto" : "Inactivo/Finalizado";
+                
+                $textoTorneos .= "- Torneo: {$tor['nombre']}\n";
+                $textoTorneos .= "  Ubicación: {$tor['ubicacion']}\n";
+                $textoTorneos .= "  Duración: Desde {$tor['fecha_inicio']} hasta {$tor['fecha_fin']}\n";
+                $textoTorneos .= "  Estatus actual: {$estatusTexto}\n\n";
+            }
+        } else {
+            $textoTorneos = "No hay torneos registrados actualmente.";
+        }
+
+        // 5. CONSTRUIR EL "SUPER PROMPT" CON TODO EL CONTEXTO
         $contexto = "Eres Cani, el asistente virtual del sistema administrativo y deportivo de la academia de hockey Cannibals Lara. ";
-        $contexto .= "Responde siempre de forma amable, profesional y concisa. ";
-        $contexto .= "Aquí tienes información interna de la base de datos por si el usuario te pregunta sobre las categorías:\n\n";
-        $contexto .= "TOTAL DE CATEGORÍAS: " . $totalCategorias . "\n";
-        $contexto .= "LISTA DE CATEGORÍAS:\n" . $textoCategorias . "\n\n";
+        $contexto .= "Responde siempre de forma amable, profesional y muy concisa. ";
+        $contexto .= "Utiliza la siguiente información de la base de datos para responder al usuario:\n\n";
+        
+        $contexto .= "--- INFORMACIÓN DE CATEGORÍAS ---\n";
+        $contexto .= "Total categorías: " . $totalCategorias . "\n";
+        $contexto .= $textoCategorias . "\n";
+
+        $contexto .= "--- INFORMACIÓN DE TORNEOS ---\n";
+        $contexto .= "Total torneos registrados: " . $totalTorneos . "\n";
+        $contexto .= $textoTorneos . "\n";
+
         $contexto .= "Pregunta del usuario: " . $preguntaUsuario;
 
-        // 4. ENVIAR A PYTHON
+        // 6. ENVIAR A PYTHON
         $servicioIA = new Microservices();
         $resultado = $servicioIA->consultarGemini($contexto);
 
-        // Si Python responde bien, registramos en bitácora
+        // Registro en bitácora si la respuesta fue exitosa
         if (isset($resultado['status']) && $resultado['status'] === 'success') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Interactuó con el asistente virtual Cani.");
+            registrarBitacora($bitacoraObj, $id_modulo, "Consultó información al asistente Cani sobre Categorías/Torneos.");
         }
 
         echo json_encode($resultado);
