@@ -10,6 +10,7 @@ class ModeloConcepto extends ModeloBase
     private $id;
     private $nombre;
     private $monto;
+    private $estatus;
     public function __construct()
     {
         parent::__construct();
@@ -34,6 +35,7 @@ class ModeloConcepto extends ModeloBase
         $this->id = $datos['id'] ?? null;
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->monto = floatval(str_replace(',', '.', trim($datos['monto'] ?? '')));
+        $this->estatus = $datos['estatus'] ?? null;
         //ejecutamos la accion enviada por el controlador
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
@@ -41,6 +43,7 @@ class ModeloConcepto extends ModeloBase
             'eliminar'  => $this->Eliminar(),
             'buscar' => $this->Buscar(),
             'modificar' => $this->Modificar(),
+            'estatus'   => $this->Estatus(),
             default => throw new Exception('La accion no es valida')
         };
     }
@@ -97,6 +100,7 @@ class ModeloConcepto extends ModeloBase
 
     private function Incluir(): array
     {
+
         try {
             //para verificar existencia los parametros que recibe son string $campo, $valor, string $tabla, ?int $estatus = 1, string $db = 'general', bool $bloquear = false
 
@@ -212,7 +216,7 @@ class ModeloConcepto extends ModeloBase
             $conex = $this->conex();
             $conex->beginTransaction();
             if (!$this->verificarExistencia('id', $this->id, 'conceptos', NULL, bloquear:true)) {
-                throw new Exception(INVALID_ID);
+                throw new Exception('El registro no existe.');
             }
             $sentencia = "DELETE FROM conceptos WHERE id_conceptos = :id";
             $stmt = $conex->prepare($sentencia);
@@ -230,4 +234,36 @@ class ModeloConcepto extends ModeloBase
             $conex = NULL;
         }
     }
+
+private function Estatus(): array
+{
+    try {
+        $conex = $this->conex();
+        $conex->beginTransaction();
+
+        if (!$this->verificarExistencia('id', $this->id, 'conceptos', NULL, bloquear: true)) {
+            throw new Exception('El concepto de pago no existe.');
+        }
+
+        // Alternar entre 1 y 2
+        $nuevoEstado = ($this->estatus == 1) ? 2 : 1;
+
+        $sentencia = "UPDATE conceptos SET estatus = :estatus WHERE id_conceptos = :id_conceptos";
+        $stmt = $conex->prepare($sentencia);
+        $stmt->bindParam(':estatus', $nuevoEstado);
+        $stmt->bindParam(':id_conceptos', $this->id);
+        $stmt->execute();
+
+        $conex->commit();
+        return array('accion' => 'exito');
+    } catch (Exception $e) {
+        if ($conex && $conex->inTransaction()) {
+            $conex->rollback();
+        }
+        logs('Concepto', $e->getMessage(), 'Modelo_Estatus');
+        return array('accion' => 'error', 'codigo' => $e->getMessage());
+    } finally {
+        $conex = NULL;
+    }
+}
 }

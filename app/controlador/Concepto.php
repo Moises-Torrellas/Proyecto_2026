@@ -62,6 +62,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Concepto de pago.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'estatus':
+            if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Concepto de pago.');
+            cambiarEstatus($obj, $id_modulo, $bitacoraObj);
+            break;
 
             default:
                 throw new Exception('Acción no permitida.');
@@ -110,7 +114,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
     try { 
         $validaciones = [
             'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'monto' => ['regla' => '/^[0-9]+(,[0-9]{1,2})?$/', 'mensaje' => 'Monto inválido.'],
+            'monto' => ['regla' => '/^[0-9]+(.[0-9]{1,2})?$/', 'mensaje' => 'Monto inválido.'],
         ];
 
         validar_datos($validaciones);
@@ -149,8 +153,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $validaciones = [
             'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
             'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'monto' => ['regla' => '/^[0-9]+([0-9]{1,2})?$/','mensaje' => 'Monto inválido.'
-],
+            'monto' => ['regla' => '/^[0-9]+(.[0-9]{1,2})?$/', 'mensaje' => 'Monto inválido.'],
         ];
 
         validar_datos($validaciones);
@@ -208,11 +211,39 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
                 ASSOCIATES  => 'El concepto de pago tiene atletas asociados.',
                 default          => 'Ocurrió un error inesperado en la eliminacion.'
             };
-
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Concepto', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function cambiarEstatus($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
+            throw new Exception('ID inválido o no proporcionado.');
+        }
+
+        $datos = [
+            'id' => $_POST['id'],
+            'estatus' => $_POST['estatus'] ?? 1,
+            'accion' => 'estatus'
+        ];
+
+        $resultado = $obj->ProcesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Actualizó el estatus del concepto de pago " . $_POST['id']);
+            $resultado = array('accion' => 'estatus', 'mensaje' => 'Estatus actualizado exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            $resultado['mensaje'] = 'Ocurrió un error inesperado al actualizar el estatus en la base de datos.';
+        }
+        
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Concepto', $e->getMessage(), 'Controlador_Estatus');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

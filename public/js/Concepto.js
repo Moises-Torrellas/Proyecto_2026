@@ -22,7 +22,7 @@ $(document).ready(function () {
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
 
     // Validación de monto
-    Validacion("monto", /^[0-9\b\,]*$/, /^[0-9]+(,[0-9]{1,2})?$/, "Solo números con hasta dos decimales (solo comas)", "proceso");
+    Validacion("monto", /^[0-9\b\,]*$/, /^[0-9]+(.[0-9]{1,2})?$/, "Solo números con hasta dos decimales (solo comas)", "proceso");
     
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
@@ -140,6 +140,18 @@ function eliminar(id) {
         }
     });
 }
+function cambiarEstatus(id, estadoActual) {
+    let accionTexto = (estadoActual == 1) ? 'desactivar' : 'activar';
+    confirmar(`¿Está seguro que desea ${accionTexto} este concepto de pago?`, function (confirmado) {
+        if (confirmado) {
+            var datos = new FormData();
+            datos.append('accion', 'estatus');
+            datos.append('id', id);
+            datos.append('estatus', estadoActual);
+            enviaAjax(datos);
+        }
+    });
+}
 
 function validarEnvio(proceso) {
         if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
@@ -147,7 +159,7 @@ function validarEnvio(proceso) {
             muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
             return false;
     }
-    else if (validarkeyup(/^[0-9]+(,[0-9]{1,2})?$/, $('#monto'),
+    else if (validarkeyup(/^[0-9]+(.[0-9]{1,2})?$/, $('#monto'),
     $("#monto_spam"), "Solo números con hasta dos decimales (solo comas)", true)) {
     muestraMensaje("error", 2000, "Error", "Tiene que ingresar un monto válido");
     return false;
@@ -189,8 +201,11 @@ function crearConsulta(datos) {
 
                 <div class="listado_col_acciones">
                     <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_Concepto})"><i class="fi fi-sr-pencil"></i></button>
-                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_Concepto})"><i class="fi fi-sr-trash-xmark"></i></button>
+                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_conceptos})"><i class="fi fi-sr-pencil"></i></button>
+                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_conceptos})"><i class="fi fi-sr-trash-xmark"></i></button>
+                        <button id="cbt_b" class="btn_t cbt_b" onclick="cambiarEstatus(${dato.id_conceptos}, ${dato.estatus})">
+                        <i class="${dato.estatus == 2 ? 'fi fi-sr-lock' : 'fi fi-sr-unlock'}"></i>
+</button>
                     </div>
                 </div>
             </div>
@@ -227,6 +242,9 @@ function enviaAjax(datos) {
                     consultar();
                     limpia();
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
+                } else if (lee.accion == "estatus") {
+                    consultar();
+                    muestraMensaje("success", 2000, "Actualización Exitosa", lee.mensaje);
                 } else if (lee.accion == "eliminar") {
                     consultar();
                     muestraMensaje("success", 2000, "Eliminacion Exitosa", lee.mensaje);
