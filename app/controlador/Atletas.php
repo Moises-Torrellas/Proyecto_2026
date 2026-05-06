@@ -51,6 +51,10 @@ function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $p
             case 'consultarC':
                 consultarCategorias($obj);
                 break;
+            case 'incluir':
+                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar atletas.');
+                incluir($obj, $id_modulo, $bitacoraObj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -68,17 +72,16 @@ function consultar($obj): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] ='Error al listar los representantes';
+    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+        $respuesta['mensaje'] = 'Error al listar los representantes';
     }
     echo json_encode($respuesta);
 }
 function consultarRepresentantes($obj): void
 {
-    $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->ConsultarRepresentantes();
-    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] ='Error al listar los representantes';
+    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+        $respuesta['mensaje'] = 'Error al listar los representantes';
     }
     echo json_encode($respuesta);
 }
@@ -86,8 +89,8 @@ function consultarCategorias($obj): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->ConsultarCategorias();
-    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] ='Error al listar los representantes';
+    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+        $respuesta['mensaje'] = 'Error al listar los representantes';
     }
     echo json_encode($respuesta);
 }
@@ -95,8 +98,93 @@ function consultarPosiciones($obj): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->ConsultarPosiciones();
-    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] ='Error al listar los representantes';
+    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+        $respuesta['mensaje'] = 'Error al listar los representantes';
     }
     echo json_encode($respuesta);
+}
+
+function incluir($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validaciones = [
+            'fecha_nac' => ['regla'   => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'],
+            'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/', 'mensaje' => 'Nombres inválido.'],
+            'apellido' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/', 'mensaje' => 'Apellidos inválido.'],
+            'categoria' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Categoria inválida.'],
+            'posicion' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Posición inválida.'],
+            'genero' => ['regla'   => '/^[HM]$/', 'mensaje' => 'Genero inválido.'],
+        ];
+
+        $datos=[
+            'fecha_nac' => $_POST['fecha_nac'],
+            'nombre' => $_POST['nombre'],
+            'apellido' => $_POST['apellido'],
+            'posicion' => $_POST['posicion'],
+            'categoria' => $_POST['categoria'],
+            'genero' => $_POST['genero'],
+        ];
+
+        if (isset($_POST['representante'])) {
+            $validaciones['representante'] = ['regla' => '/^[1-9]+$/', 'mensaje' => 'Representante inválido.'];
+            $datos['representante'] = $_POST['representante'];
+        }
+        if (isset($_POST['doc_i'])) {
+            $validaciones['doc_i'] = ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cedula inválida. Debe contener de 7 a 8 dígitos.'];
+            $datos['doc_identidad'] = $_POST['doc_i'];
+        }
+        if (isset($_POST['telefono'])) {
+            $validaciones['telefono'] = ['regla' => '/^[0-9]{4}[-]{1}[0-9]{7}$/', 'mensaje' => 'Telefono invalido.'];
+            $datos['telefono'] = $_POST['telefono'];
+        }
+        if (isset($_POST['direccion'])) {
+            $validaciones['direccion'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', 'mensaje' => 'Direccion inválida.'];
+            $datos['direccion'] = $_POST['direccion'];
+        }
+        
+        validar_datos($validaciones);
+
+        if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception('La foto del atleta es obligatoria.');
+        }
+        
+        $fecha_nac = $_POST['fecha_nac'];
+        $anio_nac = (int)date('Y', strtotime($fecha_nac));
+        $anio_act = (int)date('Y'); // 2026
+        $edad_cal = $anio_act - $anio_nac;
+        if ($edad_cal < 18) {
+            if(empty($_POST['representante']) || $_POST['representante'] == "0"){
+                throw new Exception('El atleta es menor de edad necesita asociar un representante.');
+            }
+        }
+        if ($edad_cal > 9) {
+            if(empty($_POST['doc_i'])){
+                throw new Exception('Necesita ingresar el documento de identidad del atleta.');
+            }
+        }
+
+        $foto_nombre = subirImagen($_FILES['foto'], 'atleta', $datos['fecha_nac'], 'atletas', 'default.png');
+
+        $datos['foto'] = [$foto_nombre];
+        $datos['accion'] = 'incluir';
+        $resultado = $obj->ProcesarDatos($datos);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Registro al Atleta: " . $datos['nombre'] . " " . $datos['apellido']);
+            $resultado = array('accion' => 'incluir', 'mensaje' => 'Atleta registrado exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                DUPLICATE_CEDULA => 'La cedula ingresada ya pertenece a un atleta registrado.',
+                DUPLICATE_PHONE  => 'El telefono ingresado ya pertenece a un atleta registrado.',
+                INVALID_ID       => 'La categoria ingresada no existe en los registros del club.',
+                INVALID_ID.'0'   => 'La posicion ingresada no existe en los registros del club.',
+                INVALID_ID.'1'   => 'El representante ingresado no existe en los registros del club.',
+                default          => 'Ocurrió un error inesperado en el registro.'
+            };
+        }
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Atletas', $e->getMessage(), 'Controlador_Incluir');
+        echo json_encode(['accion' => 'error', 'mensaje' => 'Ocurrio un error inesperado.']);
+    }
 }

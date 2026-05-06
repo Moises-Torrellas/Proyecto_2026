@@ -187,6 +187,11 @@ $(document).ready(function () {
         validarEdadAtleta($(this).val());
     });
 
+    // Se ejecuta cada vez que cambian estos campos
+    $('#fecha_nac, #categoria').on('change', function () {
+        validarCategoria();
+    });
+
 });
 
 function validarEdadAtleta(fechaValor) {
@@ -194,12 +199,9 @@ function validarEdadAtleta(fechaValor) {
 
     const hoy = new Date();
     const nacimiento = new Date(fechaValor);
-    let edad = hoy.getFullYear() - nacimiento.getFullYear();
-    const mes = hoy.getMonth() - nacimiento.getMonth();
 
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-        edad--;
-    }
+    // Edad calendario: Solo la resta de los años
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
 
     const $doc_i = $("#doc_i");
     const $representante = $("#representante");
@@ -218,7 +220,7 @@ function validarEdadAtleta(fechaValor) {
 
     // 2. Regla: Placeholder de Cédula
     if (edad < 9) {
-        $doc_i.attr("placeholder", "Cédula del representante");
+        $doc_i.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
     } else {
         $doc_i.attr("placeholder", "Cédula del atleta");
     }
@@ -287,9 +289,12 @@ function validarEnvio(proceso) {
     }
 
     // 8. Documento de Identidad (Cédula)
-    if (validarkeyup(/^[0-9]{7,8}$/, $('#doc_i'), $("#doc_i_spam"), "Mínimo 7 máximo 8 dígitos", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar una cédula válida");
-        return false;
+
+    if (!$("#doc_i").prop("disabled")) {
+        if (validarkeyup(/^[0-9]{7,8}$/, $('#doc_i'), $("#doc_i_spam"), "Mínimo 7 máximo 8 dígitos", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar una cédula válida");
+            return false;
+        }
     }
 
     // 9. Teléfono (Solo si NO está deshabilitado)
@@ -313,7 +318,10 @@ function validarEnvio(proceso) {
         return false;
     }
 
-    // Si todo pasó las validaciones
+    if (!validarCategoria()) {
+        muestraMensaje("error", 2000, "Error", "La edad del atleta debe estar dentro de la categoría elegida");
+        return false;
+    }
     return true;
 }
 
@@ -358,10 +366,10 @@ function crearConsulta(datos) {
         datos.forEach(dato => {
             const anioNacimiento = new Date(dato.fecha_nac).getFullYear();
             const edadCalendario = anioActual - anioNacimiento;
-
+            const genero = dato.genero === 'H' ? 'Hombre' : 'Mujer';
             const fotoHTML = (dato.foto === 'default.png' || !dato.foto)
                 ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>`
-                : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil">`;
+                : `<img src="img/atletas/${dato.foto}" class="listado_avatar" alt="Perfil">`;
 
             // Lógica para el representante: Si no existe, no se crea el HTML de la tarjeta
             let tarjetaRepresentante = "";
@@ -390,7 +398,7 @@ function crearConsulta(datos) {
 
                         <div class="listado_col_datos">
                             <div class="listado_dato_grupo">
-                                <small>Identificación</small>
+                                <small>Doc de Identidad</small>
                                 <span>${dato.doc_identidad}</span>
                             </div>
                             <div class="listado_dato_grupo">
@@ -400,6 +408,10 @@ function crearConsulta(datos) {
                             <div class="listado_dato_grupo">
                                 <small>Teléfono</small>
                                 <span>${escapeHTML(dato.telefono)}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Genero</small>
+                                <span>${escapeHTML(genero)}</span>
                             </div>
                         </div>
 
@@ -443,6 +455,20 @@ function crearConsulta(datos) {
                                         <span>${escapeHTML(dato.direccion)}</span>
                                     </div>
                                 </div>
+                                <div class="detalle_card">
+                                    <div class="detalle_card_icon"><i data-lucide="phone"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Telefono</label>
+                                        <span>${escapeHTML(dato.telefono)}</span>
+                                    </div>
+                                </div>
+                                <div class="detalle_card">
+                                    <div class="detalle_card_icon"><i data-lucide="calendar-1"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Fecha de Nacimiento</label>
+                                        <span>${escapeHTML(dato.fecha_nac)}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -470,10 +496,11 @@ function escapeHTML(texto) {
 function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3 = null) {
     var select = $('#' + idSelect);
     select.empty();
-    select.append('');
+    select.append('<option value="" selected disabled>Seleccione una opción</option>');
 
     datos.forEach(dato => {
         let textoMostrar = "";
+        let atributosExtra = ""; // Variable para guardar los límites de edad
 
         if (idSelect === 'representante' && campo1 && campo2 && campo3) {
             textoMostrar = `${escapeHTML(dato[campo1])} ${escapeHTML(dato[campo2])} — ${dato[campo3]}`;
@@ -483,14 +510,42 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
         }
         else if (idSelect === 'categoria' && campo1 && campo2 && campo3) {
             textoMostrar = `${escapeHTML(dato[campo1])} (${dato[campo2]} a ${dato[campo3]} años)`;
+            // GUARDAR LÍMITES EN LA OPCIÓN
+            atributosExtra = `data-min="${dato[campo2]}" data-max="${dato[campo3]}"`;
         }
         else {
             textoMostrar = escapeHTML(String(dato[campo1]));
         }
 
-        var linea = `<option value="${dato[campoId]}">${textoMostrar}</option>`;
+        // Se agregan los atributosExtra a la etiqueta <option>
+        var linea = `<option value="${dato[campoId]}" ${atributosExtra}>${textoMostrar}</option>`;
         select.append(linea);
     });
+}
+
+function validarCategoria() {
+    const fechaNac = $('#fecha_nac').val();
+    const categoria = $('#categoria option:selected');
+
+    if (!fechaNac || !categoria.val()) return;
+
+    // Calcular edad calendario
+    const anioNac = new Date(fechaNac).getFullYear();
+    const anioAct = new Date().getFullYear();
+    const edadCalendario = anioAct - anioNac;
+
+    // Obtener límites desde los atributos data que guardamos antes
+    const min = parseInt(categoria.data('min'));
+    const max = parseInt(categoria.data('max'));
+    const $btnProceso = $("#proceso");
+
+    if (edadCalendario < min || edadCalendario > max) {
+        $btnProceso.prop("disabled", true).addClass("btn_bloqueado");
+        muestraMensaje("error", 2000, "Error", `El atleta tiene ${edadCalendario} años, pero la categoría solo permite de ${min} a ${max} años.`);
+        return false;
+    }
+    $btnProceso.prop("disabled", false).removeClass("btn_bloqueado");
+    return true;
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -522,7 +577,7 @@ function enviaAjax(datos) {
 
                 } else if (lee.accion == "consultarC") {
                     // Para Categorías: ID, Nombre, Edad Mínima, Edad Máxima
-                    construirSelect('categoria', lee.datos, 'id_categoria', 'nombre', 'edad_min', 'edad_max');
+                    construirSelect('categoria', lee.datos, 'id_categorias', 'nombre', 'edad_min', 'edad_max');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();

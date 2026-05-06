@@ -819,14 +819,13 @@ option {
 
 .icono_flecha_detalle {
     transition: transform 0.3s ease;
-    color: #555;
+    color: var(--color-primario);
     width: 20px;
     margin-left: 10px;
 }
 
 .expandido .icono_flecha_detalle {
     transform: rotate(180deg);
-    color: #34d314;
 }
 
 .contenedor_botonera {
