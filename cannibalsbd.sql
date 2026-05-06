@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-04-2026 a las 23:30:52
+-- Tiempo de generación: 06-05-2026 a las 04:47:55
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -49,21 +49,25 @@ CREATE TABLE `atletas` (
   `id_atleta` int(11) NOT NULL,
   `nombres` varchar(60) NOT NULL,
   `apellidos` varchar(60) NOT NULL,
-  `doc_identidad` varchar(13) NOT NULL,
+  `doc_identidad` varchar(13) DEFAULT NULL,
+  `telefono` varchar(15) DEFAULT NULL,
+  `direccion` varchar(150) DEFAULT NULL,
   `genero` enum('H','M') NOT NULL,
   `fecha_nac` date NOT NULL,
-  `foto` varchar(100) NOT NULL,
+  `foto` varchar(100) NOT NULL DEFAULT 'default.png',
   `id_posicion` int(11) NOT NULL,
   `id_categoria` int(11) NOT NULL,
-  `id_representante` int(11) NOT NULL
+  `id_representante` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `atletas`
 --
 
-INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`) VALUES
-(2, 'dffd', 'dfdf', '12345678', 'H', '2004-05-12', 'FOTO', 1, 1, 2);
+INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `telefono`, `direccion`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`) VALUES
+(3, 'Juan David', 'Perez Perez', NULL, NULL, NULL, 'H', '2020-07-03', 'atleta_2020-07-03_1778027645.png', 5, 3, 2),
+(4, 'Mohammed Rowe', 'Wilmer Buckley', '54875454', NULL, NULL, 'M', '2014-07-09', 'atleta_2014-07-09_1778031558.png', 6, 1, 2),
+(5, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-5879846', 'El Tocuyo', 'H', '2002-07-17', 'atleta_2002-07-17_1778031987.png', 1, 4, NULL);
 
 -- --------------------------------------------------------
 
@@ -111,7 +115,9 @@ CREATE TABLE `categorias` (
 --
 
 INSERT INTO `categorias` (`id_categorias`, `nombre`, `edad_min`, `edad_max`) VALUES
-(1, 'U-12', 12, 13);
+(1, 'U-12', 12, 13),
+(3, 'U-06', 5, 6),
+(4, 'SENIOR', 18, 60);
 
 -- --------------------------------------------------------
 
@@ -233,6 +239,15 @@ CREATE TABLE `estado_equipamiento` (
   `nivel_estado` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
+--
+-- Volcado de datos para la tabla `estado_equipamiento`
+--
+
+INSERT INTO `estado_equipamiento` (`id_estado`, `nombre`, `nivel_estado`) VALUES
+(1, 'Exelente', 1),
+(3, 'Mas O Menos', 2),
+(4, 'Mala', 3);
+
 -- --------------------------------------------------------
 
 --
@@ -307,7 +322,8 @@ CREATE TABLE `posiciones` (
 INSERT INTO `posiciones` (`id_posicion`, `nombre`, `abreviatura`, `descripcion`) VALUES
 (1, 'Delantero', 'DC', ''),
 (5, 'Defensa', 'DF', ''),
-(6, 'Portero', 'PR', '');
+(6, 'Portero', 'PR', ''),
+(8, 'Medio', 'MD', '');
 
 -- --------------------------------------------------------
 
@@ -342,8 +358,7 @@ CREATE TABLE `representantes` (
 --
 
 INSERT INTO `representantes` (`id_representante`, `nombre`, `apellido`, `cedula`, `nacionalidad`, `direccion`, `telefono`) VALUES
-(2, 'Jose', 'Martinez', '12345678', 'V', 'Barquisimeto', '3333-3333333'),
-(3, 'Maria', 'Perez', '87654321', 'E', 'Tocuyo', '2222-2222222');
+(2, 'Moises', 'Martinez', '12345678', 'V', 'Barquisimeto', '3333-3333333');
 
 -- --------------------------------------------------------
 
@@ -556,7 +571,7 @@ ALTER TABLE `asignaciones`
 -- AUTO_INCREMENT de la tabla `atletas`
 --
 ALTER TABLE `atletas`
-  MODIFY `id_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `atleta_premios`
@@ -574,7 +589,7 @@ ALTER TABLE `catalogos`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id_categorias` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_categorias` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `conceptos`
@@ -622,7 +637,7 @@ ALTER TABLE `estadisticas`
 -- AUTO_INCREMENT de la tabla `estado_equipamiento`
 --
 ALTER TABLE `estado_equipamiento`
-  MODIFY `id_estado` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_estado` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `metodos_pago`
@@ -652,7 +667,7 @@ ALTER TABLE `participaciones`
 -- AUTO_INCREMENT de la tabla `posiciones`
 --
 ALTER TABLE `posiciones`
-  MODIFY `id_posicion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id_posicion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `premios`
@@ -664,7 +679,7 @@ ALTER TABLE `premios`
 -- AUTO_INCREMENT de la tabla `representantes`
 --
 ALTER TABLE `representantes`
-  MODIFY `id_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `tipos_premios`
@@ -676,7 +691,7 @@ ALTER TABLE `tipos_premios`
 -- AUTO_INCREMENT de la tabla `torneos`
 --
 ALTER TABLE `torneos`
-  MODIFY `id_torneo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_torneo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Restricciones para tablas volcadas
