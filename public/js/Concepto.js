@@ -180,11 +180,12 @@ function modificar(datos) {
 function crearConsulta(datos) {
     const contenedor = $('#resultadoconsulta');
     contenedor.empty();
-
     if (datos.length === 0) {
         contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
     } else {
         datos.forEach(dato => {
+            let icon = dato.estatus == 1 ? 'fi-sr-unlock' : 'fi-sr-lock';
+            let color = dato.estatus == 1 ? 'cbt_g' : 'cbt_a';
     let registro = `
         <div class="listado_contenedor_grupal">
             <div class="listado_item" onclick="toggleDetalles(this)">
@@ -203,9 +204,7 @@ function crearConsulta(datos) {
                     <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_conceptos})"><i class="fi fi-sr-pencil"></i></button>
                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_conceptos})"><i class="fi fi-sr-trash-xmark"></i></button>
-                        <button id="cbt_b" class="btn_t cbt_b" onclick="cambiarEstatus(${dato.id_conceptos}, ${dato.estatus})">
-                        <i class="${dato.estatus == 2 ? 'fi fi-sr-lock' : 'fi fi-sr-unlock'}"></i>
-</button>
+                        <button class="btn_t ${color}" onclick="cambiarEstatus(${dato.id_conceptos}, ${dato.estatus}, this)"><i class="fi ${icon}"></i></button></button>
                     </div>
                 </div>
             </div>
