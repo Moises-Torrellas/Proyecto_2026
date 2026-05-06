@@ -22,12 +22,12 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloAtletas();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudRepresentantes($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
     cargarVista($pagina);
 }
 
-function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $permisos): void
+function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
     try {
         $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';

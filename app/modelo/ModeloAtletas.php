@@ -62,8 +62,8 @@ class ModeloAtletas extends ModeloBase
 
         // 3. Mapeo de campos condicionales (enviados según la lógica del controlador)
         $this->representante = $datos['representante'] ?? null;
-        $this->doc_identidad = $datos['doc_identidad'] ?? null; // Viene de $_POST['doc_i']
-        $this->telefono      = $datos['telefono'] ?? null;
+        $this->doc_identidad = isset($datos['doc_identidad']) ? trim($datos['doc_identidad']) : null;
+        $this->telefono = isset($datos['telefono']) ? trim($datos['telefono']) : null;
         $this->direccion     = isset($datos['direccion']) ?
             mb_convert_case(trim($datos['direccion']), MB_CASE_TITLE, "UTF-8") : null;
 
@@ -178,7 +178,7 @@ class ModeloAtletas extends ModeloBase
             $conex->beginTransaction();
 
             // 1. Verificaciones de duplicados (Cédula y Teléfono)
-            if ($this->doc_identidad !== null) {
+            if ($this->doc_identidad !== null && $this->doc_identidad !== '') {
                 if ($this->verificarExistencia('doc_identidad', $this->doc_identidad, 'atletas', NULL, bloquear: true)) {
                     throw new Exception(DUPLICATE_CEDULA);
                 }
