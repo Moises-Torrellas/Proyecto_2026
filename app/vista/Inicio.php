@@ -23,7 +23,7 @@
                     <!-- <input type="hidden" id="token" name="token" value="<?php /* echo $_SESSION['token']; */ ?>"> -->
                     <div class="row">
                         <div class="colum">
-                            <div class="caja_formulario">
+                            <div class="caja_formulario c_f_i">
                                 <input type="text" class="formulario" id="cedula" name="cedula">
                                 <label for="cedula" class="titulo_formulario">Cedula</label>
                                 <span class="mensaje" id="spam_cedula"></span>
@@ -32,7 +32,7 @@
                     </div>
                     <div class="row">
                         <div class="colum">
-                            <div class="caja_formulario">
+                            <div class="caja_formulario c_f_i">
                                 <input type="password" class="formulario" id="contraseña" name="contraseña">
                                 <label for="contraseña" class="titulo_formulario">Contraseña</label>
                                 <span class="mensaje" id="spam_contraseña"></span>
@@ -43,7 +43,7 @@
                     <div class="row">
                         <div class="colum column_inicio">
                             <button type="button" class="btn btn_azul btn_inicio" id="ingreso">Iniciar Sesión</button>
-                            <a href="/Proyecto_2026/public/Recuperacion">¿Has olvidado tu contraseña?</a>
+                            <a  href="/Proyecto_2026/public/Recuperacion" style="user-select: none;">¿Has olvidado tu contraseña?</a>
                         </div>
                     </div>
                 </form>

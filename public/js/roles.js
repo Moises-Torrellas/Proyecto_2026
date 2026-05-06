@@ -1,7 +1,20 @@
+$('#busqueda').off('keyup').on('keyup', busqueda);
+let timerBusqueda;
 function consultar() {
-    var datos = new FormData();
+    let datos = new FormData();
     datos.append('accion', 'consultar');
     enviaAjax(datos);
+}
+function busqueda() {
+    clearTimeout(timerBusqueda);
+    timerBusqueda = setTimeout(function () {
+        let valorBusqueda = $('#busqueda').val();
+        let datos = new FormData();
+        datos.append('accion', 'consultar');
+        datos.append('filtro', valorBusqueda);
+
+        enviaAjax(datos);
+    }, 500);
 }
 function consultarModulo() {
     var datos = new FormData();
@@ -95,7 +108,7 @@ $(document).ready(function () {
                 popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
             },
             {
-                element: '#tabla',
+                element: '#resultadoconsulta',
                 popover: { title: 'Registros', description: 'Aqui se mostraran todos los registros.', position: 'top' }
             },
             {
@@ -226,23 +239,7 @@ function eliminar(id) {
     });
 }
 
-/* function crearConsulta(datos) {
-    var tablaBody = $('#resultadoconsulta');
-    tablaBody.empty();
-    datos.forEach(dato => {
-        var linea = `<tr>
-                        <td>${dato.id_rol}</td>
-                        <td>${escapeHTML(dato.nombre_rol)}</td>
-                        <td>
-                            <button class="btn_t cbt_v" id="cbt_v" onclick="buscar(${dato.id_rol})"><i class="fi fi-sr-pencil"></i></button>
-                            <button class="btn_t cbt_r" id="cbt_r" onclick="eliminar(${dato.id_rol})"><i class="fi fi-sr-trash-xmark"></i></button>
-                        </td>
-                    </tr>`;
 
-        tablaBody.append(linea);
-    });
-    inicializarPaginador();
-} */
 
 function crearConsulta(datos) {
     const contenedor = $('#resultadoconsulta');
@@ -349,7 +346,7 @@ $('#add').on('click', function () {
             $("#tabla_permisos").append(lin);
         }
     } else if (id == null) {
-        muestraMensaje("error", 2000, "Error", "Tienes que seleccionar un modulo antes de agregarlo.");
+        muestraMensajeMini("error", 2000, "Tiene que seleccionar un modulo");
     }
 });
 
@@ -400,19 +397,19 @@ function enviaAjax(datos) {
                     modificar(lee.datos);
                 }
                 else if (lee.accion == "incluir") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                     consultar();
                     limpia();
                     limpia_Tablas();
                     cerrarModal();
                 } else if (lee.accion == "modificar") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                     consultar();
                     limpia();
                     limpia_Tablas();
                     cerrarModal();
                 } else if (lee.accion == "eliminar") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Eliminacion Exitosa", lee.mensaje);
                     consultar();
                 } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);

@@ -24,33 +24,19 @@
 }
 
 .modal {
-    width: 70%;
-    height: 70%;
+    width: 600px;
+    height: 650px;
     background: var(--fondo-principal);
     border-radius: 10px;
     display: grid;
     grid-template-rows: 80px auto;
 }
 
-.modal_grande {
-    width: 80%;
-    height: 80%;
-}
-
-.modal_mediano {
-    width: 60%;
-    height: 60%;
-}
-
-.modal_pequeño {
-    width: 30%;
-    height: 80%;
-}
-
 .cabecera_modal {
     grid-row: 1;
     display: grid;
     grid-template-columns: 1fr auto;
+    border-bottom: 2px solid var(--color-claro); ;
     place-items: start;
     align-items: center;
 }
@@ -59,7 +45,7 @@
     grid-column: 1;
     place-items: start;
     margin-left: 40px;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 600;
     user-select: none;
     color: var(--texto-principal);
@@ -68,7 +54,7 @@
 .cerrar_modal {
     width: 50px;
     text-align: center;
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: 600;
     grid-column: 2;
     margin-right: 40px;
@@ -80,7 +66,6 @@
 
 .cerrar_modal:hover {
     color: var(--color-primario);
-    text-shadow: 0px 0px 8px rgba(0, 106, 255, 0.50);
 }
 
 .contenido_modal {
@@ -95,7 +80,7 @@
     display: grid;
     grid-template-rows: auto;
     place-items: center;
-    gap: 40px;
+    gap: 20px;
 }
 
 .colum {
@@ -112,7 +97,7 @@
 
 .caja_formulario {
     position: relative;
-    width: 300px;
+    width: 250px;
     height: auto;
     display: flex;
     justify-content: center;
@@ -139,9 +124,12 @@
     width: 500px;
 }
 
+
+
 .formulario {
-    width: calc(100% - 40px);
+    box-sizing: border-box;
     height: 45px;
+    width: 100%;
     padding: 0px 20px 0px 20px;
     color: var(--texto-principal);
     font-size: .9rem;
@@ -151,6 +139,43 @@
     background: transparent;
     transition: .2s ease-in;
     background-color: var(--fondo-form);
+}
+
+.input-group-custom {
+    display: flex;
+    align-items: flex-start;
+    width: 350px; /* Ajusta según necesites */
+}
+
+/* Ajuste para el Select (Nacionalidad) */
+.nacionalidad_ext {
+    width: 50px !important;
+    height: 100% !important; /* Más pequeño */
+}
+
+.nacionalidad_ext .formulario {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none; /* Quita la línea del medio */
+    padding: 0 10px;
+    width: 100%;
+}
+
+/* Ajuste para el Input (Cedula) */
+.cedula_ext {
+    flex-grow: 1; /* Que ocupe el resto */
+    width: auto !important;
+}
+
+.cedula_ext .formulario {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    width: 100%;
+}
+
+/* Si usas labels flotantes, asegúrate de ajustar su posición */
+.nacionalidad_ext .titulo_formulario {
+    left: 10px;
 }
 
 .formulario_pequeño {

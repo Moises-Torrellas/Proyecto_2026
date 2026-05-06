@@ -41,6 +41,16 @@ const _MD_PREMIOS_ = 21;
 const _MD_PALMARES_ = 22;
 const _MD_ESTADISTICAS_ = 23;
 
+/* CODIGOS DE ERROR */
+const DUPLICATE_CEDULA = "001";
+const DUPLICATE_EMAIL  = "002";
+const INVALID_ID     = "003";
+const DUPLICATE_NAME  = "004";
+const DUPLICATE_PHONE  = "005";
+const ASSOCIATES  = "006";
+const VALIDATION = "007";
+const DB_CONNECTION    = "500";
+
 if (session_status() === PHP_SESSION_NONE) {
     // Configuramos la sesión antes de iniciarla
     ini_set('session.cookie_httponly', 1);
@@ -48,4 +58,3 @@ if (session_status() === PHP_SESSION_NONE) {
     session_name('SISTEMA_SG_SESSION');
     session_start();
 }
-

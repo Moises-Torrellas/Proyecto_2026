@@ -116,6 +116,7 @@ $(document).ready(function () {
         $('#contraseña').closest('.colum').show();
         $('#telefono').closest('.colum').show();
         $('#correo').closest('.colum').show();
+        $('#foto').closest('.colum').show();
         $('#roles').val(null).trigger('change');
         abrirModal();
     });
@@ -129,6 +130,7 @@ $(document).ready(function () {
         $('#contraseña').closest('.colum').hide();
         $('#telefono').closest('.colum').hide();
         $('#correo').closest('.colum').hide();
+        $('#foto').closest('.colum').hide();
         $('#roles').val(null).trigger('change');
         abrirModal();
     });
@@ -236,6 +238,7 @@ function modificar(datos) {
     $('#contraseña').closest('.colum').show();
     $('#telefono').closest('.colum').show();
     $('#correo').closest('.colum').show();
+    $('#foto').closest('.colum').show();
     $('#roles').val(null).trigger('change');
     $('#id').val(datos[0].idUsuario);
     $('#cedula').val(datos[0].cedulaUsuario);
@@ -289,7 +292,7 @@ function crearConsulta(datos) {
             let color = dato.bloqueo == 1 ? 'cbt_g' : 'cbt_a';
 
             let fotoHTML = dato.foto == 'default.png'
-                ? `<div class="listado_avatar_null"><i data-lucide="circle-user"></i></div>` 
+                ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>` 
                 : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil">`;
 
             let registro = `
@@ -408,28 +411,28 @@ function enviaAjax(datos) {
                     modificar(lee.datos);
                 }
                 else if (lee.accion == "incluir") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                     consultar();
                     limpia();
                 } else if (lee.accion == "modificar") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                     consultar();
                     limpia();
                     cerrarModal();
                 } else if (lee.accion == "eliminar") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Eliminacion Exitosa", lee.mensaje);
                     consultar();
 
                 }
                 else if (lee.accion == "reporte") {
                     cerrarAlertaEspara();
-                    muestraMensaje("success", 2000, "Correcto", 'Se ha generado el reporte');
+                    muestraMensaje("success", 2000, "Creado Exitosamente", 'Se ha generado el reporte');
                     setTimeout(function () {
                         window.open(lee.archivo, '_blank');
                     }, 2000);
                     limpia();
                 } else if (lee.accion == "bloquear") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Accion Exitosa", lee.mensaje);
 
                     if (botonPresionado) {
                         let btn = $(botonPresionado);

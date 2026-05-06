@@ -25,7 +25,7 @@ abstract class ModeloBase extends Conexion
         return ($db === 'general') ? $this->conex : $this->conexSG;
     }
 
-    protected function verificarExistencia(string $campo, $valor, string $tabla, ?int $estatus = 1, string $db = 'general'): bool
+    protected function verificarExistencia(string $campo, $valor, string $tabla, ?int $estatus = 1, string $db = 'general', bool $bloquear = false): bool
     {
         try {
             if (!array_key_exists($campo, $this->campoWhitelist)) {
@@ -34,20 +34,23 @@ abstract class ModeloBase extends Conexion
 
             $columna = $this->campoWhitelist[$campo];
 
-            // 1. Iniciamos la consulta base
+            // 1. Construimos la consulta
             $sql = "SELECT COUNT(*) FROM `{$tabla}` WHERE $columna = :valor";
 
-            // 2. Si se proporcionó un estatus, lo añadimos a la consulta
             if ($estatus !== null) {
                 $sql .= " AND estatus = :estatus";
+            }
+
+            // 2. Aplicamos FOR UPDATE si se solicita (requiere transacción activa)
+            if ($bloquear) {
+                $sql .= " FOR UPDATE";
             }
 
             $stmt = $this->getConexion($db)->prepare($sql);
             $stmt->bindValue(':valor', $valor);
 
-            // 3. Solo vinculamos el estatus si lo incluimos en el SQL
             if ($estatus !== null) {
-                $stmt->bindValue(':estatus', $estatus, PDO::PARAM_INT);
+                $stmt->bindValue(':estatus', $estatus, \PDO::PARAM_INT);
             }
 
             $stmt->execute();
@@ -58,19 +61,22 @@ abstract class ModeloBase extends Conexion
         }
     }
 
-    protected function verificarExistenciaPropia(string $campo, $valor, $id, string $tabla, ?int $estatus = 1, string $db = 'general'): bool
+    protected function verificarExistenciaPropia(string $campo, $valor, $id, string $tabla, ?int $estatus = 1, string $db = 'general', bool $bloquear = false): bool
     {
         try {
             $columna = $this->campoWhitelist[$campo];
 
-            // Consulta pura: ¿El registro con mi ID tiene este valor?
             $sql = "SELECT COUNT(*) FROM `{$tabla}` 
                 WHERE {$this->llavePrimaria} = :id 
                 AND $columna = :valor";
 
-            // Solo añadimos estatus si la tabla lo usa (en representantes envías NULL)
             if ($estatus !== null) {
                 $sql .= " AND estatus = :estatus";
+            }
+
+            // Bloqueo preventivo de la fila específica por su llave primaria
+            if ($bloquear) {
+                $sql .= " FOR UPDATE";
             }
 
             $stmt = $this->getConexion($db)->prepare($sql);
@@ -78,14 +84,13 @@ abstract class ModeloBase extends Conexion
             $stmt->bindValue(':valor', $valor);
 
             if ($estatus !== null) {
-                $stmt->bindValue(':estatus', $estatus, PDO::PARAM_INT);
+                $stmt->bindValue(':estatus', $estatus, \PDO::PARAM_INT);
             }
 
             $stmt->execute();
-            return (int)$stmt->fetchColumn() > 0; // TRUE: Me pertenece, FALSE: No me pertenece
-
+            return (int)$stmt->fetchColumn() > 0;
         } catch (Exception $e) {
-            error_log("Error en pertenencia: " . $e->getMessage());
+            error_log("Error en pertenencia con bloqueo: " . $e->getMessage());
             return false;
         }
     }

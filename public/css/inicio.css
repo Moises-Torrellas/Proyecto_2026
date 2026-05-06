@@ -89,8 +89,12 @@
     flex: 1 0 20px;
 }
 .contenedor_formulario_inicio {
-    grid-row: 2;
-    place-items: center;
+    position: relative; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 280px;
 }
 
 /* .ojo {
@@ -125,15 +129,29 @@
 
 .s {
     position: absolute;
+    width: 100%; /* Ocupa el ancho del padre para poder centrar el contenido dentro */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra el formulario y el botón horizontalmente */
     transition: transform 0.5s ease, opacity 0.5s ease;
     opacity: 0;
     z-index: 0;
+    pointer-events: none;
 }
 
 .visible {
     opacity: 1;
     z-index: 1;
     transform: translateX(0);
+    pointer-events: auto; /* Habilita clics solo cuando es visible */
+}
+
+/* Asegúrate de que el formulario dentro de .s también esté centrado */
+.s form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 
 /* Formulario saliente a la izquierda */
@@ -163,5 +181,9 @@
     width: 100%;
     font-size: 1rem;
     margin-bottom: 20px;
+}
+
+.c_f_i{
+    width: 300px;
 }
 

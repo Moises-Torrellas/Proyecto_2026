@@ -124,13 +124,13 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 
         $foto_nombre = subirImagen($_FILES['foto'], 'user', $_POST['cedula'], 'usuarios',);
 
-        // 3. Preparación de datos para el Modelo
+
         $datos = [
             'cedula'     => $_POST['cedula'],
             'nombre'     => $_POST['nombre'],
             'apellido'   => $_POST['apellido'],
             'telefono'   => $_POST['telefono'],
-            'contraseña' => $_POST['contraseña'], // Recuerda usar password_hash en el modelo
+            'contraseña' => $_POST['contraseña'],
             'correo'     => $_POST['correo'],
             'roles_id'   => $_POST['rol'],
             'foto'       => $foto_nombre, // Se envía el nombre del archivo
@@ -141,8 +141,20 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         // 5. Auditoría y Respuesta
-        if (isset($resultado['resultado']) && $resultado['resultado'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró el usuario: " . $_POST['cedula']);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Registro al usuario: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido']);
+            $resultado = array('accion' => 'incluir', 'mensaje' => 'Usuario registrado exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                VALIDATION       => 'Debe proporcionar una contraseña al crear el usuario.',
+                INVALID_ID       => 'El rol con el que intenta registrar este usuario no existe.',
+                DUPLICATE_CEDULA => 'La cedula ingresada ya pertenece a un usuario registrado.',
+                DUPLICATE_PHONE  => 'El telefono ingresado ya pertenece a un usuario registrado.',
+                DUPLICATE_EMAIL  => 'El correo ingresado ya pertenece a un usuario registrado.',
+                default          => 'Ocurrió un error inesperado en el registro.'
+            };
         }
 
         echo json_encode($resultado);
@@ -191,31 +203,59 @@ function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
 
-        if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó un usuario ID: " . $_POST['id']);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico al usuario: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido']);
+            $resultado = array('accion' => 'modificar', 'mensaje' => 'Usuario modificado exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                INVALID_ID       => 'El rol con el que intenta modificar este usuario no existe.',
+                DUPLICATE_EMAIL  => 'El correo ingresado ya pertenece a un usuario registrado.',
+                DUPLICATE_PHONE  => 'El telefono ingresado ya pertenece a un usuario registrado.',
+                DUPLICATE_CEDULA => 'La cedula ingresada ya pertenece a un usuario registrado.',
+                DUPLICATE_EMAIL . '0'  => 'El correo ya fue usado por otro usuario (eliminado). No se puede reutilizar.',
+                DUPLICATE_CEDULA . '0'  => 'La cedula ya fue usado por otro usuario (eliminado). No se puede reutilizar.',
+                DUPLICATE_PHONE . '0'  => 'El Telefono ya fue usado por otro usuario (eliminado). No se puede reutilizar.',
+                default          => 'Ocurrió un error inesperado en la modificacion.'
+            };
         }
 
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('Usuarios', $e->getMessage(), 'Controlador_Incluir');
+        logs('Usuarios', $e->getMessage(), 'Controlador_Modificar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
 function eliminarUsuario($obj, $id_modulo, $bitacoraObj): void
 {
-    validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+    try {
+        validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
 
-    if ($_POST['id'] == $_SESSION['id']) {
-        throw new Exception('No puedes eliminar tu propio usuario.');
+        if ($_POST['id'] == $_SESSION['id']) {
+            throw new Exception('No puedes eliminar tu propio usuario.');
+        }
+
+        $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'eliminar']);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino al usuario: " . $_POST['id']);
+            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Usuario eliminado exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                INVALID_ID       => 'El usuario que intenta eliminar ya no existe',
+                ASSOCIATES  => 'No puede eliminar al Super Usuario',
+                default          => 'Ocurrió un error inesperado en la eliminacion.'
+            };
+        }
+
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Usuarios', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
-
-    $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'eliminar']);
-
-    if (isset($resultado['accion']) && $resultado['accion'] === 'eliminar') {
-        registrarBitacora($bitacoraObj, $id_modulo, "Eliminó un usuario de forma exitosa");
-    }
-
-    echo json_encode($resultado);
 }
 
 function buscarUsuario($obj): void
@@ -228,22 +268,44 @@ function buscarUsuario($obj): void
 
 function bloquearUsuario($obj, $id_modulo, $bitacoraObj): void
 {
-    validar_datos([
-        'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-        'bloqueo' => ['regla' => '/^[1-2]+$/', 'mensaje' => 'Error interno de bloqueo.']
-    ]);
+    try {
+        validar_datos([
+            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
+            'bloqueo' => ['regla' => '/^[1-2]+$/', 'mensaje' => 'Error interno de bloqueo.']
+        ]);
 
-    if ($_POST['id'] == $_SESSION['id']) {
-        throw new Exception('No puedes bloquear tu propio usuario.');
+        if ($_POST['id'] == $_SESSION['id']) {
+            throw new Exception('No puedes bloquear tu propio usuario.');
+        }
+
+        $datos = [
+            'id' => $_POST['id'],
+            'bloqueo' => $_POST['bloqueo'],
+            'accion' => 'bloquear'
+        ];
+
+        $resultado = $obj->procesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            $nuevoEstado = ($_POST['bloqueo'] == 1) ? 2 : 1;
+            $mensajeExito = ($nuevoEstado == 2) ? "Usuario bloqueado exitosamente." : "Usuario desbloqueado exitosamente.";
+            $mensajeBitacora = ($nuevoEstado == 2) ? "Bloqueo al usuario: " : "Desbloqueo al usuario: ";
+            registrarBitacora($bitacoraObj, $id_modulo, $mensajeBitacora . $_POST['id']);
+            $resultado = array('accion' => 'bloquear', 'mensaje' => $mensajeExito);
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                ASSOCIATES => 'El Super Usuario no puede ser bloqueado.',
+                INVALID_ID => 'El usuario que intenta modificar ya no existe.',
+                default    => 'No se pudo completar la operación de bloqueo.'
+            };
+        }
+
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Usuarios', $e->getMessage(), 'Controlador_Bloquear');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
-
-    $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'bloqueo' => $_POST['bloqueo'], 'accion' => 'bloquear']);
-
-    if (isset($resultado['tipo'])) {
-        registrarBitacora($bitacoraObj, $id_modulo, ucfirst($resultado['tipo']) . " usuario ID: " . $_POST['id']);
-    }
-
-    echo json_encode($resultado);
 }
 
 function generarReporteUsuarios($obj, $reporte): void

@@ -39,7 +39,7 @@
         </div>
     </section>
     <section class="contenedor_modal" id="contenedor_modal">
-        <div class="modal modal_grande ocultar" id="modal">
+        <div class="modal ocultar" id="modal">
             <div class="cabecera_modal">
                 <h2 class="titulo_modal" id="titulo_modal"></h2>
                 <a type="button" class="cerrar_modal" id="cerrar_modal">&times;</a>
@@ -48,20 +48,17 @@
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
                     <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="nacionalidad" id="nacionalidad" class="formulario select">
-                                    <option value="V" selected>Venezolano</option>
-                                    <option value="E" selected>Extranjero</option>
-                                    <option value="P" selected>Pasaporte</option>
+                        <div class="input-group-custom">
+                            <div class="caja_formulario nacionalidad_ext">
+                                <select name="nacionalidad" id="nacionalidad" class="formulario select"> 
+                                    <option value="V" selected>V</option>
+                                    <option value="E">E</option>
+                                    <option value="P">P</option>
                                 </select>
-                                <label for="nacionalidad" class="titulo_formulario">Nacionalidad</label>
-                                <span class="mensaje" id="nacionalidad_span"></span>
                             </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="cedula" name="cedula">
+
+                            <div class="caja_formulario cedula_ext">
+                                <input type="text" class="formulario" id="cedula" name="cedula" placeholder=" ">
                                 <label for="cedula" class="titulo_formulario">Cedula</label>
                                 <span class="mensaje" id="cedula_spam"></span>
                             </div>

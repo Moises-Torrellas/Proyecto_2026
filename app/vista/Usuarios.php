@@ -55,6 +55,8 @@
                                 <span class="mensaje" id="cedula_spam"></span>
                             </div>
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="nombre" name="nombre">
@@ -80,14 +82,6 @@
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="password" class="formulario" id="contraseña" name="contraseña">
-                                <label for="contraseña" class="titulo_formulario">Contraseña</label>
-                                <span class="mensaje" id="contraseña_spam"></span>
-                                <i class="fi fi-sr-eye ojo icon_input"></i>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
                                 <input type="text" class="formulario" id="correo" name="correo">
                                 <label for="correo" class="titulo_formulario">Correo</label>
                                 <span class="mensaje" id="correo_spam"></span>
@@ -95,6 +89,14 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="password" class="formulario" id="contraseña" name="contraseña">
+                                <label for="contraseña" class="titulo_formulario">Contraseña</label>
+                                <span class="mensaje" id="contraseña_spam"></span>
+                                <i class="fi fi-sr-eye ojo icon_input"></i>
+                            </div>
+                        </div>
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="rol" id="roles" class="formulario select">

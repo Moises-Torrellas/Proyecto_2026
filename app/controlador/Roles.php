@@ -65,6 +65,10 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
                 if (!$permisos['modificar']) throw new Exception('No tiene permisos para modificar roles.');
                 modificarRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'eliminar':
+                if (!$permisos['eliminar']) throw new Exception('No tiene permisos para eliminar roles.');
+                eliminarRolesData($obj, $id_modulo, $bitacoraObj);
+                break;
 
             default:
                 throw new Exception('Acción no reconocida.');
@@ -75,14 +79,14 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
     }
 }
 
-/**
- * --- LÓGICA DE CADA ACCIÓN ---
- */
-
 function consultarRolesData($obj): void
 {
-    $roles = $obj->consultar();
-    echo json_encode($roles);
+    $filtro['filtro'] = $_POST['filtro'] ?? '';
+    $respuesta = $obj->Consultar($filtro);
+    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+        $respuesta['mensaje'] ='Error al listar los representantes';
+    }
+    echo json_encode($respuesta);
 }
 
 function consultarModuloData($obj): void
@@ -93,80 +97,187 @@ function consultarModuloData($obj): void
 
 function buscarRolesData($obj): void
 {
-    validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
-    $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
-    echo json_encode($resultado);
+    try {
+        validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+        $idsProtegidos = [1, 2];
+        if (in_array($_POST['id'], $idsProtegidos)) {
+            throw new Exception('Este rol no puede ser modificado');
+        }
+        $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Roles', $e->getMessage(), 'Controlador_Buscar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
 }
 
 function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
 {
-    validarFormatoRoles();
+    try {
+        $validaciones = ['nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido.']];
 
-    $datos = estructurarDatosRol('incluir');
-    $respuesta = $obj->procesarDatos($datos);
+        validar_datos($validaciones);
 
-    if (isset($respuesta['accion']) && $respuesta['accion'] == 'incluir') {
-        registrarBitacora($bitacoraObj, $id_modulo, 'Registró el rol: ' . $_POST['nombre']);
+        if (is_array($_POST['id_modulo'])) {
+            if (count($_POST['id_modulo']) !== count(array_unique($_POST['id_modulo']))) {
+                throw new Exception("No se permiten módulos duplicados");
+            }
+        }
+
+        $validacionesP = [
+            'id_modulo' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'ID de módulo inválido.'],
+        ];
+
+        $datos = [
+            'nombre' => $_POST['nombre'],
+            'id_modulo' => $_POST['id_modulo'],
+            'accion' => 'incluir'
+        ];
+
+        if (isset($_POST['check_incluir']) && !empty($_POST['check_incluir'])) {
+            $validacionesP['check_incluir'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso incluir inválido.'];
+            $datos['c_incluir'] = $_POST['check_incluir'];
+        }
+        if (isset($_POST['check_modificar']) && !empty($_POST['check_modificar'])) {
+            $validacionesP['check_modificar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso modificar inválido.'];
+            $datos['c_modificar'] = $_POST['check_modificar'];
+        }
+        if (isset($_POST['check_eliminar']) && !empty($_POST['check_eliminar'])) {
+            $validacionesP['check_eliminar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso eliminar inválido.'];
+            $datos['c_eliminar'] = $_POST['check_eliminar'];
+        }
+        if (isset($_POST['check_reporte']) && !empty($_POST['check_reporte'])) {
+            $validacionesP['check_reporte'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso reporte inválido.'];
+            $datos['c_reporte'] = $_POST['check_eliminar'];
+        }
+        if (isset($_POST['check_otros']) && !empty($_POST['check_otros'])) {
+            $validacionesP['check_otros'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso otros inválido.'];
+            $datos['c_otros'] = $_POST['check_otros'];
+        }
+
+        validarArrays($validacionesP);
+
+
+
+        $resultado = $obj->procesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Registro el Rol: " . $_POST['nombre']);
+            $resultado = array('accion' => 'incluir', 'mensaje' => 'Rol registrado exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                DUPLICATE_NAME => 'Ya existe un rol registrado con este nombre.',
+                ASSOCIATES  => 'Uno de Los modulos que intenta registrar no existe o esta restringido.',
+                default          => 'Ocurrió un error inesperado en el registro del rol.'
+            };
+        }
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Roles', $e->getMessage(), 'Controlador_Incluir');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
-
-    echo json_encode($respuesta);
 }
 
 function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
 {
-    validarFormatoRoles();
+    try {
+        $validaciones = [
+            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido.'],
+            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']
+        ];
 
-    $datos = estructurarDatosRol('modificar');
-    $respuesta = $obj->procesarDatos($datos);
+        validar_datos($validaciones);
 
-    if (isset($respuesta['accion']) && $respuesta['accion'] == 'modificar') {
-        registrarBitacora($bitacoraObj, $id_modulo, 'Modificó el rol: ' . $_POST['nombre']);
-    }
-
-    echo json_encode($respuesta);
-}
-
-/**
- * --- FUNCIONES AUXILIARES (Para evitar repetir código) ---
- */
-
-function validarFormatoRoles(): void
-{
-    $reglas = [
-        'nombre'          => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido.'],
-        'id_modulo'       => ['regla' => '/^[1-9]+$/', 'mensaje' => 'ID de módulo inválido.'],
-        'check_incluir'   => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
-        'check_modificar' => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
-        'check_eliminar'  => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
-        'check_reporte'   => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.'],
-        'check_otros'     => ['regla' => '/^[0-1]$/',  'mensaje' => 'Valor de permiso inválido.']
-    ];
-
-    // Solo validamos las llaves que existan en el POST
-    validar_datos(array_intersect_key($reglas, $_POST));
-}
-
-function estructurarDatosRol(string $accion): array
-{
-    $datos = [
-        'accion' => $accion,
-        'nombre' => $_POST['nombre']
-    ];
-
-    $mapeo = [
-        'id_modulo'       => 'id_modulo',
-        'check_incluir'   => 'c_incluir',
-        'check_modificar' => 'c_modificar',
-        'check_eliminar'  => 'c_eliminar',
-        'check_reporte'   => 'c_reporte',
-        'check_otros'     => 'c_otros'
-    ];
-
-    foreach ($mapeo as $postKey => $dataKey) {
-        if (isset($_POST[$postKey])) {
-            $datos[$dataKey] = $_POST[$postKey];
+        if (is_array($_POST['id_modulo'])) {
+            if (count($_POST['id_modulo']) !== count(array_unique($_POST['id_modulo']))) {
+                throw new Exception("No se permiten módulos duplicados");
+            }
         }
-    }
 
-    return $datos;
+        $validacionesP = [
+            'id_modulo'      => ['regla' => '/^[0-9]+$/', 'mensaje' => 'ID de módulo inválido.'],
+        ];
+
+        $datos = [
+            'id'          => $_POST['id'],
+            'nombre'      => $_POST['nombre'],
+            'id_modulo'   => $_POST['id_modulo'],
+            'accion'         => 'modificar'
+        ];
+
+        if (isset($_POST['check_incluir']) && !empty($_POST['check_incluir'])) {
+            $validacionesP['check_incluir'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso incluir inválido.'];
+            $datos['c_incluir'] = $_POST['check_incluir'];
+        }
+        if (isset($_POST['check_modificar']) && !empty($_POST['check_modificar'])) {
+            $validacionesP['check_modificar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso modificar inválido.'];
+            $datos['c_modificar'] = $_POST['check_modificar'];
+        }
+        if (isset($_POST['check_eliminar']) && !empty($_POST['check_eliminar'])) {
+            $validacionesP['check_eliminar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso eliminar inválido.'];
+            $datos['c_eliminar'] = $_POST['check_eliminar'];
+        }
+        if (isset($_POST['check_reporte']) && !empty($_POST['check_reporte'])) {
+            $validacionesP['check_reporte'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso reporte inválido.'];
+            $datos['c_reporte'] = $_POST['check_eliminar'];
+        }
+        if (isset($_POST['check_otros']) && !empty($_POST['check_otros'])) {
+            $validacionesP['check_otros'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso otros inválido.'];
+            $datos['c_otros'] = $_POST['check_otros'];
+        }
+
+        validarArrays($validacionesP);
+
+        $resultado = $obj->procesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico el Rol: " . $_POST['nombre']);
+            $resultado = array('accion' => 'modificar', 'mensaje' => 'Rol modificado exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                DUPLICATE_NAME => 'Ya existe un rol registrado con este nombre.',
+                ASSOCIATES  => 'Uno de Los modulos que intenta registrar no existe o esta restringido.',
+                default          => 'Ocurrió un error inesperado en el registro del rol.'
+            };
+        }
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Roles', $e->getMessage(), 'Controlador_Modificar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+
+function eliminarRolesData($obj, $id_modulo, $bitacoraObj)
+{
+    try {
+        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
+
+        validar_datos($validaciones);
+
+        $datos = [
+            'id'          => $_POST['id'],
+            'accion'         => 'eliminar'
+        ];
+
+        $resultado = $obj->procesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino el Rol: " . $_POST['id']);
+            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Rol eliminado exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                INVALID_ID => 'No puedes eliminar roles protegidos.',
+                ASSOCIATES  => 'El rol tiene usuarios asociados.',
+                ASSOCIATES . '0'  => 'El rol que intenta eliminar no existe',
+                default          => 'Ocurrió un error inesperado en el registro del rol.'
+            };
+        }
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Roles', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
 }
