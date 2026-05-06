@@ -62,6 +62,7 @@ $(document).ready(function () {
     Validacion("doc_i", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Mínimo 7 máximo 8 dígitos, solo números", "proceso");
     Validacion("telefono", /^[0-9\b-]*$/, /^[0-9]{4}-[0-9]{7}$/, "Formato inválido (XXXX-XXXXXXX)", "proceso");
     Validacion("direccion", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, /^.{5,150}$/, "Dirección muy corta o inválida", "proceso");
+    Validacion("edad", /^[0-9\b]*$/, /^[0-9]{0,10}$/, "Solo numeros", "proceso");
 
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
@@ -81,6 +82,8 @@ $(document).ready(function () {
                 confirmar('¿Está seguro que quiere modificar este atleta?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
+                        var fotoActual = $("#proceso").data("foto_actual")
+                        datos.append('foto_actual', fotoActual);
                         datos.append('accion', 'modificar');
                         enviaAjax(datos);
                     }
@@ -185,6 +188,7 @@ $(document).ready(function () {
     // --- Lógica de validación de edad y activación de campos ---
     $("#fecha_nac").on("change", function () {
         validarEdadAtleta($(this).val());
+        cargarEdad($(this).val());
     });
 
     // Se ejecuta cada vez que cambian estos campos
@@ -241,6 +245,13 @@ function validarEdadAtleta(fechaValor) {
         $telefono.prop("disabled", false).parent().removeClass("campo_deshabilitado");
         $direccion.prop("disabled", false).parent().removeClass("campo_deshabilitado");
     }
+}
+
+function cargarEdad(fecha){
+    const hoy = new Date();
+    const nacimiento = new Date(fecha);
+    const edad = hoy.getFullYear() - nacimiento.getFullYear();
+    $('#edad').val(edad);
 }
 
 function validarEnvio(proceso) {
@@ -312,11 +323,13 @@ function validarEnvio(proceso) {
             return false;
         }
     }
-
-    if ($('#foto').val() == "" || $('#foto')[0].files.length === 0) {
-        muestraMensaje("error", 2000, "Error", "Debe seleccionar una foto para el atleta");
-        return false;
+    if (proceso == "incluir") {
+        if ($('#foto').val() == "" || $('#foto')[0].files.length === 0) {
+            muestraMensaje("error", 2000, "Error", "Debe seleccionar una foto para el atleta");
+            return false;
+        }
     }
+
 
     if (!validarCategoria()) {
         muestraMensaje("error", 2000, "Error", "La edad del atleta debe estar dentro de la categoría elegida");
@@ -343,13 +356,28 @@ function eliminar(id) {
 }
 
 function modificar(datos) {
+    limpia();
     $("#proceso").data("accion", "modificar");
     $("#proceso").text("Modificar Atleta");
     $("#titulo_modal").text("Modificar Atleta");
 
-    $('#representante').val(null).trigger('change');
-    $('#posicion').val(null).trigger('change');
-    $('#categoria').val(null).trigger('change');
+    $('#fecha_nac').val(datos[0].fecha_nac);
+    $('#id').val(datos[0].id_atleta);
+    $('#doc_i').val(datos[0].doc_identidad);
+    $('#nombre').val(datos[0].nombres);
+    $('#apellido').val(datos[0].apellidos);
+    $('#genero').val(datos[0].genero);
+    $('#genero').val(datos[0].genero);
+    $('#telefono').val(datos[0].telefono);
+    $('#direccion').val(datos[0].direccion);
+    $('#representante').val(datos[0].id_representante).trigger('change');
+    $('#posicion').val(datos[0].id_posicion).trigger('change');
+    $('#categoria').val(datos[0].id_categoria).trigger('change');
+    $("#proceso").data("foto_actual", datos[0].foto);
+    const rutaCarpeta = "img/atletas/";
+    const nombreFoto = datos[0].foto ? datos[0].foto : "default.png";
+    $("#foto_previa").attr("src", rutaCarpeta + nombreFoto).trigger('change');
+    validarEdadAtleta(datos[0].fecha_nac);
 
     abrirModal();
 }
@@ -533,7 +561,6 @@ function validarCategoria() {
     const anioNac = new Date(fechaNac).getFullYear();
     const anioAct = new Date().getFullYear();
     const edadCalendario = anioAct - anioNac;
-
     // Obtener límites desde los atributos data que guardamos antes
     const min = parseInt(categoria.data('min'));
     const max = parseInt(categoria.data('max'));

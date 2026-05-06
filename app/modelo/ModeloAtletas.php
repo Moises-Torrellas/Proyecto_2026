@@ -80,9 +80,9 @@ class ModeloAtletas extends ModeloBase
 
         return match ($accion) {
             'incluir'   => $this->Incluir(),
-            /*'modificar' => $this->Modificar(),
-            /*'eliminar'  => $this->Eliminar(),
-            /*'buscar'    => $this->Buscar(), */
+            'modificar' => $this->Modificar(),
+            /*'eliminar'  => $this->Eliminar(),*/
+            'buscar'    => $this->Buscar(),
             default     => throw new Exception('La acción solicitada para el atleta no es válida.')
         };
     }
@@ -179,7 +179,7 @@ class ModeloAtletas extends ModeloBase
 
             // 1. Verificaciones de duplicados (Cédula y Teléfono)
             if ($this->doc_identidad !== null && $this->doc_identidad !== '') {
-                if ($this->verificarExistencia('doc_identidad', $this->doc_identidad, 'atletas', NULL, bloquear: true)) {
+                if ($this->verificarExistencia('cedula', $this->doc_identidad, 'atletas', NULL, bloquear: true)) {
                     throw new Exception(DUPLICATE_CEDULA);
                 }
             }
@@ -271,6 +271,122 @@ class ModeloAtletas extends ModeloBase
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = null;
+        }
+    }
+
+    private function Modificar()
+    {
+        $conex = null;
+        try {
+            if (!$this->verificarExistencia('categoria', $this->categoria, 'categorias', NULL)) {
+                throw new Exception(INVALID_ID);
+            }
+            if (!$this->verificarExistencia('posicion', $this->posicion, 'posiciones', NULL)) {
+                throw new Exception(INVALID_ID . '0');
+            }
+            if ($this->representante !== null) {
+                if (!$this->verificarExistencia('representante', $this->representante, 'representantes', NULL)) {
+                    throw new Exception(INVALID_ID . '1');
+                }
+            }
+            $conex = $this->conex();
+            $conex->beginTransaction();
+
+            if ($this->doc_identidad !== null && $this->doc_identidad !== '') {
+                if (!$this->verificarExistenciaPropia('cedula', $this->doc_identidad, $this->id, 'atletas', NULL, bloquear: true)) {
+                    if ($this->verificarExistencia('cedula', $this->doc_identidad, 'atletas', NULL, bloquear: true)) {
+                        throw new Exception(DUPLICATE_CEDULA);
+                    }
+                }
+            }
+            if ($this->telefono !== null && $this->telefono !== '') {
+                if (!$this->verificarExistenciaPropia('telefono', $this->telefono, $this->id, 'atletas', NULL, bloquear: true)) {
+                    if ($this->verificarExistencia('telefono', $this->telefono, 'atletas', NULL, bloquear: true)) {
+                        throw new Exception(DUPLICATE_PHONE);
+                    }
+                }
+            }
+            $campos = [];
+
+            // --- DATOS OBLIGATORIOS ---
+            $campos[] = "nombres = :nombre";
+            $campos[] = "apellidos = :apellido";
+            $campos[] = "fecha_nac = :fecha_nac";
+            $campos[] = "id_categoria = :id_categoria";
+            $campos[] = "id_posicion = :id_posicion";
+            $campos[] = "genero = :genero";
+            $campos[] = "foto = :foto";
+
+            // --- DATOS OPCIONALES ---
+            // Manejo dinámico idéntico a Incluir()
+            if ($this->doc_identidad !== null) {
+                $campos[] = "doc_identidad = :doc_identidad";
+            }
+            if ($this->telefono !== null && $this->telefono !== '') {
+                $campos[] = "telefono = :telefono";
+            }
+            if ($this->direccion !== null && $this->direccion !== '') {
+                $campos[] = "direccion = :direccion";
+            }
+            if ($this->representante !== null && $this->representante !== '0') {
+                $campos[] = "id_representante = :id_representante";
+            }
+            $sql = "UPDATE atletas SET " . implode(", ", $campos) . " WHERE id_atleta = :id";
+            $stmt = $conex->prepare($sql);
+
+            $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
+
+            $stmt->bindValue(':nombre', $this->nombre);
+            $stmt->bindValue(':apellido', $this->apellido);
+            $stmt->bindValue(':fecha_nac', $this->fecha_nac);
+            $stmt->bindValue(':id_categoria', $this->categoria, \PDO::PARAM_INT);
+            $stmt->bindValue(':id_posicion', $this->posicion, \PDO::PARAM_INT);
+            $stmt->bindValue(':genero', $this->genero);
+            $stmt->bindValue(':foto', $this->foto);
+
+            if ($this->doc_identidad !== null) {
+                $stmt->bindValue(':doc_identidad', $this->doc_identidad);
+            }
+            if ($this->telefono !== null && $this->telefono !== '') {
+                $stmt->bindValue(':telefono', $this->telefono);
+            }
+            if ($this->direccion !== null && $this->direccion !== '') {
+                $stmt->bindValue(':direccion', $this->direccion);
+            }
+            if ($this->representante !== null && $this->representante !== '0') {
+                $stmt->bindValue(':id_representante', $this->representante, \PDO::PARAM_INT);
+            }
+
+            $stmt->execute();
+
+            $conex->commit();
+            return array('accion' => 'exito');
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            logs('Atletas', $e->getMessage(), 'Modelo_Incluir');
+            return array('accion' => 'error', 'codigo' => $e->getMessage());
+        } finally {
+            $conex = null;
+        }
+    }
+
+    private function Buscar()
+    {
+        try {
+            $conex = $this->conex();
+            $sentencia = "SELECT * FROM atletas WHERE id_atleta = :id";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindParam(':id', $this->id);
+            $stmt->execute();
+            $datos = $stmt->fetchAll();
+            return array('accion' => 'buscar', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Representantes', $e->getMessage(), 'Modelo');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
         }
     }
 
