@@ -55,6 +55,13 @@
                                 <span class="mensaje" id="fecha_nac_spam"></span>
                             </div>
                         </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="edad" readonly>
+                                <label for="edad" class="titulo_formulario">Edad (Año Calendario)</label>
+                                <span class="mensaje" id="edad_spam"></span>
+                            </div>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="colum">
