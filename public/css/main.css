@@ -296,7 +296,7 @@ option {
 
 .contenedor_funciones {
     width: 100%;
-    height: auto;
+    height: 100%;
     background-color: transparent;
     border-radius: 10px;
     display: grid;
@@ -531,6 +531,7 @@ option {
     width: 100%;
     align-items: center;
     margin-top: 15px;
+    min-height: 90%;
     gap: 10px;
 }
 
@@ -815,6 +816,12 @@ option {
 .icon_con {
     width: 40px;
     height: 40px;
+}
+
+.listado_vacio{
+    font-size: 1.5rem;
+    color: var(--color-primario);
+    text-align: center;
 }
 
 .icono_flecha_detalle {
