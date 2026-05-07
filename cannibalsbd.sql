@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 06-05-2026 a las 04:47:55
+-- Tiempo de generación: 08-05-2026 a las 00:24:01
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -65,9 +65,7 @@ CREATE TABLE `atletas` (
 --
 
 INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `telefono`, `direccion`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`) VALUES
-(3, 'Juan David', 'Perez Perez', NULL, NULL, NULL, 'H', '2020-07-03', 'atleta_2020-07-03_1778027645.png', 5, 3, 2),
-(4, 'Mohammed Rowe', 'Wilmer Buckley', '54875454', NULL, NULL, 'M', '2014-07-09', 'atleta_2014-07-09_1778031558.png', 6, 1, 2),
-(5, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-5879846', 'El Tocuyo', 'H', '2002-07-17', 'atleta_2002-07-17_1778031987.png', 1, 4, NULL);
+(12, 'Jose Jose', 'Perez Perez', '25218564', '3423-4234234', 'Barquesimeto', 'H', '2001-06-18', 'default.png', 5, 4, NULL);
 
 -- --------------------------------------------------------
 
@@ -115,9 +113,12 @@ CREATE TABLE `categorias` (
 --
 
 INSERT INTO `categorias` (`id_categorias`, `nombre`, `edad_min`, `edad_max`) VALUES
-(1, 'U-12', 12, 13),
+(1, 'U-12', 11, 12),
 (3, 'U-06', 5, 6),
-(4, 'SENIOR', 18, 60);
+(4, 'SENIOR', 18, 60),
+(5, 'U-08', 7, 8),
+(6, 'U-10', 9, 10),
+(7, 'U-14', 13, 14);
 
 -- --------------------------------------------------------
 
@@ -140,9 +141,17 @@ CREATE TABLE `categoria_catalogo` (
 CREATE TABLE `conceptos` (
   `id_conceptos` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
-  `monto` decimal(10,0) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
   `estatus` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `conceptos`
+--
+
+INSERT INTO `conceptos` (`id_conceptos`, `nombre`, `monto`, `estatus`) VALUES
+(2, 'Mensualidad', 30.00, 1),
+(3, 'Viaticos', 30.30, 1);
 
 -- --------------------------------------------------------
 
@@ -268,10 +277,20 @@ CREATE TABLE `metodos_pago` (
 --
 
 CREATE TABLE `monedas` (
-  `id_monedas` int(11) NOT NULL,
+  `id_moneda` int(11) NOT NULL,
   `nombre` varchar(40) NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `abreviatura` varchar(4) NOT NULL,
+  `simbolo` varchar(3) NOT NULL,
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `monedas`
+--
+
+INSERT INTO `monedas` (`id_moneda`, `nombre`, `abreviatura`, `simbolo`, `estatus`) VALUES
+(4, 'Dolar', 'USD', '$', 1),
+(5, 'Bolivares', 'VES', 'Bs', 1);
 
 -- --------------------------------------------------------
 
@@ -280,7 +299,7 @@ CREATE TABLE `monedas` (
 --
 
 CREATE TABLE `pagos` (
-  `id_pagos` int(11) NOT NULL,
+  `id_pago` int(11) NOT NULL,
   `id_cobrar` int(11) NOT NULL,
   `id_metodo` int(11) NOT NULL,
   `id_moneda` int(11) NOT NULL,
@@ -507,13 +526,13 @@ ALTER TABLE `metodos_pago`
 -- Indices de la tabla `monedas`
 --
 ALTER TABLE `monedas`
-  ADD PRIMARY KEY (`id_monedas`);
+  ADD PRIMARY KEY (`id_moneda`);
 
 --
 -- Indices de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  ADD PRIMARY KEY (`id_pagos`),
+  ADD PRIMARY KEY (`id_pago`),
   ADD KEY `id_cobrar` (`id_cobrar`),
   ADD KEY `id_metodo` (`id_metodo`),
   ADD KEY `id_moneda` (`id_moneda`);
@@ -571,7 +590,7 @@ ALTER TABLE `asignaciones`
 -- AUTO_INCREMENT de la tabla `atletas`
 --
 ALTER TABLE `atletas`
-  MODIFY `id_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `atleta_premios`
@@ -589,13 +608,13 @@ ALTER TABLE `catalogos`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id_categorias` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_categorias` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `conceptos`
 --
 ALTER TABLE `conceptos`
-  MODIFY `id_conceptos` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_conceptos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `cuentas_cobrar`
@@ -649,13 +668,13 @@ ALTER TABLE `metodos_pago`
 -- AUTO_INCREMENT de la tabla `monedas`
 --
 ALTER TABLE `monedas`
-  MODIFY `id_monedas` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_moneda` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `id_pagos` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `participaciones`
@@ -679,7 +698,7 @@ ALTER TABLE `premios`
 -- AUTO_INCREMENT de la tabla `representantes`
 --
 ALTER TABLE `representantes`
-  MODIFY `id_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `tipos_premios`
@@ -776,7 +795,7 @@ ALTER TABLE `estadisticas`
 ALTER TABLE `pagos`
   ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`id_cobrar`) REFERENCES `cuentas_cobrar` (`id_cobrar`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`id_metodo`) REFERENCES `metodos_pago` (`id_metodos`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `pagos_ibfk_3` FOREIGN KEY (`id_moneda`) REFERENCES `monedas` (`id_monedas`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `pagos_ibfk_3` FOREIGN KEY (`id_moneda`) REFERENCES `monedas` (`id_moneda`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `participaciones`
