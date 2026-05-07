@@ -35,7 +35,7 @@ class ModeloAtletas extends ModeloBase
             'posicion' => 'id_posicion',
             'representante' => 'id_representante'
         ];
-        $this->llavePrimaria = 'idUsuario';
+        $this->llavePrimaria = 'id_atleta';
 
         $this->obj_representantes = new ModeloRepresentantes;
         $this->obj_categoria = new ModeloCategorias;

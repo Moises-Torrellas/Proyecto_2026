@@ -58,7 +58,7 @@
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="edad" readonly>
-                                <label for="edad" class="titulo_formulario">Edad</label>
+                                <label for="edad" class="titulo_formulario">Edad (Año Calendario)</label>
                                 <span class="mensaje" id="edad_spam"></span>
                             </div>
                         </div>

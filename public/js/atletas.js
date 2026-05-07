@@ -378,6 +378,7 @@ function modificar(datos) {
     const nombreFoto = datos[0].foto ? datos[0].foto : "default.png";
     $("#foto_previa").attr("src", rutaCarpeta + nombreFoto).trigger('change');
     validarEdadAtleta(datos[0].fecha_nac);
+    cargarEdad(datos[0].fecha_nac);
 
     abrirModal();
 }
