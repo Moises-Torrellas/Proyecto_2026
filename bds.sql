@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 26-04-2026 a las 20:03:13
+-- Tiempo de generación: 06-05-2026 a las 04:46:50
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -43,76 +43,7 @@ CREATE TABLE `bitacora` (
 --
 
 INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `fecha`, `hora`, `idUsuario`) VALUES
-(67, 1, 'Accedió al módulo', '2026-04-22', '14:23:00', 1),
-(68, 5, 'Cierre de sesión.', '2026-04-22', '14:26:28', 1),
-(69, 4, 'Inicio de sesión exitoso', '2026-04-22', '14:35:10', 1),
-(70, 1, 'Modificó un usuario ID: 1', '2026-04-22', '14:35:32', 1),
-(71, 5, 'Cierre de sesión.', '2026-04-22', '14:36:37', 1),
-(72, 4, 'Inicio de sesión exitoso', '2026-04-22', '14:36:55', 21),
-(73, 5, 'Cierre de sesión.', '2026-04-22', '14:37:19', 21),
-(74, 4, 'Inicio de sesión exitoso', '2026-04-22', '14:39:00', 1),
-(75, 4, 'Inicio de sesión exitoso', '2026-04-22', '16:38:09', 1),
-(76, 8, 'Registró al representante: 1223345', '2026-04-22', '16:50:21', 1),
-(77, 8, 'Registró al representante: 1223345', '2026-04-22', '16:51:36', 1),
-(78, 8, 'Registró al representante: 00000000', '2026-04-22', '16:51:56', 1),
-(79, 4, 'Inicio de sesión exitoso', '2026-04-22', '19:51:30', 1),
-(80, 8, 'Registró al representante: 87654321', '2026-04-22', '20:20:36', 1),
-(81, 5, 'Cierre de sesión.', '2026-04-22', '23:12:36', 1),
-(82, 4, 'Inicio de sesión exitoso', '2026-04-23', '10:15:43', 1),
-(83, 8, 'Eliminó al representante: 2', '2026-04-23', '10:48:51', 1),
-(84, 8, 'Eliminó al representante: 1', '2026-04-23', '11:33:18', 1),
-(85, 8, 'Registró al representante: 87654321', '2026-04-23', '11:33:48', 1),
-(86, 8, 'Registró al representante: 12345678', '2026-04-23', '11:35:59', 1),
-(87, 8, 'Registró al representante: 87654321', '2026-04-23', '14:01:57', 1),
-(88, 8, 'Eliminó al representante: 1', '2026-04-23', '14:05:36', 1),
-(89, 8, 'Registró al representante: 12345678', '2026-04-23', '14:07:37', 1),
-(90, 4, 'Inicio de sesión exitoso', '2026-04-23', '14:46:21', 1),
-(91, 8, 'Registró al representante: 87654321', '2026-04-23', '14:52:44', 1),
-(92, 4, 'Inicio de sesión exitoso', '2026-04-23', '15:12:50', 1),
-(93, 5, 'Cierre de sesión.', '2026-04-23', '15:13:07', 1),
-(94, 4, 'Inicio de sesión exitoso', '2026-04-23', '16:12:51', 1),
-(95, 4, 'Inicio de sesión exitoso', '2026-04-23', '17:32:40', 1),
-(96, 4, 'Inicio de sesión exitoso', '2026-04-24', '07:43:09', 1),
-(97, 4, 'Inicio de sesión exitoso', '2026-04-24', '11:00:15', 1),
-(98, 4, 'Inicio de sesión exitoso', '2026-04-24', '11:30:57', 1),
-(99, 4, 'Inicio de sesión exitoso', '2026-04-24', '21:15:48', 1),
-(100, 9, 'Registró la pasición: DELANTERO', '2026-04-24', '22:33:48', 1),
-(101, 9, 'Registró la pasición: delantero', '2026-04-24', '22:38:19', 1),
-(102, 9, 'Registró la pasición: defensa', '2026-04-24', '22:39:02', 1),
-(103, 9, 'Registró la pasición: defensa', '2026-04-24', '22:42:07', 1),
-(104, 9, 'Registró la pasición: portero', '2026-04-24', '22:42:17', 1),
-(105, 9, 'Registró la pasición: mediocentro', '2026-04-24', '22:42:33', 1),
-(106, 9, 'Eliminó la posición: 7', '2026-04-24', '22:53:58', 1),
-(107, 11, 'Registró la categoría: U-10', '2026-04-24', '23:18:14', 1),
-(108, 11, 'Eliminó la categoría: 2', '2026-04-24', '23:18:31', 1),
-(109, 5, 'Cierre de sesión.', '2026-04-24', '23:23:01', 1),
-(110, 4, 'Inicio de sesión exitoso', '2026-04-25', '12:13:17', 1),
-(111, 4, 'Inicio de sesión exitoso', '2026-04-25', '19:08:40', 1),
-(112, 1, 'Modificó un usuario ID: 21', '2026-04-25', '22:55:54', 1),
-(113, 1, 'Modificó un usuario ID: 21', '2026-04-25', '22:57:23', 1),
-(114, 5, 'Cierre de sesión.', '2026-04-25', '23:25:34', 1),
-(115, 4, 'Inicio de sesión exitoso', '2026-04-25', '23:26:16', 21),
-(116, 5, 'Cierre de sesión.', '2026-04-25', '23:30:05', 21),
-(117, 4, 'Inicio de sesión exitoso', '2026-04-25', '23:30:18', 1),
-(118, 1, 'Modificó un usuario ID: 21', '2026-04-25', '23:30:41', 1),
-(119, 5, 'Cierre de sesión.', '2026-04-25', '23:30:51', 1),
-(120, 4, 'Inicio de sesión exitoso', '2026-04-25', '23:31:00', 1),
-(121, 5, 'Cierre de sesión.', '2026-04-25', '23:31:27', 1),
-(122, 4, 'Inicio de sesión exitoso', '2026-04-25', '23:32:35', 21),
-(123, 5, 'Cierre de sesión.', '2026-04-25', '23:34:24', 21),
-(124, 4, 'Inicio de sesión exitoso', '2026-04-26', '11:06:12', 1),
-(125, 19, 'Registró el torneo: Torneo Nacional', '2026-04-26', '11:12:07', 1),
-(126, 19, 'Modificó el torneo: TORNEO NACIONAL', '2026-04-26', '11:12:38', 1),
-(127, 19, 'Eliminó el torneo ID: 1', '2026-04-26', '11:12:40', 1),
-(128, 1, 'Modificó un usuario ID: 1', '2026-04-26', '11:15:52', 1),
-(129, 5, 'Cierre de sesión.', '2026-04-26', '11:16:13', 1),
-(130, 4, 'Inicio de sesión exitoso', '2026-04-26', '11:16:27', 1),
-(131, 5, 'Cierre de sesión.', '2026-04-26', '12:12:56', 1),
-(132, 4, 'Inicio de sesión exitoso', '2026-04-26', '13:26:11', 1),
-(133, 5, 'Cierre de sesión.', '2026-04-26', '13:26:30', 1),
-(134, 4, 'Inicio de sesión exitoso', '2026-04-26', '13:41:19', 1),
-(135, 5, 'Cierre de sesión.', '2026-04-26', '14:02:42', 1),
-(136, 4, 'Inicio de sesión exitoso', '2026-04-26', '14:02:52', 1);
+(2, 4, 'Inicio de sesión exitoso', '2026-05-05', '22:33:33', 1);
 
 -- --------------------------------------------------------
 
@@ -151,7 +82,14 @@ INSERT INTO `modulo` (`id_modulo`, `nombre_modulo`, `estatus`) VALUES
 (20, 'Equipos', 1),
 (21, 'Premios', 1),
 (22, 'Palmares', 1),
-(23, 'Estadisticas', 1);
+(23, 'Estadisticas', 1),
+(99, 'IA', 1),
+(100, 'Atletas', 1),
+(101, 'Conceptos de Cuentas', 1),
+(102, 'Monedas', 1),
+(103, 'Categoria de Equipamiento', 1),
+(104, 'Calidad', 1),
+(105, 'Participaciones', 1);
 
 -- --------------------------------------------------------
 
@@ -169,6 +107,13 @@ CREATE TABLE `permiso` (
   `reporte` tinyint(1) NOT NULL DEFAULT 0,
   `otros` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `permiso`
+--
+
+INSERT INTO `permiso` (`id_permiso`, `id_rol`, `id_modulo`, `eliminar`, `modificar`, `incluir`, `reporte`, `otros`) VALUES
+(90, 9, 10, 0, 1, 1, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -189,7 +134,8 @@ CREATE TABLE `roles` (
 
 INSERT INTO `roles` (`id_rol`, `nombre_rol`, `nivel_rol`, `estatus`) VALUES
 (1, 'Super Usuario', 1, 1),
-(2, 'Administrador', 2, 1);
+(2, 'Administrador', 2, 1),
+(9, 'Entrenador', 3, 1);
 
 -- --------------------------------------------------------
 
@@ -202,7 +148,7 @@ CREATE TABLE `usuarios` (
   `cedulaUsuario` varchar(10) NOT NULL,
   `nombreUsuario` varchar(35) NOT NULL,
   `apellidoUsuario` varchar(35) NOT NULL,
-  `foto` varchar(255) DEFAULT NULL,
+  `foto` varchar(255) DEFAULT 'default.png',
   `telefonoUsuario` varchar(15) NOT NULL,
   `contraseña` varchar(255) NOT NULL,
   `correo` varchar(60) NOT NULL,
@@ -216,8 +162,7 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `foto`, `telefonoUsuario`, `contraseña`, `correo`, `id_rol`, `estatus`, `bloqueo`) VALUES
-(1, '12345678', 'Admin', 'Admin', 'default.png', '0000-0000000', '$2y$10$z9rD8xGPyg4.JegVpLgfi.WEi2HPKEKGvOQYRDZfZPqwlzxRqS.y.', 'admin@gmail.com', 1, 1, 1),
-(21, '29506932', 'Moises', 'Torrellas', 'default.png', '0000-0000000', '$2y$10$iT6mg6QOCrcz9dSL/JFi.eieRvOc0c4z8I7ObS75m04ZWuhTxr9lS', 'moitcj@gmail.com', 2, 1, 1);
+(1, '12345678', 'Admin', 'Admin', 'default.png', '0000-0000000', '$2y$10$z9rD8xGPyg4.JegVpLgfi.WEi2HPKEKGvOQYRDZfZPqwlzxRqS.y.', 'admin@gmail.com', 1, 1, 1);
 
 --
 -- Índices para tablas volcadas
@@ -268,31 +213,31 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=137;
+  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `modulo`
 --
 ALTER TABLE `modulo`
-  MODIFY `id_modulo` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id_modulo` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- AUTO_INCREMENT de la tabla `permiso`
 --
 ALTER TABLE `permiso`
-  MODIFY `id_permiso` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
+  MODIFY `id_permiso` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `id_rol` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id_rol` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `idUsuario` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `idUsuario` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- Restricciones para tablas volcadas

@@ -245,11 +245,11 @@ $(document).ready(function () {
 
 function inicializarPaginador() {
     const $contenedorListado = $('#resultadoconsulta');
-    
+
     // CAMBIO CLAVE: Ahora buscamos el CONTENEDOR GRUPAL, no solo el item.
     // Esto asegura que se oculte el borde verde y el panel de detalle también.
-    const $items = $contenedorListado.find('.listado_contenedor_grupal'); 
-    
+    const $items = $contenedorListado.find('.listado_contenedor_grupal');
+
     // Si tienes tablas sin tree (donde usas listado_item directo), 
     // esta línea detectará ambos casos:
     const $registros = $items.length > 0 ? $items : $contenedorListado.find('.listado_item');
@@ -266,13 +266,13 @@ function inicializarPaginador() {
 
         // Ocultamos todos los contenedores completos
         $registros.hide();
-        
+
         // Mostramos solo los de la página actual
         // Si es el tree, usamos block (porque el flex está dentro, en el listado_item)
         // Si es la tabla simple, usamos flex.
-        $registros.slice(start, end).each(function() {
+        $registros.slice(start, end).each(function () {
             if ($(this).hasClass('listado_contenedor_grupal')) {
-                $(this).css('display', 'block'); 
+                $(this).css('display', 'block');
             } else {
                 $(this).css('display', 'flex');
             }
@@ -484,10 +484,37 @@ function cerrarAlertaEspara() {
 }
 
 function limpia() {
-    $('#f input').not(':checkbox, #token').val('');
-    $('input').removeClass('denegado');
-    $('.select').val(null).trigger('change');
-    $('.mensaje').text('');
+    const formulario = $('#f');
+
+    // 1. Limpiar campos de texto, fecha y otros (Excepto token)
+    formulario.find('input').not(':checkbox, :radio, :file, #token').val('');
+
+    // 2. Limpiar input de ARCHIVO y resetear la PREVISUALIZACIÓN a la cámara
+    formulario.find('input:file').val(''); 
+    $('#foto_previa').attr('src', ''); // Restablece el icono original
+
+    // 3. Desmarcar checkboxes y radios
+    formulario.find('input:checkbox, input:radio').prop('checked', false);
+
+    // 4. Limpiar textareas (Dirección)
+    formulario.find('textarea').val('');
+
+    // 5. Resetear Selects (Categoría, Posición, Representante)
+    formulario.find('select').each(function () {
+        $(this).val($(this).find('option:first').val()).trigger('change');
+    });
+
+    // 6. Resetear estados visuales y mensajes de error
+    formulario.find('.denegado').removeClass('denegado');
+    $('.mensaje').text(''); 
+
+    // 7. Restablecer bloqueos de la lógica de edad (Atletas)
+    formulario.find('input, select, textarea, button').prop('disabled', false);
+    $('.campo_deshabilitado, .bloqueado, .btn_bloqueado').removeClass('campo_deshabilitado bloqueado btn_bloqueado');
+
+    // 8. Ajustes de placeholders y visibilidad
+    $("#doc_i").attr("placeholder", "Cédula");
+    formulario.find('.row, .col, div').show();
 }
 
 function limpia_Tablas() {
@@ -518,9 +545,9 @@ function iniciarTourConPasos(pasos) {
 function toggleDetalles(elemento) {
     const contenedorActual = $(elemento).closest('.listado_contenedor_grupal');
     const panelActual = contenedorActual.find('.listado_detalle_oculto');
-    
+
     // 1. Buscamos todos los demás contenedores que estén expandidos y los cerramos
-    $('.listado_contenedor_grupal.expandido').not(contenedorActual).each(function() {
+    $('.listado_contenedor_grupal.expandido').not(contenedorActual).each(function () {
         $(this).removeClass('expandido');
         $(this).find('.listado_detalle_oculto').slideUp(300);
     });
@@ -553,7 +580,7 @@ zonaDrop.addEventListener('dragleave', () => {
 zonaDrop.addEventListener('drop', (e) => {
     e.preventDefault();
     zonaDrop.classList.remove('drag-over');
-    
+
     if (e.dataTransfer.files.length > 0) {
         procesarArchivo(e.dataTransfer.files[0]);
     }

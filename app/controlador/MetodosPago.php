@@ -1,0 +1,222 @@
+<?php
+
+use App\modelo\Modelo_Metodos_Pago;
+
+// 1. Cargamos las funciones base
+require_once __DIR__ . '/Base.php';
+
+// 2. Configuración del módulo (Corregido al ID de Representantes)
+$id_modulo = _MD_METODOS_;
+
+// 3. Procesar permisos (Retorna el array de permisos)
+$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+
+// 4. Lógica de despacho (Router interno)
+$nombreClaseModelo = 'App\modelo\Modelo_Metodos_Pago';
+
+if (!class_exists($nombreClaseModelo)) {
+    require_once(__DIR__ . '/../vista/complementos/404.php');
+    exit();
+}
+
+$objModelo = new Modelo_Metodos_Pago();
+
+if (comprobarAjax() && !empty($_POST)) {
+    manejarSolicitudMetodos_Pagos($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+} else {
+    cargarVista($pagina);
+}
+
+/**
+ * --- FUNCIONES DEL CONTROLADOR ---
+ */
+
+function manejarSolicitudMetodos_Pagos($obj, $id_modulo, $bitacoraObj, array $permisos): void
+{
+    try {
+        $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
+            throw new Exception('Error de seguridad: Token inválido o expirado.');
+        }
+
+        $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
+
+        // Seguridad centralizada
+        switch ($accion) {
+            case 'consultar':
+                consultar($obj);
+                break;
+            case 'buscar':
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
+                buscar($obj);
+                break;
+            case 'incluir':
+                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar representantes.');
+                incluir($obj, $id_modulo, $bitacoraObj);
+                break;
+            case 'eliminar':
+                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar representantes.');
+                eliminar($obj, $id_modulo, $bitacoraObj);
+                break;
+            case 'modificar':
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
+                modificar($obj, $id_modulo, $bitacoraObj);
+                break;
+
+            default:
+                throw new Exception('Acción no permitida.');
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+/**
+ * --- LÓGICA DE ACCIONES ---
+ */
+
+function consultar($obj): void
+{
+    $filtro['filtro'] = $_POST['filtro'] ?? '';
+    $respuesta = $obj->Consultar($filtro);
+    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+        $respuesta['mensaje'] ='Error al listar los metodos de pago';
+    }
+    echo json_encode($respuesta);
+}
+
+function buscar($obj): void
+{
+    try {
+        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
+        validar_datos($validaciones);
+
+        $datos = [
+            'id' => $_POST['id'],
+            'accion' => 'buscar'
+        ];
+
+        $resultado = $obj->procesarDatos($datos);
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Metodos_Pago', $e->getMessage(), 'Controlador_Buscar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function incluir($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validaciones = [
+            'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
+            'nec_referencia' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,15}$/', 'mensaje' => 'Referencia inválido.'],
+            'estatus'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,10}$/', 'mensaje' => 'Estatus inválido.'],
+        ];
+
+        validar_datos($validaciones);
+
+        $datos = [
+            'nombre'     => $_POST['nombre'],
+            'nec_referencia'   => $_POST['nec_referenia'],
+            'estatus' => $_POST['estatus'],
+        ];
+        $datos['accion'] = 'incluir';
+
+        $resultado = $obj->procesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró el metodo de pago: " . $_POST['nombre'] . ' ' . $_POST['nec_referencia']);
+            $resultado = array('accion' => 'incluir', 'mensaje' => 'Metodo de Pago registrado exitosamente.');
+
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                DUPLICATE_NOMBRE => 'Ya existe el metodo de pago registrado con ese nombre.',
+                default          => 'Ocurrió un error inesperado en el registro.'
+            };
+
+        }
+        echo json_encode($resultado);
+
+    } catch (Exception $e) {
+        logs('Metodos_Pago', $e->getMessage(), 'Controlador_Incluir');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+function modificar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validaciones = [
+            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
+            'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
+            'nec_referencia' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,15}$/', 'mensaje' => 'Referencia inválido.'],
+            'estatus'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,10}$/', 'mensaje' => 'Estatus inválido.'],
+        ];
+
+        validar_datos($validaciones);
+
+        $datos = [
+            'id' => $_POST['id'],
+            'nombre'     => $_POST['nombre'],
+            'nec_referencia'   => $_POST['nec_referenia'],
+            'estatus' => $_POST['estatus'],
+            
+        ];
+        $datos['accion'] = 'modificar';
+
+        $resultado = $obj->procesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico al metodo: " . $_POST['nombre']);
+            $resultado = array('accion' => 'modificar', 'mensaje' => 'Metodo modificado exitosamente.');
+
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                DUPLICATE_NOMBRE => 'Ya existe un metodo de pago registrado con esta nombre.',
+                default          => 'Ocurrió un error inesperado en la modificacion.'
+            };
+
+        }
+
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Metodos_Pago', $e->getMessage(), 'Controlador');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+function eliminar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
+        validar_datos($validaciones);
+
+        $datos = [
+            'id' => $_POST['id'],
+            'accion' => 'eliminar'
+        ];
+
+        $resultado = $obj->procesarDatos($datos);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino al metodo de pago: " . $_POST['id']);
+            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Representante eliminado exitosamente.');
+
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                INVALID_ID => 'El metodo de pago no existe.',
+                ASSOCIATES  => 'El metodo de pago tiene pagos asociados.',
+                default          => 'Ocurrió un error inesperado en la eliminacion.'
+            };
+
+        }
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Metodos_Pago', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
