@@ -1,10 +1,12 @@
 $('#busqueda').off('keyup').on('keyup', busqueda);
 let timerBusqueda;
+
 function consultar() {
     let datos = new FormData();
     datos.append('accion', 'consultar');
     enviaAjax(datos);
 }
+
 function busqueda() {
     clearTimeout(timerBusqueda);
     timerBusqueda = setTimeout(function () {
@@ -12,50 +14,36 @@ function busqueda() {
         let datos = new FormData();
         datos.append('accion', 'consultar');
         datos.append('filtro', valorBusqueda);
-
         enviaAjax(datos);
     }, 500);
 }
+
 $(document).ready(function () {
+    // 1. Cargar la tabla al iniciar
     consultar();
 
-    $("#cedula").on("input", function () {
-        var input = $(this).val().replace(/[^0-9]/g, '');
-        if (input.length > 4) {
-            input = input.substring(0, 8);
+    // 2. Filtros de escritura (evitar letras en las edades)
+    $("#edad_min, #edad_max").on("input", function () {
+        var input = $(this).val().replace(/[^0-9]/g, ''); // Solo números
+        if (input.length > 2) {
+            input = input.substring(0, 2); // Máximo 2 dígitos
         }
         $(this).val(input);
     });
 
-    $("#telefono").on("input", function () {
-        var input = $(this).val().replace(/[^0-9]/g, '');
-        if (input.length > 4) {
-            input = input.substring(0, 4) + '-' + input.substring(4, 11);
-        }
-        $(this).val(input);
-    });
+    // 3. Validaciones en tiempo real para Categorías
+    // Nombre: Letras, números, espacios y guiones (Ej: "U-12", "Sub 20")
+    Validacion("nombre", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras, números y guiones)", "proceso");
+    Validacion("edad_min", /^[0-9\b]*$/, /^[0-9]{1,2}$/, "Edad mínima requerida, solo 1 o 2 dígitos", "proceso");
+    Validacion("edad_max", /^[0-9\b]*$/, /^[0-9]{1,2}$/, "Edad máxima requerida, solo 1 o 2 dígitos", "proceso");
 
-    // Validación de Cédula
-    Validacion("cedula", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Minimo 7 maximo 8 digitos, solo numeros", "proceso");
-
-    // Validación de Nombre
-    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
-
-    // Validación de Apellido
-    Validacion("apellido", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
-
-    // Validación de Teléfono
-    Validacion("telefono", /^[0-9\-\b]*$/, /^[0-9]{4}[-]{1}[0-9]{7}$/, "El formato es 0400-0000000");
-
-    Validacion("nacionalidad", /^[VEP]$/, /^[VEP]$/, "Solo puede ingresar V, E o P");
-
-    Validacion("direccion", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/, "Solo letras entre 3 y 150 caracteres", "proceso");
-
+    // 4. Lógica de los Botones Guardar/Modificar
     $('#proceso').on('click', function () {
-        accion = $(this).data("accion");
+        let accion = $(this).data("accion");
+        
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere registrar este representante?', function (confirmado) {
+                confirmar('¿Está seguro que quiere registrar esta categoría?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
@@ -66,7 +54,7 @@ $(document).ready(function () {
         }
         else if (accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar este representante?', function (confirmado) {
+                confirmar('¿Está seguro que quiere modificar esta categoría?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
@@ -78,7 +66,7 @@ $(document).ready(function () {
         else if (accion == "generar") {
             confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
                 if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento')
+                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento')
                     var datos = new FormData($('#f')[0]);
                     datos.append('accion', 'generar');
                     enviaAjax(datos);
@@ -87,73 +75,26 @@ $(document).ready(function () {
         }
     });
 
+    // 5. Botones de la vista
     $("#incluir").on("click", function () {
-        limpia();
-
+        limpia(); // Limpia el formulario
+        $("#id").val("");
         $("#proceso").data("accion", "incluir");
-        $("#proceso").text("Registrar Representante");
-        $("#titulo_modal").text("Registrar Representante");
-        $('#direccion').closest('.colum').show();
-        $('#telefono').closest('.colum').show();
-        abrirModal();
+        $("#proceso").text("Registrar Categoría");
+        $("#titulo_modal").text("Registrar Nueva Categoría");
+        abrirModal(); // Esta función debe estar definida en tu main.js o base.js
     });
 
     $("#generar").on("click", function () {
         limpia();
-
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
-        $('#telefono').closest('.colum').hide();
-        $('#direccion').closest('.colum').hide();
         abrirModal();
     });
-
-    $('#ayuda').on('click', function () {
-        const pasos = [
-            {
-                element: '#busqueda',
-                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar al representante que necesites.', position: 'bottom' }
-            },
-            {
-                element: '#incluir',
-                popover: { title: 'Nuevo Representante', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevo representante', position: 'bottom' }
-            },
-            {
-                element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
-            },
-            {
-                element: '#resultadoconsulta',
-                popover: { title: 'Representantes Registrados', description: 'Aqui se mostraran todos los representantes registrados.', position: 'top' }
-            },
-            {
-                element: '#cbt_v',
-                popover: { title: 'Modificar Representantes', description: 'Si pulsa aqui se abrira un modal para modificar el representante seleccionado.', position: 'left' }
-            },
-            {
-                element: '#cbt_r',
-                popover: { title: 'Eliminar Representante', description: 'Si pulsa aqui eliminara el representante seleccionado.', position: 'left' }
-            },
-            {
-                element: '#rowsPerPage',
-                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
-            },
-            {
-                element: '#botonera',
-                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
-            },
-            {
-                element: '#cantidad',
-                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de representantes cargados.', position: 'top' }
-            },
-        ];
-
-        const driver = iniciarTourConPasos(pasos);
-        driver.start();
-    });
-
 });
+
+// --- FUNCIONES LÓGICAS GLOBALES ---
 
 function buscar(id) {
     var datos = new FormData();
@@ -161,8 +102,9 @@ function buscar(id) {
     datos.append('id', id);
     enviaAjax(datos);
 }
+
 function eliminar(id) {
-    confirmar('¿Está seguro que quiere eliminar este representante?', function (confirmado) {
+    confirmar('¿Está seguro que quiere eliminar esta categoría?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
@@ -173,59 +115,50 @@ function eliminar(id) {
 }
 
 function validarEnvio(proceso) {
-    if ($('#nacionalidad option:selected').val() == null) {
-        muestraMensaje("error", 2000, "Error", "Tiene que elegir una opción de nacionalidad");
+    if (validarkeyup(/^[A-Za-z0-9\-\b\s]{2,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 2 y 30 caracteres (letras, números y guiones)", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de categoría válido");
         return false;
     }
-    else if (validarkeyup(/^[0-9]{7,8}$/, $('#cedula'),
-        $("#cedula_spam"), "Minimo 7 maximo 8 digitos, solo numeros", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar una cedula valida");
+    else if (validarkeyup(/^[0-9]{1,2}$/, $("#edad_min"), $("#edad_min_spam"), "Debe ser un número válido", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar una edad mínima válida");
         return false;
     }
-    else if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-        $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
+    else if (validarkeyup(/^[0-9]{1,2}$/, $("#edad_max"), $("#edad_max_spam"), "Debe ser un número válido", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar una edad máxima válida");
         return false;
     }
-    else if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-        $('#apellido'), $("#apellido_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un apellido valido");
+
+    // Validación lógica: Edad mínima no puede ser mayor a la máxima
+    let min = parseInt($("#edad_min").val(), 10);
+    let max = parseInt($("#edad_max").val(), 10);
+    if (min > max) {
+        muestraMensaje("error", 3000, "Error", "La edad mínima no puede ser mayor a la edad máxima");
         return false;
     }
-    else if (validarkeyup(/^[0-9]{4}[-]{1}[0-9]{7}$/,
-        $('#telefono'), $("#telefono_spam"), "El formato es 0400-000000", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un telefono valido");
-        return false;
-    }
-    else if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/,
-        $('#direccion'), $("#direccion_spam"), "Solo letras entre 3 y 100 caracteres", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar una direccion valida");
-        return false;
-    }
+
     return true;
 }
 
 function modificar(datos) {
     $("#proceso").data("accion", "modificar");
-    $("#proceso").text("Modificar Representante");
-    $("#titulo_modal").text("Modificar Representante");
-    $('#direccion').closest('.colum').show();
-    $('#telefono').closest('.colum').show();
-    $('#id').val(datos[0].id_representante);
-    $('#cedula').val(datos[0].cedula);
+    $("#proceso").text("Modificar Categoría");
+    $("#titulo_modal").text("Modificar Categoría");
+    
+    // Llenamos el formulario con los datos recibidos de la BD
+    $('#id').val(datos[0].id_categorias);
     $('#nombre').val(datos[0].nombre);
-    $('#apellido').val(datos[0].apellido);
-    $('#telefono').val(datos[0].telefono);
-    $('#direccion').val(datos[0].direccion);
+    $('#edad_min').val(datos[0].edad_min);
+    $('#edad_max').val(datos[0].edad_max);
 
     abrirModal();
 }
+
 function crearConsulta(datos) {
     const contenedor = $('#resultadoconsulta');
     contenedor.empty();
 
     if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
+        contenedor.append('<div class="listado_vacio"><p>No se encontraron categorías registradas</p></div>');
     } else {
         datos.forEach(dato => {
             let registro = `
@@ -233,27 +166,23 @@ function crearConsulta(datos) {
                     <div class="listado_item" onclick="toggleDetalles(this)">
                         <div class="listado_col_datos">
                             <div class="listado_dato_grupo">
-                                <small>Nombre y Apellido</small>
-                                <span>${dato.nombre} ${dato.apellido}</span>
+                                <small>Categoría</small>
+                                <span style="font-weight: bold; color: #2ec135;">${escapeHTML(dato.nombre)}</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Cedula</small>
-                                <span>${dato.nacionalidad}. ${dato.cedula}</span>
+                                <small>Edad Mínima</small>
+                                <span>${dato.edad_min} años</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Telefono</small>
-                                <span>${dato.telefono}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Direccion</small>
-                                <span>${escapeHTML(dato.direccion)}</span>
+                                <small>Edad Máxima</small>
+                                <span>${dato.edad_max} años</span>
                             </div>
                         </div>
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_representante})"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_representante})"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_categorias})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_categorias})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             </div>
                         </div>
                     </div>
@@ -279,10 +208,11 @@ function escapeHTML(texto) {
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
+
 function enviaAjax(datos) {
     $.ajax({
         async: true,
-        url: "",
+        url: "", // Se envía al controlador actual de la ruta (/Categorias)
         type: "POST",
         contentType: false,
         data: datos,
@@ -295,41 +225,44 @@ function enviaAjax(datos) {
         success: function (respuesta) {
             try {
                 var lee = JSON.parse(respuesta);
+                
                 if (lee.accion == "consultar") {
                     crearConsulta(lee.datos);
-                } else if (lee.accion == "incluir") {
+                } 
+                else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
+                    cerrarModal(); // Agregado para que se cierre al guardar
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
-                } else if (lee.accion == "eliminar") {
+                } 
+                else if (lee.accion == "eliminar") {
                     consultar();
-                    muestraMensaje("success", 2000, "Eliminacion Exitosa", lee.mensaje);
-                } else if (lee.accion == "modificar") {
+                    muestraMensaje("success", 2000, "Eliminación Exitosa", lee.mensaje);
+                } 
+                else if (lee.accion == "modificar") {
                     consultar();
                     limpia();
                     cerrarModal();
-
-                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
-                } else if (lee.accion == "buscar") {
+                    muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
+                } 
+                else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }
                 else if (lee.accion == "error") {
-                    muestraMensaje("error", 2000, "Error", lee.mensaje);
+                    muestraMensaje("error", 3000, "Error", lee.mensaje);
                 }
             } catch (e) {
-                alert("Error en JSON " + e.name);
+                alert("Error procesando los datos: " + e.message);
+                console.error(respuesta); // Útil para ver en la consola si el PHP imprimió un error visible
             }
         },
-
-
         error: function (request, status, err) {
-
             if (status == "timeout") {
                 muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
             } else {
-                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + request + status + err);
+                muestraMensaje("error", 3000, "Error de Conexión", "Revisa la consola. Código: " + request.status);
+                console.error("Detalle del error:", request.responseText);
             }
-        },
-        complete: function () { },
+        }
     });
 }

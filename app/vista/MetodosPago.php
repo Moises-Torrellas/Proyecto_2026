@@ -3,7 +3,7 @@
 
 <head>
     <?php include('complementos/head.php'); ?>
-    <title>Representantes</title>
+    <title>Metodos de Pago</title>
 </head>
 
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
@@ -26,7 +26,7 @@
                         <div class="botones">
                             <button class="btn btn_azul" id="incluir">Nuevo Metodo de Pago</button>
 
-                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <button class="btn btn_verde" id="generar">Generar Reporte de Metodo de Pago</button>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
@@ -58,20 +58,25 @@
                         </div>
                     </div>
                     <div class="row">
+
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="nec_referencia" id="nec_referencia" class="formulario select">
+
+                                </select>
+                                <label for="nec_referencia" class="titulo_formulario">Referencia</label>
+                                <span class="mensaje" id="nec_referencia_span"></span>
+                            </div>
+                        </div>
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="estatus" name="estatus">
-                                <label for="estatus" class="titulo_formulario">Telefono</label>
+                                <label for="estatus" class="titulo_formulario">Estatus</label>
                                 <span class="mensaje" id="estatus_spam"></span>
                             </div>
                         </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="nec_referencia" name="nec_referencia">
-                                <label for="nec_referencia" class="titulo_formulario">Necesidad de Referencia</label>
-                                <span class="mensaje" id="nec_referencia_spam"></span>
-                            </div>
-                        </div>
+                    </div>
+                        
                     </div>
                     <div class="row">
                         <div class="colum">
@@ -79,6 +84,7 @@
                             <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
                         </div>
                     </div>
+                    
                 </form>
             </div>
         </div>

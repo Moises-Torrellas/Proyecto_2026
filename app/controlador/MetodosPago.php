@@ -1,6 +1,6 @@
 <?php
 
-use App\modelo\Modelo_Metodos_Pago;
+use App\modelo\ModeloMetodosPago;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -12,14 +12,14 @@ $id_modulo = _MD_METODOS_;
 $permisos = procesarPermisos($id_modulo, $bitacora ?? null);
 
 // 4. Lógica de despacho (Router interno)
-$nombreClaseModelo = 'App\modelo\Modelo_Metodos_Pago';
+$nombreClaseModelo = 'App\modelo\ModeloMetodosPago';
 
 if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
     exit();
 }
 
-$objModelo = new Modelo_Metodos_Pago();
+$objModelo = new ModeloMetodosPago();
 
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudMetodos_Pagos($objModelo, $id_modulo, $bitacora ?? null, $permisos);
@@ -47,19 +47,19 @@ function manejarSolicitudMetodos_Pagos($obj, $id_modulo, $bitacoraObj, array $pe
                 consultar($obj);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar el metodo de pago.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar representantes.');
+                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar el metodo de pago.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar representantes.');
+                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar el metodo de pago.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar el metodo de pago.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
 
