@@ -88,6 +88,7 @@ abstract class ModeloBase extends Conexion
             }
 
             $stmt->execute();
+            
             return (int)$stmt->fetchColumn() > 0;
         } catch (Exception $e) {
             error_log("Error en pertenencia con bloqueo: " . $e->getMessage());

@@ -32,13 +32,13 @@ class ModeloInicio extends Conexion
             $this->conexion = self::conexSG();
             $sql = 'SELECT usuarios.idUsuario,usuarios.nombreUsuario,usuarios.apellidoUsuario,usuarios.foto,roles.nombre_rol,roles.id_rol,roles.nivel_rol,usuarios.contraseña,usuarios.bloqueo  
                             FROM `usuarios` 
-                            INNER JOIN roles ON roles.id_rol=usuarios.id_rol WHERE cedulaUsuario = :cedula;';
+                            INNER JOIN roles ON roles.id_rol=usuarios.id_rol WHERE cedulaUsuario = :cedula AND usuarios.estatus != 0;';
             $stmt = $this->conexion->prepare($sql);
             $stmt->bindParam(':cedula', $this->cedula, \PDO::PARAM_STR);
             $stmt->execute();
             $resultado = $stmt->fetch();
 
-            if($resultado['bloqueo'] == 0){
+            if($resultado['bloqueo'] !== 1){
                 return ['accion' => 'denegado','resultado' => 0 , 'mensaje' => 'Usted tiene bloqueado el acceso.'];
             }
 

@@ -112,7 +112,7 @@ class ModeloCategorias extends ModeloBase
     private function Modificar(): array
     {
         try {
-            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'representantes', NULL)) {
+            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'categorias', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'categorias', NULL)) {
                     return array('accion' => 'error', 'mensaje' => 'Ya existe otra categoria registrada con este nombre.');
                 }

@@ -14,9 +14,9 @@
             <li class="nav_opciones">
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Cuentas por Cobrar</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="banknote"></i> Pagos</a>
-                <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="receipt"></i> Conceptos de Cuentas</a>
                 <a type="button" href="/Proyecto_2026/public/MetodosPago" class="opciones"><i class="opciones_i" data-lucide="wallet"></i> Metodos de Pago</a>
-                <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="coins"></i> Monedas</a>
+                <a type="button" href="/Proyecto_2026/public/Concepto" class="opciones"><i class="opciones_i" data-lucide="receipt"></i> Conceptos de Cuentas</a>
+                <a type="button" href="/Proyecto_2026/public/Monedas" class="opciones"><i class="opciones_i" data-lucide="coins"></i> Monedas</a>
             </li>
             <li class="nav_identificador">Inventario</li>
             <li class="nav_opciones">
