@@ -26,7 +26,7 @@
                         <div class="botones">
                             <button class="btn btn_azul" id="incluir">Nuevo Atleta</button>
 
-                            <button class="btn btn_verde" id="generar">Generar Reporte de Metodo de Pago</button>
+                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
                     <div class="contenedor_resultados">

@@ -26,7 +26,7 @@
                         <div class="botones">
                             <button class="btn btn_azul" id="incluir">Nuevo Metodo de Pago</button>
 
-                            <button class="btn btn_verde" id="generar">Generar Reporte de Metodo de Pago</button>
+                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
@@ -62,7 +62,8 @@
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="nec_referencia" id="nec_referencia" class="formulario select">
-
+                                    <option value="1" selected>Si</option>
+                                    <option value="2" selected>No</option>
                                 </select>
                                 <label for="nec_referencia" class="titulo_formulario">Referencia</label>
                                 <span class="mensaje" id="nec_referencia_span"></span>

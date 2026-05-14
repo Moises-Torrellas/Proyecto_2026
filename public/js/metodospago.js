@@ -23,18 +23,11 @@ $(document).ready(function () {
     consultar();
 
     // 2. Filtros de escritura (evitar letras en las edades)
-    $("#edad_min, #edad_max").on("input", function () {
-        var input = $(this).val().replace(/[^0-9]/g, ''); // Solo números
-        if (input.length > 2) {
-            input = input.substring(0, 2); // Máximo 2 dígitos
-        }
-        $(this).val(input);
-    });
 
     // 3. Validaciones en tiempo real para Categorías
     // Nombre: Letras, números, espacios y guiones (Ej: "U-12", "Sub 20")
     Validacion("nombre", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras, números y guiones)", "proceso");
-    Validacion("edad_min", /^[0-9\b]*$/, /^[0-9]{1,2}$/, "Edad mínima requerida, solo 1 o 2 dígitos", "proceso");
+    Validacion("nec_referencia", /^[0-9\b]*$/, /^[0-9]{1,2}$/, "Edad mínima requerida, solo 1 o 2 dígitos", "proceso");
     Validacion("edad_max", /^[0-9\b]*$/, /^[0-9]{1,2}$/, "Edad máxima requerida, solo 1 o 2 dígitos", "proceso");
 
     // 4. Lógica de los Botones Guardar/Modificar
@@ -42,7 +35,7 @@ $(document).ready(function () {
         let accion = $(this).data("accion");
         
         if (accion == "incluir") {
-            if (validarEnvio(accion)) {
+            /* if (validarEnvio(accion)) { */
                 confirmar('¿Está seguro que quiere registrar esta categoría?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
@@ -50,7 +43,7 @@ $(document).ready(function () {
                         enviaAjax(datos);
                     }
                 });
-            }
+            /* } */
         }
         else if (accion == "modificar") {
             if (validarEnvio(accion)) {
