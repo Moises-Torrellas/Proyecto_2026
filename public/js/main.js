@@ -62,6 +62,11 @@ $(document).ready(function () {
 
     tippy('[data-tippy-content]', { theme: 'light' });
 
+    $('#btn_hamburguesa').on('click', function(e) {
+        e.stopPropagation();
+        $('.nav_lateral').toggleClass('mostrar');
+    });
+
     let scrollTimers = {}; // Objeto para guardar los timers de cada contenedor
 
     $('.contenido_modulo, .navegacion').on('scroll', function () {
@@ -183,6 +188,10 @@ $(document).ready(function () {
         // Si el clic no es en notificaciones, cerrar notificaciones
         if (!$(e.target).closest('#noti, #contenedor_notificaciones').length) {
             $('#contenedor_notificaciones').removeClass('expandir');
+        }
+        // Si el clic no es en nav_lateral ni en btn_hamburguesa, cerrar menú lateral
+        if (!$(e.target).closest('.nav_lateral, #btn_hamburguesa').length) {
+            $('.nav_lateral').removeClass('mostrar');
         }
     });
 
@@ -557,3 +566,169 @@ function toggleDetalles(elemento) {
     panelActual.slideToggle(300);
 }
 
+// public/js/notificaciones.js
+document.addEventListener("DOMContentLoaded", function () {
+    const btnNoti = document.getElementById("noti");
+    const contenedorNoti = document.getElementById("contenedor_notificaciones");
+
+    // ==========================================
+    // 1. CONEXIÓN AL WEBSOCKET (EN TIEMPO REAL)
+    // ==========================================
+    const ws = new WebSocket("ws://localhost:8080");
+
+    ws.onmessage = function (event) {
+        const payload = JSON.parse(event.data);
+        
+        // Renderizar el mensaje mini superior nativo con Lucide Icons
+        renderizarNotificacionSuperior(payload.titulo, payload.mensaje, payload.tipo);
+        
+        // Incrementar el indicador numérico sobre tu campana
+        actualizarContadorBadge();
+    };
+
+    ws.onclose = function () {
+        console.warn("Conexión de notificaciones caída. Operando en modo pasivo (BD).");
+    };
+
+    // ==========================================
+    // 2. INTERACCIÓN DEL PANEL DESPLEGABLE FLOTANTE
+    // ==========================================
+    if (btnNoti && contenedorNoti) {
+        btnNoti.addEventListener("click", function (e) {
+            e.preventDefault();
+            
+            // Alternar visibilidad con tu clase existente
+            contenedorNoti.classList.toggle("ocultar");
+
+            // Si el panel se abre, extraemos la historia real de MariaDB
+            if (!contenedorNoti.classList.contains("ocultar")) {
+                cargarNotificacionesEnPanel();
+            }
+        });
+
+        // Ocultar el panel si hacen clic en cualquier otra zona de la pantalla
+        document.addEventListener("click", function (e) {
+            if (!btnNoti.contains(e.target) && !contenedorNoti.contains(e.target)) {
+                contenedorNoti.classList.add("ocultar");
+            }
+        });
+    }
+});
+
+// ==========================================
+// 3. CONSULTA AL CONTROLADOR (URL AMIGABLE .HTACCESS)
+// ==========================================
+function cargarNotificacionesEnPanel() {
+    // Usamos el enrutamiento limpio de tu .htaccess
+    fetch('Notificaciones')
+        .then(response => response.json())
+        .then(respuesta => {
+            const listaUl = document.querySelector(".lista_noti");
+            if (!listaUl) return;
+
+            listaUl.innerHTML = ""; // Limpiar elementos estáticos viejos
+
+            if (respuesta.accion === 'consultar' && respuesta.datos.length > 0) {
+                
+                respuesta.datos.forEach(noti => {
+                    let iconName = "info";
+                    let iconClass = "icon_noti_info";
+
+                    if (noti.tipo === "cumpleaños") {
+                        iconName = "cake";
+                        iconClass = "icon_noti_info"; 
+                    } else if (noti.tipo === "torneo") {
+                        iconName = "trophy";
+                        iconClass = "icon_noti_success";
+                    } else if (noti.tipo === "cuenta_cobrar") {
+                        iconName = "credit-card";
+                        iconClass = "icon_noti_info"; 
+                    }
+
+                    const itemHTML = `
+                        <li class="item_noti">
+                            <div class="noti_icono_estado">
+                                <i data-lucide="${iconName}" class="${iconClass}"></i>
+                            </div>
+                            <div class="noti_contenido">
+                                <h3 class="noti_titulo">${noti.titulo}</h3>
+                                <p class="noti_mensaje">${noti.mensaje}</p>
+                                <span class="noti_tiempo">${noti.creado_en}</span>
+                            </div>
+                        </li>
+                    `;
+                    listaUl.insertAdjacentHTML("beforeend", itemHTML);
+                });
+
+                // Forzar re-escaneo de Lucide sobre las nuevas etiquetas li
+                if (typeof lucide !== 'undefined') lucide.createIcons({ container: listaUl });
+
+                // Reiniciar el badge numérico visual del botón
+                const badge = document.getElementById("campana-notificaciones-badge");
+                if (badge) {
+                    badge.textContent = "0";
+                    badge.classList.add("ocultar"); 
+                }
+
+            } else {
+                listaUl.innerHTML = `<li class="item_noti"><p class="noti_mensaje" style="padding: 10px; text-align: center; width: 100%;">No tienes notificaciones por ahora.</p></li>`;
+            }
+        })
+        .catch(err => console.error("Error al cargar historial desde el .htaccess:", err));
+}
+
+// ==========================================
+// 4. FUNCIONES DE RENDERIZACIÓN PARA SWEETALERT Y BADGE
+// ==========================================
+function renderizarNotificacionSuperior(titulo, mensaje, tipo) {
+    let nombreIcono = "bell";
+    let colorIcono = "#3085d6";
+
+    if (tipo === "cumpleaños") { nombreIcono = "cake"; colorIcono = "#ec4899"; }
+    else if (tipo === "torneo") { nombreIcono = "trophy"; colorIcono = "#eab308"; }
+    else if (tipo === "cuenta_cobrar") { nombreIcono = "credit-card"; colorIcono = "#ef4444"; }
+
+    const contenidoHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; text-align: left;">
+            <i data-lucide="${nombreIcono}" style="width: 24px; height: 24px; stroke-width: 2; color: ${colorIcono}; flex-shrink: 0;"></i>
+            <div>
+                <span style="font-weight: bold; display: block; font-size: 14px;">${titulo}</span>
+                <span style="font-weight: normal; font-size: 12px; color: #555;">${mensaje}</span>
+            </div>
+        </div>
+    `;
+    
+    muestraNoti(contenidoHTML, 10000);
+}
+
+function actualizarContadorBadge() {
+    const badge = document.getElementById("campana-notificaciones-badge");
+    if (badge) {
+        let actual = parseInt(badge.textContent) || 0;
+        badge.textContent = actual + 1;
+        badge.classList.remove("ocultar");
+    }
+}
+
+// Tu función original intacta adaptada para inicializar Lucide
+function muestraNoti(titulo, tiempo) {
+    const Toast = Swal.mixin({
+        toast: true,
+        position: "top",
+        showConfirmButton: false,
+        timer: tiempo,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons({ container: toast });
+            }
+        },
+        customClass: {
+            popup: "mi-popup",
+            title: "mi-titulo"
+        }
+    });
+    Toast.fire({ title: titulo });
+}

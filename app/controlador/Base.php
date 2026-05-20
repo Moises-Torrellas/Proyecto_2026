@@ -3,8 +3,21 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
 {
     $nivelUsuario = $_SESSION['nivel_rol'] ?? 99;
 
-    $modulosProhibidos = [_MD_USUARIOS_, _MD_ROLES_, _MD_BITACORA_];
+    // 1. REGLA DE ORO: Si es Nivel 1 (Superusuario), tiene acceso ABSOLUTO a todo.
+    // Colocándolo de primero, garantizamos que no lo afecte ninguna otra restricción.
+    if ($nivelUsuario === 1) {
+        return [
+            'ingresar'  => true,
+            'registrar' => true,
+            'modificar' => true,
+            'eliminar'  => true,
+            'reporte'   => true,
+            'otros'     => true
+        ];
+    }
 
+    // 2. Restricciones específicas para el Nivel 2 (Modulos críticos prohibidos)
+    $modulosProhibidos = [_MD_USUARIOS_, _MD_ROLES_, _MD_BITACORA_];
     if ($nivelUsuario === 2 && in_array($id_modulo, $modulosProhibidos)) {
         $_SESSION['alerta'] = [
             'icono'   => 'error',
@@ -15,9 +28,11 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
         exit();
     }
 
-    if ($nivelUsuario === 1 || $nivelUsuario === 2) {
+    // 3. Si es Nivel 2 y pasó el filtro anterior, tiene permisos plenos en el resto de los módulos
+    if ($nivelUsuario === 2) {
         return [
-            'incluir'   => true,
+            'ingresar'  => true,
+            'registrar' => true,
             'modificar' => true,
             'eliminar'  => true,
             'reporte'   => true,
@@ -25,15 +40,28 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
         ];
     }
 
+    // 4. Validación estricta para usuarios regulares (Nivel 3 en adelante) basados en la base de datos
     if (isset($_SESSION['permisos'][$id_modulo])) {
         $p = $_SESSION['permisos'][$id_modulo];
 
+        // Si no tiene el permiso de ingresar activo, se rebota del módulo
+        if (!isset($p['ingresar']) || !$p['ingresar']) {
+            $_SESSION['alerta'] = [
+                'icono'   => 'error',
+                'titulo'  => 'Acceso denegado',
+                'mensaje' => 'No tienes permitido ingresar a este módulo.'
+            ];
+            header("Location:" . _URL_ . "Principal");
+            exit();
+        }
+
         $permisos = [
-            'incluir'   => $p['incluir'] == 1,
-            'modificar' => $p['modificar'] == 1,
-            'eliminar'  => $p['eliminar'] == 1,
-            'reporte'   => $p['reporte'] == 1,
-            'otros'     => $p['otros'] == 1
+            'ingresar'  => (bool)$p['ingresar'],
+            'registrar' => (isset($p['registrar']) && $p['registrar']),
+            'modificar' => (isset($p['modificar']) && $p['modificar']),
+            'eliminar'  => (isset($p['eliminar']) && $p['eliminar']),
+            'reporte'   => (isset($p['reporte']) && $p['reporte']),
+            'otros'     => (isset($p['otros']) && $p['otros'])
         ];
 
         if (!comprobarAjax() && $bitacora !== null) {
@@ -52,8 +80,9 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
     }
 }
 
-function cargarVista(string $pagina): void
-{
+function cargarVista(string $pagina, array $permisos = null): void
+{   
+    
     $archivoVista = sprintf(__DIR__ . '/../vista/%s.php', $pagina);
 
     if (is_file($archivoVista)) {

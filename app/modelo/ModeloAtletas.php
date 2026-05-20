@@ -390,6 +390,20 @@ class ModeloAtletas extends ModeloBase
         }
     }
 
+    public function ConsultarCumple()
+    {
+        try {
+            $conex = $this->conex();
+            $sql = "SELECT nombres, apellidos FROM atletas 
+                WHERE MONTH(fecha_nac) = MONTH(NOW()) 
+                AND DAY(fecha_nac) = DAY(NOW())";
+            return $conex->query($sql)->fetchAll();
+        } catch (Exception $e) {
+            logs('Atletas', $e->getMessage(), 'Modelo_ConsultarCumple');
+            return [];
+        }
+    }
+
     public function ConsultarRepresentantes()
     {
         $respuesta = $this->obj_representantes->Consultar();

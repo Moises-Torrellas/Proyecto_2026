@@ -675,6 +675,9 @@ option {
 .cbt_r {
     background: rgb(255, 0, 0);
 }
+.cbt_sec {
+    background: rgba(255, 149, 0, 0.906);
+}
 
 .cbt_v {
     background: var(--color-primario);
