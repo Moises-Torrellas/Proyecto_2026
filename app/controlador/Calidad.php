@@ -51,7 +51,7 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar calidad.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar calidad.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':

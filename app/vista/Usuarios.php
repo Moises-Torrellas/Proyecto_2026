@@ -24,9 +24,12 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <button class="btn btn_azul" id="incluir">Nuevo Usuario</button>
-
-                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php if ($permisos['registrar']): ?>
+                                <button class="btn btn_azul" id="incluir">Nuevo Usuario</button>
+                            <?php endif; ?>
+                            <?php if ($permisos['reporte']): ?>
+                                <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">

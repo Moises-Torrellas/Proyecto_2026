@@ -57,7 +57,7 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
                 break;
 
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tiene permisos para incluir roles.');
+                if (!$permisos['registrar']) throw new Exception('No tiene permisos para incluir roles.');
                 incluirRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
 

@@ -51,7 +51,7 @@ function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $p
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar representantes.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar representantes.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
