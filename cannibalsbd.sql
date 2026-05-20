@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 20-05-2026 a las 20:59:39
+-- Tiempo de generación: 20-05-2026 a las 21:38:25
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -407,7 +407,8 @@ CREATE TABLE `representantes` (
 --
 
 INSERT INTO `representantes` (`id_representante`, `nombre`, `apellido`, `cedula`, `nacionalidad`, `direccion`, `telefono`) VALUES
-(2, 'Moises', 'Martinez', '12345678', 'V', 'Barquisimeto', '3333-3333333');
+(2, 'Moises', 'Martinez', '12345678', 'V', 'Barquisimeto', '3333-3333333'),
+(6, 'Maria', 'Martinez', '25065254', 'V', 'Barquisimeto', '2342-3423423');
 
 -- --------------------------------------------------------
 
@@ -441,6 +442,7 @@ ALTER TABLE `asignaciones`
 --
 ALTER TABLE `atletas`
   ADD PRIMARY KEY (`id_atleta`),
+  ADD UNIQUE KEY `doc_identidad` (`doc_identidad`,`telefono`),
   ADD KEY `id_representante` (`id_representante`),
   ADD KEY `id_posicion` (`id_posicion`),
   ADD KEY `id_categoria` (`id_categoria`);
@@ -634,6 +636,12 @@ ALTER TABLE `categorias`
   MODIFY `id_categorias` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
+-- AUTO_INCREMENT de la tabla `categoria_catalogo`
+--
+ALTER TABLE `categoria_catalogo`
+  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `conceptos`
 --
 ALTER TABLE `conceptos`
@@ -712,6 +720,12 @@ ALTER TABLE `pagos`
   MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `palmares`
+--
+ALTER TABLE `palmares`
+  MODIFY `id_palmares` int(100) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `participaciones`
 --
 ALTER TABLE `participaciones`
@@ -733,7 +747,7 @@ ALTER TABLE `premios`
 -- AUTO_INCREMENT de la tabla `representantes`
 --
 ALTER TABLE `representantes`
-  MODIFY `id_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `torneos`
