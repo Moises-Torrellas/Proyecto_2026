@@ -51,8 +51,7 @@
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="id_atleta" id="id_atleta" class="formulario select">
-                                    <!-- Options llenadas por AJAX -->
-                                </select>
+                                    </select>
                                 <label for="id_atleta" class="titulo_formulario">Atleta</label>
                                 <span class="mensaje" id="id_atleta_span"></span>
                             </div>
@@ -60,8 +59,7 @@
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="id_concepto" id="id_concepto" class="formulario select">
-                                    <!-- Options llenadas por AJAX -->
-                                </select>
+                                    </select>
                                 <label for="id_concepto" class="titulo_formulario">Concepto de Cobro</label>
                                 <span class="mensaje" id="id_concepto_span"></span>
                             </div>
@@ -71,17 +69,17 @@
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="monto_total" name="monto_total" placeholder="Ej: 50.00">
-                                <label for="monto_total" class="titulo_formulario">Monto Total</label>
-                                <span class="mensaje" id="monto_total_spam"></span>
+                                <select name="id_moneda" id="id_moneda" class="formulario select">
+                                    </select>
+                                <label for="id_moneda" class="titulo_formulario">Moneda</label>
+                                <span class="mensaje" id="id_moneda_span"></span>
                             </div>
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <!-- Este campo suele ser readonly porque se calcula automático al cobrar o pagar -->
-                                <input type="text" class="formulario" id="monto_pendiente" name="monto_pendiente" readonly>
-                                <label for="monto_pendiente" class="titulo_formulario">Monto Pendiente</label>
-                                <span class="mensaje" id="monto_pendiente_spam"></span>
+                                <input type="text" class="formulario" id="monto_total" name="monto_total" placeholder="Ej: 50.00">
+                                <label for="monto_total" class="titulo_formulario">Monto Total</label>
+                                <span class="mensaje" id="monto_total_spam"></span>
                             </div>
                         </div>
                     </div>
@@ -89,11 +87,21 @@
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
+                                <input type="text" class="formulario" id="monto_pendiente" name="monto_pendiente" readonly>
+                                <label for="monto_pendiente" class="titulo_formulario">Monto Pendiente</label>
+                                <span class="mensaje" id="monto_pendiente_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
                                 <input type="date" class="formulario" id="fecha_emision" name="fecha_emision" readonly>
                                 <label for="fecha_emision" class="titulo_formulario">Fecha de Emisión</label>
                                 <span class="mensaje" id="fecha_emision_spam"></span>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="estatus" id="estatus" class="formulario select" disabled>
@@ -118,7 +126,6 @@
         </div>
     </section>
     <script src="js/main.js"></script>
-    <!-- Asegúrate de crear este archivo JS para manejar la lógica de esta vista específica -->
     <script src="js/cuentas_cobrar.js"></script>
 </body>
 

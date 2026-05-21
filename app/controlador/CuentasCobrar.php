@@ -5,7 +5,7 @@ use App\modelo\ModeloCuentasCobrar;
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
-// 2. Configuración del módulo (Ya con el guion bajo corregido)
+// 2. Configuración del módulo
 $id_modulo = _MD_CUENTAS_;   
 
 // 3. Procesar permisos (Retorna el array de permisos)
@@ -52,12 +52,15 @@ function manejarSolicitudCuentasCobrar($obj, $id_modulo, $bitacoraObj, array $pe
             case 'consultarCo':
                 consultarCo($obj);
                 break;
+            case 'consultarM': // NUEVO: Para cargar las monedas en el formulario
+                consultarM($obj);
+                break;
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar cuentas por cobrar.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar cuentas por cobrar.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar cuentas por cobrar.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
@@ -104,6 +107,13 @@ function consultarCo($obj): void
     echo json_encode($respuesta);
 }
 
+// NUEVA FUNCIÓN PARA MONEDAS
+function consultarM($obj): void
+{
+    $respuesta = $obj->ConsultarMonedas();
+    echo json_encode($respuesta);
+}
+
 function buscar($obj): void
 {
     try {
@@ -126,12 +136,12 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        // Regla para montos: Permite números enteros o con hasta 2 decimales separados por punto.
         $reglaMonto = '/^[0-9]+(\.[0-9]{1,2})?$/';
 
         $validaciones = [
             'id_concepto' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
             'id_atleta'   => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
+            'id_moneda'   => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'], // AGREGADO
             'monto_total' => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido. Use formato numérico (ej. 10.50).']
         ];
 
@@ -140,18 +150,17 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $datos = [
             'id_concepto' => $_POST['id_concepto'],
             'id_atleta'   => $_POST['id_atleta'],
+            'id_moneda'   => $_POST['id_moneda'], // AGREGADO
             'monto_total' => $_POST['monto_total'],
-            'estatus'     => 'Pendiente', // Al incluir, siempre nace como pendiente
+            'estatus'     => 'Pendiente', 
             'accion'      => 'incluir'
         ];
 
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
             registrarBitacora($bitacoraObj, $id_modulo, "Generó un cargo de " . $_POST['monto_total'] . " al atleta ID: " . $_POST['id_atleta']);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Cuenta por cobrar registrada exitosamente.');
-
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = 'Ocurrió un error inesperado al registrar el cargo: ' . ($resultado['codigo'] ?? '');
         }
@@ -173,10 +182,10 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
              'id'              => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
              'id_concepto'     => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
              'id_atleta'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
+             'id_moneda'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'], // AGREGADO
              'monto_total'     => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido.'],
-    // Cambiamos la regla del estatus para que sea más flexible o simplemente validamos que no esté vacío
-            'estatus'         => ['regla' => '/^.+$/', 'mensaje' => 'El campo estatus es obligatorio.']
-];
+             'estatus'         => ['regla' => '/^.+$/', 'mensaje' => 'El campo estatus es obligatorio.']
+        ];
 
         validar_datos($validaciones);
 
@@ -184,8 +193,8 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'id'              => $_POST['id'],
             'id_concepto'     => $_POST['id_concepto'],
             'id_atleta'       => $_POST['id_atleta'],
+            'id_moneda'       => $_POST['id_moneda'], // AGREGADO
             'monto_total'     => $_POST['monto_total'],
-            'monto_pendiente' => $_POST['monto_pendiente'],
             'estatus'         => $_POST['estatus'],
             'accion'          => 'modificar'
         ];
@@ -193,10 +202,8 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
             registrarBitacora($bitacoraObj, $id_modulo, "Modificó la cuenta por cobrar ID: " . $_POST['id']);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Cuenta por cobrar modificada exitosamente.');
-
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = 'Ocurrió un error inesperado en la modificación.';
         }
@@ -220,20 +227,15 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         ];
 
         $resultado = $obj->procesarDatos($datos);
-       if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-    
-       registrarBitacora($bitacoraObj, $id_modulo, "Anuló la cuenta por cobrar ID: " . $_POST['id']);
-    
-       $resultado = array('accion' => 'eliminar', 'mensaje' => 'Cuenta por cobrar anulada correctamente (estatus: Anulado).');
-
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Anuló la cuenta por cobrar ID: " . $_POST['id']);
+            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Cuenta por cobrar anulada correctamente (estatus: Anulado).');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID  => 'La cuenta por cobrar no existe.',
                 ASSOCIATES  => 'No se puede eliminar la cuenta porque ya tiene pagos asociados registrados.',
                 default     => 'Ocurrió un error inesperado en la eliminación.'
             };
-
         }
         echo json_encode($resultado);
     } catch (Exception $e) {

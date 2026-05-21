@@ -21,6 +21,13 @@ function consultarConceptos() {
     enviaAjax(datos);
 }
 
+// Consultar Monedas para el Select
+function consultarMonedas() {
+    let datos = new FormData();
+    datos.append('accion', 'consultarM'); 
+    enviaAjax(datos);
+}
+
 function busqueda() {
     clearTimeout(timerBusqueda);
     timerBusqueda = setTimeout(function () {
@@ -36,6 +43,7 @@ $(document).ready(function () {
     consultar();
     consultarAtletas();
     consultarConceptos();
+    consultarMonedas();
 
     // Validar entrada de monto para que solo acepte números y punto decimal
     $("#monto_total").on("input", function () {
@@ -75,6 +83,7 @@ $(document).ready(function () {
                         $('#estatus').prop('disabled', false);
                         $('#id_atleta').prop('disabled', false);
                         $('#id_concepto').prop('disabled', false);
+                        $('#id_moneda').prop('disabled', false);
 
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
@@ -83,6 +92,7 @@ $(document).ready(function () {
                         $('#estatus').prop('disabled', true);
                         $('#id_atleta').prop('disabled', true);
                         $('#id_concepto').prop('disabled', true);
+                        $('#id_moneda').prop('disabled', true);
 
                         enviaAjax(datos);
                     }
@@ -101,6 +111,7 @@ $(document).ready(function () {
         }
     });
 
+    // Configuración de Select2
     $('#id_atleta').select2({
         placeholder: "Selecciona un Atleta",
         allowClear: true,
@@ -108,6 +119,11 @@ $(document).ready(function () {
 
     $('#id_concepto').select2({
         placeholder: "Selecciona un Concepto",
+        allowClear: true,
+    });
+
+    $('#id_moneda').select2({
+        placeholder: "Selecciona una Moneda",
         allowClear: true,
     });
 
@@ -120,7 +136,12 @@ $(document).ready(function () {
 
         $('#id_atleta').val(null).trigger('change');
         $('#id_concepto').val(null).trigger('change');
+        $('#id_moneda').val(null).trigger('change');
         
+        $('#id_atleta').prop('disabled', false);
+        $('#id_concepto').prop('disabled', false);
+        $('#id_moneda').prop('disabled', false);
+
         $('#monto_pendiente').val('');
         $('#fecha_emision').val(new Date().toISOString().split('T')[0]); 
         $('#estatus').val('Pendiente');
@@ -170,6 +191,11 @@ function validarEnvio(proceso) {
         return false;
     }
 
+    if ($('#id_moneda').val() == "" || $('#id_moneda').val() == null) {
+        muestraMensaje("error", 2000, "Error", "Debe seleccionar una moneda");
+        return false;
+    }
+
     if (validarkeyup(/^[0-9]+(\.[0-9]{1,2})?$/, $("#monto_total"), $("#monto_total_spam"), "Formato inválido", true)) {
         muestraMensaje("error", 2000, "Error", "Debe ingresar un monto válido (Ej. 50 o 50.50)");
         return false;
@@ -205,6 +231,8 @@ function modificar(datos) {
     $('#id').val(datos[0].id_cobrar);
     $('#id_atleta').val(datos[0].id_atleta).trigger('change');
     $('#id_concepto').val(datos[0].id_concepto).trigger('change');
+    $('#id_moneda').val(datos[0].id_moneda).trigger('change');
+    
     $('#monto_total').val(datos[0].monto_total);
     $('#monto_pendiente').val(datos[0].monto_pendiente);
     
@@ -216,6 +244,9 @@ function modificar(datos) {
     
     $('#monto_pendiente').prop('readonly', true); 
     $('#estatus').prop('disabled', true); 
+    $('#id_atleta').prop('disabled', true);
+    $('#id_concepto').prop('disabled', true);
+    $('#id_moneda').prop('disabled', true); 
 
     abrirModal();
 }
@@ -230,26 +261,45 @@ function crearConsulta(datos) {
         datos.forEach(dato => {
             let estatusRaw = String(dato.estatus).toLowerCase();
             let estiloGris = '';
-            let botonesDisabled = '';
-            let iconoAccion = 'fi-sr-trash-xmark'; 
-
-            if (estatusRaw === 'anulado') {
-                estiloGris = 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"';
-                botonesDisabled = 'disabled';
-                iconoAccion = 'fi-sr-lock'; 
-            }
+            let botonesAccion = ''; 
 
             let colorEstatus = '';
             let iconoEstatus = '';
-            if (estatusRaw === 'pagado') {
-                colorEstatus = 'style="color: var(--verde-exito); font-weight: bold;"';
-                iconoEstatus = '<i data-lucide="check-circle" style="color: var(--verde-exito);"></i>';
-            } else if (estatusRaw === 'anulado') {
+
+            // EVALUACIÓN DE ANULACIÓN INDEPENDIENTE (Soft Delete)
+            if (parseInt(dato.anulado) === 1) {
+                estiloGris = 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"';
                 colorEstatus = 'style="color: #6c757d; font-weight: bold;"';
                 iconoEstatus = '<i data-lucide="lock" style="color: #6c757d;"></i>';
+                
+                // Si la bandera está en 1, NO se dibuja el botón de editar
+                botonesAccion = `
+                    <button class="btn_t cbt_r" disabled title="Registro Anulado" style="cursor: not-allowed; opacity: 0.7;">
+                        <i class="fi fi-sr-lock"></i>
+                    </button>
+                `;
             } else {
-                colorEstatus = 'style="color: var(--rojo-error); font-weight: bold;"';
-                iconoEstatus = '<i data-lucide="alert-circle" style="color: var(--rojo-error);"></i>';
+                // Lógica de colores normal para cuentas activas
+                if (estatusRaw === 'pagado') {
+                    colorEstatus = 'style="color: var(--verde-exito); font-weight: bold;"';
+                    iconoEstatus = '<i data-lucide="check-circle" style="color: var(--verde-exito);"></i>';
+                } else if (estatusRaw === 'abonado') {
+                    colorEstatus = 'style="color: #ffc107; font-weight: bold;"';
+                    iconoEstatus = '<i data-lucide="alert-circle" style="color: #ffc107;"></i>';
+                } else {
+                    colorEstatus = 'style="color: var(--rojo-error); font-weight: bold;"';
+                    iconoEstatus = '<i data-lucide="alert-circle" style="color: var(--rojo-error);"></i>';
+                }
+
+                // Si está activa, muestra el lápiz normal y el candado para ejecutar la anulación
+                botonesAccion = `
+                    <button class="btn_t cbt_v" onclick="buscar(${dato.id_cobrar})" title="Modificar">
+                        <i class="fi fi-sr-pencil"></i>
+                    </button>
+                    <button class="btn_t cbt_r" onclick="anular(${dato.id_cobrar})" title="Anular Cuenta">
+                        <i class="fi fi-sr-lock"></i>
+                    </button>
+                `;
             }
 
             let fechaCorta = dato.fecha_emision.split(' ')[0];
@@ -272,26 +322,23 @@ function crearConsulta(datos) {
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>Total</small>
-                                <span class="listado_resaltado">$${dato.monto_total}</span>
+                                <span class="listado_resaltado">${escapeHTML(dato.moneda_nombre)} ${dato.monto_total}</span>
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>Pendiente</small>
-                                <span ${colorEstatus}>$${dato.monto_pendiente}</span>
+                                <span ${colorEstatus}>${escapeHTML(dato.moneda_nombre)} ${dato.monto_pendiente}</span>
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>Estatus</small>
-                                <span style="display:flex; align-items:center; gap:5px;">${iconoEstatus} ${escapeHTML(dato.estatus)}</span>
+                                <span style="display:flex; align-items:center; gap:5px;">
+                                    ${iconoEstatus} ${parseInt(dato.anulado) === 1 ? 'Anulado' : escapeHTML(dato.estatus)}
+                                </span>
                             </div>
                         </div>
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button class="btn_t cbt_v" onclick="buscar(${dato.id_cobrar})" ${botonesDisabled}>
-                                    <i class="fi fi-sr-pencil"></i>
-                                </button>
-                                <button class="btn_t cbt_r" onclick="anular(${dato.id_cobrar})" ${botonesDisabled}>
-                                    <i class="fi ${iconoAccion}"></i>
-                                </button>
+                                ${botonesAccion}
                             </div>
                             <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                         </div>
@@ -367,6 +414,8 @@ function enviaAjax(datos) {
                     construirSelect('id_atleta', lee.datos, 'id_atleta', 'nombre', 'apellido');
                 } else if (lee.accion == "consultarCo") {
                     construirSelect('id_concepto', lee.datos, 'id_concepto', 'nombre');
+                } else if (lee.accion == "consultarM") { 
+                    construirSelect('id_moneda', lee.datos, 'id_moneda', 'nombre');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
@@ -374,7 +423,7 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } else if (lee.accion == "eliminar") {
                     consultar();
-                    muestraMensaje("success", 2000, "Eliminación Exitosa", lee.mensaje);
+                    muestraMensaje("success", 2000, "Anulación Exitosa", lee.mensaje);
                 } else if (lee.accion == "modificar") {
                     consultar();
                     limpia();
@@ -398,7 +447,7 @@ function enviaAjax(datos) {
             }
         }
     });
-} // <--- SE CORRIGIÓ ESTA LLAVE (Cerraba todo el código antes)
+}
 
 function escapeHTML(texto) {
     if (!texto) return '';
