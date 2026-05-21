@@ -22,32 +22,34 @@ $(document).ready(function () {
     // 1. Cargar la tabla al iniciar
     consultar();
 
-    // 2. Filtros de escritura (evitar letras en las edades)
+    // 2. Validaciones en tiempo real para Métodos de Pago
+    // Nombre: Letras, números, espacios y acentos (Ej: "Pago Móvil", "Zelle", "Transferencia")
+    Validacion("nombre", /^[A-Za-z0-9\sñÑáéíóúÁÉÍÓÚ]*$/, /^[A-Za-z0-9\sñÑáéíóúÁÉÍÓÚ]{2,30}$/, "Permitido entre 2 y 30 caracteres", "proceso");
+    
+    // Nota: Si 'nec_referencia' y 'estatus' son campos <select>, la validación onkeyup 
+    // no es estrictamente necesaria aquí, se controlan mejor en la función validarEnvio().
+    // Si son inputs de texto, puedes descomentar y ajustar estas líneas:
+    // Validacion("nec_referencia", /^[A-Za-z0-9]*$/, /^[A-Za-z0-9]{1,2}$/, "Especifique si requiere referencia", "proceso");
+    // Validacion("estatus", /^[A-Za-z0-9]*$/, /^[A-Za-z0-9]{1,15}$/, "Especifique el estatus", "proceso");
 
-    // 3. Validaciones en tiempo real para Categorías
-    // Nombre: Letras, números, espacios y guiones (Ej: "U-12", "Sub 20")
-    Validacion("nombre", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras, números y guiones)", "proceso");
-    Validacion("nec_referencia", /^[0-9\b]*$/, /^[0-9]{1,2}$/, "Edad mínima requerida, solo 1 o 2 dígitos", "proceso");
-    Validacion("edad_max", /^[0-9\b]*$/, /^[0-9]{1,2}$/, "Edad máxima requerida, solo 1 o 2 dígitos", "proceso");
-
-    // 4. Lógica de los Botones Guardar/Modificar
+    // 3. Lógica de los Botones Guardar/Modificar
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
         
         if (accion == "incluir") {
-            /* if (validarEnvio(accion)) { */
-                confirmar('¿Está seguro que quiere registrar esta categoría?', function (confirmado) {
+            if (validarEnvio(accion)) { // Descomentado para que valide antes de incluir
+                confirmar('¿Está seguro que quiere registrar este método de pago?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
                         enviaAjax(datos);
                     }
                 });
-            /* } */
+            }
         }
         else if (accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar esta categoría?', function (confirmado) {
+                confirmar('¿Está seguro que quiere modificar este método de pago?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
@@ -68,14 +70,14 @@ $(document).ready(function () {
         }
     });
 
-    // 5. Botones de la vista
+    // 4. Botones de la vista
     $("#incluir").on("click", function () {
         limpia(); // Limpia el formulario
-        $("#id").val("");
+        $("#id").val(""); // Este es el input hidden en tu form (asegúrate de que en el backend reciba id_metodos)
         $("#proceso").data("accion", "incluir");
-        $("#proceso").text("Registrar Categoría");
-        $("#titulo_modal").text("Registrar Nueva Categoría");
-        abrirModal(); // Esta función debe estar definida en tu main.js o base.js
+        $("#proceso").text("Registrar Método");
+        $("#titulo_modal").text("Registrar Nuevo Método de Pago");
+        abrirModal();
     });
 
     $("#generar").on("click", function () {
@@ -97,7 +99,7 @@ function buscar(id) {
 }
 
 function eliminar(id) {
-    confirmar('¿Está seguro que quiere eliminar esta categoría?', function (confirmado) {
+    confirmar('¿Está seguro que quiere eliminar este método de pago?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
@@ -108,24 +110,23 @@ function eliminar(id) {
 }
 
 function validarEnvio(proceso) {
-    if (validarkeyup(/^[A-Za-z0-9\-\b\s]{2,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 2 y 30 caracteres (letras, números y guiones)", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de categoría válido");
+    // Validar Nombre
+    if (validarkeyup(/^[A-Za-z0-9\sñÑáéíóúÁÉÍÓÚ]{2,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 2 y 30 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de método válido");
         return false;
     }
-    else if (validarkeyup(/^[0-9]{1,2}$/, $("#edad_min"), $("#edad_min_spam"), "Debe ser un número válido", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar una edad mínima válida");
-        return false;
-    }
-    else if (validarkeyup(/^[0-9]{1,2}$/, $("#edad_max"), $("#edad_max_spam"), "Debe ser un número válido", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar una edad máxima válida");
+    
+    // Validar Necesita Referencia (Asumiendo que no puede estar vacío)
+    if ($("#nec_referencia").val() === null || $("#nec_referencia").val() === "") {
+        muestraMensaje("error", 2000, "Error", "Debe indicar si el método necesita referencia");
+        // Opcional: mostrar un span de error si tienes uno configurado
+        // $("#nec_referencia_spam").text("Campo requerido").show(); 
         return false;
     }
 
-    // Validación lógica: Edad mínima no puede ser mayor a la máxima
-    let min = parseInt($("#edad_min").val(), 10);
-    let max = parseInt($("#edad_max").val(), 10);
-    if (min > max) {
-        muestraMensaje("error", 3000, "Error", "La edad mínima no puede ser mayor a la edad máxima");
+    // Validar Estatus (Asumiendo que no puede estar vacío)
+    if ($("#estatus").val() === null || $("#estatus").val() === "") {
+        muestraMensaje("error", 2000, "Error", "Debe seleccionar un estatus");
         return false;
     }
 
@@ -134,14 +135,14 @@ function validarEnvio(proceso) {
 
 function modificar(datos) {
     $("#proceso").data("accion", "modificar");
-    $("#proceso").text("Modificar Categoría");
-    $("#titulo_modal").text("Modificar Categoría");
+    $("#proceso").text("Modificar Método");
+    $("#titulo_modal").text("Modificar Método de Pago");
     
     // Llenamos el formulario con los datos recibidos de la BD
-    $('#id').val(datos[0].id_categorias);
+    $('#id').val(datos[0].id_metodos); 
     $('#nombre').val(datos[0].nombre);
-    $('#edad_min').val(datos[0].edad_min);
-    $('#edad_max').val(datos[0].edad_max);
+    $('#nec_referencia').val(datos[0].nec_referencia);
+    $('#estatus').val(datos[0].estatus);
 
     abrirModal();
 }
@@ -151,31 +152,36 @@ function crearConsulta(datos) {
     contenedor.empty();
 
     if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron categorías registradas</p></div>');
+        contenedor.append('<div class="listado_vacio"><p>No se encontraron métodos de pago registrados</p></div>');
     } else {
         datos.forEach(dato => {
+            // Evaluamos cómo mostrar la info de referencia y estatus de forma amigable
+            let txtReferencia = (dato.nec_referencia == '1' || dato.nec_referencia == 'Si' || dato.nec_referencia == 'Sí') ? 'Sí' : 'No';
+            let txtEstatus = (dato.estatus == '1' || dato.estatus == 'Activo') ? 'Activo' : 'Inactivo';
+            let colorEstatus = (txtEstatus === 'Activo') ? '#2ec135' : '#e74c3c';
+
             let registro = `
                 <div class="listado_contenedor_grupal">
                     <div class="listado_item" onclick="toggleDetalles(this)">
                         <div class="listado_col_datos">
                             <div class="listado_dato_grupo">
-                                <small>Categoría</small>
-                                <span style="font-weight: bold; color: #2ec135;">${escapeHTML(dato.nombre)}</span>
+                                <small>Método de Pago</small>
+                                <span style="font-weight: bold; color: #333;">${escapeHTML(dato.nombre)}</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Edad Mínima</small>
-                                <span>${dato.edad_min} años</span>
+                                <small>¿Requiere Ref?</small>
+                                <span>${txtReferencia}</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Edad Máxima</small>
-                                <span>${dato.edad_max} años</span>
+                                <small>Estatus</small>
+                                <span style="color: ${colorEstatus}; font-weight: 500;">${txtEstatus}</span>
                             </div>
                         </div>
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_categorias})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_categorias})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_metodos})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_metodos})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             </div>
                         </div>
                     </div>
@@ -190,6 +196,7 @@ function crearConsulta(datos) {
 }
 
 function escapeHTML(texto) {
+    if (!texto) return '';
     var caracteres = {
         '&': '&amp;',
         '<': '&lt;',
@@ -197,7 +204,7 @@ function escapeHTML(texto) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return texto.replace(/[&<>"']/g, m => caracteres[m]);
+    return String(texto).replace(/[&<>"']/g, m => caracteres[m]);
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -205,7 +212,7 @@ var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
         async: true,
-        url: "", // Se envía al controlador actual de la ruta (/Categorias)
+        url: "", // Recuerda que esto apunta al controlador actual (/MetodosPago)
         type: "POST",
         contentType: false,
         data: datos,
@@ -225,7 +232,7 @@ function enviaAjax(datos) {
                 else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
-                    cerrarModal(); // Agregado para que se cierre al guardar
+                    cerrarModal(); 
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } 
                 else if (lee.accion == "eliminar") {
@@ -246,7 +253,7 @@ function enviaAjax(datos) {
                 }
             } catch (e) {
                 alert("Error procesando los datos: " + e.message);
-                console.error(respuesta); // Útil para ver en la consola si el PHP imprimió un error visible
+                console.error(respuesta); 
             }
         },
         error: function (request, status, err) {

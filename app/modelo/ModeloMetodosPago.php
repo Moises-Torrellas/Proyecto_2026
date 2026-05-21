@@ -11,6 +11,7 @@ class ModeloMetodosPago extends ModeloBase
     private $nombre;
     private $nec_referencia;
     private $estatus;
+    
     public function __construct()
     {
         parent::__construct();
@@ -112,9 +113,9 @@ class ModeloMetodosPago extends ModeloBase
         try {
             //para verificar existencia los parametros que recibe son string $campo, $valor, string $tabla, ?int $estatus = 1, string $db = 'general', bool $bloquear = false
 
-            /* string $campo     Nombre lógico del campo (ej: 'cedula', 'correo'). Se valida contra la whitelist definida en el __construct.
-            mixed  $valor     El valor específico que se desea buscar en la tabla.
-            string $tabla     Nombre de la tabla donde se realizará la búsqueda.
+            /* string $campo    Nombre lógico del campo (ej: 'cedula', 'correo'). Se valida contra la whitelist definida en el __construct.
+            mixed  $valor    El valor específico que se desea buscar en la tabla.
+            string $tabla    Nombre de la tabla donde se realizará la búsqueda.
             int|null $estatus Filtro por estado del registro. (1 = Activo por defecto, NULL = Buscar en todo) sirve si la tabla tiene estatus para borrado logico.
             string $db        Identificador de la conexión a usar (por defecto 'general' para la base de datos del club) para la base de datos de seguridad se le pasa como parametro 'sg' .
             bool   $bloquear  Si es true, aplica 'FOR UPDATE' para bloquear la fila (Manejo de concurrencia).
@@ -171,19 +172,20 @@ class ModeloMetodosPago extends ModeloBase
             * 
             * 7. $bloquear: Si es true, activa el "FOR UPDATE". Esto pausa otros procesos que intenten leer o cambiar esta fila 
             *    específica hasta que tú termines tu transacción, evitando choques de datos en el sistema de la academia.
- */
+            */
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'metodos_pago', NULL, bloquear: true)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'metodos_pago', NULL, bloquear: true)) {
-                    throw new
-                     Exception(DUPLICATE_NOMBRE);
+                    throw new Exception(DUPLICATE_NOMBRE); // CORREGIDO: Todo en una sola línea
                 }
             }
 
+            // CORREGIDO: Se eliminó la coma después de :estatus
             $sentencia = "UPDATE metodos_pago SET 
             nombre = :nombre, 
             nec_referencia = :nec_referencia, 
-            estatus = :estatus, 
-            WHERE id_metodos = :id_metodos";
+            estatus = :estatus 
+            WHERE id_metodos = :id_metodos"; 
+            
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':nec_referencia', $this->nec_referencia);

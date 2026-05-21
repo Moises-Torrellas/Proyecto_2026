@@ -5,7 +5,7 @@ use App\modelo\ModeloMetodosPago;
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
-// 2. Configuración del módulo (Corregido al ID de Representantes)
+// 2. Configuración del módulo
 $id_modulo = _MD_METODOS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
@@ -109,17 +109,17 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $validaciones = [
-            'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'nec_referencia' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,15}$/', 'mensaje' => 'Referencia inválido.'],
-            'estatus'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,10}$/', 'mensaje' => 'Estatus inválido.'],
+            'nombre'         => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
+            'nec_referencia' => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{1,15}$/', 'mensaje' => 'Referencia inválida.'],
+            'estatus'        => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{1,10}$/', 'mensaje' => 'Estatus inválido.'],
         ];
 
         validar_datos($validaciones);
 
         $datos = [
-            'nombre'     => $_POST['nombre'],
-            'nec_referencia'   => $_POST['nec_referenia'],
-            'estatus' => $_POST['estatus'],
+            'nombre'         => $_POST['nombre'],
+            'nec_referencia' => $_POST['nec_referencia'], // CORREGIDO AQUÍ
+            'estatus'        => $_POST['estatus'],
         ];
         $datos['accion'] = 'incluir';
 
@@ -145,24 +145,24 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
+
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $validaciones = [
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'nec_referencia' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,15}$/', 'mensaje' => 'Referencia inválido.'],
-            'estatus'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,10}$/', 'mensaje' => 'Estatus inválido.'],
+            'id'             => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
+            'nombre'         => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
+            'nec_referencia' => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{1,15}$/', 'mensaje' => 'Referencia inválida.'],
+            'estatus'        => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{1,10}$/', 'mensaje' => 'Estatus inválido.'],
         ];
 
         validar_datos($validaciones);
 
         $datos = [
-            'id' => $_POST['id'],
-            'nombre'     => $_POST['nombre'],
-            'nec_referencia'   => $_POST['nec_referenia'],
-            'estatus' => $_POST['estatus'],
-            
+            'id'             => $_POST['id'],
+            'nombre'         => $_POST['nombre'],
+            'nec_referencia' => $_POST['nec_referencia'], // CORREGIDO AQUÍ
+            'estatus'        => $_POST['estatus'],
         ];
         $datos['accion'] = 'modificar';
 
@@ -176,7 +176,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                DUPLICATE_NOMBRE => 'Ya existe un metodo de pago registrado con esta nombre.',
+                DUPLICATE_NOMBRE => 'Ya existe un metodo de pago registrado con este nombre.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
 
@@ -188,6 +188,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
+
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
@@ -203,7 +204,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
 
             registrarBitacora($bitacoraObj, $id_modulo, "Elimino al metodo de pago: " . $_POST['id']);
-            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Representante eliminado exitosamente.');
+            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Método de pago eliminado exitosamente.'); // CORREGIDO AQUÍ
 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
