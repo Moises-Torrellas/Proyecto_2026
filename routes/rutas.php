@@ -51,6 +51,7 @@ function manejarRuta($pagina): void
         'Concepto' => 'Concepto',
         'Monedas' => 'Monedas',
         'Notificaciones' => 'Notificaciones',
+        'Pagos' => 'Pagos',
 
     ];
     // Verificamos si la página solicitada existe en las rutas definidas
