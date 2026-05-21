@@ -57,46 +57,6 @@
                     </div>
                     <div class="row" id="row_permisos" style="display: none;">
                         <div class="colum colum_tabla_completa" style="padding: 0;">
-                            <label for="" class="titulo_formulario titulo_formulario_tabla" style="margin-bottom: 15px; display: block;">Permisos</label>
-                            
-                            <style>
-                                #tabla_permisos_container {
-                                    overflow-x: auto; 
-                                    width: 90%; 
-                                    border: 1px solid #ccc;
-                                    border-radius: 5px;
-                                    margin-bottom: 20px;
-                                }
-                                #tabla_permisos_ui {
-                                    width: 80%; 
-                                    border-collapse: collapse;
-                                }
-                                #tabla_permisos_ui th, #tabla_permisos_ui td {
-                                    border-bottom: 1px solid #ddd;
-                                    border-right: 1px solid #ddd;
-                                    padding: 10px;
-                                    text-align: center;
-                                }
-                                #tabla_permisos_ui th:last-child, #tabla_permisos_ui td:last-child {
-                                    border-right: none;
-                                }
-                                #tabla_permisos_ui tr:last-child td {
-                                    border-bottom: none;
-                                }
-                                #tabla_permisos_ui tbody tr:hover {
-                                    background-color: #f1f1f1;
-                                }
-                                #tabla_permisos_ui th {
-                                    background-color: #f8f9fa;
-                                    color: #333;
-                                    font-weight: bold;
-                                }
-                                #tabla_permisos_ui td:first-child, #tabla_permisos_ui th:first-child {
-                                    text-align: left;
-                                    font-weight: bold;
-                                }
-                            </style>
-
                             <div id="tabla_permisos_container">
                                 <table id="tabla_permisos_ui">
                                     <thead>
@@ -111,7 +71,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="tabla_permisos">
-                                        
+
                                     </tbody>
                                 </table>
                             </div>

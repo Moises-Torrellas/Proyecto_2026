@@ -118,6 +118,12 @@ $(document).ready(function () {
         $('#telefono').closest('.colum').show();
         $('#correo').closest('.colum').show();
         $('#foto').closest('.colum').show();
+        $('#nombre').closest('.colum').show();
+        $('#apellido').closest('.colum').show();
+        $('#cedula').closest('.colum').show();
+        $('#roles').closest('.colum').show();
+        $('#limpiar').show();
+        $('#row_permisos').hide();
         $('#roles').val(null).trigger('change');
         abrirModal();
     });
@@ -132,6 +138,12 @@ $(document).ready(function () {
         $('#telefono').closest('.colum').hide();
         $('#correo').closest('.colum').hide();
         $('#foto').closest('.colum').hide();
+        $('#nombre').closest('.colum').show();
+        $('#apellido').closest('.colum').show();
+        $('#cedula').closest('.colum').show();
+        $('#roles').closest('.colum').show();
+        $('#row_permisos').hide();
+        $('#limpiar').show();
         $('#roles').val(null).trigger('change');
         abrirModal();
     });
@@ -240,6 +252,12 @@ function modificar(datos) {
     $('#telefono').closest('.colum').show();
     $('#correo').closest('.colum').show();
     $('#foto').closest('.colum').show();
+    $('#nombre').closest('.colum').show();
+    $('#apellido').closest('.colum').show();
+    $('#cedula').closest('.colum').show();
+    $('#roles').closest('.colum').show();
+    $('#row_permisos').hide();
+    $('#limpiar').show();
     $('#roles').val(null).trigger('change');
     $('#id').val(datos[0].idUsuario);
     $('#cedula').val(datos[0].cedulaUsuario);
@@ -279,6 +297,21 @@ function bloquear(id, b, elemento) {
     });
 }
 
+function CargarPermisos() {
+    $('#contraseña').closest('.colum').hide();
+    $('#telefono').closest('.colum').hide();
+    $('#correo').closest('.colum').hide();
+    $('#foto').closest('.colum').hide();
+    $('#nombre').closest('.colum').hide();
+    $('#apellido').closest('.colum').hide();
+    $('#cedula').closest('.colum').hide();
+    $('#roles').closest('.colum').hide();
+    $('#row_permisos').show();
+    $('#limpiar').hide();
+
+    abrirModal();
+}
+
 const icon = 'fi-sr-lock';
 
 function crearConsulta(datos) {
@@ -293,7 +326,7 @@ function crearConsulta(datos) {
             let color = dato.bloqueo == 1 ? 'cbt_g' : 'cbt_a';
 
             let fotoHTML = dato.foto == 'default.png'
-                ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>` 
+                ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>`
                 : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil">`;
 
             let registro = `
@@ -324,7 +357,7 @@ function crearConsulta(datos) {
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button class="btn_t cbt_m" onclick=""><i class="fi fi-sr-user-permissions"></i></button>
+                                <button class="btn_t cbt_m" onclick="CargarPermisos()"><i class="fi fi-sr-user-permissions"></i></button>
                                 <button class="btn_t cbt_v" onclick="buscar(${dato.idUsuario})"><i class="fi fi-sr-pencil"></i></button>
                                 <button class="btn_t cbt_r" onclick="eliminar(${dato.idUsuario})"><i class="fi fi-sr-trash-xmark"></i></button>
                                 <button class="btn_t ${color}" onclick="bloquear(${dato.idUsuario}, ${dato.bloqueo}, this)"><i class="fi ${icon}"></i></button>
@@ -486,18 +519,18 @@ function enviaAjax(datos) {
 }
 
 // Escuchamos cuando el usuario selecciona un archivo
-document.getElementById('foto').addEventListener('change', function(event) {
+document.getElementById('foto').addEventListener('change', function (event) {
     const archivo = event.target.files[0];
-    
+
     if (archivo) {
         // Creamos el objeto para leer el archivo
         const reader = new FileReader();
-        
+
         // Cuando termine de leer, cambiamos el 'src' de la imagen
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             document.getElementById('foto_previa').src = e.target.result;
         }
-        
+
         // Inicia la lectura del archivo como una URL de datos
         reader.readAsDataURL(archivo);
     }
