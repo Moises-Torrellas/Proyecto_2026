@@ -321,20 +321,26 @@ ul {
 .item_noti {
     width: 100%;
     height: auto;
-    min-height: 60px;
+    min-height: 70px;
+    padding: 3px 0px;
     display: flex;
     justify-content: start;
     align-items: center;
     transition: background 0.2s;
     cursor: pointer;
 }
-
+.noti_titulo {
+    font-size: 0.9rem;
+    color: var(--texto-principal);
+    margin-bottom: 4px;
+}
 .item_noti:hover {
     background-color: var(--fondo-translucido);
 }
 
 .noti_contenido .noti_mensaje {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
+    font-weight: 600;
     color: var(--texto-principal);
     margin-bottom: 4px;
 }

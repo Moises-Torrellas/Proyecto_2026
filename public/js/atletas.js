@@ -106,16 +106,19 @@ $(document).ready(function () {
     $('#representante').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
+        dropdownParent: $('.contenedor_modal'),
     });
 
     $('#posicion').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
+        dropdownParent: $('.contenedor_modal'),
     });
 
     $('#categoria').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
+        dropdownParent: $('.contenedor_modal'),
     });
 
     $("#incluir").on("click", function () {
@@ -159,12 +162,20 @@ $(document).ready(function () {
                 popover: { title: 'Atletas Registrados', description: 'Aqui se mostraran todos los Atletas registrados.', position: 'top' }
             },
             {
+                element: '#registro',
+                popover: { title: 'Registro de un Atleta', description: 'Aqui se mostrara la informacion de un Atleta si pulsa el registro se desplegara mas informacion.', position: 'bottom' }
+            },
+            {
                 element: '#cbt_v',
                 popover: { title: 'Modificar Atletas', description: 'Si pulsa aqui se abrira un modal para modificar el Atleta seleccionado.', position: 'left' }
             },
             {
                 element: '#cbt_r',
                 popover: { title: 'Eliminar Atleta', description: 'Si pulsa aqui eliminara el Atleta seleccionado.', position: 'left' }
+            },
+            {
+                element: '#cbt_sec',
+                popover: { title: 'Generar Curriculum', description: 'Si pulsa aqui generara un curriculum del Atleta seleccionado.', position: 'left' }
             },
             {
                 element: '#rowsPerPage',
@@ -416,7 +427,7 @@ function crearConsulta(datos) {
             }
 
             let registro = `
-                <div class="listado_contenedor_grupal">
+                <div id="registro" class="listado_contenedor_grupal">
                     <div class="listado_item" onclick="toggleDetalles(this)">
                         <div class="listado_col_principal">
                             ${fotoHTML}
@@ -446,8 +457,9 @@ function crearConsulta(datos) {
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button class="btn_t cbt_v" onclick="buscar(${dato.id_atleta})"><i class="fi fi-sr-pencil"></i></button>
-                                <button class="btn_t cbt_r" onclick="eliminar(${dato.id_atleta})"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_atleta})"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_atleta})"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button id="cbt_sec" class="btn_t cbt_sec" onclick=""><i class="fi fi-sr-clipboard-user"></i></button>
                             </div>
                             <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                         </div>

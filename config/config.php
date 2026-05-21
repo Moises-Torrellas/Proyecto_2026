@@ -62,6 +62,6 @@ if (session_status() === PHP_SESSION_NONE) {
     // Configuramos la sesión antes de iniciarla
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_only_cookies', 1);
-    session_name('SISTEMA_SG_SESSION');
+    session_name('SISTEMA_CBS_SESSION');
     session_start();
 }

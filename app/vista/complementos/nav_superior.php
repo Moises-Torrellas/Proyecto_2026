@@ -2,16 +2,18 @@
 <div class="nav_superior">
     <div class="contenedor_superior">
         <div class="contenedor_logo">
+            <button class="btn_hamburguesa ocultar_en_escritorio" id="btn_hamburguesa">
+                <i data-lucide="menu"></i>
+            </button>
             <img src="img/logo.png" class="logo">
             <img src="img/logo_2.png" class="nombre_negocio">
-
         </div>
 
         <div class="contenedor_usuario">
             <div class="botones_usuario">
                 <a type="button" class="boton_usuario asistente" id="asistente" data-tippy-content="Cani"><i class="icon_boton_usuario" data-lucide="bot-message-square"></i></a>
                 <a type="button" class="boton_usuario" id="ayuda" data-tippy-content="Ayuda"><i class="icon_boton_usuario" data-lucide="circle-question-mark"></i></a>
-                <a type="button" class="boton_usuario" id="noti" data-tippy-content="Notificaciones"><i class="icon_boton_usuario" data-lucide="bell"></i></a>
+                <a type="button" class="boton_usuario" id="noti" data-tippy-content="Notificaciones"><i class="icon_boton_usuario" data-lucide="bell"></i> <span id="campana-notificaciones-badge" class="badge_conteo ocultar">0</span></a>
 
                 <div class="contenedor_notificaciones ocultar" id="contenedor_notificaciones">
                     <div class="encabezado_notificaciones">
@@ -20,25 +22,7 @@
                     </div>
 
                     <ul class="lista_noti">
-                        <li class="item_noti">
-                            <div class="noti_icono_estado">
-                                <i data-lucide="info" class="icon_noti_info"></i>
-                            </div>
-                            <div class="noti_contenido">
-                                <p class="noti_mensaje">Se ha asignado un nuevo equipo talla 42.</p>
-                                <span class="noti_tiempo">Hace 5 min</span>
-                            </div>
-                        </li>
-
-                        <li class="item_noti">
-                            <div class="noti_icono_estado">
-                                <i data-lucide="check-circle" class="icon_noti_success"></i>
-                            </div>
-                            <div class="noti_contenido">
-                                <p class="noti_mensaje">Registro de atleta completado con éxito.</p>
-                                <span class="noti_tiempo">Hace 1 hora</span>
-                            </div>
-                        </li>
+                        
                     </ul>
 
                     <div class="ver_todas_notificaciones">
@@ -59,6 +43,11 @@
                 <i data-lucide="chevron-down" class="flecha_usuario" id="flecha"></i>
             </div>
             <div class="menu_superior ocultar" id="menu_superior">
+                <div class="info_usuario_responsive ocultar_en_escritorio">
+                    <h3 class="nombre_usuario"><?php echo $_SESSION['nombre'] . ' ' . $_SESSION['apellido']; ?></h3>
+                    <h4 class="tipo_usuario"><?php echo $_SESSION['rol']; ?></h4>
+                    <hr class="division_menu">
+                </div>
                 <ul class="nav_contenedor_superior">
                     <li class="nav_opciones nav_opciones_superior">
                         <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="user-cog"></i> Mi Perfil</a>

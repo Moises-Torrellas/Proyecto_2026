@@ -52,7 +52,7 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 consultarCategorias($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar atletas.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar atletas.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'buscar':
