@@ -66,6 +66,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Atletas.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'eliminar':
+                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para retirar Atletas.');
+                eliminar($obj, $id_modulo, $bitacoraObj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -84,7 +88,7 @@ function consultar($obj): void
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
     if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] = 'Error al listar los representantes';
+        $respuesta['mensaje'] = 'Error al listar los atletas';
     }
     echo json_encode($respuesta);
 }
@@ -322,6 +326,35 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Atletas', $e->getMessage(), 'Controlador_Modificar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+function eliminar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
+        validar_datos($validaciones);
+        
+        $datos=[
+            'id' => $_POST['id'],
+            'accion' => 'eliminar'
+        ];
+
+        $resultado = $obj->ProcesarDatos($datos);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Retiro al Atleta: " . $datos['id']);
+            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Atleta retirado exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                INVALID_ID       => 'El atleta no existe.',
+                default          => 'Ocurrió un error inesperado en el retiro.'
+            };
+        }
+        echo json_encode($resultado);
+
+    } catch (Exception $e) {
+        logs('Atletas', $e->getMessage(), 'Controlador_Eliminar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

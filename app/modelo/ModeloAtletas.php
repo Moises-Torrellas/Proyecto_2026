@@ -30,7 +30,8 @@ class ModeloAtletas extends ModeloBase
             'telefono' => 'telefono',
             'categoria' => 'id_categorias',
             'posicion' => 'id_posicion',
-            'representante' => 'id_representante'
+            'representante' => 'id_representante',
+            'id' => 'id_atleta'
         ];
         $this->llavePrimaria = 'id_atleta';
     }
@@ -74,7 +75,7 @@ class ModeloAtletas extends ModeloBase
         return match ($accion) {
             'incluir'   => $this->Incluir(),
             'modificar' => $this->Modificar(),
-            /*'eliminar'  => $this->Eliminar(),*/
+            'eliminar'  => $this->Eliminar(),
             'buscar'    => $this->Buscar(),
             default     => throw new Exception('La acción solicitada para el atleta no es válida.')
         };
@@ -85,7 +86,7 @@ class ModeloAtletas extends ModeloBase
             $conex = $this->conex();
             $params = [];
 
-            // Sentencia SQL unificada con herencia de datos y detalles de tablas maestras
+            // 1. Base de la consulta (Dejamos el WHERE abierto para los AND)
             $sentencia = "SELECT 
                         a.*, 
                         COALESCE(a.telefono, r.telefono) AS telefono,
@@ -105,9 +106,10 @@ class ModeloAtletas extends ModeloBase
                     LEFT JOIN categorias c ON a.id_categoria = c.id_categorias
                     WHERE 1=1";
 
-            // 1. BUSCADOR GENERAL (Filtro dinámico para el keyup)
+            // 2. BUSCADOR GENERAL (Filtro dinámico para el keyup)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
+                // NOTA: Asegúrate de si en tu BD es 'nombre' o 'nombres' (igual con apellido)
                 $sentencia .= " AND (
                 a.doc_identidad LIKE :f1 OR 
                 a.nombres LIKE :f2 OR 
@@ -124,19 +126,22 @@ class ModeloAtletas extends ModeloBase
                 $params[':f6'] = $p;
             }
 
-            // 2. FILTROS ESPECÍFICOS (Por propiedades del objeto)
+            // 3. FILTROS ESPECÍFICOS
             if (!empty($this->doc_identidad)) {
                 $sentencia .= " AND a.doc_identidad = :doc_i";
                 $params[':doc_i'] = $this->doc_identidad;
             }
 
-            if (!empty($this->id_categoria)) {
+            // CORREGIDO: En tu ProcesarDatos usas $this->categoria, no $this->id_categoria
+            if (!empty($this->categoria)) {
                 $sentencia .= " AND a.id_categoria = :id_cat";
                 $params[':id_cat'] = $this->categoria;
             }
 
-            // 3. ORDENAMIENTO
-            $sentencia .= " ORDER BY c.edad_min ASC, a.apellidos ASC";
+            // 4. UNIFICACIÓN DEL ORDENAMIENTO (Siempre al final de todo)
+            // Primero estatus 1, luego por la edad mínima de la categoría, luego alfabético
+            $sentencia .= " ORDER BY 
+                        CASE WHEN a.estatus = 1 THEN 0 ELSE 1 END ASC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -144,7 +149,6 @@ class ModeloAtletas extends ModeloBase
 
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
-            // Registro del error en el log del sistema
             logs('Atletas', $e->getMessage(), 'Modelo_Consultar_Completo');
             return array('accion' => 'error', 'msg' => $e->getMessage());
         } finally {
@@ -309,6 +313,7 @@ class ModeloAtletas extends ModeloBase
             $campos[] = "id_posicion = :id_posicion";
             $campos[] = "genero = :genero";
             $campos[] = "foto = :foto";
+            $campos[] = "estatus = 1";
 
             // --- DATOS OPCIONALES ---
             // Manejo dinámico idéntico a Incluir()
@@ -376,7 +381,7 @@ class ModeloAtletas extends ModeloBase
             $datos = $stmt->fetchAll();
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
-            logs('Representantes', $e->getMessage(), 'Modelo');
+            logs('Atletas', $e->getMessage(), 'Modelo');
             return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
@@ -394,6 +399,34 @@ class ModeloAtletas extends ModeloBase
         } catch (Exception $e) {
             logs('Atletas', $e->getMessage(), 'Modelo_ConsultarCumple');
             return [];
+        }
+    }
+
+    private function Eliminar(): array
+    {
+        try {
+            $conex = null;
+            $conex = $this->conex();
+            $conex->beginTransaction();
+            if (!$this->verificarExistencia('id', $this->id, 'atletas', NULL, bloquear: true)) {
+                throw new Exception(INVALID_ID);
+            }
+
+            $sql = "UPDATE `atletas` SET `estatus`= 0 WHERE id_atleta = :id";
+            $stmt = $conex->prepare($sql);
+            $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
+            $stmt->execute();
+
+            $conex->commit();
+            return ['accion' => 'exito'];
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            logs('Atletas', $e->getMessage(), 'Modelo_Eliminar');
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+        } finally {
+            $conex = null;
         }
     }
 }
