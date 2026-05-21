@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 20-05-2026 a las 21:38:25
+-- Tiempo de generación: 22-05-2026 a las 00:41:35
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -66,7 +66,8 @@ CREATE TABLE `atletas` (
 INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `telefono`, `direccion`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`, `estatus`) VALUES
 (13, 'Jose Jose', 'Perez Perez', '32323232', NULL, NULL, 'H', '2012-05-18', 'atleta_2012-05-18_1779198735.png', 5, 7, 2, 1),
 (14, 'Mario Mario', 'Bros Bros', '34324324', NULL, NULL, 'H', '2009-05-19', 'atleta_2009-05-19_1779198715.png', 5, 8, 2, 1),
-(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779226550.png', 6, 4, NULL, 1);
+(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779226550.png', 6, 4, NULL, 0),
+(16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779398437.png', 5, 3, 6, 0);
 
 -- --------------------------------------------------------
 
@@ -102,9 +103,9 @@ CREATE TABLE `categorias` (
 
 INSERT INTO `categorias` (`id_categorias`, `nombre`, `edad_min`, `edad_max`) VALUES
 (1, 'U-12', 11, 12),
-(3, 'U-06', 5, 6),
+(3, 'U-6', 5, 6),
 (4, 'SENIOR', 18, 60),
-(5, 'U-08', 7, 8),
+(5, 'U-8', 7, 8),
 (6, 'U-10', 9, 10),
 (7, 'U-14', 13, 14),
 (8, 'U-17', 15, 17);
@@ -284,7 +285,7 @@ CREATE TABLE `metodos_pago` (
   `id_metodos` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
   `nec_referencia` tinyint(4) NOT NULL DEFAULT 0,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 -- --------------------------------------------------------
@@ -424,6 +425,13 @@ CREATE TABLE `torneos` (
   `ubicacion` varchar(150) NOT NULL,
   `estatus` tinyint(3) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `torneos`
+--
+
+INSERT INTO `torneos` (`id_torneo`, `nombre`, `fecha_inicio`, `fecha_fin`, `ubicacion`, `estatus`) VALUES
+(2, 'MUNDIAL BARQUISIMETO 2026', '2026-07-16', '2026-09-24', 'Estado Lara', 1);
 
 --
 -- Índices para tablas volcadas
@@ -621,7 +629,7 @@ ALTER TABLE `asignaciones`
 -- AUTO_INCREMENT de la tabla `atletas`
 --
 ALTER TABLE `atletas`
-  MODIFY `id_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de la tabla `catalogos`
@@ -639,7 +647,7 @@ ALTER TABLE `categorias`
 -- AUTO_INCREMENT de la tabla `categoria_catalogo`
 --
 ALTER TABLE `categoria_catalogo`
-  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `conceptos`
@@ -753,7 +761,7 @@ ALTER TABLE `representantes`
 -- AUTO_INCREMENT de la tabla `torneos`
 --
 ALTER TABLE `torneos`
-  MODIFY `id_torneo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_torneo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Restricciones para tablas volcadas
