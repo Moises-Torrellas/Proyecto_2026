@@ -73,6 +73,7 @@ $(document).ready(function () {
     $('#modulo').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
+        dropdownParent: $('.contenedor_modal'),
     });
     $("#incluir").on("click", function () {
         limpia();

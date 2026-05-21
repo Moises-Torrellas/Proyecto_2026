@@ -43,7 +43,7 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 consultar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar Monedas.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar Monedas.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'buscar':
