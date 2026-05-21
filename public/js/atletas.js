@@ -411,7 +411,7 @@ function crearConsulta(datos) {
             const genero = dato.genero === 'H' ? 'Hombre' : 'Mujer';
             const fotoHTML = (dato.foto === 'default.png' || !dato.foto)
                 ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>`
-                : `<img src="img/atletas/${dato.foto}" class="listado_avatar" alt="Perfil">`;
+                : `<img src="img/atletas/${dato.foto}" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">`;
 
             // Lógica para el representante: Si no existe, no se crea el HTML de la tarjeta
             let tarjetaRepresentante = "";
