@@ -46,8 +46,7 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
-                    <input type="hidden" id="token" name="token" value="<?php echo $_SESSION['token']; ?>">
-                    <div class="row">
+                    <div class="row" id="row_nombre">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="nombre" name="nombre">
@@ -56,32 +55,59 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="" id="modulo" class="formulario select">
+                    <div class="row" id="row_permisos" style="display: none;">
+                        <div class="colum colum_tabla_completa" style="padding: 0;">
+                            <label for="" class="titulo_formulario titulo_formulario_tabla" style="margin-bottom: 15px; display: block;">Permisos</label>
+                            
+                            <style>
+                                #tabla_permisos_container {
+                                    overflow-x: auto; 
+                                    width: 90%; 
+                                    border: 1px solid #ccc;
+                                    border-radius: 5px;
+                                    margin-bottom: 20px;
+                                }
+                                #tabla_permisos_ui {
+                                    width: 80%; 
+                                    border-collapse: collapse;
+                                }
+                                #tabla_permisos_ui th, #tabla_permisos_ui td {
+                                    border-bottom: 1px solid #ddd;
+                                    border-right: 1px solid #ddd;
+                                    padding: 10px;
+                                    text-align: center;
+                                }
+                                #tabla_permisos_ui th:last-child, #tabla_permisos_ui td:last-child {
+                                    border-right: none;
+                                }
+                                #tabla_permisos_ui tr:last-child td {
+                                    border-bottom: none;
+                                }
+                                #tabla_permisos_ui tbody tr:hover {
+                                    background-color: #f1f1f1;
+                                }
+                                #tabla_permisos_ui th {
+                                    background-color: #f8f9fa;
+                                    color: #333;
+                                    font-weight: bold;
+                                }
+                                #tabla_permisos_ui td:first-child, #tabla_permisos_ui th:first-child {
+                                    text-align: left;
+                                    font-weight: bold;
+                                }
+                            </style>
 
-                                </select>
-                                <label for="modulo" class="titulo_formulario">Modulo</label>
-                                <span class="mensaje" id="modulo_span"></span>
-                                <button type="button" class="btn btn_azul btn_formulario" id="add">Agregar</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum colum_tabla_completa">
-                            <label for="" class="titulo_formulario titulo_formulario_tabla">Permisos</label>
-                            <div class="caja_formulario caja_tabla ct_t">
-                                <table>
+                            <div id="tabla_permisos_container">
+                                <table id="tabla_permisos_ui">
                                     <thead>
                                         <tr>
-                                            <th>Modulo</th>
-                                            <th>Incluir</th>
+                                            <th>Módulo</th>
+                                            <th>Ingresar</th>
+                                            <th>Registrar</th>
                                             <th>Modificar</th>
                                             <th>Eliminar</th>
                                             <th>Reportes</th>
                                             <th>Otras Opciones</th>
-                                            <th>Opción</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tabla_permisos">

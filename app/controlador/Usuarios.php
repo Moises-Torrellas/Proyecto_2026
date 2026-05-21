@@ -1,7 +1,6 @@
 <?php
 
 use App\modelo\ModeloUsuarios;
-use App\modelo\ModeloRoles;
 use App\servicios\ReporteUsuario;
 
 // 1. Cargamos las funciones base
@@ -48,8 +47,7 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 break;
 
             case 'consultarRoles':
-                $modeloRoles = new ModeloRoles();
-                consultarRoles($modeloRoles);
+                consultarRoles($obj);
                 break;
 
             case 'incluir':
@@ -101,11 +99,12 @@ function consultarUsuarios($obj): void
 
 function consultarRoles($obj): void
 {
-    $roles = $obj->consultar();
-    $roles['accion'] = 'consultarRoles';
-    echo json_encode($roles);
+    $respuesta = $obj->consultarRoles();
+    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+        $respuesta['mensaje'] = 'Error al listar los roles';
+    }
+    echo json_encode($respuesta);
 }
-
 
 function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 {

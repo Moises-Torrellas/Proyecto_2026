@@ -21,6 +21,8 @@ class ModeloUsuarios extends ModeloBase
 
     private $actualizar_contraseña = false;
 
+    private $obj_roles;
+
     public function __construct()
     {
         parent::__construct();
@@ -33,6 +35,8 @@ class ModeloUsuarios extends ModeloBase
             'rol' => 'id_rol',
         ];
         $this->llavePrimaria = 'idUsuario';
+
+        $this->obj_roles = new ModeloRoles;
     }
 
     public function procesarDatos(array $datos): array
@@ -393,5 +397,12 @@ class ModeloUsuarios extends ModeloBase
             $conex = null;
         }
         return $resultado;
+    }
+
+    public function ConsultarRoles()
+    {
+        $respuesta = $this->obj_roles->Consultar();
+        $respuesta['accion'] = 'consultarRoles';
+        return $respuesta;
     }
 }

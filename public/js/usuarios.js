@@ -324,6 +324,7 @@ function crearConsulta(datos) {
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                <button class="btn_t cbt_m" onclick=""><i class="fi fi-sr-user-permissions"></i></button>
                                 <button class="btn_t cbt_v" onclick="buscar(${dato.idUsuario})"><i class="fi fi-sr-pencil"></i></button>
                                 <button class="btn_t cbt_r" onclick="eliminar(${dato.idUsuario})"><i class="fi fi-sr-trash-xmark"></i></button>
                                 <button class="btn_t ${color}" onclick="bloquear(${dato.idUsuario}, ${dato.bloqueo}, this)"><i class="fi ${icon}"></i></button>
