@@ -405,6 +405,7 @@ function crearConsulta(datos) {
 
         datos.forEach(dato => {
             const anioNacimiento = new Date(dato.fecha_nac).getFullYear();
+            const estatus = dato.estatus === 1 ? `<span class="estatus_v">Activo</span>` : `<span class="estatus_r">Retirado</span>`;
             const edadCalendario = anioActual - anioNacimiento;
             const genero = dato.genero === 'H' ? 'Hombre' : 'Mujer';
             const fotoHTML = (dato.foto === 'default.png' || !dato.foto)
@@ -446,12 +447,12 @@ function crearConsulta(datos) {
                                 <span class="listado_resaltado">${edadCalendario} años</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Teléfono</small>
-                                <span>${escapeHTML(dato.telefono)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
                                 <small>Genero</small>
                                 <span>${escapeHTML(genero)}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Estatus</small>
+                                ${estatus}
                             </div>
                         </div>
 

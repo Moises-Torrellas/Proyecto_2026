@@ -20,9 +20,6 @@ class ModeloAtletas extends ModeloBase
     private $fecha_nac;
     private $foto;
 
-    private $obj_posicion;
-    private $obj_categoria;
-    private $obj_representantes;
 
 
     public function __construct()
@@ -36,10 +33,6 @@ class ModeloAtletas extends ModeloBase
             'representante' => 'id_representante'
         ];
         $this->llavePrimaria = 'id_atleta';
-
-        $this->obj_representantes = new ModeloRepresentantes;
-        $this->obj_categoria = new ModeloCategorias;
-        $this->obj_posicion = new ModeloPosiciones;
     }
 
     public function ProcesarDatos(array $datos): array
@@ -402,24 +395,5 @@ class ModeloAtletas extends ModeloBase
             logs('Atletas', $e->getMessage(), 'Modelo_ConsultarCumple');
             return [];
         }
-    }
-
-    public function ConsultarRepresentantes()
-    {
-        $respuesta = $this->obj_representantes->Consultar();
-        $respuesta['accion'] = 'consultarR';
-        return $respuesta;
-    }
-    public function ConsultarCategorias()
-    {
-        $respuesta = $this->obj_categoria->Consultar();
-        $respuesta['accion'] = 'consultarC';
-        return $respuesta;
-    }
-    public function ConsultarPosiciones()
-    {
-        $respuesta = $this->obj_posicion->Consultar();
-        $respuesta['accion'] = 'consultarP';
-        return $respuesta;
     }
 }
