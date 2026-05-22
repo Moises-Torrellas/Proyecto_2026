@@ -115,16 +115,19 @@ $(document).ready(function () {
     $('#id_atleta').select2({
         placeholder: "Selecciona un Atleta",
         allowClear: true,
+        dropdownParent: $('.contenedor_modal'),
     });
 
     $('#id_concepto').select2({
         placeholder: "Selecciona un Concepto",
         allowClear: true,
+        dropdownParent: $('.contenedor_modal'),
     });
 
     $('#id_moneda').select2({
         placeholder: "Selecciona una Moneda",
         allowClear: true,
+        dropdownParent: $('.contenedor_modal'),
     });
 
     $("#incluir").on("click", function () {
@@ -258,87 +261,44 @@ function crearConsulta(datos) {
     if (datos.length === 0) {
         contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
     } else {
+        console.log(datos);
         datos.forEach(dato => {
-            let estatusRaw = String(dato.estatus).toLowerCase();
-            let estiloGris = '';
-            let botonesAccion = ''; 
-
-            let colorEstatus = '';
-            let iconoEstatus = '';
-
-            // EVALUACIÓN DE ANULACIÓN INDEPENDIENTE (Soft Delete)
-            if (parseInt(dato.anulado) === 1) {
-                estiloGris = 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"';
-                colorEstatus = 'style="color: #6c757d; font-weight: bold;"';
-                iconoEstatus = '<i data-lucide="lock" style="color: #6c757d;"></i>';
-                
-                // Si la bandera está en 1, NO se dibuja el botón de editar
-                botonesAccion = `
-                    <button class="btn_t cbt_r" disabled title="Registro Anulado" style="cursor: not-allowed; opacity: 0.7;">
-                        <i class="fi fi-sr-lock"></i>
-                    </button>
-                `;
-            } else {
-                // Lógica de colores normal para cuentas activas
-                if (estatusRaw === 'pagado') {
-                    colorEstatus = 'style="color: var(--verde-exito); font-weight: bold;"';
-                    iconoEstatus = '<i data-lucide="check-circle" style="color: var(--verde-exito);"></i>';
-                } else if (estatusRaw === 'abonado') {
-                    colorEstatus = 'style="color: #ffc107; font-weight: bold;"';
-                    iconoEstatus = '<i data-lucide="alert-circle" style="color: #ffc107;"></i>';
-                } else {
-                    colorEstatus = 'style="color: var(--rojo-error); font-weight: bold;"';
-                    iconoEstatus = '<i data-lucide="alert-circle" style="color: var(--rojo-error);"></i>';
-                }
-
-                // Si está activa, muestra el lápiz normal y el candado para ejecutar la anulación
-                botonesAccion = `
-                    <button class="btn_t cbt_v" onclick="buscar(${dato.id_cobrar})" title="Modificar">
-                        <i class="fi fi-sr-pencil"></i>
-                    </button>
-                    <button class="btn_t cbt_r" onclick="anular(${dato.id_cobrar})" title="Anular Cuenta">
-                        <i class="fi fi-sr-lock"></i>
-                    </button>
-                `;
-            }
-
             let fechaCorta = dato.fecha_emision.split(' ')[0];
-
+            const estatus = dato.estatus === 1 ? `<span class="estatus_v">Pagado</span>` : `<span class="estatus_a">Pendiente</span>`;
+            const retirar = dato.anulado === 0 ? `<button id="cbt_r" class="btn_t cbt_r" onclick="anular(${dato.id_cobrar})"><i class="fi fi-sr-cross-circle"></i></button>` : ``;
             let registro = `
-                <div class="listado_contenedor_grupal" ${estiloGris}>
+                <div id="registro" class="listado_contenedor_grupal">
                     <div class="listado_item" onclick="toggleDetalles(this)">
                         <div class="listado_col_principal">
                             <div class="listado_avatar_null"><i class="icon_con" data-lucide="receipt"></i></div>
                             <div class="listado_info_base">
-                                <span class="listado_titulo">${escapeHTML(dato.atleta_nombre)} ${escapeHTML(dato.atleta_apellido)}</span>
-                                <small>${escapeHTML(dato.concepto_nombre)}</small>
+                                <span class="listado_titulo">${escapeHTML(dato.concepto_nombre)}</span>
                             </div>
                         </div>
 
                         <div class="listado_col_datos">
                             <div class="listado_dato_grupo">
-                                <small>Fecha Emisión</small>
+                                <small>Fecha de Emision</small>
                                 <span>${fechaCorta}</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Total</small>
-                                <span class="listado_resaltado">${escapeHTML(dato.moneda_nombre)} ${dato.monto_total}</span>
+                                <small>Monto</small>
+                                <span class="listado_resaltado">${dato.moneda_simbolo} ${dato.monto_total}</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Pendiente</small>
-                                <span ${colorEstatus}>${escapeHTML(dato.moneda_nombre)} ${dato.monto_pendiente}</span>
+                                <small>Monto Pendiente</small>
+                                <span>${dato.moneda_simbolo} ${dato.monto_pendiente}</span>
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>Estatus</small>
-                                <span style="display:flex; align-items:center; gap:5px;">
-                                    ${iconoEstatus} ${parseInt(dato.anulado) === 1 ? 'Anulado' : escapeHTML(dato.estatus)}
-                                </span>
+                                ${estatus}
                             </div>
                         </div>
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                ${botonesAccion}
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_cobrar})"><i class="fi fi-sr-pencil"></i></button>
+                                ${retirar}
                             </div>
                             <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                         </div>
@@ -346,19 +306,13 @@ function crearConsulta(datos) {
 
                     <div class="listado_detalle_oculto">
                         <div class="detalle_expandido_container">
+                            <!-- Fila Superior Dinámica -->
                             <div class="detalle_fila">
                                 <div class="detalle_card">
-                                    <div class="detalle_card_icon"><i data-lucide="user"></i></div>
+                                    <div class="detalle_card_icon"><i data-lucide="circle-star"></i></div>
                                     <div class="detalle_card_txt">
                                         <label>Atleta</label>
                                         <span>${escapeHTML(dato.atleta_nombre)} ${escapeHTML(dato.atleta_apellido)}</span>
-                                    </div>
-                                </div>
-                                <div class="detalle_card">
-                                    <div class="detalle_card_icon"><i data-lucide="file-text"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Concepto</label>
-                                        <span>${escapeHTML(dato.concepto_nombre)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -371,6 +325,7 @@ function crearConsulta(datos) {
     }
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
 }
 
 function construirSelect(idSelect, datos, campoId, campo1, campo2 = null) {
