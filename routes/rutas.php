@@ -48,6 +48,7 @@ function manejarRuta($pagina): void
         'Calidad' => 'Calidad',
         'Bitacora' => 'Bitacora',
         'Atletas' => 'Atletas',
+        'MetodosPago' => 'MetodosPago',
         'Concepto' => 'Concepto',
         'Monedas' => 'Monedas',
         'Notificaciones' => 'Notificaciones',
