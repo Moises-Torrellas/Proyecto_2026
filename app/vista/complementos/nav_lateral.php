@@ -12,14 +12,9 @@
             </li>
             <li class="nav_identificador">Cobranzas</li>
             <li class="nav_opciones">
-<<<<<<< HEAD
-                <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Cuentas por Cobrar</a>
-                <a type="button" href="/Proyecto_2026/public/Pagos" class="opciones"><i class="opciones_i" data-lucide="banknote"></i> Pagos</a>
-=======
                 <a type="button" href="/Proyecto_2026/public/CuentasCobrar" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Cuentas por Cobrar</a>
-                <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="banknote"></i> Pagos</a>
+                <a type="button" href="/Proyecto_2026/public/Pagos" class="opciones"><i class="opciones_i" data-lucide="banknote"></i> Pagos</a>
                 <a type="button" href="/Proyecto_2026/public/MetodosPago" class="opciones"><i class="opciones_i" data-lucide="wallet"></i> Metodos de Pago</a>
->>>>>>> ab09b29072eafe431b6ca9ea683e3ccd63431c9c
                 <a type="button" href="/Proyecto_2026/public/Concepto" class="opciones"><i class="opciones_i" data-lucide="receipt"></i> Conceptos de Cuentas</a>
                 <a type="button" href="/Proyecto_2026/public/Monedas" class="opciones"><i class="opciones_i" data-lucide="coins"></i> Monedas</a>
             </li>
