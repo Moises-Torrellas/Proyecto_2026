@@ -39,6 +39,10 @@
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="trophy"></i> Palmares</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="chart-area"></i> Estadisticas</a>
             </li>
+            <li class="nav_identificador">Reportes</li>
+            <li class="nav_opciones">
+                <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="chart-column-stacked"></i> Reportes</a>
+            </li>
             <?php if($_SESSION['nivel_rol'] == 1){?>
             <li class="nav_identificador">General</li>
             <li class="nav_opciones">

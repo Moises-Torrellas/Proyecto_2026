@@ -1,6 +1,9 @@
 <?php
 
 use App\modelo\ModeloPagos;
+use App\modelo\ModeloCuentasCobrar;
+use App\modelo\ModeloMonedas;
+use App\modelo\ModeloMetodosPago;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -39,12 +42,57 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         // Seguridad centralizada
         switch ($accion) {
-            
+            case 'consultarM':
+                consultarM();
+                break;
+            case 'consultarMP':
+                consultarMP();
+                break;
+            case 'consultarC':
+                consultarC();
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
         error_log($e->getMessage());
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function consultarM(): void
+{
+    try {
+        $objM = new ModeloMonedas();
+        $respuesta = $objM->Consultar();
+        $respuesta['accion'] = 'consultarM';
+        echo json_encode($respuesta);
+    } catch (Exception $e) {
+        logs('Pagos', $e->getMessage(), 'Controlador_ConsultarM');
+        echo json_encode(['accion' => 'error', 'mensaje' => 'Error al listar las monedas.']);
+    }
+}
+function consultarMP(): void
+{
+    try {
+        $objMP = new ModeloMetodosPago();
+        $respuesta = $objMP->Consultar();
+        $respuesta['accion'] = 'consultarMP';
+        echo json_encode($respuesta);
+    } catch (Exception $e) {
+        logs('Pagos', $e->getMessage(), 'Controlador_ConsultarMP');
+        echo json_encode(['accion' => 'error', 'mensaje' => 'Error al listar los metodos de pago.']);
+    }
+}
+
+function consultarC(): void {
+    try {
+        $objC = new ModeloCuentasCobrar();
+        $respuesta = $objC->Consultar();
+        $respuesta['accion'] = 'consultarC';
+        echo json_encode($respuesta);
+    } catch (Exception $e) {
+        logs('Pagos', $e->getMessage(), 'Controlador_ConsultarC');
+        echo json_encode(['accion' => 'error', 'mensaje' => 'Error al listar las cuentas cobrar.']);
     }
 }

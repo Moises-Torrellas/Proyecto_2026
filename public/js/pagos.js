@@ -5,14 +5,14 @@ function consultar() {
     datos.append('accion', 'consultar');
     enviaAjax(datos);
 }
-function consultarR() {
+function consultarM() {
     let datos = new FormData();
-    datos.append('accion', 'consultarR');
+    datos.append('accion', 'consultarM');
     enviaAjax(datos);
 }
-function consultarP() {
+function consultarMP() {
     let datos = new FormData();
-    datos.append('accion', 'consultarP');
+    datos.append('accion', 'consultarMP');
     enviaAjax(datos);
 }
 function consultarC() {
@@ -35,11 +35,10 @@ function busqueda() {
 
 
 $(document).ready(function () {
-    /* consultar();
-    consultarR();
-    consultarP();
+    consultarM();
+    consultarMP();
     consultarC();
- */
+
     /* $("#doc_i").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
         if (input.length > 4) {
@@ -194,3 +193,96 @@ $(document).ready(function () {
     });
 
 });
+
+function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3 = null) {
+    var select = $('#' + idSelect);
+    select.empty();
+    select.append('<option value="" selected disabled>Seleccione una opción</option>');
+
+    datos.forEach(dato => {
+        let textoMostrar = "";
+        let atributosExtra = ""; // Variable para guardar los límites de edad
+
+        if (idSelect === 'moneda' && campo1 && campo2) {
+            textoMostrar = `${dato[campo1]} ${dato[campo2]}`;
+        }
+        else if (idSelect === 'metodo' && campo1) {
+            textoMostrar = `${dato[campo1]}`;
+        }
+        else if (idSelect === 'cuenta' && campo1 && campo2 && campo3) {
+            textoMostrar = `${dato[campo1]}/${dato[campo2]} ${dato[campo3]}`;
+        }
+        else {
+            textoMostrar = escapeHTML(String(dato[campo1]));
+        }
+
+        // Se agregan los atributosExtra a la etiqueta <option>
+        var linea = `<option value="${dato[campoId]}">${textoMostrar}</option>`;
+        select.append(linea);
+    });
+}
+
+var token = $('meta[name="csrf-token"]').attr('content');
+function enviaAjax(datos) {
+    $.ajax({
+        async: true,
+        url: "",
+        type: "POST",
+        contentType: false,
+        data: datos,
+        processData: false,
+        cache: false,
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
+        timeout: 10000,
+        success: function (respuesta) {
+            try {
+                var lee = JSON.parse(respuesta);
+                if (lee.accion == "consultar") {
+                    crearConsulta(lee.datos);
+                } else if (lee.accion == "consultarM") {
+                    //muestraMensaje("success", 2000, "Registro Exitoso", 'Hola1');
+                    construirSelect('moneda', lee.datos, 'id_moneda', 'simbolo', 'nombre');
+                } else if (lee.accion == "consultarMP") {
+                    //muestraMensaje("success", 2000, "Registro Exitoso", 'Hola2');
+                    construirSelect('metodo', lee.datos, 'id_metodos', 'nombre');
+                } else if (lee.accion == "consultarC") {
+                    //muestraMensaje("success", 2000, "Registro Exitoso", 'Hola3');
+                    construirSelect('cuenta', lee.datos, 'id_cobrar', 'concepto_nombre', 'atleta_nombre','atleta_apellido');
+                } else if (lee.accion == "incluir") {
+                    consultar();
+                    limpia();
+                    muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
+                } else if (lee.accion == "eliminar") {
+                    consultar();
+                    muestraMensaje("success", 2000, "Retiro Exitoso", lee.mensaje);
+                } else if (lee.accion == "modificar") {
+                    consultar();
+                    limpia();
+                    cerrarModal();
+
+                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
+                } else if (lee.accion == "buscar") {
+                    modificar(lee.datos);
+                }
+                else if (lee.accion == "error") {
+                    muestraMensaje("error", 2000, "Error", lee.mensaje);
+                }
+            } catch (e) {
+                alert("Error en JSON " + e.name);
+            }
+        },
+
+
+        error: function (request, status, err) {
+
+            if (status == "timeout") {
+                muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
+            } else {
+                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + request + status + err);
+            }
+        },
+        complete: function () { },
+    });
+}
