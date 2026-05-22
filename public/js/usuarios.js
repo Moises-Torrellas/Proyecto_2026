@@ -313,7 +313,6 @@ function CargarPermisos() {
 }
 
 const icon = 'fi-sr-lock';
-
 function crearConsulta(datos) {
     const contenedor = $('#resultadoconsulta');
     contenedor.empty();
@@ -326,8 +325,8 @@ function crearConsulta(datos) {
             let color = dato.bloqueo == 1 ? 'cbt_g' : 'cbt_a';
 
             let fotoHTML = dato.foto == 'default.png'
-                ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>`
-                : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil">`;
+                ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>` 
+                : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">`;
 
             let registro = `
                 <div class="listado_contenedor_grupal">

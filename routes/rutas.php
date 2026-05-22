@@ -48,11 +48,12 @@ function manejarRuta($pagina): void
         'Calidad' => 'Calidad',
         'Bitacora' => 'Bitacora',
         'Atletas' => 'Atletas',
+        'MetodosPago' => 'MetodosPago',
         'Concepto' => 'Concepto',
         'Monedas' => 'Monedas',
+        'CuentasCobrar' => 'CuentasCobrar',
         'Notificaciones' => 'Notificaciones',
-
-    ];
+];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {
         // Verificamos si el usuario está autenticado antes de permitir el acceso a otras páginas

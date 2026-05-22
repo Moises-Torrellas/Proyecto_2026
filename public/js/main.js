@@ -732,3 +732,22 @@ function muestraNoti(titulo, tiempo) {
     });
     Toast.fire({ title: titulo });
 }
+
+// Función global para manejar imágenes rotas de atletas
+function manejarErrorCamara(img) {
+    // 1. Definimos el HTML exacto que quieres para el estado 'null'
+    const htmlAvatarNull = '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>';
+
+    // 2. Creamos un elemento temporal para convertir el string HTML en nodos DOM
+    const placeholder = document.createElement('div');
+    placeholder.innerHTML = htmlAvatarNull;
+    const nuevoNodo = placeholder.firstChild; // Obtenemos el div.listado_avatar_null
+
+    // 3. Reemplazamos la imagen rota por el nuevo contenedor del icono
+    img.replaceWith(nuevoNodo);
+
+    // 4. ¡IMPORTANTE! Forzamos a Lucide a renderizar el icono recién insertado
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
