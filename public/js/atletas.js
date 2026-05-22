@@ -406,7 +406,7 @@ function crearConsulta(datos) {
         datos.forEach(dato => {
             const anioNacimiento = new Date(dato.fecha_nac).getFullYear();
             const estatus = dato.estatus === 1 ? `<span class="estatus_v">Activo</span>` : `<span class="estatus_r">Retirado</span>`;
-            const retirar = dato.estatus === 1 ? `<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_atleta})"><i class="fi fi-sr-cross-circle"></i></button>` : ``;
+            const retirar = dato.estatus === 1 ? `<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_atleta})" data-tippy-content="Retirar"><i class="fi fi-sr-cross-circle"></i></button>` : ``;
             const edadCalendario = anioActual - anioNacimiento;
             const genero = dato.genero === 'H' ? 'Hombre' : 'Mujer';
             const fotoHTML = (dato.foto === 'default.png' || !dato.foto)
@@ -459,9 +459,9 @@ function crearConsulta(datos) {
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_atleta})"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_atleta})" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                 ${retirar}
-                                <button id="cbt_sec" class="btn_t cbt_sec" onclick=""><i class="fi fi-sr-clipboard-user"></i></button>
+                                <button id="cbt_sec" class="btn_t cbt_sec" onclick="" data-tippy-content="Generar Curriculum"><i class="fi fi-sr-clipboard-user"></i></button>
                             </div>
                             <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                         </div>
@@ -523,6 +523,7 @@ function crearConsulta(datos) {
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function escapeHTML(texto) {

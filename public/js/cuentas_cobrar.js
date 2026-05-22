@@ -10,21 +10,21 @@ function consultar() {
 // Consultar Atletas para el Select
 function consultarAtletas() {
     let datos = new FormData();
-    datos.append('accion', 'consultarA'); 
+    datos.append('accion', 'consultarA');
     enviaAjax(datos);
 }
 
 // Consultar Conceptos para el Select
 function consultarConceptos() {
     let datos = new FormData();
-    datos.append('accion', 'consultarCo'); 
+    datos.append('accion', 'consultarCo');
     enviaAjax(datos);
 }
 
 // Consultar Monedas para el Select
 function consultarMonedas() {
     let datos = new FormData();
-    datos.append('accion', 'consultarM'); 
+    datos.append('accion', 'consultarM');
     enviaAjax(datos);
 }
 
@@ -53,9 +53,9 @@ $(document).ready(function () {
             input = input.substring(0, input.length - 1);
         }
         $(this).val(input);
-        
+
         // Si estamos incluyendo, el monto pendiente es igual al monto total
-        if($("#proceso").data("accion") === "incluir"){
+        if ($("#proceso").data("accion") === "incluir") {
             $("#monto_pendiente").val(input);
         }
     });
@@ -87,7 +87,7 @@ $(document).ready(function () {
 
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
-                        
+
                         // Los volvemos a deshabilitar visualmente
                         $('#estatus').prop('disabled', true);
                         $('#id_atleta').prop('disabled', true);
@@ -140,17 +140,17 @@ $(document).ready(function () {
         $('#id_atleta').val(null).trigger('change');
         $('#id_concepto').val(null).trigger('change');
         $('#id_moneda').val(null).trigger('change');
-        
+
         $('#id_atleta').prop('disabled', false);
         $('#id_concepto').prop('disabled', false);
         $('#id_moneda').prop('disabled', false);
 
         $('#monto_pendiente').val('');
-        $('#fecha_emision').val(new Date().toISOString().split('T')[0]); 
+        $('#fecha_emision').val(new Date().toISOString().split('T')[0]);
         $('#estatus').val('Pendiente');
-        
-        $('#estatus').prop('disabled', true); 
-        $('#monto_pendiente').prop('readonly', true); 
+
+        $('#estatus').prop('disabled', true);
+        $('#monto_pendiente').prop('readonly', true);
 
         abrirModal();
     });
@@ -219,7 +219,7 @@ function anular(id) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('id', id);
-            datos.append('accion', 'eliminar'); 
+            datos.append('accion', 'eliminar');
             enviaAjax(datos);
         }
     });
@@ -235,21 +235,21 @@ function modificar(datos) {
     $('#id_atleta').val(datos[0].id_atleta).trigger('change');
     $('#id_concepto').val(datos[0].id_concepto).trigger('change');
     $('#id_moneda').val(datos[0].id_moneda).trigger('change');
-    
+
     $('#monto_total').val(datos[0].monto_total);
     $('#monto_pendiente').val(datos[0].monto_pendiente);
-    
+
     let fecha = datos[0].fecha_emision.split(' ')[0];
     $('#fecha_emision').val(fecha);
-    
+
     let estatusBD = datos[0].estatus == '0' ? 'Pendiente' : datos[0].estatus;
     $('#estatus').val(estatusBD).trigger('change');
-    
-    $('#monto_pendiente').prop('readonly', true); 
-    $('#estatus').prop('disabled', true); 
+
+    $('#monto_pendiente').prop('readonly', true);
+    $('#estatus').prop('disabled', true);
     $('#id_atleta').prop('disabled', true);
     $('#id_concepto').prop('disabled', true);
-    $('#id_moneda').prop('disabled', true); 
+    $('#id_moneda').prop('disabled', true);
 
     abrirModal();
 }
@@ -264,10 +264,24 @@ function crearConsulta(datos) {
         console.log(datos);
         datos.forEach(dato => {
             let fechaCorta = dato.fecha_emision.split(' ')[0];
-            const estatus = dato.estatus === 1 ? `<span class="estatus_v">Pagado</span>` : `<span class="estatus_a">Pendiente</span>`;
-            const retirar = dato.anulado === 0 ? `<button id="cbt_r" class="btn_t cbt_r" onclick="anular(${dato.id_cobrar})"><i class="fi fi-sr-cross-circle"></i></button>` : ``;
+
+            const esAnulado = parseInt(dato.anulado) === 1;
+
+            const estiloGris = esAnulado ? 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"' : '';
+
+            const estatus = esAnulado
+                ? `<span class="estatus_r" style="color: #6c757d; border-color: #6c757d;">Anulado</span>`
+                : (dato.estatus === 1 ? `<span class="estatus_v">Pagado</span>` : `<span class="estatus_a">Pendiente</span>`);
+
+            const botonesAccion = esAnulado
+                ? `<button class="btn_t cbt_r" disabled title="Registro Anulado" style="cursor: not-allowed;"><i class="fi fi-sr-cross-circle"></i></button>`
+                : `
+                    <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_cobrar})"><i class="fi fi-sr-pencil"></i></button>
+                    <button id="cbt_r" class="btn_t cbt_r" onclick="anular(${dato.id_cobrar})"><i class="fi fi-sr-cross-circle"></i></button>
+                  `;
+
             let registro = `
-                <div id="registro" class="listado_contenedor_grupal">
+                <div id="registro" class="listado_contenedor_grupal" ${estiloGris}>
                     <div class="listado_item" onclick="toggleDetalles(this)">
                         <div class="listado_col_principal">
                             <div class="listado_avatar_null"><i class="icon_con" data-lucide="receipt"></i></div>
@@ -297,8 +311,7 @@ function crearConsulta(datos) {
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_cobrar})"><i class="fi fi-sr-pencil"></i></button>
-                                ${retirar}
+                                ${botonesAccion}
                             </div>
                             <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                         </div>
@@ -306,7 +319,6 @@ function crearConsulta(datos) {
 
                     <div class="listado_detalle_oculto">
                         <div class="detalle_expandido_container">
-                            <!-- Fila Superior Dinámica -->
                             <div class="detalle_fila">
                                 <div class="detalle_card">
                                     <div class="detalle_card_icon"><i data-lucide="circle-star"></i></div>
@@ -369,7 +381,7 @@ function enviaAjax(datos) {
                     construirSelect('id_atleta', lee.datos, 'id_atleta', 'nombre', 'apellido');
                 } else if (lee.accion == "consultarCo") {
                     construirSelect('id_concepto', lee.datos, 'id_concepto', 'nombre');
-                } else if (lee.accion == "consultarM") { 
+                } else if (lee.accion == "consultarM") {
                     construirSelect('id_moneda', lee.datos, 'id_moneda', 'nombre');
                 } else if (lee.accion == "incluir") {
                     consultar();
@@ -416,7 +428,7 @@ function toggleDetalles(elemento) {
 }
 
 function limpia() {
-    if($('#f')[0]) $('#f')[0].reset();
+    if ($('#f')[0]) $('#f')[0].reset();
     $('.select2').val(null).trigger('change');
     $("#proceso").data("accion", "incluir");
     $("#proceso").text("Registrar Cargo");

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 22-05-2026 a las 00:41:35
+-- Tiempo de generación: 22-05-2026 a las 04:52:59
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -64,10 +64,10 @@ CREATE TABLE `atletas` (
 --
 
 INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `telefono`, `direccion`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`, `estatus`) VALUES
-(13, 'Jose Jose', 'Perez Perez', '32323232', NULL, NULL, 'H', '2012-05-18', 'atleta_2012-05-18_1779198735.png', 5, 7, 2, 1),
-(14, 'Mario Mario', 'Bros Bros', '34324324', NULL, NULL, 'H', '2009-05-19', 'atleta_2009-05-19_1779198715.png', 5, 8, 2, 1),
-(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779226550.png', 6, 4, NULL, 0),
-(16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779398437.png', 5, 3, 6, 0);
+(13, 'Jose Jose', 'Perez Perez', '32323232', NULL, NULL, 'H', '2012-05-18', 'atleta_2012-05-18_1779417290.png', 5, 7, 2, 1),
+(14, 'Mario Mario', 'Bros Bros', '34324324', NULL, NULL, 'H', '2009-05-19', 'atleta_2009-05-19_1779417273.png', 5, 8, 2, 1),
+(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779417262.png', 6, 4, NULL, 1),
+(16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779417253.png', 5, 3, 6, 0);
 
 -- --------------------------------------------------------
 
@@ -154,11 +154,21 @@ CREATE TABLE `cuentas_cobrar` (
   `id_concepto` int(11) NOT NULL,
   `id_atleta` int(11) NOT NULL,
   `id_moneda` int(100) NOT NULL,
-  `monto_personalizado` decimal(10,0) DEFAULT NULL,
+  `monto_personalizado` decimal(10,2) DEFAULT NULL,
   `fecha_emision` date NOT NULL,
   `fecha_vencimiento` date DEFAULT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL,
+  `anulado` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `cuentas_cobrar`
+--
+
+INSERT INTO `cuentas_cobrar` (`id_cobrar`, `id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `fecha_emision`, `fecha_vencimiento`, `estatus`, `anulado`) VALUES
+(1, 2, 15, 4, 30.00, '2026-05-21', '2026-06-20', 0, 0),
+(2, 3, 13, 5, 525.00, '2026-05-21', '2026-06-20', 0, 0),
+(3, 2, 16, 4, 30.58, '2026-05-21', '2026-06-20', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -659,7 +669,7 @@ ALTER TABLE `conceptos`
 -- AUTO_INCREMENT de la tabla `cuentas_cobrar`
 --
 ALTER TABLE `cuentas_cobrar`
-  MODIFY `id_cobrar` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_cobrar` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_equipos`
