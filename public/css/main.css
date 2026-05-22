@@ -491,29 +491,7 @@ option {
     object-fit: cover;
 }
 
-.estatus_v {
-    color: #00b321;
-    background-color: #e9ffe9;
-    padding: 5px;
-    border-radius: 5px;
-    display: inline-block;
-}
-
-.estatus_r {
-    color: #b30000;
-    background-color: #ffe9e9;
-    padding: 5px;
-    border-radius: 5px;
-    display: inline-block;
-}
-
-.estatus_g {
-    color: #767676;
-    background-color: #f1f1f1;
-    padding: 5px;
-    border-radius: 5px;
-    display: inline-block;
-}*/
+*/
 
 /* 1. CONTENEDORES DE ESTRUCTURA */
 /* 1. CONTENEDORES DE ESTRUCTURA */
@@ -836,6 +814,28 @@ option {
 
 .expandido .icono_flecha_detalle {
     transform: rotate(180deg);
+}
+
+
+.estatus_v {
+    color: var(--color-primario) !important;
+    background-color: #00a20030;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.estatus_r {
+    color: #f10000 !important;
+    background-color: #f1000030;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.estatus_a {
+    color: #f1b100 !important;
+    background-color: #f1b10030;
+    padding: 5px;
+    border-radius: 5px;
 }
 
 .contenedor_botonera {

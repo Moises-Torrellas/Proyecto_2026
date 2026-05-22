@@ -356,7 +356,7 @@ function buscar(id) {
     enviaAjax(datos);
 }
 function eliminar(id) {
-    confirmar('¿Está seguro que quiere eliminar este atleta?', function (confirmado) {
+    confirmar('¿Está seguro que quiere retirar este atleta del club?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
@@ -405,11 +405,13 @@ function crearConsulta(datos) {
 
         datos.forEach(dato => {
             const anioNacimiento = new Date(dato.fecha_nac).getFullYear();
+            const estatus = dato.estatus === 1 ? `<span class="estatus_v">Activo</span>` : `<span class="estatus_r">Retirado</span>`;
+            const retirar = dato.estatus === 1 ? `<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_atleta})" data-tippy-content="Retirar"><i class="fi fi-sr-cross-circle"></i></button>` : ``;
             const edadCalendario = anioActual - anioNacimiento;
             const genero = dato.genero === 'H' ? 'Hombre' : 'Mujer';
             const fotoHTML = (dato.foto === 'default.png' || !dato.foto)
                 ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>`
-                : `<img src="img/atletas/${dato.foto}" class="listado_avatar" alt="Perfil">`;
+                : `<img src="img/atletas/${dato.foto}" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">`;
 
             // Lógica para el representante: Si no existe, no se crea el HTML de la tarjeta
             let tarjetaRepresentante = "";
@@ -446,20 +448,20 @@ function crearConsulta(datos) {
                                 <span class="listado_resaltado">${edadCalendario} años</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Teléfono</small>
-                                <span>${escapeHTML(dato.telefono)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
                                 <small>Genero</small>
                                 <span>${escapeHTML(genero)}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Estatus</small>
+                                ${estatus}
                             </div>
                         </div>
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_atleta})"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_atleta})"><i class="fi fi-sr-trash-xmark"></i></button>
-                                <button id="cbt_sec" class="btn_t cbt_sec" onclick=""><i class="fi fi-sr-clipboard-user"></i></button>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_atleta})" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                ${retirar}
+                                <button id="cbt_sec" class="btn_t cbt_sec" onclick="" data-tippy-content="Generar Curriculum"><i class="fi fi-sr-clipboard-user"></i></button>
                             </div>
                             <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                         </div>
@@ -521,6 +523,7 @@ function crearConsulta(datos) {
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function escapeHTML(texto) {
@@ -624,7 +627,7 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } else if (lee.accion == "eliminar") {
                     consultar();
-                    muestraMensaje("success", 2000, "Eliminacion Exitosa", lee.mensaje);
+                    muestraMensaje("success", 2000, "Retiro Exitoso", lee.mensaje);
                 } else if (lee.accion == "modificar") {
                     consultar();
                     limpia();
