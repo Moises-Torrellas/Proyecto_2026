@@ -58,7 +58,6 @@
                         </div>
                     </div>
                     <div class="row">
-
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="nec_referencia" id="nec_referencia" class="formulario select">
@@ -67,13 +66,6 @@
                                 </select>
                                 <label for="nec_referencia" class="titulo_formulario">Referencia</label>
                                 <span class="mensaje" id="nec_referencia_span"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="estatus" name="estatus">
-                                <label for="estatus" class="titulo_formulario">Estatus</label>
-                                <span class="mensaje" id="estatus_spam"></span>
                             </div>
                         </div>
                     </div>

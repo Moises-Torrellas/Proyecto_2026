@@ -22,20 +22,13 @@ $(document).ready(function () {
     // 1. Cargar la tabla al iniciar
     consultar();
 
-    // 2. Validaciones en tiempo real para Métodos de Pago
-    // Nombre: Letras, números, espacios y acentos (Ej: "Pago Móvil", "Zelle", "Transferencia")
-    Validacion("nombre", /^[A-Za-z0-9\sñÑáéíóúÁÉÍÓÚ]*$/, /^[A-Za-z0-9\sñÑáéíóúÁÉÍÓÚ]{2,30}$/, "Permitido entre 2 y 30 caracteres", "proceso");
-    
-    // Nota: Si 'nec_referencia' y 'estatus' son campos <select>, la validación onkeyup 
-    // no es estrictamente necesaria aquí, se controlan mejor en la función validarEnvio().
-    // Si son inputs de texto, puedes descomentar y ajustar estas líneas:
-    // Validacion("nec_referencia", /^[A-Za-z0-9]*$/, /^[A-Za-z0-9]{1,2}$/, "Especifique si requiere referencia", "proceso");
-    // Validacion("estatus", /^[A-Za-z0-9]*$/, /^[A-Za-z0-9]{1,15}$/, "Especifique el estatus", "proceso");
+    Validacion("nombre",/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Permitido entre 2 y 30 caracteres", "proceso");
+
 
     // 3. Lógica de los Botones Guardar/Modificar
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
-        
+
         if (accion == "incluir") {
             if (validarEnvio(accion)) { // Descomentado para que valide antes de incluir
                 confirmar('¿Está seguro que quiere registrar este método de pago?', function (confirmado) {
@@ -115,7 +108,7 @@ function validarEnvio(proceso) {
         muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de método válido");
         return false;
     }
-    
+
     // Validar Necesita Referencia (Asumiendo que no puede estar vacío)
     if ($("#nec_referencia").val() === null || $("#nec_referencia").val() === "") {
         muestraMensaje("error", 2000, "Error", "Debe indicar si el método necesita referencia");
@@ -123,13 +116,6 @@ function validarEnvio(proceso) {
         // $("#nec_referencia_spam").text("Campo requerido").show(); 
         return false;
     }
-
-    // Validar Estatus (Asumiendo que no puede estar vacío)
-    if ($("#estatus").val() === null || $("#estatus").val() === "") {
-        muestraMensaje("error", 2000, "Error", "Debe seleccionar un estatus");
-        return false;
-    }
-
     return true;
 }
 
@@ -137,14 +123,30 @@ function modificar(datos) {
     $("#proceso").data("accion", "modificar");
     $("#proceso").text("Modificar Método");
     $("#titulo_modal").text("Modificar Método de Pago");
-    
+
     // Llenamos el formulario con los datos recibidos de la BD
-    $('#id').val(datos[0].id_metodos); 
+    $('#id').val(datos[0].id_metodos);
     $('#nombre').val(datos[0].nombre);
     $('#nec_referencia').val(datos[0].nec_referencia);
     $('#estatus').val(datos[0].estatus);
 
     abrirModal();
+}
+
+let botonPresionado = null
+function bloquear(id, b, elemento) {
+    let texto = (b == 1) ? 'bloquear' : 'desbloquear';
+    confirmar(`¿Está seguro que quiere ${texto} este Metodo?`, function (confirmado) {
+        if (confirmado) {
+            botonPresionado = elemento;
+            var datos = new FormData();
+            datos.append('accion', 'bloquear');
+            datos.append('id', id);
+            datos.append('bloqueo', b);
+            enviaAjax(datos);
+
+        }
+    });
 }
 
 function crearConsulta(datos) {
@@ -155,10 +157,9 @@ function crearConsulta(datos) {
         contenedor.append('<div class="listado_vacio"><p>No se encontraron métodos de pago registrados</p></div>');
     } else {
         datos.forEach(dato => {
-            // Evaluamos cómo mostrar la info de referencia y estatus de forma amigable
-            let txtReferencia = (dato.nec_referencia == '1' || dato.nec_referencia == 'Si' || dato.nec_referencia == 'Sí') ? 'Sí' : 'No';
-            let txtEstatus = (dato.estatus == '1' || dato.estatus == 'Activo') ? 'Activo' : 'Inactivo';
-            let colorEstatus = (txtEstatus === 'Activo') ? '#2ec135' : '#e74c3c';
+            let txtReferencia = dato.nec_referencia == 1  ? 'Sí' : 'No';
+            let icon = dato.estatus == 1 ? 'fi-sr-unlock' : 'fi-sr-lock';
+            let color = dato.estatus == 1 ? 'cbt_g' : 'cbt_a';
 
             let registro = `
                 <div class="listado_contenedor_grupal">
@@ -166,15 +167,11 @@ function crearConsulta(datos) {
                         <div class="listado_col_datos">
                             <div class="listado_dato_grupo">
                                 <small>Método de Pago</small>
-                                <span style="font-weight: bold; color: #333;">${escapeHTML(dato.nombre)}</span>
+                                <span>${escapeHTML(dato.nombre)}</span>
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>¿Requiere Ref?</small>
                                 <span>${txtReferencia}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Estatus</small>
-                                <span style="color: ${colorEstatus}; font-weight: 500;">${txtEstatus}</span>
                             </div>
                         </div>
 
@@ -182,6 +179,7 @@ function crearConsulta(datos) {
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_metodos})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_metodos})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button class="btn_t ${color}" onclick="bloquear(${dato.id_metodos}, ${dato.estatus}, this)"><i class="fi ${icon}"></i></button>
                             </div>
                         </div>
                     </div>
@@ -225,26 +223,30 @@ function enviaAjax(datos) {
         success: function (respuesta) {
             try {
                 var lee = JSON.parse(respuesta);
-                
+
                 if (lee.accion == "consultar") {
                     crearConsulta(lee.datos);
-                } 
+                }
                 else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
-                    cerrarModal(); 
+                    cerrarModal();
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
-                } 
+                }
                 else if (lee.accion == "eliminar") {
                     consultar();
                     muestraMensaje("success", 2000, "Eliminación Exitosa", lee.mensaje);
-                } 
+                }
                 else if (lee.accion == "modificar") {
                     consultar();
                     limpia();
                     cerrarModal();
                     muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
-                } 
+                }
+                else if (lee.accion == "bloquear") {
+                    muestraMensaje("success", 2000, "Bloqueo Exitosa", lee.mensaje);
+                    consultar();
+                }
                 else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }
@@ -253,7 +255,7 @@ function enviaAjax(datos) {
                 }
             } catch (e) {
                 alert("Error procesando los datos: " + e.message);
-                console.error(respuesta); 
+                console.error(respuesta);
             }
         },
         error: function (request, status, err) {

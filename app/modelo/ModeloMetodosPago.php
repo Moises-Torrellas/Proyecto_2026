@@ -10,7 +10,7 @@ class ModeloMetodosPago extends ModeloBase
     private $id;
     private $nombre;
     private $nec_referencia;
-    private $estatus;
+    private $bloqueo;
     
     public function __construct()
     {
@@ -35,9 +35,9 @@ class ModeloMetodosPago extends ModeloBase
         }
         //Procesamos los datos
         $this->id = $datos['id'] ?? null;
+        $this->bloqueo = $datos['bloqueo'] ?? null;
         $this->nec_referencia = $datos['nec_referencia'] ?? '';
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
-        $this->estatus = mb_convert_case(trim($datos['estatus'] ?? ''), MB_CASE_TITLE, "UTF-8");
         //ejecutamos la accion enviada por el controlador
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
@@ -45,6 +45,7 @@ class ModeloMetodosPago extends ModeloBase
             'eliminar'  => $this->Eliminar(),
             'buscar' => $this->Buscar(),
             'modificar' => $this->Modificar(),
+            'bloquear' => $this->Bloquear(),
             default => throw new Exception('La accion no es valida')
         };
     }
@@ -62,9 +63,7 @@ class ModeloMetodosPago extends ModeloBase
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
                 $sentencia .= " AND (
-                nombre LIKE :f1 OR 
-                nec_referencia LIKE :f2 OR 
-                estatus LIKE :f3
+                nombre LIKE :f1 
             )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
@@ -77,17 +76,6 @@ class ModeloMetodosPago extends ModeloBase
                 $sentencia .= " AND nombre LIKE :nombre";
                 $params[':nombre'] = "%" . trim($this->nombre) . "%";
             }
-
-            if (!empty($this->nec_referencia)) {
-                $sentencia .= " AND nec_referencia LIKE :nec_referencia";
-                $params[':nec_referencia'] = "%" . trim($this->nec_referencia) . "%";
-            }
-
-            if (!empty($this->estatus)) {
-                $sentencia .= " AND estatus LIKE :estatus";
-                $params[':estatus'] = "%" . trim($this->estatus) . "%";
-            }
-
 
             // 4. Orden (Asegúrate de usar una columna que exista, como id_metodos)
             $sentencia .= " ORDER BY id_metodos ASC";
@@ -111,29 +99,16 @@ class ModeloMetodosPago extends ModeloBase
     private function Incluir(): array
     {
         try {
-            //para verificar existencia los parametros que recibe son string $campo, $valor, string $tabla, ?int $estatus = 1, string $db = 'general', bool $bloquear = false
-
-            /* string $campo    Nombre lógico del campo (ej: 'cedula', 'correo'). Se valida contra la whitelist definida en el __construct.
-            mixed  $valor    El valor específico que se desea buscar en la tabla.
-            string $tabla    Nombre de la tabla donde se realizará la búsqueda.
-            int|null $estatus Filtro por estado del registro. (1 = Activo por defecto, NULL = Buscar en todo) sirve si la tabla tiene estatus para borrado logico.
-            string $db        Identificador de la conexión a usar (por defecto 'general' para la base de datos del club) para la base de datos de seguridad se le pasa como parametro 'sg' .
-            bool   $bloquear  Si es true, aplica 'FOR UPDATE' para bloquear la fila (Manejo de concurrencia).
-            
-            return bool Devuelve true si el registro existe, false en caso contrario.
-            throws Exception Si el campo proporcionado no está en la whitelist de seguridad. */
             $conex = $this->conex();
             $conex->beginTransaction();
             if ($this->verificarExistencia('nombre', $this->nombre, 'metodos_pago', NULL, bloquear: true)) {
-                //estas constantes como DUPLICATE_CEDULA o DUPLICATE_PHONE estan definidas en el config.php
-                throw new Exception(DUPLICATE_NOMBRE);
+                throw new Exception(DUPLICATE_NAME);
             }
 
-            $sentencia = "INSERT INTO metodos_pago (`nombre`, `nec_referencia`, `estatus`) VALUES (:nombre, :nec_referencia,:estatus)";
+            $sentencia = "INSERT INTO metodos_pago (`nombre`, `nec_referencia`) VALUES (:nombre, :nec_referencia)";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':nec_referencia', $this->nec_referencia);
-            $stmt->bindParam(':estatus', $this->estatus);
             $stmt->execute();
 
             $conex->commit();
@@ -154,42 +129,20 @@ class ModeloMetodosPago extends ModeloBase
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
-
-            /*
-            * EXPLICACIÓN DE PARÁMETROS - verificarExistenciaPropia:
-            * 
-            * 1. $campo: El nombre del dato a validar (ej: 'cedula'). Se verifica contra una lista de campos permitidos por seguridad.
-            * 
-            * 2. $valor: El contenido que quieres buscar (ej: '27123456'). Es el valor que el usuario ingresó en el formulario.
-            * 
-            * 3. $id: La llave primaria del registro que estás editando actualmente. Sirve para comparar si el valor ya es tuyo.
-            * 
-            * 4. $tabla: Nombre de la tabla en la base de datos donde se hará la consulta (ej: 'representantes').
-            * 
-            * 5. $estatus: Filtro de estado. Por defecto busca activos (1), pero si envías NULL busca en todos los registros.
-            * 
-            * 6. $db: Indica cuál conexión de base de datos usar (por defecto usa la conexión 'general').
-            * 
-            * 7. $bloquear: Si es true, activa el "FOR UPDATE". Esto pausa otros procesos que intenten leer o cambiar esta fila 
-            *    específica hasta que tú termines tu transacción, evitando choques de datos en el sistema de la academia.
-            */
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'metodos_pago', NULL, bloquear: true)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'metodos_pago', NULL, bloquear: true)) {
-                    throw new Exception(DUPLICATE_NOMBRE); // CORREGIDO: Todo en una sola línea
+                    throw new Exception(DUPLICATE_NAME); // CORREGIDO: Todo en una sola línea
                 }
             }
 
-            // CORREGIDO: Se eliminó la coma después de :estatus
             $sentencia = "UPDATE metodos_pago SET 
             nombre = :nombre, 
-            nec_referencia = :nec_referencia, 
-            estatus = :estatus 
+            nec_referencia = :nec_referencia
             WHERE id_metodos = :id_metodos"; 
             
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':nec_referencia', $this->nec_referencia);
-            $stmt->bindParam(':estatus', $this->estatus);
             $stmt->bindParam(':id_metodos', $this->id);
             $stmt->execute();
 
@@ -249,6 +202,40 @@ class ModeloMetodosPago extends ModeloBase
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
+        }
+    }
+
+    private function Bloquear(): array
+    {
+        try {
+            $conex = $this->conex();
+            $conex->beginTransaction();
+
+            if (!$this->verificarExistencia('id', $this->id, 'metodos_pago', NULL, bloquear: true)) {
+                throw new Exception(INVALID_ID);
+            }
+
+            $nuevoEstado = ($this->bloqueo == 1) ? 2 : 1;
+
+            $sql = "UPDATE `metodos_pago` SET `estatus` = :estado WHERE id_metodos = :id";
+            $stmt = $conex->prepare($sql);
+
+            $stmt->execute([
+                ':estado' => $nuevoEstado,
+                ':id' => $this->id
+            ]);
+
+
+            $conex->commit();
+            return ['accion' => 'exito'];
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            logs('metodos_pago', $e->getMessage(), 'Modelo_Bloquear');
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+        } finally {
+            $conex = null;
         }
     }
 }

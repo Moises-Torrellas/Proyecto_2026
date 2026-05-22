@@ -51,7 +51,7 @@ function manejarSolicitudMetodos_Pagos($obj, $id_modulo, $bitacoraObj, array $pe
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar el metodo de pago.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar el metodo de pago.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
@@ -62,7 +62,10 @@ function manejarSolicitudMetodos_Pagos($obj, $id_modulo, $bitacoraObj, array $pe
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar el metodo de pago.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
-
+            case 'bloquear':
+                if (!$permisos['otros']) throw new Exception('No tienes permisos para bloquear Metodos de pago.');
+                bloquear($obj, $id_modulo, $bitacoraObj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -110,16 +113,14 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
     try {
         $validaciones = [
             'nombre'         => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'nec_referencia' => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{1,15}$/', 'mensaje' => 'Referencia inválida.'],
-            'estatus'        => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{1,10}$/', 'mensaje' => 'Estatus inválido.'],
+            'nec_referencia' => ['regla' => '/^[1-2]+$/', 'mensaje' => 'Referencia inválida.']
         ];
 
         validar_datos($validaciones);
 
         $datos = [
             'nombre'         => $_POST['nombre'],
-            'nec_referencia' => $_POST['nec_referencia'], // CORREGIDO AQUÍ
-            'estatus'        => $_POST['estatus'],
+            'nec_referencia' => $_POST['nec_referencia']
         ];
         $datos['accion'] = 'incluir';
 
@@ -127,19 +128,18 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
 
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró el metodo de pago: " . $_POST['nombre'] . ' ' . $_POST['nec_referencia']);
-            $resultado = array('accion' => 'incluir', 'mensaje' => 'Metodo de Pago registrado exitosamente.');
+            registrarBitacora($bitacoraObj, $id_modulo, "Registro al metodo: " . $_POST['nombre']);
+            $resultado = array('accion' => 'incluir', 'mensaje' => 'Metodo registrado exitosamente.');
 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                DUPLICATE_NOMBRE => 'Ya existe el metodo de pago registrado con ese nombre.',
-                default          => 'Ocurrió un error inesperado en el registro.'
+                DUPLICATE_NAME => 'Ya existe un metodo de pago registrado con este nombre.',
+                default          => 'Ocurrió un error inesperado en la modificacion.'
             };
 
         }
         echo json_encode($resultado);
-
     } catch (Exception $e) {
         logs('Metodos_Pago', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
@@ -152,8 +152,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $validaciones = [
             'id'             => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
             'nombre'         => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'nec_referencia' => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{1,15}$/', 'mensaje' => 'Referencia inválida.'],
-            'estatus'        => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{1,10}$/', 'mensaje' => 'Estatus inválido.'],
+            'nec_referencia' => ['regla' => '/^[1-2]+$/', 'mensaje' => 'Referencia inválida.']
         ];
 
         validar_datos($validaciones);
@@ -161,8 +160,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $datos = [
             'id'             => $_POST['id'],
             'nombre'         => $_POST['nombre'],
-            'nec_referencia' => $_POST['nec_referencia'], // CORREGIDO AQUÍ
-            'estatus'        => $_POST['estatus'],
+            'nec_referencia' => $_POST['nec_referencia']
         ];
         $datos['accion'] = 'modificar';
 
@@ -176,7 +174,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                DUPLICATE_NOMBRE => 'Ya existe un metodo de pago registrado con este nombre.',
+                DUPLICATE_NAME => 'Ya existe un metodo de pago registrado con este nombre.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
 
@@ -218,6 +216,43 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Metodos_Pago', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function bloquear($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        validar_datos([
+            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
+            'bloqueo' => ['regla' => '/^[1-2]+$/', 'mensaje' => 'Error interno de bloqueo.']
+        ]);
+
+        $datos = [
+            'id' => $_POST['id'],
+            'bloqueo' => $_POST['bloqueo'],
+            'accion' => 'bloquear'
+        ];
+
+        $resultado = $obj->procesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            $nuevoEstado = ($_POST['bloqueo'] == 1) ? 2 : 1;
+            $mensajeExito = ($nuevoEstado == 2) ? "Metodo bloqueado exitosamente." : "Metodo desbloqueado exitosamente.";
+            $mensajeBitacora = ($nuevoEstado == 2) ? "Bloqueo el metodo: " : "Desbloqueo el metodo: ";
+            registrarBitacora($bitacoraObj, $id_modulo, $mensajeBitacora . $_POST['id']);
+            $resultado = array('accion' => 'bloquear', 'mensaje' => $mensajeExito);
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                INVALID_ID => 'El metodo que intenta bloquear ya no existe.',
+                default    => 'No se pudo completar la operación de bloqueo.'
+            };
+        }
+
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Metodos_Pago', $e->getMessage(), 'Controlador_Bloquear');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
