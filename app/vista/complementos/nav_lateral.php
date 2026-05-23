@@ -134,6 +134,7 @@
                     <a type="button" href="/Proyecto_2026/public/Usuarios" class="opciones"><i class="opciones_i" data-lucide="users"></i> Usuarios</a>
                     <a type="button" href="/Proyecto_2026/public/Roles" class="opciones"><i class="opciones_i" data-lucide="user-key"></i> Roles</a>
                     <a type="button" href="/Proyecto_2026/public/Bitacora" class="opciones "><i class="opciones_i" data-lucide="notebook"></i> Bitacora</a>
+                    <a type="button" href="/Proyecto_2026/public/Respaldo" class="opciones "><i class="opciones_i" data-lucide="server-cog"></i> Mantenimiento BD</a>
                 </li>
             <?php endif; ?>
 
