@@ -24,7 +24,10 @@ $objModelo = new ModeloMonedas();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
 
 function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
@@ -40,7 +43,8 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar Monedas.');
+                consultar($obj, $permisos);
                 break;
             case 'incluir':
                 if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar Monedas.');
@@ -71,16 +75,16 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
     }
 }
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    
+
     // Extraemos los datos crudos que espera la vista
-    $registro = $respuesta['datos'] ?? []; 
+    $registro = $respuesta['datos'] ?? [];
     $solo_lista = true; // El interruptor mágico para el AJAX
 
-    include (__DIR__.'/../vista/Monedas.php');
+    include(__DIR__ . '/../vista/Monedas.php');
 }
 
 function buscar($obj): void
@@ -106,9 +110,9 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $validaciones = [
-            'nombre'      => [ 'regla'   => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido (solo letras, entre 3 y 30 caracteres).'],
-            'abreviatura' => [ 'regla'   => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida (solo letras, entre 2 y 4 caracteres).'],
-            'simbolo'     => [ 'regla'   => '/^[a-zA-ZñÑ\$€£]{1,5}$/u', 'mensaje' => 'Símbolo inválido (máximo 5 caracteres, ej: $, Bs, €).']
+            'nombre'      => ['regla'   => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido (solo letras, entre 3 y 30 caracteres).'],
+            'abreviatura' => ['regla'   => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida (solo letras, entre 2 y 4 caracteres).'],
+            'simbolo'     => ['regla'   => '/^[a-zA-ZñÑ\$€£]{1,5}$/u', 'mensaje' => 'Símbolo inválido (máximo 5 caracteres, ej: $, Bs, €).']
         ];
 
         validar_datos($validaciones);
@@ -125,12 +129,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         if (isset($respuesta['accion']) && $respuesta['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Registró la moneda: " . $_POST['nombre']);
             $respuesta = array('accion' => 'incluir', 'mensaje' => 'Moneda registrada exitosamente.');
-        }else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        } else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
 
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
                 DUPLICATE_NAME => 'Ya existe una moneda registrada con este nombre.',
-                VALIDATION.'1'  => 'Ya existe una moneda registrada con esta abreviatura.',
-                VALIDATION.'2'  => 'Ya existe una moneda registrada con este símbolo.',
+                VALIDATION . '1'  => 'Ya existe una moneda registrada con esta abreviatura.',
+                VALIDATION . '2'  => 'Ya existe una moneda registrada con este símbolo.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
         }
@@ -145,9 +149,9 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
     try {
         $validaciones = [
             'id'          => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre'      => [ 'regla'   => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido (solo letras, entre 3 y 30 caracteres).'],
-            'abreviatura' => [ 'regla'   => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida (solo letras, entre 2 y 4 caracteres).'],
-            'simbolo'     => [ 'regla'   => '/^[a-zA-ZñÑ\$€£]{1,5}$/u', 'mensaje' => 'Símbolo inválido (máximo 5 caracteres, ej: $, Bs, €).']
+            'nombre'      => ['regla'   => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido (solo letras, entre 3 y 30 caracteres).'],
+            'abreviatura' => ['regla'   => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida (solo letras, entre 2 y 4 caracteres).'],
+            'simbolo'     => ['regla'   => '/^[a-zA-ZñÑ\$€£]{1,5}$/u', 'mensaje' => 'Símbolo inválido (máximo 5 caracteres, ej: $, Bs, €).']
         ];
 
         validar_datos($validaciones);
@@ -165,12 +169,12 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         if (isset($respuesta['accion']) && $respuesta['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Modifico la moneda: " . $_POST['nombre']);
             $respuesta = array('accion' => 'modificar', 'mensaje' => 'Moneda modificada exitosamente.');
-        }else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        } else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
 
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
                 DUPLICATE_NAME => 'Ya existe una moneda registrada con este nombre.',
-                VALIDATION.'1'  => 'Ya existe una moneda registrada con esta abreviatura.',
-                VALIDATION.'2'  => 'Ya existe una moneda registrada con este símbolo.',
+                VALIDATION . '1'  => 'Ya existe una moneda registrada con esta abreviatura.',
+                VALIDATION . '2'  => 'Ya existe una moneda registrada con este símbolo.',
                 INVALID_ID => 'la Moneda que intenta modificar ya no existe.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
@@ -200,7 +204,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         if (isset($respuesta['accion']) && $respuesta['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Elimino la moneda: " . $_POST['id']);
             $respuesta = array('accion' => 'eliminar', 'mensaje' => 'Moneda eliminada exitosamente.');
-        }else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        } else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
 
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
                 ASSOCIATES => 'No se puede eliminar la moneda porque esta asociado a pagos.',

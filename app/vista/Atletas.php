@@ -1,3 +1,147 @@
+<?php
+if (isset($solo_lista) && $solo_lista === true):
+    if (empty($registro)): ?>
+        <div class="listado_vacio">
+            <p>No se encontraron registros</p>
+        </div>
+        <?php else:
+        $anioActual = date('Y');
+        foreach ($registro as $dato):
+            // Cálculos y transformaciones de datos del Atleta
+            $anioNacimiento = date('Y', strtotime($dato['fecha_nac']));
+            $edadCalendario = $anioActual - $anioNacimiento;
+            $genero = ($dato['genero'] === 'H') ? 'Hombre' : 'Mujer';
+
+            // Renderizado dinámico del Avatar/Foto
+            $foto = $dato['foto'] ?? '';
+            $fotoHTML = ($foto === 'default.png' || empty($foto))
+                ? '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>'
+                : '<img src="img/atletas/' . htmlspecialchars($foto) . '" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">';
+        ?>
+            <div id="registro" class="listado_contenedor_grupal">
+                <div class="listado_item" onclick="toggleDetalles(this)">
+
+                    <div class="listado_col_principal">
+                        <?= $fotoHTML ?>
+                        <div class="listado_info_base">
+                            <span class="listado_titulo">
+                                <?= htmlspecialchars($dato['nombres']) ?> <?= htmlspecialchars($dato['apellidos']) ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Doc de Identidad</small>
+                            <span><?= htmlspecialchars($dato['doc_identidad']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Edad (Año Cal.)</small>
+                            <span class="listado_resaltado"><?= $edadCalendario ?> años</span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Género</small>
+                            <span><?= htmlspecialchars($genero) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Estatus</small>
+                            <?php if ($dato['estatus'] == 1): ?>
+                                <span class="estatus_v">Activo</span>
+                            <?php else: ?>
+                                <span class="estatus_r">Retirado</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                            <?php if ($permisos['modificar']): ?>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Modificar">
+                                    <i class="fi fi-sr-pencil"></i>
+                                </button>
+                            <?php endif; ?>
+                            <?php if ($dato['estatus'] == 1 && $permisos['eliminar']): ?>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Retirar">
+                                    <i class="fi fi-sr-cross-circle"></i>
+                                </button>
+                            <?php endif; ?>
+                            <?php if ($permisos['reporte']): ?>
+                                <button id="cbt_sec" class="btn_t cbt_sec" onclick="" data-tippy-content="Generar Currículum">
+                                    <i class="fi fi-sr-clipboard-user"></i>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                        <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                    </div>
+                </div>
+
+                <div class="listado_detalle_oculto">
+                    <div class="detalle_expandido_container">
+
+                        <div class="detalle_fila">
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="bring-to-front"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Categoría Deportiva</label>
+                                    <span><?= htmlspecialchars($dato['nombre_categoria']) ?></span>
+                                    <small>Rango: <?= $dato['edad_min'] ?>-<?= $dato['edad_max'] ?> años</small>
+                                </div>
+                            </div>
+
+                            <?php if (!empty($dato['nombre_rep']) && trim($dato['nombre_rep']) !== ""): ?>
+                                <div class="detalle_card">
+                                    <div class="detalle_card_icon"><i data-lucide="user-star"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Representante</label>
+                                        <span><?= htmlspecialchars($dato['nombre_rep']) ?> <?= htmlspecialchars($dato['apellido_rep'] ?? '') ?></span>
+                                        <small><?= htmlspecialchars($dato['cedula_rep'] ?? '') ?></small>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="land-plot"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Posición Técnica</label>
+                                    <span><?= htmlspecialchars($dato['nombre_posicion']) ?></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detalle_fila">
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Dirección</label>
+                                    <span><?= htmlspecialchars($dato['direccion']) ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="phone"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Teléfono</label>
+                                    <span><?= htmlspecialchars($dato['telefono']) ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="calendar-1"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Fecha de Nacimiento</label>
+                                    <span><?= htmlspecialchars($dato['fecha_nac']) ?></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+<?php
+        endforeach;
+    endif;
+    exit();
+endif;
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -24,13 +168,153 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <button class="btn btn_azul" id="incluir">Nuevo Atleta</button>
-
-                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php if ($permisos['registrar']): ?>
+                                <button class="btn btn_azul" id="incluir">Nuevo Atleta</button>
+                            <?php endif; ?>
+                            <?php if ($permisos['reporte']): ?>
+                                <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
+                            <?php if (empty($registro)): ?>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros</p>
+                                </div>
+                                <?php else:
+                                $anioActual = date('Y');
+                                foreach ($registro as $dato):
+                                    $anioNacimiento = date('Y', strtotime($dato['fecha_nac']));
+                                    $edadCalendario = $anioActual - $anioNacimiento;
+                                    $genero = ($dato['genero'] === 'H') ? 'Hombre' : 'Mujer';
+
+                                    $foto = $dato['foto'] ?? '';
+                                    $fotoHTML = ($foto === 'default.png' || empty($foto))
+                                        ? '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>'
+                                        : '<img src="img/atletas/' . htmlspecialchars($foto) . '" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">';
+                                ?>
+                                    <div id="registro" class="listado_contenedor_grupal">
+                                        <div class="listado_item" onclick="toggleDetalles(this)">
+
+                                            <div class="listado_col_principal">
+                                                <?= $fotoHTML ?>
+                                                <div class="listado_info_base">
+                                                    <span class="listado_titulo">
+                                                        <?= htmlspecialchars($dato['nombres']) ?> <?= htmlspecialchars($dato['apellidos']) ?>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo">
+                                                    <small>Doc de Identidad</small>
+                                                    <span><?= htmlspecialchars($dato['doc_identidad']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Edad (Año Cal.)</small>
+                                                    <span class="listado_resaltado"><?= $edadCalendario ?> años</span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Género</small>
+                                                    <span><?= htmlspecialchars($genero) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Estatus</small>
+                                                    <?php if ($dato['estatus'] == 1): ?>
+                                                        <span class="estatus_v">Activo</span>
+                                                    <?php else: ?>
+                                                        <span class="estatus_r">Retirado</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_acciones">
+                                                <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                                    <?php if ($permisos['modificar']): ?>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Modificar">
+                                                            <i class="fi fi-sr-pencil"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                    <?php if ($dato['estatus'] == 1 && $permisos['eliminar']): ?>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Retirar">
+                                                            <i class="fi fi-sr-cross-circle"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                    <?php if ($permisos['reporte']): ?>
+                                                        <button id="cbt_sec" class="btn_t cbt_sec" onclick="" data-tippy-content="Generar Currículum">
+                                                            <i class="fi fi-sr-clipboard-user"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="listado_detalle_oculto">
+                                            <div class="detalle_expandido_container">
+
+                                                <div class="detalle_fila">
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="bring-to-front"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Categoría Deportiva</label>
+                                                            <span><?= htmlspecialchars($dato['nombre_categoria']) ?></span>
+                                                            <small>Rango: <?= $dato['edad_min'] ?>-<?= $dato['edad_max'] ?> años</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <?php if (!empty($dato['nombre_rep']) && trim($dato['nombre_rep']) !== ""): ?>
+                                                        <div class="detalle_card">
+                                                            <div class="detalle_card_icon"><i data-lucide="user-star"></i></div>
+                                                            <div class="detalle_card_txt">
+                                                                <label>Representante</label>
+                                                                <span><?= htmlspecialchars($dato['nombre_rep']) ?> <?= htmlspecialchars($dato['apellido_rep'] ?? '') ?></span>
+                                                                <small><?= htmlspecialchars($dato['cedula_rep'] ?? '') ?></small>
+                                                            </div>
+                                                        </div>
+                                                    <?php endif; ?>
+
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="land-plot"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Posición Técnica</label>
+                                                            <span><?= htmlspecialchars($dato['nombre_posicion']) ?></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="detalle_fila">
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Dirección</label>
+                                                            <span><?= htmlspecialchars($dato['direccion']) ?></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="phone"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Teléfono</label>
+                                                            <span><?= htmlspecialchars($dato['telefono']) ?></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="calendar-1"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Fecha de Nacimiento</label>
+                                                            <span><?= htmlspecialchars($dato['fecha_nac']) ?></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                            <?php
+                                endforeach;
+                            endif; ?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>

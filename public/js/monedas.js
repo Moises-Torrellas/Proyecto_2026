@@ -18,8 +18,6 @@ function busqueda() {
 }
 
 $(document).ready(function () {
-    consultar();
-
 
     // Validación de Nombre
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
@@ -203,6 +201,7 @@ function crearConsulta(htmlRecibido) {
     // Ejecutamos tus inicializadores estéticos y paginadores normales
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');

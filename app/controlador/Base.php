@@ -1,10 +1,9 @@
 <?php
-function procesarPermisos(int $id_modulo, $bitacora = null): array
+function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = false): array
 {
     $nivelUsuario = $_SESSION['nivel_rol'] ?? 99;
 
-    // 1. REGLA DE ORO: Si es Nivel 1 (Superusuario), tiene acceso ABSOLUTO a todo.
-    // Colocándolo de primero, garantizamos que no lo afecte ninguna otra restricción.
+    // 1. REGLA DE ORO: Superusuario
     if ($nivelUsuario === 1) {
         return [
             'ingresar'  => true,
@@ -16,9 +15,11 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
         ];
     }
 
-    // 2. Restricciones específicas para el Nivel 2 (Modulos críticos prohibidos)
+    // 2. Restricciones específicas para el Nivel 2
     $modulosProhibidos = [_MD_USUARIOS_, _MD_ROLES_, _MD_BITACORA_];
     if ($nivelUsuario === 2 && in_array($id_modulo, $modulosProhibidos)) {
+        if ($soloValidar) return []; // En el menú simplemente no tiene permisos
+        
         $_SESSION['alerta'] = [
             'icono'   => 'error',
             'titulo'  => 'Acceso denegado',
@@ -28,7 +29,7 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
         exit();
     }
 
-    // 3. Si es Nivel 2 y pasó el filtro anterior, tiene permisos plenos en el resto de los módulos
+    // 3. Permisos plenos Nivel 2
     if ($nivelUsuario === 2) {
         return [
             'ingresar'  => true,
@@ -40,12 +41,14 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
         ];
     }
 
-    // 4. Validación estricta para usuarios regulares (Nivel 3 en adelante) basados en la base de datos
+    // 4. Validación para usuarios regulares (Nivel 3+)
     if (isset($_SESSION['permisos'][$id_modulo])) {
         $p = $_SESSION['permisos'][$id_modulo];
 
-        // Si no tiene el permiso de ingresar activo, se rebota del módulo
+        // Si no tiene el permiso de ingresar activo
         if (!isset($p['ingresar']) || !$p['ingresar']) {
+            if ($soloValidar) return []; // En el menú no pasa nada
+            
             $_SESSION['alerta'] = [
                 'icono'   => 'error',
                 'titulo'  => 'Acceso denegado',
@@ -64,12 +67,15 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
             'otros'     => (isset($p['otros']) && $p['otros'])
         ];
 
-        if (!comprobarAjax() && $bitacora !== null) {
+        // Solo registramos bitácora si NO es una simple validación de menú
+        if (!$soloValidar && !comprobarAjax() && $bitacora !== null) {
             registrarBitacora($bitacora, $id_modulo, "Accedió al módulo");
         }
 
         return $permisos;
     } else {
+        if ($soloValidar) return []; // En el menú no pasa nada
+        
         $_SESSION['alerta'] = [
             'icono'   => 'error',
             'titulo'  => 'Acceso denegado',
@@ -80,7 +86,7 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
     }
 }
 
-function cargarVista(string $pagina, array $permisos = null): void
+function cargarVista(string $pagina,array $datos = []): void
 {   
     
     $archivoVista = sprintf(__DIR__ . '/../vista/%s.php', $pagina);
@@ -88,9 +94,10 @@ function cargarVista(string $pagina, array $permisos = null): void
     if (is_file($archivoVista)) {
         // Generar un token de seguridad para la sesión
         $_SESSION['token'] = bin2hex(random_bytes(32));
-        require_once($archivoVista);
+        extract($datos);
+        require($archivoVista);
     } else {
-        require_once(__DIR__ . '/../vista/complementos/404.php');
+        require(__DIR__ . '/../vista/complementos/404.php');
         exit();
     }
 }
