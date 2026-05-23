@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 20-05-2026 a las 21:00:07
--- Versión del servidor: 10.4.28-MariaDB
--- Versión de PHP: 8.2.4
+-- Tiempo de generación: 23-05-2026 a las 05:08:54
+-- Versión del servidor: 10.4.32-MariaDB
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `bds`
 --
-CREATE DATABASE IF NOT EXISTS `bds` DEFAULT CHARACTER SET utf8 COLLATE utf8_spanish2_ci;
-USE `bds`;
 
 -- --------------------------------------------------------
 
@@ -122,7 +120,30 @@ INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `fecha`, `hora`,
 (77, 100, 'Registro al Atleta: Moises Jesus Torrellas colmenarez', '2026-05-19', '17:35:50', 1),
 (78, 5, 'Cierre de sesión.', '2026-05-19', '23:15:06', 1),
 (79, 4, 'Inicio de sesión exitoso', '2026-05-20', '13:17:01', 1),
-(80, 5, 'Cierre de sesión.', '2026-05-20', '13:54:52', 1);
+(80, 5, 'Cierre de sesión.', '2026-05-20', '13:54:52', 1),
+(81, 4, 'Inicio de sesión exitoso', '2026-05-20', '21:40:35', 1),
+(82, 12, 'Generó un cargo de 30 al atleta ID: 13', '2026-05-20', '22:54:51', 1),
+(83, 12, 'Generó un cargo de 30 al atleta ID: 13', '2026-05-20', '22:58:18', 1),
+(84, 12, 'Generó un cargo de 30 al atleta ID: 13', '2026-05-20', '23:01:08', 1),
+(85, 12, 'Anuló la cuenta por cobrar ID: 1', '2026-05-20', '23:01:18', 1),
+(86, 12, 'Anuló la cuenta por cobrar ID: 1', '2026-05-20', '23:01:41', 1),
+(87, 12, 'Anuló la cuenta por cobrar ID: 1', '2026-05-20', '23:03:44', 1),
+(88, 12, 'Anuló la cuenta por cobrar ID: 1', '2026-05-20', '23:06:55', 1),
+(89, 12, 'Anuló la cuenta por cobrar ID: 1', '2026-05-20', '23:12:05', 1),
+(90, 12, 'Anuló la cuenta por cobrar ID: 1', '2026-05-20', '23:16:09', 1),
+(91, 12, 'Anuló la cuenta por cobrar ID: 1', '2026-05-20', '23:19:57', 1),
+(92, 12, 'Anuló la cuenta por cobrar ID: 1', '2026-05-20', '23:35:13', 1),
+(93, 12, 'Generó un cargo de 13000 al atleta ID: 14', '2026-05-20', '23:36:02', 1),
+(94, 12, 'Modificó la cuenta por cobrar ID: 2', '2026-05-20', '23:40:44', 1),
+(95, 12, 'Modificó la cuenta por cobrar ID: 2', '2026-05-20', '23:47:03', 1),
+(96, 12, 'Modificó la cuenta por cobrar ID: 2', '2026-05-20', '23:47:56', 1),
+(97, 12, 'Modificó la cuenta por cobrar ID: 2', '2026-05-20', '23:52:00', 1),
+(98, 4, 'Inicio de sesión exitoso', '2026-05-22', '21:23:28', 1),
+(100, 106, 'Eliminó el archivo de respaldo: backup_cannibalsbd_2026-05-22_22-10-53.sql', '2026-05-22', '22:24:44', 1),
+(101, 106, 'Eliminó el archivo de respaldo: backup_cannibalsbd_2026-05-22_21-37-46.sql', '2026-05-22', '22:24:49', 1),
+(102, 106, 'Generó el respaldo: backup_cannibalsbd_2026-05-22_22-24-59.sql', '2026-05-22', '22:25:04', 1),
+(103, 106, 'Generó el respaldo: backup_cannibalsbd_2026-05-22_23-03-34.sql', '2026-05-22', '23:03:37', 1),
+(104, 106, 'Restauró el sistema usando: backup_cannibalsbd_2026-05-22_23-03-34.sql', '2026-05-22', '23:06:37', 1);
 
 -- --------------------------------------------------------
 
@@ -168,7 +189,8 @@ INSERT INTO `modulo` (`id_modulo`, `nombre_modulo`, `estatus`) VALUES
 (102, 'Monedas', 1),
 (103, 'Categoria de Equipamiento', 1),
 (104, 'Calidad', 1),
-(105, 'Participaciones', 1);
+(105, 'Participaciones', 1),
+(106, 'Respaldo BD', 1);
 
 -- --------------------------------------------------------
 
@@ -236,6 +258,27 @@ CREATE TABLE `permisos_usuarios` (
   `reporte` tinyint(1) NOT NULL DEFAULT 0,
   `otros` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `respaldos`
+--
+
+CREATE TABLE `respaldos` (
+  `id_respaldo` int(11) NOT NULL,
+  `nombre_archivo` varchar(150) NOT NULL,
+  `peso` varchar(20) NOT NULL,
+  `fecha_creacion` datetime NOT NULL,
+  `idUsuario` int(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `respaldos`
+--
+
+INSERT INTO `respaldos` (`id_respaldo`, `nombre_archivo`, `peso`, `fecha_creacion`, `idUsuario`) VALUES
+(1, 'backup_cannibalsbd_2026-05-22_23-03-34.sql', '26.15 KB', '2026-05-22 23:03:37', 1);
 
 -- --------------------------------------------------------
 
@@ -328,6 +371,13 @@ ALTER TABLE `permisos_usuarios`
   ADD KEY `id_modulo` (`id_modulo`);
 
 --
+-- Indices de la tabla `respaldos`
+--
+ALTER TABLE `respaldos`
+  ADD PRIMARY KEY (`id_respaldo`),
+  ADD KEY `idUsuario` (`idUsuario`);
+
+--
 -- Indices de la tabla `roles`
 --
 ALTER TABLE `roles`
@@ -350,13 +400,13 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
+  MODIFY `id_bitacora` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
 
 --
 -- AUTO_INCREMENT de la tabla `modulo`
 --
 ALTER TABLE `modulo`
-  MODIFY `id_modulo` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
+  MODIFY `id_modulo` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
 
 --
 -- AUTO_INCREMENT de la tabla `notificaciones`
@@ -369,6 +419,12 @@ ALTER TABLE `notificaciones`
 --
 ALTER TABLE `permisos_roles`
   MODIFY `id_permiso_rol` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
+
+--
+-- AUTO_INCREMENT de la tabla `respaldos`
+--
+ALTER TABLE `respaldos`
+  MODIFY `id_respaldo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -412,6 +468,12 @@ ALTER TABLE `permisos_roles`
 ALTER TABLE `permisos_usuarios`
   ADD CONSTRAINT `permisos_usuarios_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`idUsuario`),
   ADD CONSTRAINT `permisos_usuarios_ibfk_2` FOREIGN KEY (`id_modulo`) REFERENCES `modulo` (`id_modulo`);
+
+--
+-- Filtros para la tabla `respaldos`
+--
+ALTER TABLE `respaldos`
+  ADD CONSTRAINT `respaldos_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`idUsuario`) ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `usuarios`

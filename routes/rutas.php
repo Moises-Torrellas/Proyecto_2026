@@ -53,6 +53,7 @@ function manejarRuta($pagina): void
         'Monedas' => 'Monedas',
         'CuentasCobrar' => 'CuentasCobrar',
         'Notificaciones' => 'Notificaciones',
+        'Respaldo' => 'Respaldo',
 ];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {
