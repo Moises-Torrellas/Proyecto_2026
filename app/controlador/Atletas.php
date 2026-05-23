@@ -27,8 +27,12 @@ $objModelo = new ModeloAtletas();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables =['registro' => $registro, 'permisos' => $permisos ];
+    cargarVista($pagina, $variables);
 }
+
 
 function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
@@ -43,16 +47,12 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar atletas.');
+                consultar($obj, $permisos);
                 break;
-            case 'consultarR':
-                consultarRepresentantes();
-                break;
-            case 'consultarP':
-                consultarPosiciones();
-                break;
-            case 'consultarC':
-                consultarCategorias();
+            case 'MultiConsulta': // <- NUEVA ACCIÓN UNIFICADA
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar atletas.');
+                MultiConsulta();
                 break;
             case 'incluir':
                 if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar atletas.');
@@ -83,60 +83,37 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
  * --- LÓGICA DE ACCIONES ---
  */
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] = 'Error al listar los atletas';
-    }
-    echo json_encode($respuesta);
+    
+    $registro = $respuesta['datos'] ?? []; 
+    $solo_lista = true;
+
+    include (__DIR__.'/../vista/Atletas.php');
 }
-function consultarRepresentantes(): void
+function MultiConsulta(): void 
 {
     try {
         $modeloRep = new ModeloRepresentantes();
-        $respuesta = $modeloRep->Consultar();
-        $respuesta['accion'] = 'consultarR'; // Mantenemos tu estándar de respuesta
-
-        if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-            $respuesta['mensaje'] = 'Error al listar los representantes';
-        }
-        echo json_encode($respuesta);
-    } catch (Exception $e) {
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
-    }
-}
-
-function consultarCategorias(): void
-{
-    try {
-        $modeloCat = new ModeloCategorias();
-        $respuesta = $modeloCat->Consultar();
-        $respuesta['accion'] = 'consultarC';
-
-        if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-            $respuesta['mensaje'] = 'Error al listar las categorías';
-        }
-        echo json_encode($respuesta);
-    } catch (Exception $e) {
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
-    }
-}
-
-function consultarPosiciones(): void
-{
-    try {
         $modeloPos = new ModeloPosiciones();
-        $respuesta = $modeloPos->Consultar();
-        $respuesta['accion'] = 'consultarP';
+        $modeloCat = new ModeloCategorias();
 
-        if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-            $respuesta['mensaje'] = 'Error al listar las posiciones';
-        }
-        echo json_encode($respuesta);
+        $repRespuesta = $modeloRep->Consultar();
+        $posRespuesta = $modeloPos->Consultar();
+        $catRespuesta = $modeloCat->Consultar();
+
+        // Armamos el JSON con la estructura exacta que pide el JavaScript
+        echo json_encode([
+            'accion'         => 'MultiConsulta',
+            'representantes' => $repRespuesta['datos'] ?? [],
+            'posiciones'     => $posRespuesta['datos'] ?? [],
+            'categorias'     => $catRespuesta['datos'] ?? []
+        ]);
     } catch (Exception $e) {
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+        logs('Atletas', $e->getMessage(), 'Controlador_MultiConsulta');
+        echo json_encode(['accion' => 'error', 'mensaje' => 'Error al inicializar los catálogos del módulo.']);
     }
 }
 function buscar($obj): void

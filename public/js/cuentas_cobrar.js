@@ -40,7 +40,6 @@ function busqueda() {
 }
 
 $(document).ready(function () {
-    consultar();
     consultarAtletas();
     consultarConceptos();
     consultarMonedas();
@@ -254,90 +253,16 @@ function modificar(datos) {
     abrirModal();
 }
 
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
-    } else {
-        console.log(datos);
-        datos.forEach(dato => {
-            let fechaCorta = dato.fecha_emision.split(' ')[0];
+    // Inyectamos directamente el bloque HTML estructurado que procesó el servidor
+    contenedor.html(htmlRecibido);
 
-            const esAnulado = parseInt(dato.anulado) === 1;
-
-            const estiloGris = esAnulado ? 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"' : '';
-
-            const estatus = esAnulado
-                ? `<span class="estatus_r" style="color: #6c757d; border-color: #6c757d;">Anulado</span>`
-                : (dato.estatus === 1 ? `<span class="estatus_v">Pagado</span>` : `<span class="estatus_a">Pendiente</span>`);
-
-            const botonesAccion = esAnulado
-                ? `<button class="btn_t cbt_r" disabled title="Registro Anulado" style="cursor: not-allowed;"><i class="fi fi-sr-cross-circle"></i></button>`
-                : `
-                    <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_cobrar})"><i class="fi fi-sr-pencil"></i></button>
-                    <button id="cbt_r" class="btn_t cbt_r" onclick="anular(${dato.id_cobrar})"><i class="fi fi-sr-cross-circle"></i></button>
-                  `;
-
-            let registro = `
-                <div id="registro" class="listado_contenedor_grupal" ${estiloGris}>
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_principal">
-                            <div class="listado_avatar_null"><i class="icon_con" data-lucide="receipt"></i></div>
-                            <div class="listado_info_base">
-                                <span class="listado_titulo">${escapeHTML(dato.concepto_nombre)}</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Fecha de Emision</small>
-                                <span>${fechaCorta}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Monto</small>
-                                <span class="listado_resaltado">${dato.moneda_simbolo} ${dato.monto_total}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Monto Pendiente</small>
-                                <span>${dato.moneda_simbolo} ${dato.monto_pendiente}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Estatus</small>
-                                ${estatus}
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                ${botonesAccion}
-                            </div>
-                            <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
-                        </div>
-                    </div>
-
-                    <div class="listado_detalle_oculto">
-                        <div class="detalle_expandido_container">
-                            <div class="detalle_fila">
-                                <div class="detalle_card">
-                                    <div class="detalle_card_icon"><i data-lucide="circle-star"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Atleta</label>
-                                        <span>${escapeHTML(dato.atleta_nombre)} ${escapeHTML(dato.atleta_apellido)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-
+    // Reactivamos las librerías visuales y los comportamientos estéticos
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function construirSelect(idSelect, datos, campoId, campo1, campo2 = null) {
@@ -373,11 +298,13 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } else if (lee.accion == "consultarA") {
+                if (lee.accion == "consultarA") {
                     construirSelect('id_atleta', lee.datos, 'id_atleta', 'nombre', 'apellido');
                 } else if (lee.accion == "consultarCo") {
                     construirSelect('id_concepto', lee.datos, 'id_concepto', 'nombre');
@@ -420,16 +347,4 @@ function escapeHTML(texto) {
     if (!texto) return '';
     var caracteres = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return String(texto).replace(/[&<>"']/g, m => caracteres[m]);
-}
-
-function toggleDetalles(elemento) {
-    $(elemento).next('.listado_detalle_oculto').slideToggle();
-    $(elemento).find('.icono_flecha_detalle').toggleClass('rotar_flecha');
-}
-
-function limpia() {
-    if ($('#f')[0]) $('#f')[0].reset();
-    $('.select2').val(null).trigger('change');
-    $("#proceso").data("accion", "incluir");
-    $("#proceso").text("Registrar Cargo");
 }

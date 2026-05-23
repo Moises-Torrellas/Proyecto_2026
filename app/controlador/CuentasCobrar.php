@@ -24,7 +24,10 @@ $objModelo = new ModeloCuentasCobrar();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudCuentasCobrar($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables =['registro' => $registro, 'permisos' => $permisos ];
+    cargarVista($pagina, $variables);
 }
 
 /**
@@ -44,15 +47,19 @@ function manejarSolicitudCuentasCobrar($obj, $id_modulo, $bitacoraObj, array $pe
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
+                consultar($obj, $permisos);
                 break;
             case 'consultarA':
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
                 consultarA($obj);
                 break;
             case 'consultarCo':
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
                 consultarCo($obj);
                 break;
-            case 'consultarM': // NUEVO: Para cargar las monedas en el formulario
+            case 'consultarM':
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
                 consultarM($obj);
                 break;
             case 'buscar':
@@ -85,14 +92,15 @@ function manejarSolicitudCuentasCobrar($obj, $id_modulo, $bitacoraObj, array $pe
  * --- LÓGICA DE ACCIONES ---
  */
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] ='Error al listar las cuentas por cobrar';
-    }
-    echo json_encode($respuesta);
+    
+    $registro = $respuesta['datos'] ?? []; 
+    $solo_lista = true;
+
+    include (__DIR__.'/../vista/CuentasCobrar.php');
 }
 
 function consultarA($obj): void

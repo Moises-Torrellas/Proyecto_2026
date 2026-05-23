@@ -26,7 +26,8 @@ $objModelo = new ModeloUsuarios();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudUsuarios($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina, $permisos);
+    $variables = ['permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
 
 function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): void
