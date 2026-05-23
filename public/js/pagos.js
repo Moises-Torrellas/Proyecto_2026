@@ -210,7 +210,7 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
             textoMostrar = `${dato[campo1]}`;
         }
         else if (idSelect === 'cuenta' && campo1 && campo2 && campo3) {
-            textoMostrar = `${dato[campo1]}/${dato[campo2]} ${dato[campo3]}`;
+            textoMostrar = `${dato[campo1]} / ${dato[campo2]} ${dato[campo3]}`;
         }
         else {
             textoMostrar = escapeHTML(String(dato[campo1]));

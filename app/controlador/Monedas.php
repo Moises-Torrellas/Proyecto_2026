@@ -75,7 +75,12 @@ function consultar($obj): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    echo json_encode($respuesta);
+    
+    // Extraemos los datos crudos que espera la vista
+    $registro = $respuesta['datos'] ?? []; 
+    $solo_lista = true; // El interruptor mágico para el AJAX
+
+    include (__DIR__.'/../vista/Monedas.php');
 }
 
 function buscar($obj): void

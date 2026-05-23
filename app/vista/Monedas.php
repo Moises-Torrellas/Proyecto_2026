@@ -1,3 +1,53 @@
+<?php
+
+if (isset($solo_lista) && $solo_lista === true):
+    if (empty($registro)): ?>
+        <div class="listado_vacio">
+            <p>No se encontraron registros</p>
+        </div>
+    <?php else: 
+        foreach ($registro as $dato): 
+            $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
+            $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
+        ?>
+            <div class="listado_contenedor_grupal">
+                <div class="listado_item">
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Nombre</small>
+                            <span><?= htmlspecialchars($dato['nombre']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Abreviatura</small>
+                            <span style="font-weight: bold; color: #2ec135;"><?= htmlspecialchars($dato['abreviatura']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Simbolo</small>
+                            <span><?= htmlspecialchars($dato['simbolo']) ?></span>
+                        </div>
+                    </div>
+                    <div class="listado_col_acciones">
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn_t cbt_v" onclick="buscar(<?= $dato['id_moneda'] ?>)">
+                                <i class="fi fi-sr-pencil"></i>
+                            </button>
+                            <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_moneda'] ?>)">
+                                <i class="fi fi-sr-trash-xmark"></i>
+                            </button>
+                            <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_moneda'] ?>, <?= $dato['estatus'] ?>, this)">
+                                <i class="fi <?= $icon ?>"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php 
+        endforeach;
+    endif;
+    exit();
+endif; 
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -25,12 +75,13 @@
                         </div>
                         <div class="botones">
                             <button class="btn btn_azul" id="incluir">Nueva Moneda</button>
-
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
+                    
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
+                            
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
@@ -38,6 +89,7 @@
             </div>
         </div>
     </section>
+
     <section class="contenedor_modal" id="contenedor_modal">
         <div class="modal modal_grande ocultar" id="modal">
             <div class="cabecera_modal">
@@ -82,6 +134,7 @@
             </div>
         </div>
     </section>
+
     <script src="js/main.js"></script>
     <script src="js/monedas.js"></script>
 </body>
