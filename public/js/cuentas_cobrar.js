@@ -52,6 +52,7 @@ function calcularVencimientoAutomatico(fechaEmisionValor) {
 }
 
 $(document).ready(function () {
+    inicializarPaginador();
     consultarAtletas();
     consultarConceptos();
     consultarMonedas();

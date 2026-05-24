@@ -24,7 +24,10 @@ $objModelo = new ModeloMetodosPago();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudMetodos_Pagos($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
 
 /**
@@ -44,7 +47,8 @@ function manejarSolicitudMetodos_Pagos($obj, $id_modulo, $bitacoraObj, array $pe
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar el metodo de pago.');
+                consultar($obj, $permisos);
                 break;
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar el metodo de pago.');
@@ -79,14 +83,15 @@ function manejarSolicitudMetodos_Pagos($obj, $id_modulo, $bitacoraObj, array $pe
  * --- LÓGICA DE ACCIONES ---
  */
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] ='Error al listar los metodos de pago';
-    }
-    echo json_encode($respuesta);
+
+    $registro = $respuesta['datos'] ?? [];
+    $solo_lista = true;
+
+    include(__DIR__ . '/../vista/MetodosPago.php');
 }
 
 function buscar($obj): void
@@ -130,14 +135,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
             registrarBitacora($bitacoraObj, $id_modulo, "Registro al metodo: " . $_POST['nombre']);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Metodo registrado exitosamente.');
-
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un metodo de pago registrado con este nombre.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
-
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
@@ -170,14 +173,12 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
             registrarBitacora($bitacoraObj, $id_modulo, "Modifico al metodo: " . $_POST['nombre']);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Metodo modificado exitosamente.');
-
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un metodo de pago registrado con este nombre.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
-
         }
 
         echo json_encode($resultado);
@@ -211,7 +212,6 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
                 ASSOCIATES  => 'El metodo de pago tiene pagos asociados.',
                 default          => 'Ocurrió un error inesperado en la eliminacion.'
             };
-
         }
         echo json_encode($resultado);
     } catch (Exception $e) {

@@ -20,18 +20,29 @@ function busqueda() {
 
 $(document).ready(function () {
     // 1. Cargar la tabla al iniciar
-    inicializarPaginador();
+    consultar();
 
-    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Permitido entre 2 y 30 caracteres", "proceso");
+    // 2. Filtros de escritura (evitar letras en las edades)
+   /* $("#edad_min, #edad_max").on("input", function () {
+        var input = $(this).val().replace(/[^0-9]/g, ''); // Solo números
+        if (input.length > 2) {
+            input = input.substring(0, 2); // Máximo 2 dígitos
+        }
+        $(this).val(input);
+    });*/
 
+    // 3. Validaciones en tiempo real para Categorías
+    // Nombre: Letras, números, espacios y guiones (Ej: "U-12", "Sub 20")
+    Validacion("nombre", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras, números y guiones)", "proceso");
+    Validacion("descripcion", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras, números y guiones)", "proceso");
 
-    // 3. Lógica de los Botones Guardar/Modificar
+    // 4. Lógica de los Botones Guardar/Modificar
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
-
+        
         if (accion == "incluir") {
-            if (validarEnvio(accion)) { // Descomentado para que valide antes de incluir
-                confirmar('¿Está seguro que quiere registrar este método de pago?', function (confirmado) {
+            if (validarEnvio(accion)) {
+                confirmar('¿Está seguro que quiere registrar esta categoría equipamiento?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
@@ -42,7 +53,7 @@ $(document).ready(function () {
         }
         else if (accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar este método de pago?', function (confirmado) {
+                confirmar('¿Está seguro que quiere modificar esta categoría equipamiento?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
@@ -63,14 +74,14 @@ $(document).ready(function () {
         }
     });
 
-    // 4. Botones de la vista
+    // 5. Botones de la vista
     $("#incluir").on("click", function () {
         limpia(); // Limpia el formulario
-        $("#id").val(""); // Este es el input hidden en tu form (asegúrate de que en el backend reciba id_metodos)
+        $("#id").val("");
         $("#proceso").data("accion", "incluir");
-        $("#proceso").text("Registrar Método");
-        $("#titulo_modal").text("Registrar Nuevo Método de Pago");
-        abrirModal();
+        $("#proceso").text("Registrar Categoría Equipamiento");
+        $("#titulo_modal").text("Registrar Nueva Categoría Equipamiento");
+        abrirModal(); // Esta función debe estar definida en tu main.js o base.js
     });
 
     $("#generar").on("click", function () {
@@ -92,7 +103,7 @@ function buscar(id) {
 }
 
 function eliminar(id) {
-    confirmar('¿Está seguro que quiere eliminar este método de pago?', function (confirmado) {
+    confirmar('¿Está seguro que quiere eliminar esta categoría equipamiento?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
@@ -103,66 +114,80 @@ function eliminar(id) {
 }
 
 function validarEnvio(proceso) {
-    // Validar Nombre
-    if (validarkeyup(/^[A-Za-z0-9\sñÑáéíóúÁÉÍÓÚ]{2,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 2 y 30 caracteres", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de método válido");
+    if (validarkeyup(/^[A-Za-z0-9\-\b\s]{2,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 2 y 30 caracteres (letras, números y guiones)", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de categoría equipamientos válido");
         return false;
     }
+    else if (validarkeyup(/^[A-Za-z0-9\-\b\s]{2,30}$/, $("#descripcion"), $("#descripcion_spam"), "Permitido entre 2 y 30 caracteres (letras, números y guiones)", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar una descripcion válida");
+        return false;
+    }
+    
 
-    // Validar Necesita Referencia (Asumiendo que no puede estar vacío)
-    if ($("#nec_referencia").val() === null || $("#nec_referencia").val() === "") {
-        muestraMensaje("error", 2000, "Error", "Debe indicar si el método necesita referencia");
-        // Opcional: mostrar un span de error si tienes uno configurado
-        // $("#nec_referencia_spam").text("Campo requerido").show(); 
+    // Validación lógica: Edad mínima no puede ser mayor a la máxima
+  /*  let min = parseInt($("#edad_min").val(), 10);
+    let max = parseInt($("#edad_max").val(), 10);
+    if (min > max) {
+        muestraMensaje("error", 3000, "Error", "La edad mínima no puede ser mayor a la edad máxima");
         return false;
-    }
+    }*/
+
     return true;
 }
 
 function modificar(datos) {
     $("#proceso").data("accion", "modificar");
-    $("#proceso").text("Modificar Método");
-    $("#titulo_modal").text("Modificar Método de Pago");
-
+    $("#proceso").text("Modificar CategoríaEquipamiento");
+    $("#titulo_modal").text("Modificar Categoría Equipamiento");
+    
     // Llenamos el formulario con los datos recibidos de la BD
-    $('#id').val(datos[0].id_metodos);
+    $('#id').val(datos[0].id_categoria);
     $('#nombre').val(datos[0].nombre);
-    $('#nec_referencia').val(datos[0].nec_referencia);
-    $('#estatus').val(datos[0].estatus);
+    $('#descripcion').val(datos[0].descripcion);
 
     abrirModal();
 }
 
-let botonPresionado = null
-function bloquear(id, b, elemento) {
-    let texto = (b == 1) ? 'bloquear' : 'desbloquear';
-    confirmar(`¿Está seguro que quiere ${texto} este Metodo?`, function (confirmado) {
-        if (confirmado) {
-            botonPresionado = elemento;
-            var datos = new FormData();
-            datos.append('accion', 'bloquear');
-            datos.append('id', id);
-            datos.append('bloqueo', b);
-            enviaAjax(datos);
-
-        }
-    });
-}
-
-function crearConsulta(htmlRecibido) {
+function crearConsulta(datos) {
     const contenedor = $('#resultadoconsulta');
+    contenedor.empty();
 
-    // Inyectamos directamente el string de tarjetas HTML que escupió el PHP
-    contenedor.html(htmlRecibido);
+    if (datos.length === 0) {
+        contenedor.append('<div class="listado_vacio"><p>No se encontraron categorías equipamientos registradas</p></div>');
+    } else {
+        datos.forEach(dato => {
+            let registro = `
+                <div class="listado_contenedor_grupal">
+                    <div class="listado_item" onclick="toggleDetalles(this)">
+                        <div class="listado_col_datos">
+                            <div class="listado_dato_grupo">
+                                <small>Categoría</small>
+                                <span style="font-weight: bold; color: #2ec135;">${escapeHTML(dato.nombre)}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Descripcion</small>
+                                <span>${dato.descripcion} </span>
+                            </div>
+                        </div>
 
-    // Ejecutamos tus inicializadores estéticos y paginadores normales
+                        <div class="listado_col_acciones">
+                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_categoria})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_categoria})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            contenedor.append(registro);
+        });
+    }
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
-    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function escapeHTML(texto) {
-    if (!texto) return '';
     var caracteres = {
         '&': '&amp;',
         '<': '&lt;',
@@ -170,7 +195,7 @@ function escapeHTML(texto) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return String(texto).replace(/[&<>"']/g, m => caracteres[m]);
+    return texto.replace(/[&<>"']/g, m => caracteres[m]);
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -178,7 +203,7 @@ var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
         async: true,
-        url: "", // Recuerda que esto apunta al controlador actual (/MetodosPago)
+        url: "", // Se envía al controlador actual de la ruta (/Categorias)
         type: "POST",
         contentType: false,
         data: datos,
@@ -189,32 +214,28 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
-            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
-                crearConsulta(respuesta);
-                return; // Cortamos el flujo de inmediato de forma exitosa
-            }
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "incluir") {
+                
+                if (lee.accion == "consultar") {
+                    crearConsulta(lee.datos);
+                } 
+                else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
-                    cerrarModal();
+                    cerrarModal(); // Agregado para que se cierre al guardar
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
-                }
+                } 
                 else if (lee.accion == "eliminar") {
                     consultar();
                     muestraMensaje("success", 2000, "Eliminación Exitosa", lee.mensaje);
-                }
+                } 
                 else if (lee.accion == "modificar") {
                     consultar();
                     limpia();
                     cerrarModal();
                     muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
-                }
-                else if (lee.accion == "bloquear") {
-                    muestraMensaje("success", 2000, "Bloqueo Exitosa", lee.mensaje);
-                    consultar();
-                }
+                } 
                 else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }
@@ -223,7 +244,7 @@ function enviaAjax(datos) {
                 }
             } catch (e) {
                 alert("Error procesando los datos: " + e.message);
-                console.error(respuesta);
+                console.error(respuesta); // Útil para ver en la consola si el PHP imprimió un error visible
             }
         },
         error: function (request, status, err) {

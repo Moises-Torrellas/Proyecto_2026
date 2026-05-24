@@ -52,7 +52,7 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_CONCEPTOS_)): ?>
-                        <a type="button" href="/Proyecto_2026/public/Concepto" class="opciones"><i class="opciones_i" data-lucide="receipt"></i> Conceptos de Cuentas</a>
+                        <a type="button" href="/Proyecto_2026/public/Conceptos" class="opciones"><i class="opciones_i" data-lucide="receipt"></i> Conceptos de Cuentas</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_MONEDAS_)): ?>
@@ -73,7 +73,7 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_CATEGORIA_EQUI_)): ?>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="layers-plus"></i> Categoria de Equipamientos</a>
+                        <a type="button" href="/Proyecto_2026/public/CategoriaEquipamiento" class="opciones"><i class="opciones_i" data-lucide="layers-plus"></i> Categoria de Equipamientos</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_CALIDAD_)): ?>

@@ -5,7 +5,7 @@ namespace App\modelo;
 use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloConcepto extends ModeloBase
+class ModeloConceptos extends ModeloBase
 {
     private $id;
     private $nombre;
@@ -102,21 +102,9 @@ class ModeloConcepto extends ModeloBase
     {
 
         try {
-            //para verificar existencia los parametros que recibe son string $campo, $valor, string $tabla, ?int $estatus = 1, string $db = 'general', bool $bloquear = false
-
-            /* string $campo     Nombre lógico del campo (ej: 'cedula', 'correo'). Se valida contra la whitelist definida en el __construct.
-            mixed  $valor     El valor específico que se desea buscar en la tabla.
-            string $tabla     Nombre de la tabla donde se realizará la búsqueda.
-            int|null $estatus Filtro por estado del registro. (1 = Activo por defecto, NULL = Buscar en todo) sirve si la tabla tiene estatus para borrado logico.
-            string $db        Identificador de la conexión a usar (por defecto 'general' para la base de datos del club) para la base de datos de seguridad se le pasa como parametro 'sg' .
-            bool   $bloquear  Si es true, aplica 'FOR UPDATE' para bloquear la fila (Manejo de concurrencia).
-            
-            return bool Devuelve true si el registro existe, false en caso contrario.
-            throws Exception Si el campo proporcionado no está en la whitelist de seguridad. */
             $conex = $this->conex();
             $conex->beginTransaction();
             if ($this->verificarExistencia('nombre', $this->nombre, 'conceptos', NULL, bloquear: true)) {
-                //estas constantes como DUPLICATE_NAME estan definidas en el config.php
                 throw new Exception(DUPLICATE_NAME);
             }
 
@@ -145,24 +133,6 @@ class ModeloConcepto extends ModeloBase
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            /*
-            * EXPLICACIÓN DE PARÁMETROS - verificarExistenciaPropia:
-            * 
-            * 1. $campo: El nombre del dato a validar (ej: 'cedula'). Se verifica contra una lista de campos permitidos por seguridad.
-            * 
-            * 2. $valor: El contenido que quieres buscar (ej: '27123456'). Es el valor que el usuario ingresó en el formulario.
-            * 
-            * 3. $id: La llave primaria del registro que estás editando actualmente. Sirve para comparar si el valor ya es tuyo.
-            * 
-            * 4. $tabla: Nombre de la tabla en la base de datos donde se hará la consulta (ej: 'representantes').
-            * 
-            * 5. $estatus: Filtro de estado. Por defecto busca activos (1), pero si envías NULL busca en todos los registros.
-            * 
-            * 6. $db: Indica cuál conexión de base de datos usar (por defecto usa la conexión 'general').
-            * 
-            * 7. $bloquear: Si es true, activa el "FOR UPDATE". Esto pausa otros procesos que intenten leer o cambiar esta fila 
-            *    específica hasta que tú termines tu transacción, evitando choques de datos en el sistema de la academia.
- */
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'conceptos', NULL, bloquear: true)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'conceptos', NULL, bloquear: true)) {
                     throw new Exception(DUPLICATE_NAME);

@@ -69,16 +69,16 @@ class ModeloCuentasCobrar extends ModeloBase
 
             // CORRECCIÓN: Cambiado c.monto a c.monto_personalizado
             $sentencia = "SELECT c.*, 
-                                 c.monto_personalizado as monto_total, 
-                                 c.monto_pendiente as monto_pendiente,
-                                 c.anulado as anulado,
-                                 IF(c.estatus = '0', 'Pendiente', c.estatus) as estatus,
-                                 a.nombres as atleta_nombre, 
-                                 a.apellidos as atleta_apellido, 
-                                 co.nombre as concepto_nombre,
-                                 m.nombre as moneda_nombre,
-                                 m.simbolo as moneda_simbolo
-                          FROM cuentas_cobrar c            INNER JOIN atletas a ON c.id_atleta = a.id_atleta 
+                                c.monto_personalizado as monto_total, 
+                                c.monto_pendiente as monto_pendiente,
+                                c.anulado as anulado,
+                                IF(c.estatus = '0', 'Pendiente', c.estatus) as estatus,
+                                a.nombres as atleta_nombre, 
+                                a.apellidos as atleta_apellido, 
+                                co.nombre as concepto_nombre,
+                                m.nombre as moneda_nombre,
+                                m.simbolo as moneda_simbolo
+                        FROM cuentas_cobrar c            INNER JOIN atletas a ON c.id_atleta = a.id_atleta 
                         INNER JOIN conceptos co ON c.id_concepto = co.id_conceptos 
                         INNER JOIN monedas m ON c.id_moneda = m.id_moneda
                         WHERE 1=1";
@@ -185,7 +185,7 @@ class ModeloCuentasCobrar extends ModeloBase
 
             // Añadimos monto_pendiente a los campos y los valores de la sentencia SQL
             $sentencia = "INSERT INTO cuentas_cobrar (`id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `monto_pendiente`, `fecha_emision`, `fecha_vencimiento`, `estatus`) 
-                          VALUES (:id_concepto, :id_atleta, :id_moneda, :monto, :monto_pendiente, :fecha_emision, :fecha_vencimiento, :estatus)";
+                        VALUES (:id_concepto, :id_atleta, :id_moneda, :monto, :monto_pendiente, :fecha_emision, :fecha_vencimiento, :estatus)";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id_concepto', $this->id_concepto);

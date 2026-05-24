@@ -1,6 +1,6 @@
 <?php
 
-use App\modelo\ModeloConcepto;
+use App\modelo\ModeloConceptos;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -12,19 +12,22 @@ $id_modulo = _MD_CONCEPTOS_;
 $permisos = procesarPermisos($id_modulo, $bitacora ?? null);
 
 // 4. Lógica de despacho (Router interno)
-$nombreClaseModelo = 'App\modelo\ModeloConcepto';
+$nombreClaseModelo = 'App\modelo\ModeloConceptos';
 
 if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
     exit();
 }
 
-$objModelo = new ModeloConcepto();
+$objModelo = new ModeloConceptos();
 
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
 
 /**
@@ -44,7 +47,8 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar Concepto de pago.');
+                consultar($obj, $permisos);
                 break;
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Concepto de pago.');
@@ -80,14 +84,15 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
  * --- LÓGICA DE ACCIONES ---
  */
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] ='Error al listar Concepto de pago';
-    }
-    echo json_encode($respuesta);
+
+    $registro = $respuesta['datos'] ?? [];
+    $solo_lista = true;
+
+    include(__DIR__ . '/../vista/Conceptos.php');
 }
 
 function buscar($obj): void
