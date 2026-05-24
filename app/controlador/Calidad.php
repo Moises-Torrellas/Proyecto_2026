@@ -6,7 +6,7 @@ use App\modelo\ModeloCalidad;
 require_once __DIR__ . '/Base.php';
 
 // 2. Configuración del módulo (Corregido al ID de Categorías)
-$id_modulo = _MD_CATEGORIAS_;
+$id_modulo = _MD_CALIDAD_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
 $permisos = procesarPermisos($id_modulo, $bitacora ?? null);
@@ -22,7 +22,7 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloCalidad();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudCategorias($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
     cargarVista($pagina);
 }
@@ -31,7 +31,7 @@ if (comprobarAjax() && !empty($_POST)) {
  * --- FUNCIONES DEL CONTROLADOR ---
  */
 
-function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permisos): void
+function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
     try {
         $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
@@ -67,7 +67,7 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Calidad', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

@@ -2,38 +2,38 @@
 
 use App\modelo\ModeloPosiciones;
 
-// 1. Cargamos las funciones base
+//Cargamos las funciones base para los controladores
 require_once __DIR__ . '/Base.php';
 
-// 2. Configuración del módulo (Corregido al ID de Representantes)
-$id_modulo = _MD_REPRESENTANTES_;
+// Configuración del id del módulo
+$id_modulo = _MD_POSICIONES_;
 
-// 3. Procesar permisos (Retorna el array de permisos)
+//Procesar permisos (Retorna el array de permisos)
 $permisos = procesarPermisos($id_modulo, $bitacora ?? null);
 
-// 4. Lógica de despacho (Router interno)
+//Comprobar si el modelo existe
 $nombreClaseModelo = 'App\modelo\ModeloPosiciones';
-
 if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
     exit();
 }
-
+// Instanciamos la clase del objeto
 $objModelo = new ModeloPosiciones();
-
+// comprobamos si la solicitud es por medio de ajax
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudRepresentantes($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+// Realizamos la primera consulta del modulo y la pasamos como parametro a la vista con los permisos
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables =['registro' => $registro, 'permisos' => $permisos ];
+    cargarVista($pagina, $variables);
 }
-
-/**
- * --- FUNCIONES DEL CONTROLADOR ---
- */
-
+// Funcion para manejar las peticiones recibe como parametros el objeto del modelo, el id del modulo, la bitacora y el array de permisos
 function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
     try {
+        //comprobamos el token de la sesion
         $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
             throw new Exception('Error de seguridad: Token inválido o expirado.');
@@ -44,7 +44,8 @@ function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $p
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar posiciones.');
+                consultar($obj, $permisos);
                 break;
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar posiciones.');
@@ -67,16 +68,20 @@ function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $p
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Posiciones', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    echo json_encode($respuesta);
+    
+    $registro = $respuesta['datos'] ?? []; 
+    $solo_lista = true;
+
+    include (__DIR__.'/../vista/Posiciones.php');
 }
 
 function buscar($obj): void

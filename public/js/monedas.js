@@ -18,6 +18,7 @@ function busqueda() {
 }
 
 $(document).ready(function () {
+    inicializarPaginador();
 
     // Validación de Nombre
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");

@@ -24,12 +24,11 @@ $objModelo = new ModeloCategorias();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudCategorias($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
-
-/**
- * --- FUNCIONES DEL CONTROLADOR ---
- */
 
 function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
@@ -44,7 +43,8 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar categorias.');
+                consultar($obj, $permisos);
                 break;
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar categorias.');
@@ -67,7 +67,7 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Categorias', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -76,11 +76,15 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
  * Acciones específicas
  */
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    echo json_encode($respuesta);
+
+    $registro = $respuesta['datos'] ?? [];
+    $solo_lista = true;
+
+    include(__DIR__ . '/../vista/Categorias.php');
 }
 
 function buscar($obj): void
@@ -118,11 +122,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             throw new Exception('La edad mínima no puede ser mayor que la edad máxima.');
         }
 
-         $datos = [
+        $datos = [
             'nombre'     => $_POST['nombre'],
             'edad_minima' => $_POST['edad_min'],
             'edad_maxima' => $_POST['edad_max']
-        ];  
+        ];
         $datos['accion'] = 'incluir';
 
         $resultado = $obj->procesarDatos($datos);

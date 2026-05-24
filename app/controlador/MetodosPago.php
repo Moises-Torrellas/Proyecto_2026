@@ -70,7 +70,7 @@ function manejarSolicitudMetodos_Pagos($obj, $id_modulo, $bitacoraObj, array $pe
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Metodos_Pago', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

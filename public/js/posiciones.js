@@ -17,9 +17,7 @@ function busqueda() {
     }, 500);
 }
 $(document).ready(function () {
-    consultar();
-
-
+    inicializarPaginador();
     // Validación de Nombre
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
 
@@ -174,47 +172,14 @@ function modificar(datos) {
     abrirModal();
 }
 
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
-    } else {
-        datos.forEach(dato => {
-            var descripcion = dato.descripcion || "Sin Descripción";
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Nombre</small>
-                                <span>${dato.nombre}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Abreviatura</small>
-                                <span>${dato.abreviatura}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Descripción</small>
-                                <span>${descripcion}</span>
-                            </div>
-                        </div>
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_posicion})"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_posicion})"><i class="fi fi-sr-trash-xmark"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
+    contenedor.html(htmlRecibido);
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -232,6 +197,10 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
                 if (lee.accion == "consultar") {

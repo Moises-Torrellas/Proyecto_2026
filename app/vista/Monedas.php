@@ -29,13 +29,13 @@ if (isset($solo_lista) && $solo_lista === true):
                     <div class="listado_col_acciones">
                         <div style="display:flex; gap:5px;">
                             <?php if ($permisos['modificar']): ?>
-                                <button class="btn_t cbt_v" onclick="buscar(<?= $dato['id_moneda'] ?>)"><i class="fi fi-sr-pencil"></i></button>
+                                <button class="btn_t cbt_v" onclick="buscar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                             <?php endif; ?>
                             <?php if ($permisos['eliminar']): ?>
-                                <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_moneda'] ?>)"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
                             <?php if ($permisos['otros']): ?>
-                                <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_moneda'] ?>, <?= $dato['estatus'] ?>, this)"><i class="fi <?= $icon ?>"></i></button>
+                                <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_moneda'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -110,13 +110,13 @@ if (isset($solo_lista) && $solo_lista === true):
                                             <div class="listado_col_acciones">
                                                 <div style="display:flex; gap:5px;">
                                                     <?php if ($permisos['modificar']): ?>
-                                                        <button class="btn_t cbt_v" onclick="buscar(<?= $dato['id_moneda'] ?>)"><i class="fi fi-sr-pencil"></i></button>
+                                                        <button class="btn_t cbt_v" onclick="buscar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                                     <?php endif; ?>
                                                     <?php if ($permisos['eliminar']): ?>
-                                                        <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_moneda'] ?>)"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                        <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                     <?php endif; ?>
                                                     <?php if ($permisos['otros']): ?>
-                                                        <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_moneda'] ?>, <?= $dato['estatus'] ?>, this)"><i class="fi <?= $icon ?>"></i></button>
+                                                        <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_moneda'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>

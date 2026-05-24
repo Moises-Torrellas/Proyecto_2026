@@ -26,6 +26,7 @@ function busqueda() {
 
 
 $(document).ready(function () {
+    inicializarPaginador();
     MultiConsulta();
 
     $("#doc_i").on("input", function () {
@@ -474,7 +475,6 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
-            // 1. Interceptamos respuestas de interfaz (HTML para la lista de atletas)
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
                 crearConsulta(respuesta);
                 return;
