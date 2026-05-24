@@ -1,5 +1,6 @@
 $('#busqueda').off('keyup').on('keyup', busqueda);
 let timerBusqueda;
+let listaConceptosGlobal = []; // Para almacenar temporalmente los montos de los conceptos
 
 function consultar() {
     let datos = new FormData();
@@ -39,21 +40,49 @@ function busqueda() {
     }, 500);
 }
 
+// Función auxiliar para calcular +30 días reactivamente
+function calcularVencimientoAutomatico(fechaEmisionValor) {
+    if (!fechaEmisionValor) return;
+    let fecha = new Date(fechaEmisionValor + 'T00:00:00'); 
+    fecha.setDate(fecha.getDate() + 30);
+    let año = fecha.getFullYear();
+    let mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    let dia = String(fecha.getDate()).padStart(2, '0');
+    $('#fecha_vencimiento').val(`${año}-${mes}-${dia}`);
+}
+
 $(document).ready(function () {
     consultarAtletas();
     consultarConceptos();
     consultarMonedas();
 
+    // Evento reactivo para cuando cambie la fecha de emisión
+    $('#fecha_emision').on('change', function () {
+        calcularVencimientoAutomatico($(this).val());
+    });
+
+    // Evento reactivo para auto-cargar el monto al seleccionar un concepto
+    $('#id_concepto').on('change', function () {
+        let idSeleccionado = $(this).val();
+        if (idSeleccionado && listaConceptosGlobal.length > 0) {
+            // Buscamos el concepto coincidente dentro del array global
+            let conceptoEncontrado = listaConceptosGlobal.find(c => c.id_concepto == idSeleccionado);
+            if (conceptoEncontrado && conceptoEncontrado.monto) {
+                let montoBase = parseFloat(conceptoEncontrado.monto).toFixed(2);
+                $('#monto_total').val(montoBase).trigger('input');
+            }
+        }
+    });
+
     // Validar entrada de monto para que solo acepte números y punto decimal
     $("#monto_total").on("input", function () {
         var input = $(this).val().replace(/[^0-9.]/g, '');
-        // Evitar múltiples puntos
         if ((input.match(/\./g) || []).length > 1) {
             input = input.substring(0, input.length - 1);
         }
         $(this).val(input);
 
-        // Si estamos incluyendo, el monto pendiente es igual al monto total
+        // El monto pendiente se auto-iguala al monto total durante la inclusión
         if ($("#proceso").data("accion") === "incluir") {
             $("#monto_pendiente").val(input);
         }
@@ -78,20 +107,26 @@ $(document).ready(function () {
             if (validarEnvio(accion)) {
                 confirmar('¿Está seguro que quiere modificar este cargo?', function (confirmado) {
                     if (confirmado) {
-                        // Habilitamos temporalmente los campos para que viajen en el FormData
+                        // Habilitamos los campos temporalmente para compilar el FormData completo
                         $('#estatus').prop('disabled', false);
                         $('#id_atleta').prop('disabled', false);
                         $('#id_concepto').prop('disabled', false);
                         $('#id_moneda').prop('disabled', false);
+                        $('#fecha_emision').prop('readonly', false);
+                        $('#fecha_vencimiento').prop('readonly', false);
 
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
 
-                        // Los volvemos a deshabilitar visualmente
+                        // Bloqueamos visualmente de nuevo
                         $('#estatus').prop('disabled', true);
                         $('#id_atleta').prop('disabled', true);
                         $('#id_concepto').prop('disabled', true);
                         $('#id_moneda').prop('disabled', true);
+                        if ($("#proceso").data("accion") === "modificar") {
+                            $('#fecha_emision').prop('readonly', true);
+                            $('#fecha_vencimiento').prop('readonly', true);
+                        }
 
                         enviaAjax(datos);
                     }
@@ -145,9 +180,25 @@ $(document).ready(function () {
         $('#id_moneda').prop('disabled', false);
 
         $('#monto_pendiente').val('');
-        $('#fecha_emision').val(new Date().toISOString().split('T')[0]);
-        $('#estatus').val('Pendiente');
+        
+        // Habilitamos la edición de fechas para un nuevo registro
+        $('#fecha_emision').prop('readonly', false);
+        $('#fecha_vencimiento').prop('readonly', false);
 
+        // Inicializamos las fechas por defecto en el cliente
+        let fechaLocal = new Date();
+        let año = fechaLocal.getFullYear();
+        let mes = String(fechaLocal.getMonth() + 1).padStart(2, '0');
+        let dia = String(fechaLocal.getDate()).padStart(2, '0');
+        let hoy = `${año}-${mes}-${dia}`;
+
+        // Asignamos la fecha de emisión correcta (Día 23)
+        $('#fecha_emision').val(hoy);
+        
+        // El vencimiento se calculará automáticamente sumando 30 días en base al día 23
+        calcularVencimientoAutomatico(hoy);
+
+        $('#estatus').val('Pendiente');
         $('#estatus').prop('disabled', true);
         $('#monto_pendiente').prop('readonly', true);
 
@@ -160,25 +211,6 @@ $(document).ready(function () {
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Reporte de Cuentas");
         abrirModal();
-    });
-
-    $('#ayuda').on('click', function () {
-        const pasos = [
-            {
-                element: '#busqueda',
-                popover: { title: 'Barra de Búsqueda', description: 'Aquí puedes buscar cargos por atleta o concepto.', position: 'bottom' }
-            },
-            {
-                element: '#incluir',
-                popover: { title: 'Nuevo Cargo', description: 'Si pulsa aquí se abrirá un modal para generar un nuevo cargo a un atleta.', position: 'bottom' }
-            },
-            {
-                element: '#resultadoconsulta',
-                popover: { title: 'Cuentas Registradas', description: 'Aquí se mostrarán todas las cuentas por cobrar y su estatus.', position: 'top' }
-            }
-        ];
-        const driver = iniciarTourConPasos(pasos);
-        driver.start();
     });
 });
 
@@ -195,6 +227,16 @@ function validarEnvio(proceso) {
 
     if ($('#id_moneda').val() == "" || $('#id_moneda').val() == null) {
         muestraMensaje("error", 2000, "Error", "Debe seleccionar una moneda");
+        return false;
+    }
+
+    if ($('#fecha_emision').val() == "") {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar una fecha de emisión");
+        return false;
+    }
+
+    if ($('#fecha_vencimiento').val() == "") {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar una fecha de vencimiento");
         return false;
     }
 
@@ -238,11 +280,18 @@ function modificar(datos) {
     $('#monto_total').val(datos[0].monto_total);
     $('#monto_pendiente').val(datos[0].monto_pendiente);
 
-    let fecha = datos[0].fecha_emision.split(' ')[0];
-    $('#fecha_emision').val(fecha);
+    // Cargamos ambas fechas provenientes de la BD
+    let fechaEmi = datos[0].fecha_emision.split(' ')[0];
+    let fechaVen = datos[0].fecha_vencimiento.split(' ')[0];
+    $('#fecha_emision').val(fechaEmi);
+    $('#fecha_vencimiento').val(fechaVen);
 
     let estatusBD = datos[0].estatus == '0' ? 'Pendiente' : datos[0].estatus;
     $('#estatus').val(estatusBD).trigger('change');
+
+    // Al modificar, las fechas quedan bloqueadas para mantener la consistencia histórica del cargo
+    $('#fecha_emision').prop('readonly', true);
+    $('#fecha_vencimiento').prop('readonly', true);
 
     $('#monto_pendiente').prop('readonly', true);
     $('#estatus').prop('disabled', true);
@@ -255,11 +304,8 @@ function modificar(datos) {
 
 function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-
-    // Inyectamos directamente el bloque HTML estructurado que procesó el servidor
     contenedor.html(htmlRecibido);
 
-    // Reactivamos las librerías visuales y los comportamientos estéticos
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
     if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
@@ -307,6 +353,8 @@ function enviaAjax(datos) {
                 if (lee.accion == "consultarA") {
                     construirSelect('id_atleta', lee.datos, 'id_atleta', 'nombre', 'apellido');
                 } else if (lee.accion == "consultarCo") {
+                    // CACHEADO: Guardamos la lista completa en la variable global para tener acceso al monto
+                    listaConceptosGlobal = lee.datos;
                     construirSelect('id_concepto', lee.datos, 'id_concepto', 'nombre');
                 } else if (lee.accion == "consultarM") {
                     construirSelect('id_moneda', lee.datos, 'id_moneda', 'nombre');
@@ -325,8 +373,7 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
-                }
-                else if (lee.accion == "error") {
+                } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }
             } catch (e) {
@@ -347,4 +394,16 @@ function escapeHTML(texto) {
     if (!texto) return '';
     var caracteres = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return String(texto).replace(/[&<>"']/g, m => caracteres[m]);
+}
+
+function toggleDetalles(elemento) {
+    $(elemento).next('.listado_detalle_oculto').slideToggle();
+    $(elemento).find('.icono_flecha_detalle').toggleClass('rotar_flecha');
+}
+
+function limpia() {
+    if($('#f')[0]) $('#f')[0].reset();
+    $('.select2').val(null).trigger('change');
+    $("#proceso").data("accion", "incluir");
+    $("#proceso").text("Registrar Cargo");
 }
