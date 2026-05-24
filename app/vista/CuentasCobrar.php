@@ -16,7 +16,8 @@
                     ? '<span class="estatus_v">Pagado</span>'
                     : '<span class="estatus_a">Pendiente</span>';
             }
-            // 5. Lógica de renderizado de los Botones de Acción con Validación de Permisos
+
+            // Lógica de renderizado de los Botones de Acción con Validación de Permisos
             if ($esAnulado) {
                 $botonesAccion = '';
             } else {
@@ -136,7 +137,7 @@
                                             ? '<span class="estatus_v">Pagado</span>'
                                             : '<span class="estatus_a">Pendiente</span>';
                                     }
-                                    // 5. Lógica de renderizado de los Botones de Acción con Validación de Permisos
+                                    // Lógica de renderizado de los Botones de Acción con Validación de Permisos
                                     if ($esAnulado) {
                                         $botonesAccion = '';
                                     } else {
@@ -208,6 +209,7 @@
             </div>
         </div>
     </section>
+
     <section class="contenedor_modal" id="contenedor_modal">
         <div class="modal ocultar" id="modal">
             <div class="cabecera_modal">
@@ -265,7 +267,7 @@
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="date" class="formulario" id="fecha_emision" name="fecha_emision" readonly>
+                                <input type="date" class="formulario" id="fecha_emision" name="fecha_emision">
                                 <label for="fecha_emision" class="titulo_formulario">Fecha de Emisión</label>
                                 <span class="mensaje" id="fecha_emision_spam"></span>
                             </div>
@@ -273,6 +275,13 @@
                     </div>
 
                     <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_vencimiento" name="fecha_vencimiento">
+                                <label for="fecha_vencimiento" class="titulo_formulario">Fecha de Vencimiento</label>
+                                <span class="mensaje" id="fecha_vencimiento_spam"></span>
+                            </div>
+                        </div>
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="estatus" id="estatus" class="formulario select" disabled>
@@ -297,7 +306,7 @@
         </div>
     </section>
     <script src="js/main.js"></script>
-    <script src="js/cuentas_cobrar.js"></script>
+    <script src="js/cuentas_cobrar.js?v=<?= time(); ?>"></script>
 </body>
 
 </html>

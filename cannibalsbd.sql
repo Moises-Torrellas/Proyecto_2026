@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 22-05-2026 a las 04:52:59
--- Versión del servidor: 10.4.28-MariaDB
--- Versión de PHP: 8.2.4
+-- Tiempo de generación: 24-05-2026 a las 05:10:27
+-- Versión del servidor: 10.4.32-MariaDB
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `cannibalsbd`
 --
-CREATE DATABASE IF NOT EXISTS `cannibalsbd` DEFAULT CHARACTER SET utf32 COLLATE utf32_spanish_ci;
-USE `cannibalsbd`;
 
 -- --------------------------------------------------------
 
@@ -155,6 +153,7 @@ CREATE TABLE `cuentas_cobrar` (
   `id_atleta` int(11) NOT NULL,
   `id_moneda` int(100) NOT NULL,
   `monto_personalizado` decimal(10,2) DEFAULT NULL,
+  `monto_pendiente` decimal(10,2) NOT NULL DEFAULT 0.00,
   `fecha_emision` date NOT NULL,
   `fecha_vencimiento` date DEFAULT NULL,
   `estatus` tinyint(4) NOT NULL,
@@ -165,10 +164,11 @@ CREATE TABLE `cuentas_cobrar` (
 -- Volcado de datos para la tabla `cuentas_cobrar`
 --
 
-INSERT INTO `cuentas_cobrar` (`id_cobrar`, `id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `fecha_emision`, `fecha_vencimiento`, `estatus`, `anulado`) VALUES
-(1, 2, 15, 4, 30.00, '2026-05-21', '2026-06-20', 0, 0),
-(2, 3, 13, 5, 525.00, '2026-05-21', '2026-06-20', 0, 0),
-(3, 2, 16, 4, 30.58, '2026-05-21', '2026-06-20', 0, 1);
+INSERT INTO `cuentas_cobrar` (`id_cobrar`, `id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `monto_pendiente`, `fecha_emision`, `fecha_vencimiento`, `estatus`, `anulado`) VALUES
+(1, 2, 15, 4, 30.00, 0.00, '2026-05-21', '2026-06-20', 0, 1),
+(2, 3, 13, 5, 525.00, 0.00, '2026-05-21', '2026-06-20', 0, 0),
+(3, 2, 16, 4, 30.58, 0.00, '2026-05-21', '2026-06-20', 0, 1),
+(4, 3, 15, 5, 30.35, 0.00, '2026-05-23', '2026-06-22', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -669,7 +669,7 @@ ALTER TABLE `conceptos`
 -- AUTO_INCREMENT de la tabla `cuentas_cobrar`
 --
 ALTER TABLE `cuentas_cobrar`
-  MODIFY `id_cobrar` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_cobrar` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_equipos`

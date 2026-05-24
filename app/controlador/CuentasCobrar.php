@@ -145,23 +145,28 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $reglaMonto = '/^[0-9]+(\.[0-9]{1,2})?$/';
+        $reglaFecha = '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/';
 
         $validaciones = [
-            'id_concepto' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
-            'id_atleta'   => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
-            'id_moneda'   => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'], // AGREGADO
-            'monto_total' => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido. Use formato numérico (ej. 10.50).']
+            'id_concepto'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
+            'id_atleta'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
+            'id_moneda'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'],
+            'monto_total'       => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido.'],
+            'fecha_emision'     => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de emisión inválida.'],
+            'fecha_vencimiento' => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de vencimiento inválida.']
         ];
 
         validar_datos($validaciones);
 
         $datos = [
-            'id_concepto' => $_POST['id_concepto'],
-            'id_atleta'   => $_POST['id_atleta'],
-            'id_moneda'   => $_POST['id_moneda'], // AGREGADO
-            'monto_total' => $_POST['monto_total'],
-            'estatus'     => 'Pendiente', 
-            'accion'      => 'incluir'
+            'id_concepto'       => $_POST['id_concepto'],
+            'id_atleta'         => $_POST['id_atleta'],
+            'id_moneda'         => $_POST['id_moneda'],
+            'monto_total'       => $_POST['monto_total'],
+            'fecha_emision'     => $_POST['fecha_emision'],
+            'fecha_vencimiento' => $_POST['fecha_vencimiento'],
+            'estatus'           => 'Pendiente', 
+            'accion'            => 'incluir'
         ];
 
         $resultado = $obj->procesarDatos($datos);
@@ -174,7 +179,6 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         }
 
         echo json_encode($resultado);
-
     } catch (Exception $e) {
         logs('CuentasCobrar', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
@@ -185,26 +189,31 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $reglaMonto = '/^[0-9]+(\.[0-9]{1,2})?$/';
+        $reglaFecha = '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/';
 
         $validaciones = [
-             'id'              => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-             'id_concepto'     => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
-             'id_atleta'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
-             'id_moneda'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'], // AGREGADO
-             'monto_total'     => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido.'],
-             'estatus'         => ['regla' => '/^.+$/', 'mensaje' => 'El campo estatus es obligatorio.']
+             'id'                => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
+             'id_concepto'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
+             'id_atleta'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
+             'id_moneda'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'],
+             'monto_total'       => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido.'],
+             'fecha_emision'     => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de emisión inválida.'],
+             'fecha_vencimiento' => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de vencimiento inválida.'],
+             'estatus'           => ['regla' => '/^.+$/', 'mensaje' => 'El campo estatus es obligatorio.']
         ];
 
         validar_datos($validaciones);
 
         $datos = [
-            'id'              => $_POST['id'],
-            'id_concepto'     => $_POST['id_concepto'],
-            'id_atleta'       => $_POST['id_atleta'],
-            'id_moneda'       => $_POST['id_moneda'], // AGREGADO
-            'monto_total'     => $_POST['monto_total'],
-            'estatus'         => $_POST['estatus'],
-            'accion'          => 'modificar'
+            'id'                => $_POST['id'],
+            'id_concepto'       => $_POST['id_concepto'],
+            'id_atleta'         => $_POST['id_atleta'],
+            'id_moneda'         => $_POST['id_moneda'],
+            'monto_total'       => $_POST['monto_total'],
+            'fecha_emision'     => $_POST['fecha_emision'],
+            'fecha_vencimiento' => $_POST['fecha_vencimiento'],
+            'estatus'           => $_POST['estatus'],
+            'accion'            => 'modificar'
         ];
 
         $resultado = $obj->procesarDatos($datos);
