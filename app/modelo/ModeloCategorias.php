@@ -12,6 +12,7 @@ class ModeloCategorias extends ModeloBase
     private $edad_min;
     private $edad_max;
 
+
     public function __construct()
     {
         parent::__construct();
@@ -109,12 +110,16 @@ class ModeloCategorias extends ModeloBase
         } finally {
             $conex = NULL;
         }
-    }                                                      
+    }                                                   
 
     private function Modificar(): array
     {
+        $conex = NULL;
         try {
-            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'representantes', NULL)) {
+            $conex = $this->conex(); // <-- CORRECCIÓN 1: Se inicializa la conexión
+            
+            // <-- CORRECCIÓN 2: Se cambia 'representantes' por 'categorias'
+            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'categorias', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'categorias', NULL)) {
                     throw new Exception('Ya existe otra categoría registrada con este nombre.');
                 }
@@ -160,7 +165,8 @@ class ModeloCategorias extends ModeloBase
             $conex = NULL;
         }
     }
-private function Eliminar(): array
+
+    private function Eliminar(): array
     {
         try {
             $conex = $this->conex();
@@ -169,7 +175,6 @@ private function Eliminar(): array
                 throw new Exception('La categoría no existe.');
             }
             
-            // CORRECCIÓN 2: Aquí también usamos 'id' (Asegúrate de que la tabla 'atletas' exista)
             if ($this->verificarExistencia('id', $this->id, 'atletas', NULL)) {
                 throw new Exception('No se puede eliminar: la categoría tiene atletas asociados.');
             }
@@ -187,4 +192,4 @@ private function Eliminar(): array
             $conex = NULL;
         }
     }   
-} 
+}
