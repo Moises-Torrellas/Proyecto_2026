@@ -12,6 +12,9 @@
 
 /public/img/usuarios/*
 /public/img/atletas/*
+# Python virtuales y caché
+__pycache__/
+*.pyc
 # Otros archivos recomendados para tu entorno (XAMPP/Windows)
 .DS_Store
 Thumbs.db
