@@ -1,7 +1,20 @@
+$('#busqueda').off('keyup').on('keyup', busqueda);
+let timerBusqueda;
 function consultar() {
-    var datos = new FormData();
+    let datos = new FormData();
     datos.append('accion', 'consultar');
     enviaAjax(datos);
+}
+function busqueda() {
+    clearTimeout(timerBusqueda);
+    timerBusqueda = setTimeout(function () {
+        let valorBusqueda = $('#busqueda').val();
+        let datos = new FormData();
+        datos.append('accion', 'consultar');
+        datos.append('filtro', valorBusqueda);
+
+        enviaAjax(datos);
+    }, 500);
 }
 function consultarModulo() {
     var datos = new FormData();
@@ -60,6 +73,7 @@ $(document).ready(function () {
     $('#modulo').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
+        dropdownParent: $('.contenedor_modal'),
     });
     $("#incluir").on("click", function () {
         limpia();
@@ -95,7 +109,7 @@ $(document).ready(function () {
                 popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
             },
             {
-                element: '#tabla',
+                element: '#resultadoconsulta',
                 popover: { title: 'Registros', description: 'Aqui se mostraran todos los registros.', position: 'top' }
             },
             {
@@ -384,19 +398,19 @@ function enviaAjax(datos) {
                     modificar(lee.datos);
                 }
                 else if (lee.accion == "incluir") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                     consultar();
                     limpia();
                     limpia_Tablas();
                     cerrarModal();
                 } else if (lee.accion == "modificar") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                     consultar();
                     limpia();
                     limpia_Tablas();
                     cerrarModal();
                 } else if (lee.accion == "eliminar") {
-                    muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                    muestraMensaje("success", 2000, "Eliminacion Exitosa", lee.mensaje);
                     consultar();
                 } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);

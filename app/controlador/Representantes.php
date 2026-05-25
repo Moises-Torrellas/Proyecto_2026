@@ -24,7 +24,10 @@ $objModelo = new ModeloRepresentantes();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudRepresentantes($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables =['registro' => $registro, 'permisos' => $permisos ];
+    cargarVista($pagina, $variables);
 }
 
 /**
@@ -44,14 +47,15 @@ function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $p
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar representantes.');
+                consultar($obj, $permisos);
                 break;
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar representantes.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar representantes.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
@@ -67,7 +71,7 @@ function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $p
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Representantes', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -76,14 +80,16 @@ function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $p
  * --- LÓGICA DE ACCIONES ---
  */
 
-function consultar($obj): void
+
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] ='Error al listar los representantes';
-    }
-    echo json_encode($respuesta);
+    
+    $registro = $respuesta['datos'] ?? []; 
+    $solo_lista = true;
+
+    include (__DIR__.'/../vista/Representantes.php');
 }
 
 function buscar($obj): void

@@ -40,6 +40,14 @@ const _MD_EQUIPOS_ = 20;
 const _MD_PREMIOS_ = 21;
 const _MD_PALMARES_ = 22;
 const _MD_ESTADISTICAS_ = 23;
+const _MD_IA_ = 99;
+const _MD_ATLETAS_ = 100;
+const _MD_CONCEPTOS_ = 101;
+const _MD_MONEDAS_ = 102;
+const _MD_CATEGORIA_EQUI_ = 103;
+const _MD_CALIDAD_ = 104;
+const _MD_PARTICIPACIONES_ = 105;
+const _MD_RESPALDO_ = 106;
 
 /* CODIGOS DE ERROR */
 const DUPLICATE_CEDULA = "001";
@@ -55,6 +63,6 @@ if (session_status() === PHP_SESSION_NONE) {
     // Configuramos la sesión antes de iniciarla
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_only_cookies', 1);
-    session_name('SISTEMA_SG_SESSION');
+    session_name('SISTEMA_CBS_SESSION');
     session_start();
 }

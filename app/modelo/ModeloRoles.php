@@ -53,19 +53,38 @@ class ModeloRoles extends ModeloBase
             default     => throw new Exception("Acción no válida."),
         };
     }
-    public function consultar()
+    public function consultar(array $filtro = []): array
     {
         try {
-            $conex = null;
             $conex = $this->conexSG();
-            $sentencia = 'SELECT * FROM roles WHERE nivel_rol != 1';
+            $params = [];
+
+            // 1. Base de la consulta: Excluimos el nivel 1 (Super Usuario) por seguridad
+            $sentencia = "SELECT * FROM roles WHERE nivel_rol != 1";
+
+            // 2. Aplicamos el buscador general si existe
+            if (!empty($filtro['filtro'])) {
+                $p = "%" . $filtro['filtro'] . "%";
+                $sentencia .= " AND (nombre_rol LIKE :f1)";
+                $params[':f1'] = $p;
+            }
+
+            // 3. Ordenamos por el ID del rol
+            $sentencia .= " ORDER BY id_rol ASC";
+
             $stmt = $conex->prepare($sentencia);
-            $stmt->execute();
+
+            // 4. Ejecutamos pasando los parámetros para evitar inyecciones SQL
+            $stmt->execute($params);
             $datos = $stmt->fetchAll();
+
             return ['accion' => 'consultar', 'datos' => $datos];
         } catch (Exception $e) {
+            // Registro del error en la bitácora de errores del sistema
             logs('Roles', $e->getMessage(), 'Modelo_Consultar');
-            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
+            return ['accion' => 'error', 'mensaje' => 'Error al listar roles: ' . $e->getMessage()];
+        } finally {
+            $conex = null;
         }
     }
 
@@ -230,7 +249,7 @@ class ModeloRoles extends ModeloBase
         try {
             $conex = null;
             $idsProtegidos = [1, 2];
-            if (!empty(array_intersect($this->id_modulo, $idsProtegidos))) {
+            if (in_array($this->id, $idsProtegidos)) {
                 throw new Exception(INVALID_ID);
             }
 
@@ -240,9 +259,9 @@ class ModeloRoles extends ModeloBase
                 throw new Exception(ASSOCIATES);
             }
             if ($this->verificarExistencia('id', $this->id, 'roles', NULL, bloquear: true)) {
-                throw new Exception(INVALID_ID.'0');
+                throw new Exception(INVALID_ID . '0');
             }
-            
+
             $sentencia = 'DELETE FROM roles WHERE id_rol = :id';
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);

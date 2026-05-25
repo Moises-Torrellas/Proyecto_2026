@@ -46,34 +46,30 @@ class ModeloCategorias extends ModeloBase
     {
         try {
             $conex = $this->conex();
-            $params = []; // Unificamos el nombre de la variable
+            $params = [];
 
-            // 1. Iniciamos la sentencia con WHERE 1=1 para concatenar AND tranquilamente
+            // 1. Sentencia base
             $sentencia = "SELECT * FROM categorias WHERE 1=1";
 
-            // 2. BUSCADOR GENERAL (Por nombre de categoría)
+            // 2. BUSCADOR GENERAL (Corregido el paréntesis de cierre)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
-                $sentencia .= " AND (
-                nombre LIKE :f1
-                ";
+                // Agregamos el paréntesis de cierre ) al final del string de abajo
+                $sentencia .= " AND (nombre LIKE :f1)";
                 $params[':f1'] = $p;
             }
 
-            // 3. FILTROS ESPECÍFICOS (Si vienen del Modal o propiedades del objeto)
+            // 3. FILTROS ESPECÍFICOS
             if (!empty($this->nombre)) {
                 $sentencia .= " AND nombre LIKE :nombre";
                 $params[':nombre'] = trim($this->nombre) . "%";
             }
 
-            // 4. Orden (Asegúrate de usar una columna que exista, como id_categorias)
+            // 4. Ordenación por la clave primaria real de tu tabla
             $sentencia .= " ORDER BY id_categorias ASC";
 
             $stmt = $conex->prepare($sentencia);
-
-            // IMPORTANTE: Pasar los parámetros al execute
             $stmt->execute($params);
-
             $datos = $stmt->fetchAll();
 
             return array('accion' => 'consultar', 'datos' => $datos);
@@ -107,12 +103,12 @@ class ModeloCategorias extends ModeloBase
         } finally {
             $conex = NULL;
         }
-    }                                                      
+    }
 
     private function Modificar(): array
     {
         try {
-            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'representantes', NULL)) {
+            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'categorias', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'categorias', NULL)) {
                     return array('accion' => 'error', 'mensaje' => 'Ya existe otra categoria registrada con este nombre.');
                 }
@@ -156,14 +152,14 @@ class ModeloCategorias extends ModeloBase
             $conex = NULL;
         }
     }
-private function Eliminar(): array
+    private function Eliminar(): array
     {
         try {
             // CORRECCIÓN 1: Volvemos a usar 'id' genérico como lo espera tu ModeloBase
             if (!$this->verificarExistencia('id', $this->id, 'categorias', NULL)) {
                 return array('accion' => 'error', 'mensaje' => 'La categoría no existe.');
             }
-            
+
             // CORRECCIÓN 2: Aquí también usamos 'id' (Asegúrate de que la tabla 'atletas' exista)
             if ($this->verificarExistencia('id', $this->id, 'atletas', NULL)) {
                 return array('accion' => 'error', 'mensaje' => 'No se puede eliminar: la categoría tiene atletas asociados.');
@@ -174,7 +170,7 @@ private function Eliminar(): array
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
-            
+
             return array('accion' => 'eliminar', 'mensaje' => 'Categoría eliminada exitosamente.');
         } catch (Exception $e) {
             logs('Categorias', $e->getMessage(), 'Modelo');
@@ -182,5 +178,5 @@ private function Eliminar(): array
         } finally {
             $conex = NULL;
         }
-    }   
-} 
+    }
+}

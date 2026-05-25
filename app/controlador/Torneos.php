@@ -50,7 +50,7 @@ function manejarSolicitudTorneos($obj, $id_modulo, $bitacoraObj, array $permisos
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar torneos.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar torneos.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
@@ -65,7 +65,7 @@ function manejarSolicitudTorneos($obj, $id_modulo, $bitacoraObj, array $permisos
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Torneos', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

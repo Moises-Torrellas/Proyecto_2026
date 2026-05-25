@@ -22,6 +22,7 @@
 <link href="css/modal.css" rel="stylesheet">
 <link href="css/error.css" rel="stylesheet">
 <link href="css/inicio.css" rel="stylesheet">
+<link href="css/responsive.css" rel="stylesheet">
 <link href="libraries/driver.js-stable/dist/driver.min.css" rel="stylesheet">
 <link href="libraries/css/select2.min.css" rel="stylesheet" />
 <link href="libraries/css/tippy.css" rel="stylesheet" />
