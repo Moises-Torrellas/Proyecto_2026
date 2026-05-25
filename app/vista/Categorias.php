@@ -1,3 +1,43 @@
+<?php if (isset($solo_lista) && $solo_lista === true):
+    if (empty($registro)): ?>
+        <div class="listado_vacio">
+            <p>No se encontraron registros</p>
+        </div>
+        <?php else:
+        foreach ($registro as $dato): ?>
+            <div class="listado_contenedor_grupal">
+                <div class="listado_item">
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Categoría</small>
+                            <span class="listado_resaltado"><?= htmlspecialchars($dato['nombre']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Edad Mínima</small>
+                            <span><?= $dato['edad_min'] . " años" ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Edad Máxima</small>
+                            <span><?= $dato['edad_max'] . " años" ?></span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                            <?php if ($permisos['modificar']): ?>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_categorias'] ?>)" title="Modificar" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                            <?php endif; ?>
+                            <?php if ($permisos['eliminar']): ?>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_categorias'] ?>)" title="Eliminar" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    <?php exit(); ?>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -30,6 +70,43 @@
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
+                            <?php if (empty($registro)): ?>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros</p>
+                                </div>
+                                <?php else:
+                                foreach ($registro as $dato): ?>
+                                    <div class="listado_contenedor_grupal">
+                                        <div class="listado_item">
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo">
+                                                    <small>Categoría</small>
+                                                    <span class="listado_resaltado"><?= htmlspecialchars($dato['nombre']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Edad Mínima</small>
+                                                    <span><?= $dato['edad_min'] . " años" ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Edad Máxima</small>
+                                                    <span><?= $dato['edad_max'] . " años" ?></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_acciones">
+                                                <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                                    <?php if ($permisos['modificar']): ?>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_categorias'] ?>)" title="Modificar" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if ($permisos['eliminar']): ?>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_categorias'] ?>)" title="Eliminar" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
@@ -46,7 +123,7 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
-                    
+
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">

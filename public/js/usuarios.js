@@ -105,6 +105,7 @@ $(document).ready(function () {
     $('#roles').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
+        dropdownParent: $('.contenedor_modal'),
     });
     $("#incluir").on("click", function () {
         limpia();
@@ -279,7 +280,6 @@ function bloquear(id, b, elemento) {
 }
 
 const icon = 'fi-sr-lock';
-
 function crearConsulta(datos) {
     const contenedor = $('#resultadoconsulta');
     contenedor.empty();
@@ -293,7 +293,7 @@ function crearConsulta(datos) {
 
             let fotoHTML = dato.foto == 'default.png'
                 ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>` 
-                : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil">`;
+                : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">`;
 
             let registro = `
                 <div class="listado_contenedor_grupal">

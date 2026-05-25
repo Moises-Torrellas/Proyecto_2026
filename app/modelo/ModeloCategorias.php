@@ -50,22 +50,27 @@ class ModeloCategorias extends ModeloBase
     {
         try {
             $conex = $this->conex();
-            $params = []; 
+            $params = []; // Unificamos el nombre de la variable
 
+            // 1. Iniciamos la sentencia con WHERE 1=1 para concatenar AND tranquilamente
             $sentencia = "SELECT * FROM categorias WHERE 1=1";
 
-            // Buscador General
+            // 2. BUSCADOR GENERAL (Por nombre de categoría)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
-                $sentencia .= " AND nombre LIKE :f1";
+                $sentencia .= " AND (
+                nombre LIKE :f1
+                ";
                 $params[':f1'] = $p;
             }
 
-            if (!empty($this->nombre)) {    
+            // 3. FILTROS ESPECÍFICOS (Si vienen del Modal o propiedades del objeto)
+            if (!empty($this->nombre)) {
                 $sentencia .= " AND nombre LIKE :nombre";
                 $params[':nombre'] = trim($this->nombre) . "%";
             }
 
+            // 4. Orden (Asegúrate de usar una columna que exista, como id_categorias)
             $sentencia .= " ORDER BY id_categorias ASC";
 
             $stmt = $conex->prepare($sentencia);
@@ -104,14 +109,12 @@ class ModeloCategorias extends ModeloBase
         } finally {
             $conex = NULL;
         }
-    }                                              
+    }                                                      
 
     private function Modificar(): array
     {
         try {
-            $conex = $this->conex();
-            
-            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'categorias', NULL)) {
+            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'representantes', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'categorias', NULL)) {
                     throw new Exception('Ya existe otra categoría registrada con este nombre.');
                 }
@@ -157,8 +160,7 @@ class ModeloCategorias extends ModeloBase
             $conex = NULL;
         }
     }
-
-    private function Eliminar(): array
+private function Eliminar(): array
     {
         try {
             $conex = $this->conex();
@@ -167,6 +169,7 @@ class ModeloCategorias extends ModeloBase
                 throw new Exception('La categoría no existe.');
             }
             
+            // CORRECCIÓN 2: Aquí también usamos 'id' (Asegúrate de que la tabla 'atletas' exista)
             if ($this->verificarExistencia('id', $this->id, 'atletas', NULL)) {
                 throw new Exception('No se puede eliminar: la categoría tiene atletas asociados.');
             }
@@ -176,7 +179,7 @@ class ModeloCategorias extends ModeloBase
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
             
-            return array('accion' => 'exito');
+            return array('accion' => 'eliminar', 'mensaje' => 'Categoría eliminada exitosamente.');
         } catch (Exception $e) {
             logs('Categorias', $e->getMessage(), 'Modelo_Eliminar');
             return array('accion' => 'error', 'codigo' => $e->getMessage());
@@ -184,4 +187,4 @@ class ModeloCategorias extends ModeloBase
             $conex = NULL;
         }
     }   
-}
+} 

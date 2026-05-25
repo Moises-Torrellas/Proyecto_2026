@@ -62,6 +62,11 @@ $(document).ready(function () {
 
     tippy('[data-tippy-content]', { theme: 'light' });
 
+    $('#btn_hamburguesa').on('click', function(e) {
+        e.stopPropagation();
+        $('.nav_lateral').toggleClass('mostrar');
+    });
+
     let scrollTimers = {}; // Objeto para guardar los timers de cada contenedor
 
     $('.contenido_modulo, .navegacion').on('scroll', function () {
@@ -184,6 +189,10 @@ $(document).ready(function () {
         if (!$(e.target).closest('#noti, #contenedor_notificaciones').length) {
             $('#contenedor_notificaciones').removeClass('expandir');
         }
+        // Si el clic no es en nav_lateral ni en btn_hamburguesa, cerrar menú lateral
+        if (!$(e.target).closest('.nav_lateral, #btn_hamburguesa').length) {
+            $('.nav_lateral').removeClass('mostrar');
+        }
     });
 
     $('#contenedor_modal').on('click', function (e) {
@@ -245,11 +254,11 @@ $(document).ready(function () {
 
 function inicializarPaginador() {
     const $contenedorListado = $('#resultadoconsulta');
-    
+
     // CAMBIO CLAVE: Ahora buscamos el CONTENEDOR GRUPAL, no solo el item.
     // Esto asegura que se oculte el borde verde y el panel de detalle también.
-    const $items = $contenedorListado.find('.listado_contenedor_grupal'); 
-    
+    const $items = $contenedorListado.find('.listado_contenedor_grupal');
+
     // Si tienes tablas sin tree (donde usas listado_item directo), 
     // esta línea detectará ambos casos:
     const $registros = $items.length > 0 ? $items : $contenedorListado.find('.listado_item');
@@ -266,13 +275,13 @@ function inicializarPaginador() {
 
         // Ocultamos todos los contenedores completos
         $registros.hide();
-        
+
         // Mostramos solo los de la página actual
         // Si es el tree, usamos block (porque el flex está dentro, en el listado_item)
         // Si es la tabla simple, usamos flex.
-        $registros.slice(start, end).each(function() {
+        $registros.slice(start, end).each(function () {
             if ($(this).hasClass('listado_contenedor_grupal')) {
-                $(this).css('display', 'block'); 
+                $(this).css('display', 'block');
             } else {
                 $(this).css('display', 'flex');
             }
@@ -484,10 +493,37 @@ function cerrarAlertaEspara() {
 }
 
 function limpia() {
-    $('#f input').not(':checkbox, #token').val('');
-    $('input').removeClass('denegado');
-    $('.select').val(null).trigger('change');
-    $('.mensaje').text('');
+    const formulario = $('#f');
+
+    // 1. Limpiar campos de texto, fecha y otros (Excepto token)
+    formulario.find('input').not(':checkbox, :radio, :file, #token').val('');
+
+    // 2. Limpiar input de ARCHIVO y resetear la PREVISUALIZACIÓN a la cámara
+    formulario.find('input:file').val(''); 
+    $('#foto_previa').attr('src', ''); // Restablece el icono original
+
+    // 3. Desmarcar checkboxes y radios
+    formulario.find('input:checkbox, input:radio').prop('checked', false);
+
+    // 4. Limpiar textareas (Dirección)
+    formulario.find('textarea').val('');
+
+    // 5. Resetear Selects (Categoría, Posición, Representante)
+    formulario.find('select').each(function () {
+        $(this).val($(this).find('option:first').val()).trigger('change');
+    });
+
+    // 6. Resetear estados visuales y mensajes de error
+    formulario.find('.denegado').removeClass('denegado');
+    $('.mensaje').text(''); 
+
+    // 7. Restablecer bloqueos de la lógica de edad (Atletas)
+    formulario.find('input, select, textarea, button').prop('disabled', false);
+    $('.campo_deshabilitado, .bloqueado, .btn_bloqueado').removeClass('campo_deshabilitado bloqueado btn_bloqueado');
+
+    // 8. Ajustes de placeholders y visibilidad
+    $("#doc_i").attr("placeholder", "Cédula");
+    formulario.find('.row, .col, div').show();
 }
 
 function limpia_Tablas() {
@@ -518,9 +554,9 @@ function iniciarTourConPasos(pasos) {
 function toggleDetalles(elemento) {
     const contenedorActual = $(elemento).closest('.listado_contenedor_grupal');
     const panelActual = contenedorActual.find('.listado_detalle_oculto');
-    
+
     // 1. Buscamos todos los demás contenedores que estén expandidos y los cerramos
-    $('.listado_contenedor_grupal.expandido').not(contenedorActual).each(function() {
+    $('.listado_contenedor_grupal.expandido').not(contenedorActual).each(function () {
         $(this).removeClass('expandido');
         $(this).find('.listado_detalle_oculto').slideUp(300);
     });
@@ -530,88 +566,188 @@ function toggleDetalles(elemento) {
     panelActual.slideToggle(300);
 }
 
-let cropper = null;
-let fotoRecortadaBlob = null; // Aquí guardaremos la foto final para enviarla a PHP
+// public/js/notificaciones.js
+document.addEventListener("DOMContentLoaded", function () {
+    const btnNoti = document.getElementById("noti");
+    const contenedorNoti = document.getElementById("contenedor_notificaciones");
 
-const zonaDrop = document.getElementById('zona_drop');
-const inputFoto = document.getElementById('foto');
-const zonaRecorte = document.getElementById('zona_recorte');
-const imagenARecortar = document.getElementById('imagen_a_recortar');
-const fotoPrevia = document.getElementById('foto_previa');
-const btnConfirmar = document.getElementById('btn_confirmar_recorte');
+    // ==========================================
+    // 1. CONEXIÓN AL WEBSOCKET (EN TIEMPO REAL)
+    // ==========================================
+    const ws = new WebSocket("ws://localhost:8080");
 
-// 1. EVENTOS DE ARRASTRAR Y SOLTAR (DRAG & DROP)
-zonaDrop.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    zonaDrop.classList.add('drag-over');
-});
-
-zonaDrop.addEventListener('dragleave', () => {
-    zonaDrop.classList.remove('drag-over');
-});
-
-zonaDrop.addEventListener('drop', (e) => {
-    e.preventDefault();
-    zonaDrop.classList.remove('drag-over');
-    
-    if (e.dataTransfer.files.length > 0) {
-        procesarArchivo(e.dataTransfer.files[0]);
-    }
-});
-
-// 2. EVENTO SI ELIGE POR EL BOTÓN NORMAL
-inputFoto.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-        procesarArchivo(e.target.files[0]);
-    }
-});
-
-// 3. FUNCIÓN PARA LEER EL ARCHIVO E INICIAR CROPPER
-function procesarArchivo(file) {
-    // Validar que sea imagen
-    if (!file.type.startsWith('image/')) {
-        alert("Por favor, sube solo imágenes.");
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        imagenARecortar.src = e.target.result;
-        zonaRecorte.style.display = 'block'; // Mostramos la zona de recorte
-
-        // Si ya había un cropper abierto, lo destruimos para hacer uno nuevo
-        if (cropper) { cropper.destroy(); }
-
-        // Inicializamos Cropper.js (Configurado para recortar en cuadrado/círculo)
-        cropper = new Cropper(imagenARecortar, {
-            aspectRatio: 1, // Cuadrado perfecto (1:1)
-            viewMode: 1,
-            dragMode: 'move', // Permite arrastrar la imagen
-            guides: false,
-            center: false,
-            cropBoxMovable: true,
-            cropBoxResizable: true,
-        });
+    ws.onmessage = function (event) {
+        const payload = JSON.parse(event.data);
+        
+        // Renderizar el mensaje mini superior nativo con Lucide Icons
+        renderizarNotificacionSuperior(payload.titulo, payload.mensaje, payload.tipo);
+        
+        // Incrementar el indicador numérico sobre tu campana
+        actualizarContadorBadge();
     };
-    reader.readAsDataURL(file);
+
+    ws.onclose = function () {
+        console.warn("Conexión de notificaciones caída. Operando en modo pasivo (BD).");
+    };
+
+    // ==========================================
+    // 2. INTERACCIÓN DEL PANEL DESPLEGABLE FLOTANTE
+    // ==========================================
+    if (btnNoti && contenedorNoti) {
+        btnNoti.addEventListener("click", function (e) {
+            e.preventDefault();
+            
+            // Alternar visibilidad con tu clase existente
+            contenedorNoti.classList.toggle("ocultar");
+
+            // Si el panel se abre, extraemos la historia real de MariaDB
+            if (!contenedorNoti.classList.contains("ocultar")) {
+                cargarNotificacionesEnPanel();
+            }
+        });
+
+        // Ocultar el panel si hacen clic en cualquier otra zona de la pantalla
+        document.addEventListener("click", function (e) {
+            if (!btnNoti.contains(e.target) && !contenedorNoti.contains(e.target)) {
+                contenedorNoti.classList.add("ocultar");
+            }
+        });
+    }
+});
+
+// ==========================================
+// 3. CONSULTA AL CONTROLADOR (URL AMIGABLE .HTACCESS)
+// ==========================================
+function cargarNotificacionesEnPanel() {
+    // Usamos el enrutamiento limpio de tu .htaccess
+    fetch('Notificaciones')
+        .then(response => response.json())
+        .then(respuesta => {
+            const listaUl = document.querySelector(".lista_noti");
+            if (!listaUl) return;
+
+            listaUl.innerHTML = ""; // Limpiar elementos estáticos viejos
+
+            if (respuesta.accion === 'consultar' && respuesta.datos.length > 0) {
+                
+                respuesta.datos.forEach(noti => {
+                    let iconName = "info";
+                    let iconClass = "icon_noti_info";
+
+                    if (noti.tipo === "cumpleaños") {
+                        iconName = "cake";
+                        iconClass = "icon_noti_info"; 
+                    } else if (noti.tipo === "torneo") {
+                        iconName = "trophy";
+                        iconClass = "icon_noti_success";
+                    } else if (noti.tipo === "cuenta_cobrar") {
+                        iconName = "credit-card";
+                        iconClass = "icon_noti_info"; 
+                    }
+
+                    const itemHTML = `
+                        <li class="item_noti">
+                            <div class="noti_icono_estado">
+                                <i data-lucide="${iconName}" class="${iconClass}"></i>
+                            </div>
+                            <div class="noti_contenido">
+                                <h3 class="noti_titulo">${noti.titulo}</h3>
+                                <p class="noti_mensaje">${noti.mensaje}</p>
+                                <span class="noti_tiempo">${noti.creado_en}</span>
+                            </div>
+                        </li>
+                    `;
+                    listaUl.insertAdjacentHTML("beforeend", itemHTML);
+                });
+
+                // Forzar re-escaneo de Lucide sobre las nuevas etiquetas li
+                if (typeof lucide !== 'undefined') lucide.createIcons({ container: listaUl });
+
+                // Reiniciar el badge numérico visual del botón
+                const badge = document.getElementById("campana-notificaciones-badge");
+                if (badge) {
+                    badge.textContent = "0";
+                    badge.classList.add("ocultar"); 
+                }
+
+            } else {
+                listaUl.innerHTML = `<li class="item_noti"><p class="noti_mensaje" style="padding: 10px; text-align: center; width: 100%;">No tienes notificaciones por ahora.</p></li>`;
+            }
+        })
+        .catch(err => console.error("Error al cargar historial desde el .htaccess:", err));
 }
 
-// 4. CONFIRMAR EL RECORTE
-btnConfirmar.addEventListener('click', () => {
-    if (!cropper) return;
+// ==========================================
+// 4. FUNCIONES DE RENDERIZACIÓN PARA SWEETALERT Y BADGE
+// ==========================================
+function renderizarNotificacionSuperior(titulo, mensaje, tipo) {
+    let nombreIcono = "bell";
+    let colorIcono = "#3085d6";
 
-    // Obtenemos el canvas con la imagen recortada
-    const canvas = cropper.getCroppedCanvas({
-        width: 400, // Tamaño final de la imagen
-        height: 400
+    if (tipo === "cumpleaños") { nombreIcono = "cake"; colorIcono = "#ec4899"; }
+    else if (tipo === "torneo") { nombreIcono = "trophy"; colorIcono = "#eab308"; }
+    else if (tipo === "cuenta_cobrar") { nombreIcono = "credit-card"; colorIcono = "#ef4444"; }
+
+    const contenidoHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; text-align: left;">
+            <i data-lucide="${nombreIcono}" style="width: 24px; height: 24px; stroke-width: 2; color: ${colorIcono}; flex-shrink: 0;"></i>
+            <div>
+                <span style="font-weight: bold; display: block; font-size: 14px;">${titulo}</span>
+                <span style="font-weight: normal; font-size: 12px; color: #555;">${mensaje}</span>
+            </div>
+        </div>
+    `;
+    
+    muestraNoti(contenidoHTML, 10000);
+}
+
+function actualizarContadorBadge() {
+    const badge = document.getElementById("campana-notificaciones-badge");
+    if (badge) {
+        let actual = parseInt(badge.textContent) || 0;
+        badge.textContent = actual + 1;
+        badge.classList.remove("ocultar");
+    }
+}
+
+// Tu función original intacta adaptada para inicializar Lucide
+function muestraNoti(titulo, tiempo) {
+    const Toast = Swal.mixin({
+        toast: true,
+        position: "top",
+        showConfirmButton: false,
+        timer: tiempo,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons({ container: toast });
+            }
+        },
+        customClass: {
+            popup: "mi-popup",
+            title: "mi-titulo"
+        }
     });
+    Toast.fire({ title: titulo });
+}
 
-    // Mostramos la vista previa en el círculo
-    fotoPrevia.src = canvas.toDataURL('image/jpeg');
+// Función global para manejar imágenes rotas de atletas
+function manejarErrorCamara(img) {
+    // 1. Definimos el HTML exacto que quieres para el estado 'null'
+    const htmlAvatarNull = '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>';
 
-    // Convertimos el canvas a Blob (Archivo) para enviarlo por AJAX
-    canvas.toBlob((blob) => {
-        fotoRecortadaBlob = blob; // Lo guardamos en la variable global
-        zonaRecorte.style.display = 'none'; // Ocultamos el editor
-    }, 'image/jpeg', 0.9); // 0.9 es la calidad (90%)
-});
+    // 2. Creamos un elemento temporal para convertir el string HTML en nodos DOM
+    const placeholder = document.createElement('div');
+    placeholder.innerHTML = htmlAvatarNull;
+    const nuevoNodo = placeholder.firstChild; // Obtenemos el div.listado_avatar_null
+
+    // 3. Reemplazamos la imagen rota por el nuevo contenedor del icono
+    img.replaceWith(nuevoNodo);
+
+    // 4. ¡IMPORTANTE! Forzamos a Lucide a renderizar el icono recién insertado
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}

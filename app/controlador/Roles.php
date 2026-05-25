@@ -57,7 +57,7 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
                 break;
 
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tiene permisos para incluir roles.');
+                if (!$permisos['registrar']) throw new Exception('No tiene permisos para incluir roles.');
                 incluirRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
 
@@ -74,7 +74,7 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
                 throw new Exception('Acción no reconocida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Roles', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

@@ -47,6 +47,15 @@ function manejarRuta($pagina): void
         'Torneos' => 'Torneos',
         'Calidad' => 'Calidad',
         'Bitacora' => 'Bitacora',
+        'Atletas' => 'Atletas',
+        'MetodosPago' => 'MetodosPago',
+        'Conceptos' => 'Conceptos',
+        'Monedas' => 'Monedas',
+        'CuentasCobrar' => 'CuentasCobrar',
+        'Notificaciones' => 'Notificaciones',
+        'Pagos' => 'Pagos',
+        'Respaldo' => 'Respaldo',
+        'CategoriaEquipamiento'=>'CategoriaEquipamiento',
     ];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {

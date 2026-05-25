@@ -412,3 +412,12 @@
     transform: translateY(-2px); /* Pequeño salto al pasar el mouse */
 }
 
+.campo_deshabilitado {
+    opacity: 0.5;
+    pointer-events: none; /* Evita clics */
+    background-color: #f8f9fa;
+}
+.btn_bloqueado {
+    filter: grayscale(1);
+    cursor: not-allowed;
+}

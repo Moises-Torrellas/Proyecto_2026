@@ -17,8 +17,7 @@ function busqueda() {
     }, 500);
 }
 $(document).ready(function () {
-    consultar();
-
+    inicializarPaginador();
     $("#cedula").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
         if (input.length > 4) {
@@ -220,62 +219,16 @@ function modificar(datos) {
 
     abrirModal();
 }
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
-    } else {
-        datos.forEach(dato => {
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Nombre y Apellido</small>
-                                <span>${dato.nombre} ${dato.apellido}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Cedula</small>
-                                <span>${dato.nacionalidad}. ${dato.cedula}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Telefono</small>
-                                <span>${dato.telefono}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Direccion</small>
-                                <span>${escapeHTML(dato.direccion)}</span>
-                            </div>
-                        </div>
+    // Inyectamos directamente el bloque HTML estructurado que procesó el servidor
+    contenedor.html(htmlRecibido);
 
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_representante})"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_representante})"><i class="fi fi-sr-trash-xmark"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-
+    // Reactivamos las librerías visuales y los comportamientos estéticos
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
-}
-
-function escapeHTML(texto) {
-    var caracteres = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return texto.replace(/[&<>"']/g, m => caracteres[m]);
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -293,11 +246,13 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } else if (lee.accion == "incluir") {
+                if (lee.accion == "incluir") {
                     consultar();
                     limpia();
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);

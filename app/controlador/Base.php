@@ -1,11 +1,25 @@
 <?php
-function procesarPermisos(int $id_modulo, $bitacora = null): array
+function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = false): array
 {
     $nivelUsuario = $_SESSION['nivel_rol'] ?? 99;
 
-    $modulosProhibidos = [_MD_USUARIOS_, _MD_ROLES_, _MD_BITACORA_];
+    // 1. REGLA DE ORO: Superusuario
+    if ($nivelUsuario === 1) {
+        return [
+            'ingresar'  => true,
+            'registrar' => true,
+            'modificar' => true,
+            'eliminar'  => true,
+            'reporte'   => true,
+            'otros'     => true
+        ];
+    }
 
+    // 2. Restricciones específicas para el Nivel 2
+    $modulosProhibidos = [_MD_USUARIOS_, _MD_ROLES_, _MD_BITACORA_];
     if ($nivelUsuario === 2 && in_array($id_modulo, $modulosProhibidos)) {
+        if ($soloValidar) return []; // En el menú simplemente no tiene permisos
+        
         $_SESSION['alerta'] = [
             'icono'   => 'error',
             'titulo'  => 'Acceso denegado',
@@ -15,9 +29,11 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
         exit();
     }
 
-    if ($nivelUsuario === 1 || $nivelUsuario === 2) {
+    // 3. Permisos plenos Nivel 2
+    if ($nivelUsuario === 2) {
         return [
-            'incluir'   => true,
+            'ingresar'  => true,
+            'registrar' => true,
             'modificar' => true,
             'eliminar'  => true,
             'reporte'   => true,
@@ -25,23 +41,41 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
         ];
     }
 
+    // 4. Validación para usuarios regulares (Nivel 3+)
     if (isset($_SESSION['permisos'][$id_modulo])) {
         $p = $_SESSION['permisos'][$id_modulo];
 
+        // Si no tiene el permiso de ingresar activo
+        if (!isset($p['ingresar']) || !$p['ingresar']) {
+            if ($soloValidar) return []; // En el menú no pasa nada
+            
+            $_SESSION['alerta'] = [
+                'icono'   => 'error',
+                'titulo'  => 'Acceso denegado',
+                'mensaje' => 'No tienes permitido ingresar a este módulo.'
+            ];
+            header("Location:" . _URL_ . "Principal");
+            exit();
+        }
+
         $permisos = [
-            'incluir'   => $p['incluir'] == 1,
-            'modificar' => $p['modificar'] == 1,
-            'eliminar'  => $p['eliminar'] == 1,
-            'reporte'   => $p['reporte'] == 1,
-            'otros'     => $p['otros'] == 1
+            'ingresar'  => (bool)$p['ingresar'],
+            'registrar' => (isset($p['registrar']) && $p['registrar']),
+            'modificar' => (isset($p['modificar']) && $p['modificar']),
+            'eliminar'  => (isset($p['eliminar']) && $p['eliminar']),
+            'reporte'   => (isset($p['reporte']) && $p['reporte']),
+            'otros'     => (isset($p['otros']) && $p['otros'])
         ];
 
-        if (!comprobarAjax() && $bitacora !== null) {
+        // Solo registramos bitácora si NO es una simple validación de menú
+        if (!$soloValidar && !comprobarAjax() && $bitacora !== null) {
             registrarBitacora($bitacora, $id_modulo, "Accedió al módulo");
         }
 
         return $permisos;
     } else {
+        if ($soloValidar) return []; // En el menú no pasa nada
+        
         $_SESSION['alerta'] = [
             'icono'   => 'error',
             'titulo'  => 'Acceso denegado',
@@ -52,16 +86,18 @@ function procesarPermisos(int $id_modulo, $bitacora = null): array
     }
 }
 
-function cargarVista(string $pagina): void
-{
+function cargarVista(string $pagina,array $datos = []): void
+{   
+    
     $archivoVista = sprintf(__DIR__ . '/../vista/%s.php', $pagina);
 
     if (is_file($archivoVista)) {
         // Generar un token de seguridad para la sesión
         $_SESSION['token'] = bin2hex(random_bytes(32));
-        require_once($archivoVista);
+        extract($datos);
+        require($archivoVista);
     } else {
-        require_once(__DIR__ . '/../vista/complementos/404.php');
+        require(__DIR__ . '/../vista/complementos/404.php');
         exit();
     }
 }

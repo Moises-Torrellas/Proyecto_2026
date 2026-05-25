@@ -5,8 +5,13 @@
 /logs/*
 # Excepto el archivo .gitkeep (si quieres mantener la carpeta vacía en GitHub)
 !/logs/.gitkeep
+#Ignorar archivos dentro de la carpeta backups
+/backups/*
+# Excepto el archivo.gitkeep
+!/backups/.gitkeep
 
 /public/img/usuarios/*
+/public/img/atletas/*
 # Otros archivos recomendados para tu entorno (XAMPP/Windows)
 .DS_Store
 Thumbs.db

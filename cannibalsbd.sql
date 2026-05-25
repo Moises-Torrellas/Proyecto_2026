@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-04-2026 a las 23:30:52
--- Versión del servidor: 10.4.28-MariaDB
--- Versión de PHP: 8.2.4
+-- Tiempo de generación: 24-05-2026 a las 05:10:27
+-- Versión del servidor: 10.4.32-MariaDB
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `cannibalsbd`
 --
-CREATE DATABASE IF NOT EXISTS `cannibalsbd` DEFAULT CHARACTER SET utf32 COLLATE utf32_spanish_ci;
-USE `cannibalsbd`;
 
 -- --------------------------------------------------------
 
@@ -34,8 +32,6 @@ CREATE TABLE `asignaciones` (
   `id_atleta` int(11) NOT NULL,
   `id_equipamiento` int(11) NOT NULL,
   `fecha_asignacion` date NOT NULL,
-  `fecha_devolucion` date DEFAULT NULL,
-  `id_estado` int(11) NOT NULL,
   `estatus` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
@@ -49,34 +45,27 @@ CREATE TABLE `atletas` (
   `id_atleta` int(11) NOT NULL,
   `nombres` varchar(60) NOT NULL,
   `apellidos` varchar(60) NOT NULL,
-  `doc_identidad` varchar(13) NOT NULL,
+  `doc_identidad` varchar(13) DEFAULT NULL,
+  `telefono` varchar(15) DEFAULT NULL,
+  `direccion` varchar(150) DEFAULT NULL,
   `genero` enum('H','M') NOT NULL,
   `fecha_nac` date NOT NULL,
-  `foto` varchar(100) NOT NULL,
+  `foto` varchar(100) NOT NULL DEFAULT 'default.png',
   `id_posicion` int(11) NOT NULL,
   `id_categoria` int(11) NOT NULL,
-  `id_representante` int(11) NOT NULL
+  `id_representante` int(11) DEFAULT NULL,
+  `estatus` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `atletas`
 --
 
-INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`) VALUES
-(2, 'dffd', 'dfdf', '12345678', 'H', '2004-05-12', 'FOTO', 1, 1, 2);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `atleta_premios`
---
-
-CREATE TABLE `atleta_premios` (
-  `id_a_premio` int(11) NOT NULL,
-  `id_torneo` int(11) NOT NULL,
-  `id_atleta` int(11) NOT NULL,
-  `id_premio` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `telefono`, `direccion`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`, `estatus`) VALUES
+(13, 'Jose Jose', 'Perez Perez', '32323232', NULL, NULL, 'H', '2012-05-18', 'atleta_2012-05-18_1779417290.png', 5, 7, 2, 1),
+(14, 'Mario Mario', 'Bros Bros', '34324324', NULL, NULL, 'H', '2009-05-19', 'atleta_2009-05-19_1779417273.png', 5, 8, 2, 1),
+(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779417262.png', 6, 4, NULL, 1),
+(16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779417253.png', 5, 3, 6, 0);
 
 -- --------------------------------------------------------
 
@@ -111,7 +100,13 @@ CREATE TABLE `categorias` (
 --
 
 INSERT INTO `categorias` (`id_categorias`, `nombre`, `edad_min`, `edad_max`) VALUES
-(1, 'U-12', 12, 13);
+(1, 'U-12', 11, 12),
+(3, 'U-6', 5, 6),
+(4, 'SENIOR', 18, 60),
+(5, 'U-8', 7, 8),
+(6, 'U-10', 9, 10),
+(7, 'U-14', 13, 14),
+(8, 'U-17', 15, 17);
 
 -- --------------------------------------------------------
 
@@ -134,9 +129,17 @@ CREATE TABLE `categoria_catalogo` (
 CREATE TABLE `conceptos` (
   `id_conceptos` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
-  `monto` decimal(10,0) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
   `estatus` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `conceptos`
+--
+
+INSERT INTO `conceptos` (`id_conceptos`, `nombre`, `monto`, `estatus`) VALUES
+(2, 'Mensualidad', 30.00, 1),
+(3, 'Viaticos', 30.30, 1);
 
 -- --------------------------------------------------------
 
@@ -148,11 +151,24 @@ CREATE TABLE `cuentas_cobrar` (
   `id_cobrar` int(11) NOT NULL,
   `id_concepto` int(11) NOT NULL,
   `id_atleta` int(11) NOT NULL,
-  `monto_personalizado` decimal(10,0) DEFAULT NULL,
+  `id_moneda` int(100) NOT NULL,
+  `monto_personalizado` decimal(10,2) DEFAULT NULL,
+  `monto_pendiente` decimal(10,2) NOT NULL DEFAULT 0.00,
   `fecha_emision` date NOT NULL,
   `fecha_vencimiento` date DEFAULT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL,
+  `anulado` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `cuentas_cobrar`
+--
+
+INSERT INTO `cuentas_cobrar` (`id_cobrar`, `id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `monto_pendiente`, `fecha_emision`, `fecha_vencimiento`, `estatus`, `anulado`) VALUES
+(1, 2, 15, 4, 30.00, 0.00, '2026-05-21', '2026-06-20', 0, 1),
+(2, 3, 13, 5, 525.00, 0.00, '2026-05-21', '2026-06-20', 0, 0),
+(3, 2, 16, 4, 30.58, 0.00, '2026-05-21', '2026-06-20', 0, 1),
+(4, 3, 15, 5, 30.35, 0.00, '2026-05-23', '2026-06-22', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -165,6 +181,34 @@ CREATE TABLE `detalles_equipos` (
   `id_equipo` int(11) NOT NULL,
   `id_atleta` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `detalles_palmares`
+--
+
+CREATE TABLE `detalles_palmares` (
+  `id_detalle_palmares` int(100) NOT NULL,
+  `id_palmares` int(100) NOT NULL,
+  `id_premio` int(100) NOT NULL,
+  `id_atleta` int(100) DEFAULT NULL,
+  `id_equipo` int(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `devoluciones`
+--
+
+CREATE TABLE `devoluciones` (
+  `id_devolución` int(100) NOT NULL,
+  `id_asignacion` int(100) NOT NULL,
+  `id_estado` int(100) NOT NULL,
+  `fecha devolución` date NOT NULL,
+  `observación` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
 
 -- --------------------------------------------------------
 
@@ -189,19 +233,6 @@ CREATE TABLE `equipos` (
   `id_equipos` int(11) NOT NULL,
   `id_categoria` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `equipos_premios`
---
-
-CREATE TABLE `equipos_premios` (
-  `id_e_premios` int(11) NOT NULL,
-  `id_torneo` int(11) NOT NULL,
-  `id_equipo` int(11) NOT NULL,
-  `id_premio` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 -- --------------------------------------------------------
@@ -233,6 +264,27 @@ CREATE TABLE `estado_equipamiento` (
   `nivel_estado` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
+--
+-- Volcado de datos para la tabla `estado_equipamiento`
+--
+
+INSERT INTO `estado_equipamiento` (`id_estado`, `nombre`, `nivel_estado`) VALUES
+(1, 'Exelente', 1),
+(3, 'Mas O Menos', 2),
+(4, 'Mala', 3);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `historial`
+--
+
+CREATE TABLE `historial` (
+  `id_historial` int(100) NOT NULL,
+  `id_atleta` int(100) NOT NULL,
+  `fecha_emision` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+
 -- --------------------------------------------------------
 
 --
@@ -243,7 +295,7 @@ CREATE TABLE `metodos_pago` (
   `id_metodos` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
   `nec_referencia` tinyint(4) NOT NULL DEFAULT 0,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 -- --------------------------------------------------------
@@ -253,10 +305,20 @@ CREATE TABLE `metodos_pago` (
 --
 
 CREATE TABLE `monedas` (
-  `id_monedas` int(11) NOT NULL,
+  `id_moneda` int(11) NOT NULL,
   `nombre` varchar(40) NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `abreviatura` varchar(4) NOT NULL,
+  `simbolo` varchar(3) NOT NULL,
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `monedas`
+--
+
+INSERT INTO `monedas` (`id_moneda`, `nombre`, `abreviatura`, `simbolo`, `estatus`) VALUES
+(4, 'Dolar', 'USD', '$', 1),
+(5, 'Bolivares', 'VES', 'Bs', 1);
 
 -- --------------------------------------------------------
 
@@ -265,15 +327,28 @@ CREATE TABLE `monedas` (
 --
 
 CREATE TABLE `pagos` (
-  `id_pagos` int(11) NOT NULL,
+  `id_pago` int(11) NOT NULL,
   `id_cobrar` int(11) NOT NULL,
   `id_metodo` int(11) NOT NULL,
   `id_moneda` int(11) NOT NULL,
   `monto_pago` decimal(10,0) NOT NULL,
   `tasa_cambio` decimal(10,0) NOT NULL,
   `fecha_tasa` date NOT NULL,
-  `referencia` varchar(40) NOT NULL
+  `referencia` varchar(40) NOT NULL,
+  `estatus` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `palmares`
+--
+
+CREATE TABLE `palmares` (
+  `id_palmares` int(100) NOT NULL,
+  `id_torneo` int(100) NOT NULL,
+  `fecha_registro` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
 
 -- --------------------------------------------------------
 
@@ -307,7 +382,8 @@ CREATE TABLE `posiciones` (
 INSERT INTO `posiciones` (`id_posicion`, `nombre`, `abreviatura`, `descripcion`) VALUES
 (1, 'Delantero', 'DC', ''),
 (5, 'Defensa', 'DF', ''),
-(6, 'Portero', 'PR', '');
+(6, 'Portero', 'PR', ''),
+(8, 'Medio', 'MD', '');
 
 -- --------------------------------------------------------
 
@@ -317,7 +393,7 @@ INSERT INTO `posiciones` (`id_posicion`, `nombre`, `abreviatura`, `descripcion`)
 
 CREATE TABLE `premios` (
   `id_premio` int(11) NOT NULL,
-  `id_tipo` int(11) NOT NULL,
+  `tipo` enum('I','G') NOT NULL,
   `nombre` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
@@ -342,19 +418,8 @@ CREATE TABLE `representantes` (
 --
 
 INSERT INTO `representantes` (`id_representante`, `nombre`, `apellido`, `cedula`, `nacionalidad`, `direccion`, `telefono`) VALUES
-(2, 'Jose', 'Martinez', '12345678', 'V', 'Barquisimeto', '3333-3333333'),
-(3, 'Maria', 'Perez', '87654321', 'E', 'Tocuyo', '2222-2222222');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `tipos_premios`
---
-
-CREATE TABLE `tipos_premios` (
-  `id_tipo` int(11) NOT NULL,
-  `nombre` varchar(30) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+(2, 'Moises', 'Martinez', '12345678', 'V', 'Barquisimeto', '3333-3333333'),
+(6, 'Maria', 'Martinez', '25065254', 'V', 'Barquisimeto', '2342-3423423');
 
 -- --------------------------------------------------------
 
@@ -372,6 +437,13 @@ CREATE TABLE `torneos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
+-- Volcado de datos para la tabla `torneos`
+--
+
+INSERT INTO `torneos` (`id_torneo`, `nombre`, `fecha_inicio`, `fecha_fin`, `ubicacion`, `estatus`) VALUES
+(2, 'MUNDIAL BARQUISIMETO 2026', '2026-07-16', '2026-09-24', 'Estado Lara', 1);
+
+--
 -- Índices para tablas volcadas
 --
 
@@ -381,26 +453,17 @@ CREATE TABLE `torneos` (
 ALTER TABLE `asignaciones`
   ADD PRIMARY KEY (`id_asignacion`),
   ADD KEY `id_atleta` (`id_atleta`),
-  ADD KEY `id_equipamiento` (`id_equipamiento`),
-  ADD KEY `id_estado` (`id_estado`);
+  ADD KEY `id_equipamiento` (`id_equipamiento`);
 
 --
 -- Indices de la tabla `atletas`
 --
 ALTER TABLE `atletas`
   ADD PRIMARY KEY (`id_atleta`),
+  ADD UNIQUE KEY `doc_identidad` (`doc_identidad`,`telefono`),
   ADD KEY `id_representante` (`id_representante`),
   ADD KEY `id_posicion` (`id_posicion`),
   ADD KEY `id_categoria` (`id_categoria`);
-
---
--- Indices de la tabla `atleta_premios`
---
-ALTER TABLE `atleta_premios`
-  ADD PRIMARY KEY (`id_a_premio`),
-  ADD KEY `id_atleta` (`id_atleta`),
-  ADD KEY `id_premio` (`id_premio`),
-  ADD KEY `id_torneo` (`id_torneo`);
 
 --
 -- Indices de la tabla `catalogos`
@@ -434,7 +497,8 @@ ALTER TABLE `conceptos`
 ALTER TABLE `cuentas_cobrar`
   ADD PRIMARY KEY (`id_cobrar`),
   ADD KEY `id_concepto` (`id_concepto`),
-  ADD KEY `id_atleta` (`id_atleta`);
+  ADD KEY `id_atleta` (`id_atleta`),
+  ADD KEY `id_moneda` (`id_moneda`);
 
 --
 -- Indices de la tabla `detalles_equipos`
@@ -443,6 +507,24 @@ ALTER TABLE `detalles_equipos`
   ADD PRIMARY KEY (`id_detalle`),
   ADD KEY `id_atleta` (`id_atleta`),
   ADD KEY `id_equipo` (`id_equipo`);
+
+--
+-- Indices de la tabla `detalles_palmares`
+--
+ALTER TABLE `detalles_palmares`
+  ADD PRIMARY KEY (`id_detalle_palmares`),
+  ADD KEY `id_palmares` (`id_palmares`,`id_premio`,`id_atleta`,`id_equipo`),
+  ADD KEY `id_premio` (`id_premio`),
+  ADD KEY `id_atleta` (`id_atleta`),
+  ADD KEY `id_equipo` (`id_equipo`);
+
+--
+-- Indices de la tabla `devoluciones`
+--
+ALTER TABLE `devoluciones`
+  ADD PRIMARY KEY (`id_devolución`),
+  ADD KEY `id_asignacion` (`id_asignacion`,`id_estado`),
+  ADD KEY `id_estado` (`id_estado`);
 
 --
 -- Indices de la tabla `equipamientos`
@@ -460,15 +542,6 @@ ALTER TABLE `equipos`
   ADD KEY `id_categoria` (`id_categoria`);
 
 --
--- Indices de la tabla `equipos_premios`
---
-ALTER TABLE `equipos_premios`
-  ADD PRIMARY KEY (`id_e_premios`),
-  ADD KEY `id_equipo` (`id_equipo`),
-  ADD KEY `id_premio` (`id_premio`),
-  ADD KEY `id_torneos` (`id_torneo`);
-
---
 -- Indices de la tabla `estadisticas`
 --
 ALTER TABLE `estadisticas`
@@ -483,6 +556,15 @@ ALTER TABLE `estado_equipamiento`
   ADD PRIMARY KEY (`id_estado`);
 
 --
+-- Indices de la tabla `historial`
+--
+ALTER TABLE `historial`
+  ADD PRIMARY KEY (`id_historial`),
+  ADD UNIQUE KEY `id_atleta` (`id_atleta`),
+  ADD UNIQUE KEY `id_atleta_2` (`id_atleta`),
+  ADD KEY `id_atleta_3` (`id_atleta`);
+
+--
 -- Indices de la tabla `metodos_pago`
 --
 ALTER TABLE `metodos_pago`
@@ -492,16 +574,24 @@ ALTER TABLE `metodos_pago`
 -- Indices de la tabla `monedas`
 --
 ALTER TABLE `monedas`
-  ADD PRIMARY KEY (`id_monedas`);
+  ADD PRIMARY KEY (`id_moneda`);
 
 --
 -- Indices de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  ADD PRIMARY KEY (`id_pagos`),
+  ADD PRIMARY KEY (`id_pago`),
   ADD KEY `id_cobrar` (`id_cobrar`),
   ADD KEY `id_metodo` (`id_metodo`),
   ADD KEY `id_moneda` (`id_moneda`);
+
+--
+-- Indices de la tabla `palmares`
+--
+ALTER TABLE `palmares`
+  ADD PRIMARY KEY (`id_palmares`),
+  ADD UNIQUE KEY `id_torneo` (`id_torneo`),
+  ADD KEY `id_torneo_2` (`id_torneo`);
 
 --
 -- Indices de la tabla `participaciones`
@@ -521,20 +611,13 @@ ALTER TABLE `posiciones`
 -- Indices de la tabla `premios`
 --
 ALTER TABLE `premios`
-  ADD PRIMARY KEY (`id_premio`),
-  ADD KEY `id_tipo` (`id_tipo`);
+  ADD PRIMARY KEY (`id_premio`);
 
 --
 -- Indices de la tabla `representantes`
 --
 ALTER TABLE `representantes`
   ADD PRIMARY KEY (`id_representante`);
-
---
--- Indices de la tabla `tipos_premios`
---
-ALTER TABLE `tipos_premios`
-  ADD PRIMARY KEY (`id_tipo`);
 
 --
 -- Indices de la tabla `torneos`
@@ -556,13 +639,7 @@ ALTER TABLE `asignaciones`
 -- AUTO_INCREMENT de la tabla `atletas`
 --
 ALTER TABLE `atletas`
-  MODIFY `id_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT de la tabla `atleta_premios`
---
-ALTER TABLE `atleta_premios`
-  MODIFY `id_a_premio` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de la tabla `catalogos`
@@ -574,25 +651,43 @@ ALTER TABLE `catalogos`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id_categorias` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_categorias` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT de la tabla `categoria_catalogo`
+--
+ALTER TABLE `categoria_catalogo`
+  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `conceptos`
 --
 ALTER TABLE `conceptos`
-  MODIFY `id_conceptos` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_conceptos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `cuentas_cobrar`
 --
 ALTER TABLE `cuentas_cobrar`
-  MODIFY `id_cobrar` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_cobrar` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_equipos`
 --
 ALTER TABLE `detalles_equipos`
   MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `detalles_palmares`
+--
+ALTER TABLE `detalles_palmares`
+  MODIFY `id_detalle_palmares` int(100) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `devoluciones`
+--
+ALTER TABLE `devoluciones`
+  MODIFY `id_devolución` int(100) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `equipamientos`
@@ -607,12 +702,6 @@ ALTER TABLE `equipos`
   MODIFY `id_equipos` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `equipos_premios`
---
-ALTER TABLE `equipos_premios`
-  MODIFY `id_e_premios` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT de la tabla `estadisticas`
 --
 ALTER TABLE `estadisticas`
@@ -622,7 +711,13 @@ ALTER TABLE `estadisticas`
 -- AUTO_INCREMENT de la tabla `estado_equipamiento`
 --
 ALTER TABLE `estado_equipamiento`
-  MODIFY `id_estado` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_estado` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de la tabla `historial`
+--
+ALTER TABLE `historial`
+  MODIFY `id_historial` int(100) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `metodos_pago`
@@ -634,13 +729,19 @@ ALTER TABLE `metodos_pago`
 -- AUTO_INCREMENT de la tabla `monedas`
 --
 ALTER TABLE `monedas`
-  MODIFY `id_monedas` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_moneda` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `id_pagos` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `palmares`
+--
+ALTER TABLE `palmares`
+  MODIFY `id_palmares` int(100) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `participaciones`
@@ -652,7 +753,7 @@ ALTER TABLE `participaciones`
 -- AUTO_INCREMENT de la tabla `posiciones`
 --
 ALTER TABLE `posiciones`
-  MODIFY `id_posicion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id_posicion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `premios`
@@ -664,19 +765,13 @@ ALTER TABLE `premios`
 -- AUTO_INCREMENT de la tabla `representantes`
 --
 ALTER TABLE `representantes`
-  MODIFY `id_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de la tabla `tipos_premios`
---
-ALTER TABLE `tipos_premios`
-  MODIFY `id_tipo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `torneos`
 --
 ALTER TABLE `torneos`
-  MODIFY `id_torneo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_torneo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Restricciones para tablas volcadas
@@ -687,8 +782,7 @@ ALTER TABLE `torneos`
 --
 ALTER TABLE `asignaciones`
   ADD CONSTRAINT `asignaciones_ibfk_1` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `asignaciones_ibfk_2` FOREIGN KEY (`id_equipamiento`) REFERENCES `equipamientos` (`id_equipamiento`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `asignaciones_ibfk_3` FOREIGN KEY (`id_estado`) REFERENCES `estado_equipamiento` (`id_estado`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `asignaciones_ibfk_2` FOREIGN KEY (`id_equipamiento`) REFERENCES `equipamientos` (`id_equipamiento`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `atletas`
@@ -697,14 +791,6 @@ ALTER TABLE `atletas`
   ADD CONSTRAINT `atletas_ibfk_1` FOREIGN KEY (`id_representante`) REFERENCES `representantes` (`id_representante`) ON UPDATE CASCADE,
   ADD CONSTRAINT `atletas_ibfk_2` FOREIGN KEY (`id_posicion`) REFERENCES `posiciones` (`id_posicion`),
   ADD CONSTRAINT `atletas_ibfk_3` FOREIGN KEY (`id_categoria`) REFERENCES `categorias` (`id_categorias`);
-
---
--- Filtros para la tabla `atleta_premios`
---
-ALTER TABLE `atleta_premios`
-  ADD CONSTRAINT `atleta_premios_ibfk_1` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `atleta_premios_ibfk_2` FOREIGN KEY (`id_premio`) REFERENCES `premios` (`id_premio`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `atleta_premios_ibfk_3` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `catalogos`
@@ -718,7 +804,8 @@ ALTER TABLE `catalogos`
 --
 ALTER TABLE `cuentas_cobrar`
   ADD CONSTRAINT `cuentas_cobrar_ibfk_1` FOREIGN KEY (`id_concepto`) REFERENCES `conceptos` (`id_conceptos`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `cuentas_cobrar_ibfk_2` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `cuentas_cobrar_ibfk_2` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `cuentas_cobrar_ibfk_3` FOREIGN KEY (`id_moneda`) REFERENCES `monedas` (`id_moneda`);
 
 --
 -- Filtros para la tabla `detalles_equipos`
@@ -726,6 +813,22 @@ ALTER TABLE `cuentas_cobrar`
 ALTER TABLE `detalles_equipos`
   ADD CONSTRAINT `detalles_equipos_ibfk_1` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `detalles_equipos_ibfk_2` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipos`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `detalles_palmares`
+--
+ALTER TABLE `detalles_palmares`
+  ADD CONSTRAINT `detalles_palmares_ibfk_1` FOREIGN KEY (`id_premio`) REFERENCES `premios` (`id_premio`),
+  ADD CONSTRAINT `detalles_palmares_ibfk_2` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`),
+  ADD CONSTRAINT `detalles_palmares_ibfk_3` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipos`),
+  ADD CONSTRAINT `detalles_palmares_ibfk_4` FOREIGN KEY (`id_palmares`) REFERENCES `palmares` (`id_palmares`);
+
+--
+-- Filtros para la tabla `devoluciones`
+--
+ALTER TABLE `devoluciones`
+  ADD CONSTRAINT `devoluciones_ibfk_1` FOREIGN KEY (`id_asignacion`) REFERENCES `asignaciones` (`id_asignacion`),
+  ADD CONSTRAINT `devoluciones_ibfk_2` FOREIGN KEY (`id_estado`) REFERENCES `estado_equipamiento` (`id_estado`);
 
 --
 -- Filtros para la tabla `equipamientos`
@@ -741,14 +844,6 @@ ALTER TABLE `equipos`
   ADD CONSTRAINT `equipos_ibfk_1` FOREIGN KEY (`id_categoria`) REFERENCES `categorias` (`id_categorias`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Filtros para la tabla `equipos_premios`
---
-ALTER TABLE `equipos_premios`
-  ADD CONSTRAINT `equipos_premios_ibfk_1` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipos`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `equipos_premios_ibfk_2` FOREIGN KEY (`id_premio`) REFERENCES `premios` (`id_premio`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `equipos_premios_ibfk_3` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
 -- Filtros para la tabla `estadisticas`
 --
 ALTER TABLE `estadisticas`
@@ -756,12 +851,24 @@ ALTER TABLE `estadisticas`
   ADD CONSTRAINT `estadisticas_ibfk_2` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Filtros para la tabla `historial`
+--
+ALTER TABLE `historial`
+  ADD CONSTRAINT `historial_ibfk_1` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`);
+
+--
 -- Filtros para la tabla `pagos`
 --
 ALTER TABLE `pagos`
   ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`id_cobrar`) REFERENCES `cuentas_cobrar` (`id_cobrar`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`id_metodo`) REFERENCES `metodos_pago` (`id_metodos`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `pagos_ibfk_3` FOREIGN KEY (`id_moneda`) REFERENCES `monedas` (`id_monedas`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `pagos_ibfk_3` FOREIGN KEY (`id_moneda`) REFERENCES `monedas` (`id_moneda`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `palmares`
+--
+ALTER TABLE `palmares`
+  ADD CONSTRAINT `palmares_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`);
 
 --
 -- Filtros para la tabla `participaciones`
@@ -769,12 +876,6 @@ ALTER TABLE `pagos`
 ALTER TABLE `participaciones`
   ADD CONSTRAINT `participaciones_ibfk_1` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipos`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `participaciones_ibfk_2` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Filtros para la tabla `premios`
---
-ALTER TABLE `premios`
-  ADD CONSTRAINT `premios_ibfk_1` FOREIGN KEY (`id_tipo`) REFERENCES `tipos_premios` (`id_tipo`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

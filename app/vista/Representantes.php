@@ -1,3 +1,47 @@
+<?php
+if (isset($solo_lista) && $solo_lista === true):
+    if (empty($registro)): ?>
+        <div class="listado_vacio">
+            <p>No se encontraron registros</p>
+        </div>
+        <?php else:
+        foreach ($registro as $dato): ?>
+            <div class="listado_contenedor_grupal">
+                <div class="listado_item" onclick="toggleDetalles(this)">
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Nombre y Apellido</small>
+                            <span><?= $dato['nombre'] ?> <?= $dato['apellido'] ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Cedula</small>
+                            <span><?= $dato['nacionalidad'] ?> <?= $dato['cedula'] ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Telefono</small>
+                            <span><?= $dato['telefono'] ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Direccion</small>
+                            <span><?= $dato['direccion'] ?></span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                            <?php if ($permisos['modificar']): ?>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_representante'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                            <?php endif; ?>
+                            <?php if ($permisos['eliminar']): ?>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_representante'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; exit();?>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -24,13 +68,57 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <button class="btn btn_azul" id="incluir">Nuevo Representante</button>
-
-                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php if ($permisos['registrar']): ?>
+                                <button class="btn btn_azul" id="incluir">Nuevo Representante</button>
+                            <?php endif; ?>
+                            <?php if ($permisos['reporte']): ?>
+                                <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
+                            <?php if (empty($registro)): ?>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros</p>
+                                </div>
+                                <?php else:
+                                foreach ($registro as $dato): ?>
+                                    <div class="listado_contenedor_grupal">
+                                        <div class="listado_item" onclick="toggleDetalles(this)">
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo">
+                                                    <small>Nombre y Apellido</small>
+                                                    <span><?= $dato['nombre'] ?> <?= $dato['apellido'] ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Cedula</small>
+                                                    <span><?= $dato['nacionalidad'] ?> <?= $dato['cedula'] ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Telefono</small>
+                                                    <span><?= $dato['telefono'] ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Direccion</small>
+                                                    <span><?= $dato['direccion'] ?></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_acciones">
+                                                <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                                    <?php if ($permisos['modificar']): ?>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_representante'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if ($permisos['eliminar']): ?>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_representante'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif;?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
@@ -50,7 +138,7 @@
                     <div class="row">
                         <div class="input-group-custom">
                             <div class="caja_formulario nacionalidad_ext">
-                                <select name="nacionalidad" id="nacionalidad" class="formulario select"> 
+                                <select name="nacionalidad" id="nacionalidad" class="formulario select">
                                     <option value="V" selected>V</option>
                                     <option value="E">E</option>
                                     <option value="P">P</option>
@@ -109,5 +197,4 @@
     <script src="js/main.js"></script>
     <script src="js/representantes.js"></script>
 </body>
-
 </html>

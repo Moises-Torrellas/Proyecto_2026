@@ -1,0 +1,593 @@
+/* ========================================================
+   RESPONSIVE DESIGN (Aplicado a Vistas, Navs y CSS Base)
+======================================================== */
+
+/* Ocultar elementos específicos en escritorio */
+.ocultar_en_escritorio {
+    display: none;
+}
+
+/* --- Info Usuario Responsive Menu --- */
+.info_usuario_responsive {
+    text-align: center;
+    padding: 10px 0px;
+    width: 100%;
+}
+.info_usuario_responsive .nombre_usuario {
+    font-size: 0.95rem;
+    color: var(--texto-principal);
+}
+.info_usuario_responsive .tipo_usuario {
+    font-size: 0.8rem;
+    color: var(--color-secundario);
+}
+.division_menu {
+    border: none;
+    border-top: 1px solid var(--borde-color);
+    margin: 10px 0;
+    width: 100%;
+}
+
+/* --- Forzar Select2 a ocupar todo el contenedor --- */
+.select2-container {
+    width: 100% !important;
+}
+
+/* --- Select2 dropdown encima del modal --- */
+.select2-container--open .select2-dropdown {
+    z-index: 10060;
+}
+
+/* --- Cursor pointer en eventos del FullCalendar --- */
+.fc-event {
+    cursor: pointer;
+}
+
+/* =========================================
+   PANTALLAS GRANDES-MEDIANAS (Desktop con sidebar) - max 1200px
+========================================= */
+@media screen and (max-width: 1200px) {
+    /* Cabecera de vista: apilar título, búsqueda y botones */
+    .contenedor_opciones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        height: auto;
+        padding: 10px 0;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .contenedor_titulo {
+        width: 100%;
+        text-align: center;
+    }
+
+    .botones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .contenedor_funciones {
+        grid-template-rows: auto auto 60px;
+    }
+
+    /* Listado: datos en wrap para que no se amontonen */
+    .listado_col_datos {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: space-around;
+    }
+
+    .listado_dato_grupo {
+        flex: 1 1 auto;
+        min-width: 80px;
+    }
+
+    .listado_dato_grupo span {
+        font-size: 0.8rem;
+    }
+
+    .listado_dato_grupo small {
+        font-size: 0.6rem;
+    }
+}
+
+/* =========================================
+   PANTALLAS MEDIANAS (Tablets y Desktop pequeños) - max 992px
+========================================= */
+@media screen and (max-width: 992px) {
+    /* --- Botón Hamburquesa --- */
+    .btn_hamburguesa {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: var(--color-primario); /* Color verde primario */
+        cursor: pointer;
+        font-size: 24px;
+        margin-right: 10px;
+        margin-left: 20px; /* Separado del borde izquierdo */
+        padding: 5px;
+    }
+
+    .ocultar_en_escritorio {
+        display: flex;
+    }
+
+    /* --- Navbar Superior --- */
+    .logo {
+        margin-left: 5px !important; /* Quitar o reducir margin left del logo */
+    }
+
+    .nombre_negocio {
+        display: none; /* Ocultar nombre del negocio para dar espacio */
+    }
+
+    .contenedor_superior {
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .contenedor_usuario {
+        display: flex;
+        justify-content: flex-end; /* Alinea los íconos del usuario a la derecha */
+        margin-right: 15px; /* Separación del borde derecho */
+        width: 100%;
+    }
+
+    .info_usuario .contenedor_nombre {
+        display: none; /* Ocultar nombre de usuario y rol */
+    }
+    
+    .info_usuario_responsive {
+        display: block;
+    }
+
+    /* --- Layout Principal --- */
+    .contenedor {
+        grid-template-columns: 1fr; /* Una sola columna */
+    }
+
+    .nav_superior {
+        grid-column: 1; /* Ocupa solo la única columna */
+    }
+
+    .contenido {
+        grid-column: 1;
+        width: 100%;
+    }
+
+    .contenido_modulo {
+        border-radius: 0; /* Quitar el borde redondeado en móvil */
+        padding: 10px;
+    }
+
+    /* --- Nav Lateral (Dropdown Off-canvas) --- */
+    .nav_lateral {
+        position: fixed;
+        left: -100%; /* Oculto por defecto */
+        top: 60px; /* Debajo del nav superior */
+        width: 260px;
+        height: calc(100vh - 60px);
+        background-color: var(--fondo-principal);
+        z-index: 9999;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+        overflow-y: auto;
+        padding-top: 20px;
+    }
+
+    .nav_lateral.mostrar {
+        left: 0;
+    }
+
+    [data-tema='oscuro'] .nav_lateral {
+        background-color: var(--fondo-principal);
+    }
+    
+    /* Contenedor notificaciones en móvil */
+    .contenedor_notificaciones {
+        width: 300px;
+        right: 10px;
+        top: 55px;
+    }
+
+    /* --- Login y Recuperación --- */
+    .contenedor_imagen {
+        display: none !important;
+    }
+    
+    .contenedor_inicio {
+        width: 100% !important;
+        padding: 0 20px;
+        box-sizing: border-box;
+    }
+
+    /* Separador: que no se parta en dos líneas */
+    .separador {
+        white-space: nowrap;
+        width: 80%;
+        font-size: 0.65rem;
+    }
+
+    /* Unificar ancho de todos los inputs, botones y contenedores del login */
+    .c_f_i, .cf_2, .caja_formulario, .column_inicio {
+        width: 100% !important;
+        max-width: 350px !important;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .btn_inicio {
+        width: 100% !important;
+        max-width: 350px !important;
+    }
+
+    .btn_a {
+        width: 100% !important;
+        max-width: 350px !important;
+    }
+
+    /* Botones del formulario de recuperación */
+    .contenedor_formulario_inicio .btn {
+        width: 100% !important;
+        max-width: 350px !important;
+    }
+
+    /* Botón "Volver Al Inicio de Sesión" fuera del formulario */
+    .contenedor_inicio > .btn {
+        width: 100% !important;
+        max-width: 350px !important;
+    }
+
+    /* MOVIDO AQUI PARA QUE EN TABLETS NO SE ROMPA LA CABECERA NI LA TABLA */
+    /* --- Contenedor Funciones (Cabecera de la vista) --- */
+    .contenedor_opciones {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        height: auto;
+        padding: 10px 0 20px 0;
+    }
+    
+    .contenedor_funciones {
+        grid-template-rows: auto auto 60px;
+    }
+
+    .contenedor_titulo, 
+    .contenedor_busqueda, 
+    .botones {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        grid-column: unset;
+    }
+
+    .contenedor_busqueda{
+        width: 100%;
+        max-width: 300px;
+        display: flex;
+        justify-content: center;
+        grid-column: unset;
+    }
+
+    .contenedor_busqueda input {
+        width: 100%;
+        max-width: 350px;
+    }
+
+    .botones {
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    /* --- Listado (Tablas modernas/Tree) --- */
+    .listado_contenedor_grupal {
+        width: 100%;
+    }
+
+    .listado_item {
+        flex-direction: column;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .listado_col_principal {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .listado_col_datos {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 15px;
+    }
+
+    .listado_dato_grupo {
+        flex: 1 1 45%;
+        align-items: flex-start;
+        padding: 0;
+    }
+
+    .listado_dato_grupo span {
+        text-align: left;
+    }
+
+    .listado_col_acciones {
+        width: 100%;
+        justify-content: center;
+        padding-top: 10px;
+        border-top: 1px dashed var(--borde-color);
+        gap: 20px;
+    }
+
+    /* --- Panel de Control (Dashboard) --- */
+    .contenido_modulo {
+        overflow-x: hidden; /* Evitar scroll horizontal */
+    }
+
+    .contenedor_panel {
+        width: 100%;
+        padding: 0 10px;
+        align-items: center;
+        box-sizing: border-box;
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        width: 100%;
+        height: auto;
+        box-sizing: border-box;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .card h3 {
+        font-size: 12px;
+    }
+
+    .card h1 {
+        font-size: 20px;
+    }
+
+    .graficos {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 20px;
+        box-sizing: border-box;
+    }
+
+    .calendario-seccion {
+        grid-column: unset;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    /* Forzar que el calendario no desborde */
+    #calendario_eventos {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .fc {
+        max-width: 100%;
+    }
+
+    .fc .fc-scrollgrid {
+        width: 100% !important;
+    }
+
+    .fc .fc-daygrid-body,
+    .fc .fc-scrollgrid-section table {
+        width: 100% !important;
+    }
+
+    .columna-derecha-stats {
+        grid-column: unset;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        width: 100%;
+    }
+
+    .grafico-lateral,
+    .card_grafico {
+        min-height: 250px;
+    }
+
+    .chart-container {
+        padding: 15px;
+        overflow: hidden;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* FullCalendar toolbar responsive */
+    .fc .fc-toolbar {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: 1rem;
+    }
+
+    .fc .fc-button {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* =========================================
+   PANTALLAS PEQUEÑAS (Móviles) - max 768px
+========================================= */
+@media screen and (max-width: 768px) {
+    /* --- Modales --- */
+    .modal {
+        width: 95%;
+        height: 90vh;
+        grid-template-rows: 60px auto;
+    }
+    
+    .cabecera_modal {
+        height: 60px;
+    }
+
+    .titulo_modal {
+        margin-left: 20px;
+        font-size: 1.1rem;
+    }
+
+    .cerrar_modal {
+        margin-right: 20px;
+    }
+
+    .contenido_modal {
+        padding-top: 25px; /* Separación del primer input con el head del modal */
+    }
+
+    .row {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Centrar todo el formulario del modal */
+        width: 100%;
+        gap: 10px;
+    }
+
+    .colum {
+        display: flex;
+        justify-content: center; /* Centrar columnas */
+        flex-wrap: wrap; /* Permitir que los elementos se envuelvan si es necesario */
+        margin: 15px 0 10px 0;
+        width: 100%;
+        gap: 15px; /* Separación entre elementos, por ejemplo botones */
+    }
+
+    /* Que todos los inputs, selects y cajas del modal midan lo mismo */
+    .caja_formulario, 
+    .cf_1, .cf_2, .cf_3_auto, .cf_4, .cf_5 {
+        width: 100% !important;
+        max-width: 320px !important; 
+        margin: 0 auto;
+    }
+    
+    .input-group-custom {
+        width: 100% !important;
+        max-width: 320px !important; 
+        margin: 0 auto;
+    }
+
+    .formulario {
+        width: 100%;
+    }
+    
+    .titulo_formulario {
+        font-size: 0.85rem;
+    }
+    
+    .botones_usuario {
+        gap: 5px;
+    }
+    
+    .boton_usuario {
+        width: 35px;
+        height: 35px;
+    }
+
+    /* Separación de los botones limpiar y procesar en el modal */
+    .colum button.btn {
+        width: 100%;
+        max-width: 140px;
+    }
+
+    /* --- Panel de Control (Dashboard) - Móvil --- */
+    .columna-derecha-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        padding: 12px;
+    }
+
+    .graficos h4 {
+        font-size: 0.9rem;
+    }
+}
+
+/* =========================================
+   PANTALLAS EXTRA PEQUEÑAS (Móviles pequeños) - max 480px
+========================================= */
+@media screen and (max-width: 480px) {
+    .logo {
+        width: 40px;
+        margin-left: 0px !important;
+    }
+    
+    .btn_hamburguesa {
+        margin-left: 5px; /* Menos espacio en pantallas miniatura */
+    }
+
+    .info_usuario {
+        padding: 5px;
+    }
+    
+    .img_usuario {
+        width: 35px;
+        height: 35px;
+        margin-right: 5px;
+    }
+
+    .btn {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    .listado_dato_grupo {
+        flex: 1 1 100%;
+    }
+
+    /* --- Panel de Control (Dashboard) - Móvil pequeño --- */
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .card h3 {
+        font-size: 11px;
+    }
+
+    .card h1 {
+        font-size: 18px;
+    }
+
+    .icon_card {
+        font-size: 16px;
+        padding: 8px;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: 0.85rem;
+    }
+
+    .fc .fc-button {
+        padding: 3px 6px;
+        font-size: 0.75rem;
+    }
+}

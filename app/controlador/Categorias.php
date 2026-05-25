@@ -24,12 +24,11 @@ $objModelo = new ModeloCategorias();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudCategorias($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
-
-/**
- * --- FUNCIONES DEL CONTROLADOR ---
- */
 
 function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
@@ -43,14 +42,15 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
 
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar categorias.');
+                consultar($obj, $permisos);
                 break;
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para buscar/modificar categorías.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar categorías.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar categorias.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
@@ -65,7 +65,7 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Categorias', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -74,16 +74,16 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
  * --- LÓGICA DE ACCIONES ---
  */
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    
-    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] = 'Error al listar las categorías.';
-    }
-    
-    echo json_encode($respuesta);
+
+    $registro = $respuesta['datos'] ?? [];
+    $solo_lista = true;
+
+    // Nota: Asegúrate de que la vista dependa de estas variables locales
+    include(__DIR__ . '/../vista/Categorias.php');
 }
 
 function buscar($obj): void
@@ -110,12 +110,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
     try {
         $validaciones = [
             'nombre'   => ['regla' => '/^[a-zA-Z0-9\-\s]{2,30}$/', 'mensaje' => 'Nombre de categoría inválido.'],
-            'edad_min' => ['regla' => '/^[0-9]{1,2}$/', 'mensaje' => 'Edad mínima inválida.'],
-            'edad_max' => ['regla' => '/^[0-9]{1,2}$/', 'mensaje' => 'Edad máxima inválida.']
+            'edad_min' => ['regla' => '/^[0-9]{1,2}$/', 'mensaje' => 'Edad mínima inválida. Debe ser un número.'],
+            'edad_max' => ['regla' => '/^[0-9]{1,2}$/', 'mensaje' => 'Edad máxima inválida. Debe ser un número.']
         ];
 
         validar_datos($validaciones);
-
+        
         if ((int)$_POST['edad_min'] > (int)$_POST['edad_max']) {
             throw new Exception('La edad mínima no puede ser mayor que la edad máxima.');
         }
@@ -185,7 +185,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Categorias', $e->getMessage(), 'Controlador_Modificar');
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);     
     }
 }
 

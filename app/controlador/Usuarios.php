@@ -26,7 +26,8 @@ $objModelo = new ModeloUsuarios();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudUsuarios($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    $variables = ['permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
 
 function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): void
@@ -53,7 +54,7 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 break;
 
             case 'incluir':
-                if (!$permisos['incluir']) throw new Exception('No tienes permisos para registrar usuarios.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar usuarios.');
                 incluirUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
 
@@ -87,7 +88,7 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Usuarios', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

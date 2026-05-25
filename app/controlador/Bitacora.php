@@ -22,12 +22,12 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloBitacora();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudUsuarios($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
     cargarVista($pagina);
 }
 
-function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): void
+function manejarSolicitud($obj, $id_modulo, $bitacoraObj, $permisos): void
 {
     // Centralizamos la variable global de permisos aquí
 
@@ -48,7 +48,7 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Bitacora', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

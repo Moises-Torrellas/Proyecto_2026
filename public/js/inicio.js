@@ -54,7 +54,7 @@ function enviaAjax(datos) {
         timeout: 10000,
         success: function (respuesta) {
             try {
-                var lee = JSON.parse(respuesta);
+                var lee = typeof respuesta === 'object' ? respuesta : JSON.parse(respuesta);
                 if (lee.accion == "inicio") {
                     if (lee.resultado == 1) {
                         muestraMensaje("success", 2000, "Inicio Validado", lee.mensaje);
