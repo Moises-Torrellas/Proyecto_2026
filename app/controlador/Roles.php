@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_ROLES_;
 
 // 3. Procesar permisos (Ahora retorna un array en lugar de usar global)
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, $bitacora);
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloRoles';
@@ -22,8 +22,9 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloRoles();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudRoles($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitudRoles($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
+    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
     cargarVista($pagina);
 }
 

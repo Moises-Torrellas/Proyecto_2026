@@ -10,7 +10,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_USUARIOS_;
 
 // 3. Procesar permisos (esto llena la variable global $permisosGenerales)
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, $bitacora);
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloUsuarios';
@@ -23,8 +23,9 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloUsuarios();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudUsuarios($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitudUsuarios($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
+    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
     $variables = ['permisos' => $permisos];
     cargarVista($pagina, $variables);
 }

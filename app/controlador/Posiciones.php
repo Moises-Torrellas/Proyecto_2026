@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_POSICIONES_;
 
 //Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, $bitacora);
 
 //Comprobar si el modelo existe
 $nombreClaseModelo = 'App\modelo\ModeloPosiciones';
@@ -21,12 +21,12 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloPosiciones();
 // comprobamos si la solicitud es por medio de ajax
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudRepresentantes($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitudRepresentantes($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-// Realizamos la primera consulta del modulo y la pasamos como parametro a la vista con los permisos
+    registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
     $registro = $respuesta['datos'] ?? [];
-    $variables =['registro' => $registro, 'permisos' => $permisos ];
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
     cargarVista($pagina, $variables);
 }
 // Funcion para manejar las peticiones recibe como parametros el objeto del modelo, el id del modulo, la bitacora y el array de permisos
@@ -77,11 +77,11 @@ function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    
-    $registro = $respuesta['datos'] ?? []; 
+
+    $registro = $respuesta['datos'] ?? [];
     $solo_lista = true;
 
-    include (__DIR__.'/../vista/Posiciones.php');
+    include(__DIR__ . '/../vista/Posiciones.php');
 }
 
 function buscar($obj): void
@@ -132,7 +132,6 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         }
 
         echo json_encode($resultado);
-
     } catch (Exception $e) {
         logs('Posiciones', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);

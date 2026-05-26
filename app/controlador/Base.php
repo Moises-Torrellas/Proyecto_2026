@@ -5,6 +5,7 @@ function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = 
 
     // 1. REGLA DE ORO: Superusuario
     if ($nivelUsuario === 1) {
+        // REGISTRO EN BITÁCORA ANTES DEL RETURN: Solo si no es validación de menú visual
         return [
             'ingresar'  => true,
             'registrar' => true,
@@ -31,6 +32,7 @@ function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = 
 
     // 3. Permisos plenos Nivel 2
     if ($nivelUsuario === 2) {
+
         return [
             'ingresar'  => true,
             'registrar' => true,
@@ -66,11 +68,6 @@ function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = 
             'reporte'   => (isset($p['reporte']) && $p['reporte']),
             'otros'     => (isset($p['otros']) && $p['otros'])
         ];
-
-        // Solo registramos bitácora si NO es una simple validación de menú
-        if (!$soloValidar && !comprobarAjax() && $bitacora !== null) {
-            registrarBitacora($bitacora, $id_modulo, "Accedió al módulo");
-        }
 
         return $permisos;
     } else {
