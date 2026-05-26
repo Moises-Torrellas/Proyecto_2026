@@ -2,7 +2,6 @@
 
 use App\modelo\ModeloUsuarios;
 use App\modelo\ModeloRoles;
-use App\servicios\ReporteUsuario;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -76,12 +75,6 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
             case 'bloquear':
                 if (!$permisos['otros']) throw new Exception('No tiene permisos para bloquear usuarios.');
                 bloquearUsuario($obj, $id_modulo, $bitacoraObj);
-                break;
-
-            case 'generar':
-                if (!$permisos['reporte']) throw new Exception('No tienes permisos para reportes.');
-                $reporte = new ReporteUsuario();
-                generarReporteUsuarios($obj, $reporte);
                 break;
 
             default:
@@ -309,7 +302,7 @@ function bloquearUsuario($obj, $id_modulo, $bitacoraObj): void
     }
 }
 
-function generarReporteUsuarios($obj, $reporte): void
+/* function generarReporteUsuarios($obj, $reporte): void
 {
     $validacionesReporte = [];
     $datosFiltro = ['accion' => 'reporte'];
@@ -345,3 +338,4 @@ function generarReporteUsuarios($obj, $reporte): void
         throw new Exception('No se encontraron registros para el reporte.');
     }
 }
+ */

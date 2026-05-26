@@ -12,6 +12,7 @@
 
 /public/img/usuarios/*
 /public/img/atletas/*
+/public/docs/*
 # Otros archivos recomendados para tu entorno (XAMPP/Windows)
 .DS_Store
 Thumbs.db
