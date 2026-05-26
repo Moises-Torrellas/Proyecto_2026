@@ -4,7 +4,7 @@ use App\modelo\ModeloRespaldo;
 
 require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_RESPALDO_; 
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, $bitacora);
 $nombreClaseModelo = 'App\modelo\ModeloRespaldo';
 
 if (!class_exists($nombreClaseModelo)) {
@@ -15,8 +15,9 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloRespaldo();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudRespaldo($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitudRespaldo($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
+    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
     cargarVista($pagina);
 }
 

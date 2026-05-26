@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_CATEGORIA_EQUI_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, $bitacora);
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloCategoriaEquipamiento';
@@ -22,8 +22,9 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloCategoriaEquipamiento();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudCategorias($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitudCategorias($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
+    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
     cargarVista($pagina);
 }
 
