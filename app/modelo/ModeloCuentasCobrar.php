@@ -46,7 +46,7 @@ class ModeloCuentasCobrar extends ModeloBase
 
         // Leemos las fechas enviadas por el formulario
         $this->fecha_emision = !empty($datos['fecha_emision']) ? $datos['fecha_emision'] : date('Y-m-d');
-        
+
         $this->fecha_vencimiento = !empty($datos['fecha_vencimiento']) ? $datos['fecha_vencimiento'] : date('Y-m-d', strtotime($this->fecha_emision . ' + 30 days'));
 
         $this->estatus = mb_convert_case(trim($datos['estatus'] ?? 'Pendiente'), MB_CASE_TITLE, "UTF-8");
@@ -67,37 +67,30 @@ class ModeloCuentasCobrar extends ModeloBase
             $conex = $this->conex();
             $params = [];
 
-            // CORRECCIÓN: Cambiado c.monto a c.monto_personalizado
-            $sentencia = "SELECT c.*, 
-                                c.monto_personalizado as monto_total, 
-                                c.monto_pendiente as monto_pendiente,
-                                c.anulado as anulado,
-                                IF(c.estatus = '0', 'Pendiente', c.estatus) as estatus,
-                                a.nombres as atleta_nombre, 
-                                a.apellidos as atleta_apellido, 
-                                co.nombre as concepto_nombre,
-                                m.nombre as moneda_nombre,
-                                m.simbolo as moneda_simbolo
-                        FROM cuentas_cobrar c            INNER JOIN atletas a ON c.id_atleta = a.id_atleta 
-                        INNER JOIN conceptos co ON c.id_concepto = co.id_conceptos 
-                        INNER JOIN monedas m ON c.id_moneda = m.id_moneda
-                        WHERE 1=1";
+            // 1. Consultamos directamente la nueva vista
+            $sentencia = "SELECT * FROM vista_cuentas_cobrar WHERE 1=1";
 
+            // 2. Buscador general dinámico
             if (!empty($filtro['filtro'])) {
-                $p = "%" . $filtro['filtro'] . "%";
+                $p = "%" . trim($filtro['filtro']) . "%";
+
+                // Agregamos estatus_texto a la búsqueda
                 $sentencia .= " AND (
-                    a.nombres LIKE :f1 OR 
-                    a.apellidos LIKE :f2 OR 
-                    co.nombre LIKE :f3 OR
-                    m.nombre LIKE :f4
-                )";
+                atleta_nombre LIKE :f1 OR 
+                atleta_apellido LIKE :f2 OR 
+                concepto_nombre LIKE :f3 OR
+                moneda_nombre LIKE :f4 OR
+                estatus_texto LIKE :f5
+            )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
                 $params[':f3'] = $p;
                 $params[':f4'] = $p;
+                $params[':f5'] = $p;
             }
 
-            $sentencia .= " ORDER BY c.fecha_emision DESC";
+            // 3. Ordenamiento basado en la vista
+            $sentencia .= " ORDER BY fecha_emision DESC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -192,10 +185,10 @@ class ModeloCuentasCobrar extends ModeloBase
             $stmt->bindParam(':id_atleta', $this->id_atleta);
             $stmt->bindParam(':id_moneda', $this->id_moneda);
             $stmt->bindParam(':monto', $this->monto); // Se guarda en monto_personalizado
-            
+
             // ASIGNACIÓN REQUERIDA: Al crear, el saldo inicial es el total
-            $stmt->bindParam(':monto_pendiente', $this->monto); 
-            
+            $stmt->bindParam(':monto_pendiente', $this->monto);
+
             $stmt->bindParam(':fecha_emision', $this->fecha_emision);
             $stmt->bindParam(':fecha_vencimiento', $this->fecha_vencimiento);
             $stmt->bindParam(':estatus', $this->estatus);

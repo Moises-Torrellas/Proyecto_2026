@@ -40,7 +40,8 @@ if (isset($solo_lista) && $solo_lista === true):
                 </div>
             </div>
         <?php endforeach; ?>
-    <?php endif; exit();?>
+    <?php endif;
+    exit(); ?>
 <?php endif; ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -118,7 +119,7 @@ if (isset($solo_lista) && $solo_lista === true):
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
-                            <?php endif;?>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
@@ -136,16 +137,18 @@ if (isset($solo_lista) && $solo_lista === true):
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
                     <div class="row">
-                        <div class="input-group-custom">
-                            <div class="caja_formulario nacionalidad_ext">
+                        <div class="colum">
+                            <div class="caja_formulario">
                                 <select name="nacionalidad" id="nacionalidad" class="formulario select">
-                                    <option value="V" selected>V</option>
-                                    <option value="E">E</option>
-                                    <option value="P">P</option>
+                                    <option value="V" selected>V - Venezolano</option>
+                                    <option value="E">E - Extrangero</option>
+                                    <option value="P">P - Pasaporte</option>
                                 </select>
+                                <label for="nacionalidad" class="titulo_formulario">Tipo de Documento</label>
                             </div>
-
-                            <div class="caja_formulario cedula_ext">
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
                                 <input type="text" class="formulario" id="cedula" name="cedula" placeholder=" ">
                                 <label for="cedula" class="titulo_formulario">Cedula</label>
                                 <span class="mensaje" id="cedula_spam"></span>
@@ -197,4 +200,5 @@ if (isset($solo_lista) && $solo_lista === true):
     <script src="js/main.js"></script>
     <script src="js/representantes.js"></script>
 </body>
+
 </html>

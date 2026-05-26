@@ -46,7 +46,7 @@ $(document).ready(function () {
     // Validación de Teléfono
     Validacion("telefono", /^[0-9\-\b]*$/, /^[0-9]{4}[-]{1}[0-9]{7}$/, "El formato es 0400-0000000");
 
-    Validacion("nacionalidad", /^[VEP]$/, /^[VEP]$/, "Solo puede ingresar V, E o P");
+    Validacion("nacionalidad", /^[VEP]$/, /^[VEP]$/, "Solo puede ingresar V, E o P", "proceso");
 
     Validacion("direccion", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/, "Solo letras entre 3 y 150 caracteres", "proceso");
 
@@ -94,6 +94,8 @@ $(document).ready(function () {
         $("#titulo_modal").text("Registrar Representante");
         $('#direccion').closest('.colum').show();
         $('#telefono').closest('.colum').show();
+        $('#apellido').closest('.colum').show();
+        $('#nombre').closest('.colum').show();
         abrirModal();
     });
 
@@ -105,6 +107,9 @@ $(document).ready(function () {
         $("#titulo_modal").text("Generar Reporte");
         $('#telefono').closest('.colum').hide();
         $('#direccion').closest('.colum').hide();
+        $('#apellido').closest('.colum').hide();
+        $('#nombre').closest('.colum').hide();
+        $('#nacionalidad').val(null).trigger('change');
         abrirModal();
     });
 
@@ -210,6 +215,8 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Representante");
     $('#direccion').closest('.colum').show();
     $('#telefono').closest('.colum').show();
+    $('#apellido').closest('.colum').show();
+    $('#nombre').closest('.colum').show();
     $('#id').val(datos[0].id_representante);
     $('#cedula').val(datos[0].cedula);
     $('#nombre').val(datos[0].nombre);
@@ -267,6 +274,24 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
+                }
+                else if (lee.accion == "reporte") {
+                    // 1. Cerramos la alerta de espera de inmediato
+                    cerrarAlertaEspara();
+
+                    // 2. Cerramos el modal del formulario
+                    cerrarModal();
+
+                    // 3. Mostramos el mensaje de éxito (dura 2000ms en pantalla)
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
                 }
                 else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);

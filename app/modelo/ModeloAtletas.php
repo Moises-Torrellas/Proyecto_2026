@@ -86,37 +86,23 @@ class ModeloAtletas extends ModeloBase
             $conex = $this->conex();
             $params = [];
 
-            // 1. Base de la consulta (Dejamos el WHERE abierto para los AND)
-            $sentencia = "SELECT 
-                        a.*, 
-                        COALESCE(a.telefono, r.telefono) AS telefono,
-                        COALESCE(a.direccion, r.direccion) AS direccion,
-                        COALESCE(a.doc_identidad, r.cedula) AS doc_identidad,
-                        r.nombre AS nombre_rep,
-                        r.apellido AS apellido_rep,
-                        r.cedula AS cedula_rep,
-                        p.nombre AS nombre_posicion,
-                        p.abreviatura AS abrev_posicion,
-                        c.nombre AS nombre_categoria,
-                        c.edad_min,
-                        c.edad_max
-                    FROM atletas a
-                    LEFT JOIN representantes r ON a.id_representante = r.id_representante
-                    LEFT JOIN posiciones p ON a.id_posicion = p.id_posicion
-                    LEFT JOIN categorias c ON a.id_categoria = c.id_categorias
-                    WHERE 1=1";
+            // 1. Apuntamos directamente a nuestra vista
+            $sentencia = "SELECT * FROM vista_atletas WHERE 1=1";
 
             // 2. BUSCADOR GENERAL (Filtro dinámico para el keyup)
             if (!empty($filtro['filtro'])) {
-                $p = "%" . $filtro['filtro'] . "%";
-                // NOTA: Asegúrate de si en tu BD es 'nombre' o 'nombres' (igual con apellido)
+                $p = "%" . trim($filtro['filtro']) . "%";
+
+                // Agregamos las traducciones dinámicas con CASE WHEN para Género y Estatus
                 $sentencia .= " AND (
-                a.doc_identidad LIKE :f1 OR 
-                a.nombres LIKE :f2 OR 
-                a.apellidos LIKE :f3 OR 
-                r.cedula LIKE :f4 OR
-                p.nombre LIKE :f5 OR
-                c.nombre LIKE :f6
+                doc_identidad LIKE :f1 OR 
+                nombres LIKE :f2 OR 
+                apellidos LIKE :f3 OR 
+                cedula_rep LIKE :f4 OR
+                nombre_posicion LIKE :f5 OR
+                nombre_categoria LIKE :f6 OR
+                (CASE WHEN genero = 'M' THEN 'mujer' WHEN genero = 'H' THEN 'hombre' ELSE '' END) LIKE :f7 OR
+                (CASE WHEN estatus = 1 THEN 'activo' WHEN estatus = 0 THEN 'retirado' ELSE '' END) LIKE :f8
             )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
@@ -124,24 +110,23 @@ class ModeloAtletas extends ModeloBase
                 $params[':f4'] = $p;
                 $params[':f5'] = $p;
                 $params[':f6'] = $p;
+                $params[':f7'] = $p; // Parámetro para el género
+                $params[':f8'] = $p; // Parámetro para el estatus
             }
 
             // 3. FILTROS ESPECÍFICOS
             if (!empty($this->doc_identidad)) {
-                $sentencia .= " AND a.doc_identidad = :doc_i";
+                $sentencia .= " AND doc_identidad = :doc_i";
                 $params[':doc_i'] = $this->doc_identidad;
             }
 
-            // CORREGIDO: En tu ProcesarDatos usas $this->categoria, no $this->id_categoria
             if (!empty($this->categoria)) {
-                $sentencia .= " AND a.id_categoria = :id_cat";
+                $sentencia .= " AND id_categoria = :id_cat";
                 $params[':id_cat'] = $this->categoria;
             }
 
-            // 4. UNIFICACIÓN DEL ORDENAMIENTO (Siempre al final de todo)
-            // Primero estatus 1, luego por la edad mínima de la categoría, luego alfabético
-            $sentencia .= " ORDER BY 
-                        CASE WHEN a.estatus = 1 THEN 0 ELSE 1 END ASC";
+            // 4. ORDENAMIENTO
+            $sentencia .= " ORDER BY CASE WHEN estatus = 1 THEN 0 ELSE 1 END ASC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -149,7 +134,7 @@ class ModeloAtletas extends ModeloBase
 
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
-            logs('Atletas', $e->getMessage(), 'Modelo_Consultar_Completo');
+            logs('Atletas', $e->getMessage(), 'Modelo_Consultar_Vista');
             return array('accion' => 'error', 'msg' => $e->getMessage());
         } finally {
             $conex = NULL;

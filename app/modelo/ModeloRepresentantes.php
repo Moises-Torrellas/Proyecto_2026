@@ -49,6 +49,7 @@ class ModeloRepresentantes extends ModeloBase
             'eliminar'  => $this->Eliminar(),
             'buscar' => $this->Buscar(),
             'modificar' => $this->Modificar(),
+            'generar'   => $this->Consultar(),
             default => throw new Exception('La accion no es valida')
         };
     }
@@ -83,14 +84,9 @@ class ModeloRepresentantes extends ModeloBase
                 $params[':cedula'] = trim($this->cedula) . "%";
             }
 
-            if (!empty($this->nombre)) {
-                $sentencia .= " AND nombre LIKE :nombre";
-                $params[':nombre'] = "%" . trim($this->nombre) . "%";
-            }
-
-            if (!empty($this->apellido)) {
-                $sentencia .= " AND apellido LIKE :apellido";
-                $params[':apellido'] = "%" . trim($this->apellido) . "%";
+            if (!empty($this->nacionalidad)) {
+                $sentencia .= " AND nacionalidad LIKE :nacionalidad";
+                $params[':nacionalidad'] = "%" . trim($this->nacionalidad) . "%";
             }
 
             // 4. Orden (Asegúrate de usar una columna que exista, como id_representante)

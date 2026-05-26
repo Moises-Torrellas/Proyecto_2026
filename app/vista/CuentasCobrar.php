@@ -18,7 +18,7 @@
             }
 
             // Lógica de renderizado de los Botones de Acción con Validación de Permisos
-            if ($esAnulado) {
+            if ($esAnulado || (int)$dato['estatus'] === 1 || (int)$dato['monto_pendiente'] < (int)$dato['monto_total']) {
                 $botonesAccion = '';
             } else {
                 $botonesAccion = '';
@@ -138,8 +138,9 @@
                                             : '<span class="estatus_a">Pendiente</span>';
                                     }
                                     // Lógica de renderizado de los Botones de Acción con Validación de Permisos
-                                    if ($esAnulado) {
+                                    if ($esAnulado || (int)$dato['estatus'] === 1 || (int)$dato['monto_pendiente'] < (int)$dato['monto_total']) {
                                         $botonesAccion = '';
+                                        
                                     } else {
                                         $botonesAccion = '';
                                         if ($permisos['modificar']) {
