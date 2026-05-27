@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-05-2026 a las 05:13:26
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Tiempo de generación: 27-05-2026 a las 19:43:21
+-- Versión del servidor: 10.4.28-MariaDB
+-- Versión de PHP: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `cannibalsbd`
 --
+CREATE DATABASE IF NOT EXISTS `cannibalsbd` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci;
+USE `cannibalsbd`;
 
 -- --------------------------------------------------------
 
@@ -27,6 +29,7 @@ SET time_zone = "+00:00";
 -- Estructura de tabla para la tabla `asignaciones`
 --
 
+DROP TABLE IF EXISTS `asignaciones`;
 CREATE TABLE `asignaciones` (
   `id_asignacion` int(11) NOT NULL,
   `id_atleta` int(11) NOT NULL,
@@ -42,6 +45,7 @@ CREATE TABLE `asignaciones` (
 -- Estructura de tabla para la tabla `atletas`
 --
 
+DROP TABLE IF EXISTS `atletas`;
 CREATE TABLE `atletas` (
   `id_atleta` int(11) NOT NULL,
   `nombres` varchar(60) NOT NULL,
@@ -74,6 +78,7 @@ INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `te
 -- Estructura de tabla para la tabla `catalogos`
 --
 
+DROP TABLE IF EXISTS `catalogos`;
 CREATE TABLE `catalogos` (
   `id_catalogo` int(11) NOT NULL,
   `nombre` varchar(150) NOT NULL,
@@ -97,6 +102,7 @@ INSERT INTO `catalogos` (`id_catalogo`, `nombre`, `stock_minimo`, `id_categoria`
 -- Estructura de tabla para la tabla `categorias`
 --
 
+DROP TABLE IF EXISTS `categorias`;
 CREATE TABLE `categorias` (
   `id_categorias` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
@@ -123,6 +129,7 @@ INSERT INTO `categorias` (`id_categorias`, `nombre`, `edad_min`, `edad_max`) VAL
 -- Estructura de tabla para la tabla `categoria_catalogo`
 --
 
+DROP TABLE IF EXISTS `categoria_catalogo`;
 CREATE TABLE `categoria_catalogo` (
   `id_categoria` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -143,6 +150,7 @@ INSERT INTO `categoria_catalogo` (`id_categoria`, `nombre`, `descripcion`) VALUE
 -- Estructura de tabla para la tabla `conceptos`
 --
 
+DROP TABLE IF EXISTS `conceptos`;
 CREATE TABLE `conceptos` (
   `id_conceptos` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
@@ -167,6 +175,7 @@ INSERT INTO `conceptos` (`id_conceptos`, `nombre`, `monto`, `estatus`, `regla`) 
 -- Estructura de tabla para la tabla `cuentas_cobrar`
 --
 
+DROP TABLE IF EXISTS `cuentas_cobrar`;
 CREATE TABLE `cuentas_cobrar` (
   `id_cobrar` int(11) NOT NULL,
   `id_concepto` int(11) NOT NULL,
@@ -194,6 +203,7 @@ INSERT INTO `cuentas_cobrar` (`id_cobrar`, `id_concepto`, `id_atleta`, `id_moned
 -- Estructura de tabla para la tabla `detalles_equipos`
 --
 
+DROP TABLE IF EXISTS `detalles_equipos`;
 CREATE TABLE `detalles_equipos` (
   `id_detalle` int(11) NOT NULL,
   `id_equipo` int(11) NOT NULL,
@@ -206,6 +216,7 @@ CREATE TABLE `detalles_equipos` (
 -- Estructura de tabla para la tabla `detalles_palmares`
 --
 
+DROP TABLE IF EXISTS `detalles_palmares`;
 CREATE TABLE `detalles_palmares` (
   `id_detalle_palmares` int(100) NOT NULL,
   `id_palmares` int(100) NOT NULL,
@@ -220,6 +231,7 @@ CREATE TABLE `detalles_palmares` (
 -- Estructura de tabla para la tabla `devoluciones`
 --
 
+DROP TABLE IF EXISTS `devoluciones`;
 CREATE TABLE `devoluciones` (
   `id_devolución` int(100) NOT NULL,
   `id_asignacion` int(100) NOT NULL,
@@ -234,6 +246,7 @@ CREATE TABLE `devoluciones` (
 -- Estructura de tabla para la tabla `equipamientos`
 --
 
+DROP TABLE IF EXISTS `equipamientos`;
 CREATE TABLE `equipamientos` (
   `id_equipamiento` int(11) NOT NULL,
   `id_catalogo` int(11) NOT NULL,
@@ -247,6 +260,7 @@ CREATE TABLE `equipamientos` (
 -- Estructura de tabla para la tabla `equipos`
 --
 
+DROP TABLE IF EXISTS `equipos`;
 CREATE TABLE `equipos` (
   `id_equipos` int(11) NOT NULL,
   `id_categoria` int(11) NOT NULL,
@@ -259,6 +273,7 @@ CREATE TABLE `equipos` (
 -- Estructura de tabla para la tabla `estadisticas`
 --
 
+DROP TABLE IF EXISTS `estadisticas`;
 CREATE TABLE `estadisticas` (
   `id_estadisticas` int(11) NOT NULL,
   `id_torneo` int(11) NOT NULL,
@@ -276,6 +291,7 @@ CREATE TABLE `estadisticas` (
 -- Estructura de tabla para la tabla `estado_equipamiento`
 --
 
+DROP TABLE IF EXISTS `estado_equipamiento`;
 CREATE TABLE `estado_equipamiento` (
   `id_estado` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -297,6 +313,7 @@ INSERT INTO `estado_equipamiento` (`id_estado`, `nombre`, `nivel_estado`) VALUES
 -- Estructura de tabla para la tabla `historial`
 --
 
+DROP TABLE IF EXISTS `historial`;
 CREATE TABLE `historial` (
   `id_historial` int(100) NOT NULL,
   `id_atleta` int(100) NOT NULL,
@@ -309,6 +326,7 @@ CREATE TABLE `historial` (
 -- Estructura de tabla para la tabla `metodos_pago`
 --
 
+DROP TABLE IF EXISTS `metodos_pago`;
 CREATE TABLE `metodos_pago` (
   `id_metodos` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -329,6 +347,7 @@ INSERT INTO `metodos_pago` (`id_metodos`, `nombre`, `nec_referencia`, `estatus`)
 -- Estructura de tabla para la tabla `monedas`
 --
 
+DROP TABLE IF EXISTS `monedas`;
 CREATE TABLE `monedas` (
   `id_moneda` int(11) NOT NULL,
   `nombre` varchar(40) NOT NULL,
@@ -351,6 +370,7 @@ INSERT INTO `monedas` (`id_moneda`, `nombre`, `abreviatura`, `simbolo`, `estatus
 -- Estructura de tabla para la tabla `pagos`
 --
 
+DROP TABLE IF EXISTS `pagos`;
 CREATE TABLE `pagos` (
   `id_pago` int(11) NOT NULL,
   `id_cobrar` int(11) NOT NULL,
@@ -369,6 +389,7 @@ CREATE TABLE `pagos` (
 -- Estructura de tabla para la tabla `palmares`
 --
 
+DROP TABLE IF EXISTS `palmares`;
 CREATE TABLE `palmares` (
   `id_palmares` int(100) NOT NULL,
   `id_torneo` int(100) NOT NULL,
@@ -381,6 +402,7 @@ CREATE TABLE `palmares` (
 -- Estructura de tabla para la tabla `participaciones`
 --
 
+DROP TABLE IF EXISTS `participaciones`;
 CREATE TABLE `participaciones` (
   `id_participacion` int(11) NOT NULL,
   `id_torneo` int(11) NOT NULL,
@@ -393,6 +415,7 @@ CREATE TABLE `participaciones` (
 -- Estructura de tabla para la tabla `posiciones`
 --
 
+DROP TABLE IF EXISTS `posiciones`;
 CREATE TABLE `posiciones` (
   `id_posicion` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -416,11 +439,19 @@ INSERT INTO `posiciones` (`id_posicion`, `nombre`, `abreviatura`, `descripcion`)
 -- Estructura de tabla para la tabla `premios`
 --
 
+DROP TABLE IF EXISTS `premios`;
 CREATE TABLE `premios` (
   `id_premio` int(11) NOT NULL,
   `tipo` enum('I','G') NOT NULL,
   `nombre` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `premios`
+--
+
+INSERT INTO `premios` (`id_premio`, `tipo`, `nombre`) VALUES
+(1, 'I', 'Maximo Goleador');
 
 -- --------------------------------------------------------
 
@@ -428,6 +459,7 @@ CREATE TABLE `premios` (
 -- Estructura de tabla para la tabla `representantes`
 --
 
+DROP TABLE IF EXISTS `representantes`;
 CREATE TABLE `representantes` (
   `id_representante` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -452,6 +484,7 @@ INSERT INTO `representantes` (`id_representante`, `nombre`, `apellido`, `cedula`
 -- Estructura de tabla para la tabla `torneos`
 --
 
+DROP TABLE IF EXISTS `torneos`;
 CREATE TABLE `torneos` (
   `id_torneo` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -474,6 +507,7 @@ INSERT INTO `torneos` (`id_torneo`, `nombre`, `fecha_inicio`, `fecha_fin`, `ubic
 -- Estructura Stand-in para la vista `vista_atletas`
 -- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_atletas`;
 CREATE TABLE `vista_atletas` (
 `id_atleta` int(11)
 ,`nombres` varchar(60)
@@ -504,6 +538,7 @@ CREATE TABLE `vista_atletas` (
 -- Estructura Stand-in para la vista `vista_cuentas_cobrar`
 -- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_cuentas_cobrar`;
 CREATE TABLE `vista_cuentas_cobrar` (
 `id_cobrar` int(11)
 ,`id_atleta` int(11)
@@ -530,7 +565,8 @@ CREATE TABLE `vista_cuentas_cobrar` (
 --
 DROP TABLE IF EXISTS `vista_atletas`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_atletas`  AS SELECT `a`.`id_atleta` AS `id_atleta`, `a`.`nombres` AS `nombres`, `a`.`apellidos` AS `apellidos`, `a`.`estatus` AS `estatus`, `a`.`id_representante` AS `id_representante`, `a`.`id_posicion` AS `id_posicion`, `a`.`id_categoria` AS `id_categoria`, `a`.`genero` AS `genero`, `a`.`fecha_nac` AS `fecha_nac`, `a`.`foto` AS `foto`, coalesce(`a`.`telefono`,`r`.`telefono`) AS `telefono`, coalesce(`a`.`direccion`,`r`.`direccion`) AS `direccion`, coalesce(`a`.`doc_identidad`,`r`.`cedula`) AS `doc_identidad`, `r`.`nombre` AS `nombre_rep`, `r`.`apellido` AS `apellido_rep`, `r`.`cedula` AS `cedula_rep`, `p`.`nombre` AS `nombre_posicion`, `p`.`abreviatura` AS `abrev_posicion`, `c`.`nombre` AS `nombre_categoria`, `c`.`edad_min` AS `edad_min`, `c`.`edad_max` AS `edad_max` FROM (((`atletas` `a` left join `representantes` `r` on(`a`.`id_representante` = `r`.`id_representante`)) left join `posiciones` `p` on(`a`.`id_posicion` = `p`.`id_posicion`)) left join `categorias` `c` on(`a`.`id_categoria` = `c`.`id_categorias`)) ;
+DROP VIEW IF EXISTS `vista_atletas`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_atletas`  AS SELECT `a`.`id_atleta` AS `id_atleta`, `a`.`nombres` AS `nombres`, `a`.`apellidos` AS `apellidos`, `a`.`estatus` AS `estatus`, `a`.`id_representante` AS `id_representante`, `a`.`id_posicion` AS `id_posicion`, `a`.`id_categoria` AS `id_categoria`, `a`.`genero` AS `genero`, `a`.`fecha_nac` AS `fecha_nac`, `a`.`foto` AS `foto`, coalesce(`a`.`telefono`,`r`.`telefono`) AS `telefono`, coalesce(`a`.`direccion`,`r`.`direccion`) AS `direccion`, coalesce(`a`.`doc_identidad`,`r`.`cedula`) AS `doc_identidad`, `r`.`nombre` AS `nombre_rep`, `r`.`apellido` AS `apellido_rep`, `r`.`cedula` AS `cedula_rep`, `p`.`nombre` AS `nombre_posicion`, `p`.`abreviatura` AS `abrev_posicion`, `c`.`nombre` AS `nombre_categoria`, `c`.`edad_min` AS `edad_min`, `c`.`edad_max` AS `edad_max` FROM (((`atletas` `a` left join `representantes` `r` on(`a`.`id_representante` = `r`.`id_representante`)) left join `posiciones` `p` on(`a`.`id_posicion` = `p`.`id_posicion`)) left join `categorias` `c` on(`a`.`id_categoria` = `c`.`id_categorias`)) ;
 
 -- --------------------------------------------------------
 
@@ -539,7 +575,8 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `vista_cuentas_cobrar`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_cuentas_cobrar`  AS SELECT `c`.`id_cobrar` AS `id_cobrar`, `c`.`id_atleta` AS `id_atleta`, `c`.`id_concepto` AS `id_concepto`, `c`.`id_moneda` AS `id_moneda`, `c`.`fecha_emision` AS `fecha_emision`, `c`.`fecha_vencimiento` AS `fecha_vencimiento`, `c`.`monto_personalizado` AS `monto_total`, `c`.`monto_pendiente` AS `monto_pendiente`, `c`.`anulado` AS `anulado`, `c`.`estatus` AS `estatus`, CASE WHEN `c`.`anulado` = 1 THEN 'Anulado' WHEN `c`.`estatus` = 0 THEN 'Pendiente' WHEN `c`.`estatus` = 1 THEN 'Pagado' ELSE 'Desconocido' END AS `estatus_texto`, `a`.`nombres` AS `atleta_nombre`, `a`.`apellidos` AS `atleta_apellido`, `co`.`nombre` AS `concepto_nombre`, `m`.`nombre` AS `moneda_nombre`, `m`.`simbolo` AS `moneda_simbolo` FROM (((`cuentas_cobrar` `c` join `atletas` `a` on(`c`.`id_atleta` = `a`.`id_atleta`)) join `conceptos` `co` on(`c`.`id_concepto` = `co`.`id_conceptos`)) join `monedas` `m` on(`c`.`id_moneda` = `m`.`id_moneda`)) ;
+DROP VIEW IF EXISTS `vista_cuentas_cobrar`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_cuentas_cobrar`  AS SELECT `c`.`id_cobrar` AS `id_cobrar`, `c`.`id_atleta` AS `id_atleta`, `c`.`id_concepto` AS `id_concepto`, `c`.`id_moneda` AS `id_moneda`, `c`.`fecha_emision` AS `fecha_emision`, `c`.`fecha_vencimiento` AS `fecha_vencimiento`, `c`.`monto_personalizado` AS `monto_total`, `c`.`monto_pendiente` AS `monto_pendiente`, `c`.`anulado` AS `anulado`, `c`.`estatus` AS `estatus`, CASE WHEN `c`.`anulado` = 1 THEN 'Anulado' WHEN `c`.`estatus` = 0 THEN 'Pendiente' WHEN `c`.`estatus` = 1 THEN 'Pagado' ELSE 'Desconocido' END AS `estatus_texto`, `a`.`nombres` AS `atleta_nombre`, `a`.`apellidos` AS `atleta_apellido`, `co`.`nombre` AS `concepto_nombre`, `m`.`nombre` AS `moneda_nombre`, `m`.`simbolo` AS `moneda_simbolo` FROM (((`cuentas_cobrar` `c` join `atletas` `a` on(`c`.`id_atleta` = `a`.`id_atleta`)) join `conceptos` `co` on(`c`.`id_concepto` = `co`.`id_conceptos`)) join `monedas` `m` on(`c`.`id_moneda` = `m`.`id_moneda`)) ;
 
 --
 -- Índices para tablas volcadas
@@ -878,7 +915,7 @@ ALTER TABLE `posiciones`
 -- AUTO_INCREMENT de la tabla `premios`
 --
 ALTER TABLE `premios`
-  MODIFY `id_premio` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_premio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `representantes`
