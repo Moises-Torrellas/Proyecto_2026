@@ -69,7 +69,7 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_CATALOGO_)): ?>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="clipboard-pen-line"></i> Catalogo</a>
+                        <a type="button" href="/Proyecto_2026/public/Catalogos" class="opciones"><i class="opciones_i" data-lucide="clipboard-pen-line"></i> Catalogo</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_CATEGORIA_EQUI_)): ?>
