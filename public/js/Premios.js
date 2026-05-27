@@ -135,19 +135,21 @@ function eliminar(id) {
 }
 
 function validarEnvio(proceso) {
-    if (proceso === "generar") {
-        return true; // Al generar reportes, un valor vacío significa "Todos"
-    }
-
-    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre válido");
-        return false;
-    }
-    
-    // Al incluir o modificar, obligatoriamente debe ser 'I' o 'G'
+    // 1. PRIMERO validamos que el select no esté vacío (Aplica para incluir, modificar y generar)
     var valorTipo = $('#tipo').val();
     if (valorTipo !== "I" && valorTipo !== "G") {
         muestraMensaje("error", 2000, "Error", "Tiene que elegir una opción válida para el tipo de premio");
+        return false;
+    }
+
+    // 2. Si el proceso es generar el reporte, lo dejamos pasar aquí (el nombre es opcional)
+    if (proceso === "generar") {
+        return true; 
+    }
+
+    // 3. Validamos el nombre (Aplica solo para incluir y modificar)
+    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre válido");
         return false;
     }
     
