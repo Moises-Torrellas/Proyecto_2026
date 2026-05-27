@@ -86,7 +86,7 @@ if (isset($solo_lista) && $solo_lista === true):
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Categoria</small>
-                                                    <span><?= $dato['Categoria'] ?></span>
+                                                    <span><?= $dato['categoria'] ?></span>
                                                 </div>
                                             </div>
                                             <div class="listado_col_acciones">
@@ -118,31 +118,31 @@ if (isset($solo_lista) && $solo_lista === true):
             </div>
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
-                    <input type="hidden" id="id" name="id">
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="nombre" name="nombre">
-                                <label for="nombre" class="titulo_formulario">Nombre de Equipo</label>
-                                <span class="mensaje" id="nombre_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="categoria" id="categoria" class="formulario select">
-
-                                </select>
-                                <label for="categoria" class="titulo_formulario">Categoria</label>
-                                <span class="mensaje" id="categoria_span"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
-                        </div>
-                </form>
+    <input type="hidden" id="id" name="id">
+    
+    <div class="row">
+        <div class="colum">
+            <div class="caja_formulario">
+                <input type="text" class="formulario" id="nombre" name="nombre">
+                <label for="nombre" class="titulo_formulario">Nombre de Equipo</label>
+                <span class="mensaje" id="nombre_spam"></span>
+            </div>
+        </div>
+        <div class="colum">
+            <div class="caja_formulario">
+                <select name="categoria" id="categoria" class="formulario select">
+                    </select>
+                <label for="categoria" class="titulo_formulario">Categoria</label>
+                <span class="mensaje" id="categoria_span"></span>
+            </div>
+        </div>
+    </div> <div class="row">
+        <div class="colum">
+            <button type="button" class="btn btn_azul" id="proceso"></button>
+            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+        </div>
+    </div>
+</form>
             </div>
         </div>
     </section>

@@ -10,107 +10,132 @@ class ModeloEquipos extends ModeloBase
     private $id;
     private $nombre;
     private $categoria;
-   
+
+
+
     public function __construct()
     {
         parent::__construct();
-        //Definimos los campos permitidos para usar en las validaciones
         $this->campoWhitelist = [
-            'nombre' => 'nombre',
-            'categoria' => 'categoria',
-            'id' => 'id_equipos'
+            'categoria' => 'id_categorias',
+            'id' => 'id_equipos',
+            'nombre' => 'nombre'
         ];
-        //Definimos la llave primaria de la tabla en la base de datos
         $this->llavePrimaria = 'id_equipos';
     }
 
-
     public function ProcesarDatos(array $datos): array
     {
-        //si datos esta vacio ejecutamos la excepcion
+        // 1. Verificación de integridad inicial
         if (empty($datos)) {
-            throw new Exception('No se proporcionaron datos para procesar.');
+            throw new Exception('No se proporcionaron datos para procesar el registro del equipo.');
         }
-        //Procesamos los datos
-        $this->id = $datos['id'] ?? null;
-        $this->categoria = $datos['categoria'] ?? null;
-        $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
-        //ejecutamos la accion enviada por el controlador
+
+        // 2. Asignación y saneamiento de atributos básicos
+        $this->id            = $datos['id'] ?? null;
+        $this->categoria  = $datos['categoria'] ?? null;
+
+        // Atributos con formato de Título (Standard de tu proyecto)
+        $this->nombre   = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
+
+
+        // 5. Ejecución de la acción vía Match
         $accion = $datos['accion'] ?? null;
+
         return match ($accion) {
             'incluir'   => $this->Incluir(),
-            'eliminar'  => $this->Eliminar(),
-            'buscar' => $this->Buscar(),
             'modificar' => $this->Modificar(),
-            'generar'   => $this->Consultar(),
-            default => throw new Exception('La accion no es valida')
+            'eliminar'  => $this->Eliminar(),
+            'buscar'    => $this->Buscar(),
+            default     => throw new Exception('La acción solicitada para el equipo no es válida.')
         };
     }
-
     public function Consultar(array $filtro = []): array
-    {
-        try {
-            $conex = $this->conex();
-            $params = []; // Unificamos el nombre de la variable
+{
+    try {
+        $conex = $this->conex();
+        $params = [];
 
-            // 1. Iniciamos la sentencia con WHERE 1=1 para concatenar AND tranquilamente
-            $sentencia = "SELECT * FROM equipos WHERE 1=1";
+        // 1. Apuntamos a la vista (incluye info de categoría)
+        $sentencia = "SELECT e.*, c.nombre AS categoria, c.id_categorias AS id_categorias\r\n                        FROM equipos e\r\n                        INNER JOIN categorias c ON c.id_categorias = e.id_categoria\r\n                        WHERE 1=1";
 
-            // 2. BUSCADOR GENERAL (El que viene del keyup)
-            if (!empty($filtro['filtro'])) {
-                $p = "%" . $filtro['filtro'] . "%";
-                $sentencia .= " AND ( 
-                nombre LIKE :f1
-            )";
-                $params[':f1'] = $p;
-                
-            }
 
-            // 3. FILTROS ESPECÍFICOS (Si vienen del Modal o propiedades del objeto)
-            if (!empty($this->nombre)) {
-            $sentencia .= " AND nombre LIKE :nombre_obj";
-            $params[':nombre_obj'] = "%" . trim($this->nombre) . "%";
+        // 2. BUSCADOR GENERAL
+        if (!empty($filtro['filtro'])) {
+            $p = "%" . trim($filtro['filtro']) . "%";
+            $sentencia .= " AND (e.nombre LIKE :f1 OR e.id_categoria LIKE :f2 OR c.nombre LIKE :f3)";
+            $params[':f1'] = $p;
+            $params[':f2'] = $p;
+            $params[':f3'] = $p;
         }
 
-            // 4. Orden (Asegúrate de usar una columna que exista, como id_representante)
-            $sentencia .= " ORDER BY id_equipos ASC";
 
-            $stmt = $conex->prepare($sentencia);
-
-            // IMPORTANTE: Pasar los parámetros al execute
-            $stmt->execute($params);
-
-            $datos = $stmt->fetchAll();
-
-            return array('accion' => 'consultar', 'datos' => $datos);
-        } catch (Exception $e) {
-            logs('Equipos', $e->getMessage(), 'Modelo_Consultar');
-            return array('accion' => 'error');
-        } finally {
-            $conex = NULL;
+        // 3. FILTROS ESPECÍFICOS
+        if (!empty($this->categoria)) {
+            $sentencia .= " AND e.id_categoria = :id_cat";
+            $params[':id_cat'] = $this->categoria;
         }
+
+
+        // --- CORRECCIONES NECESARIAS AÑADIDAS AQUÍ ---
+        
+        // 4. Preparar y Ejecutar (Faltaba esto)
+        $stmt = $conex->prepare($sentencia);
+        $stmt->execute($params);
+        $datos = $stmt->fetchAll();
+
+        // 5. Retornar los datos (Faltaba esto)
+        return array('accion' => 'consultar', 'datos' => $datos);
+
+    } catch (Exception $e) {
+        logs('Equipos', $e->getMessage(), 'Modelo_Consultar_Vista');
+        return array('accion' => 'error', 'msg' => $e->getMessage());
+    } finally {
+        $conex = NULL;
     }
-
+}
     private function Incluir()
     {
         $conex = null;
         try {
-            // 1. Validar que la categoría exista en la tabla maestro de categorias
             if (!$this->verificarExistencia('categoria', $this->categoria, 'categorias', NULL)) {
                 throw new Exception(INVALID_ID);
             }
-
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            // 2. Verificar duplicados (ej: que no haya otro equipo con el mismo nombre en la misma categoría)
-            // Aquí puedes ajustar según las reglas de tu club
-            
-            $sql = "INSERT INTO equipos (nombre_equipo, id_categoria) VALUES (:nombre, :id_categoria)";
+            // 1. Verificaciones de duplicados (Cédula y Teléfono)
+            if ($this->nombre !== null && $this->nombre !== '') {
+                if ($this->verificarExistencia('nombre', $this->nombre, 'equipos', NULL, bloquear: true)) {
+                    throw new Exception(DUPLICATE_NAME);
+                }
+            }
+
+            // 2. Definición de partes de la consulta
+            $columnas = [];
+            $marcadores = [];
+
+            // --- DATOS OBLIGATORIOS ---
+            // Estos siempre se incluyen según la lógica de tu controlador
+            $columnas[] = "nombre";
+            $marcadores[] = ":nombre";
+            $columnas[] = "id_categoria";
+            $marcadores[] = ":id_categoria";
+
+            // --- DATOS OPCIONALES ---
+            // Se agregan a la consulta solo si no son nulos
+
+            // 3. Preparación de la sentencia SQL
+            $sql = "INSERT INTO equipos (" . implode(", ", $columnas) . ") 
+                VALUES (" . implode(", ", $marcadores) . ")";
+
             $stmt = $conex->prepare($sql);
-            
+
+            // 4. Vinculación de valores con bindValue (Evita Inyección SQL)
+            // Vinculación de obligatorios
             $stmt->bindValue(':nombre', $this->nombre);
             $stmt->bindValue(':id_categoria', $this->categoria, \PDO::PARAM_INT);
+
             $stmt->execute();
 
             $conex->commit();
@@ -119,30 +144,43 @@ class ModeloEquipos extends ModeloBase
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
             }
-            logs('Equipos', $e->getMessage(), 'Modelo');
+            logs('Equipos', $e->getMessage(), 'Modelo_Incluir');
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = null;
         }
     }
 
-   private function Modificar()
+    private function Modificar()
     {
         $conex = null;
         try {
             if (!$this->verificarExistencia('categoria', $this->categoria, 'categorias', NULL)) {
                 throw new Exception(INVALID_ID);
             }
-
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            $sql = "UPDATE equipos SET nombre_equipo = :nombre, id_categoria = :id_categoria WHERE id_equipo = :id";
-            $stmt = $conex->prepare($sql);
+                if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'equipos', NULL, bloquear: true)) {
+                    if ($this->verificarExistencia('nombre', $this->nombre, 'equipos', NULL, bloquear: true)) {
+                        throw new Exception(DUPLICATE_NAME);
+                    }
+                }
             
+            $campos = [];
+
+            // --- DATOS OBLIGATORIOS ---
+            $campos[] = "nombre = :nombre";
+            $campos[] = "id_categoria = :id_categoria";
+
+            $sql = "UPDATE equipos SET " . implode(", ", $campos) . " WHERE id_equipos = :id";
+            $stmt = $conex->prepare($sql);
+
             $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
+
             $stmt->bindValue(':nombre', $this->nombre);
             $stmt->bindValue(':id_categoria', $this->categoria, \PDO::PARAM_INT);
+
             $stmt->execute();
 
             $conex->commit();
@@ -151,32 +189,34 @@ class ModeloEquipos extends ModeloBase
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
             }
-            logs('Equipos', $e->getMessage(), 'Modelo'); //
+            logs('Equipos', $e->getMessage(), 'Modelo_Modificar');
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = null;
         }
     }
 
-    function Buscar(): array
+    private function Buscar()
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM equipos WHERE id_equipos = :id";
+            $sentencia = "SELECT e.*, c.id_categorias AS id_categorias, c.nombre AS categoria\r\n                            FROM equipos e\r\n                            INNER JOIN categorias c ON c.id_categorias = e.id_categoria\r\n                            WHERE e.id_equipos = :id";
+
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
-            logs('Equipos', $e->getMessage(), 'Modelo');
+            logs('Equipos', $e->getMessage(), 'Modelo_Buscar');
             return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
     }
 
-    private function Eliminar(): array
+
+     private function Eliminar(): array
     {
         try {
             $conex = $this->conex();
