@@ -116,6 +116,17 @@ $(document).ready(function () {
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Atleta");
         $("#titulo_modal").text("Registrar Atleta");
+        $('#fecha_nac').closest('.colum').show();
+        $('#representante').closest('.colum').show();
+        $('#telefono').closest('.colum').show();
+        $('#direccion').closest('.colum').show();
+        $('#foto').closest('.colum').show();
+        $('#estatus').closest('.colum').hide().prop('disabled', true);
+        $("#todos").prop('disabled', true); 
+        $("#genero").val("H").trigger('change');
+
+        $('#edad').prop('readonly', true);
+        $
 
         $('#representante').val(null).trigger('change');
         $('#posicion').val(null).trigger('change');
@@ -129,6 +140,14 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
+        $('#fecha_nac').closest('.colum').hide();
+        $('#representante').closest('.colum').hide();
+        $('#telefono').closest('.colum').hide();
+        $('#direccion').closest('.colum').hide();
+        $('#foto').closest('.colum').hide();
+        $('#estatus').closest('.colum').show().prop('disabled', false);
+        $('#edad').prop('readonly', false);
+        $("#todos").prop('disabled', false); 
         abrirModal();
     });
 
@@ -360,13 +379,20 @@ function modificar(datos) {
     $("#proceso").data("accion", "modificar");
     $("#proceso").text("Modificar Atleta");
     $("#titulo_modal").text("Modificar Atleta");
+    $('#fecha_nac').closest('.colum').show();
+    $('#representante').closest('.colum').show();
+    $('#telefono').closest('.colum').show();
+    $('#direccion').closest('.colum').show();
+    $('#foto').closest('.colum').show();
+    $('#estatus').closest('.colum').hide().prop('disabled', true);
+    $('#edad').prop('readonly', true);
+    $("#todos").prop('disabled', true); 
 
     $('#fecha_nac').val(datos[0].fecha_nac);
     $('#id').val(datos[0].id_atleta);
     $('#doc_i').val(datos[0].doc_identidad);
     $('#nombre').val(datos[0].nombres);
     $('#apellido').val(datos[0].apellidos);
-    $('#genero').val(datos[0].genero);
     $('#genero').val(datos[0].genero);
     $('#telefono').val(datos[0].telefono);
     $('#direccion').val(datos[0].direccion);
@@ -500,6 +526,24 @@ function enviaAjax(datos) {
                     limpia();
                     cerrarModal();
                     muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
+                }
+                else if (lee.accion == "reporte") {
+                    // 1. Cerramos la alerta de espera de inmediato
+                    cerrarAlertaEspara();
+
+                    // 2. Cerramos el modal del formulario
+                    cerrarModal();
+
+                    // 3. Mostramos el mensaje de éxito (dura 2000ms en pantalla)
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 } else if (lee.accion == "error") {

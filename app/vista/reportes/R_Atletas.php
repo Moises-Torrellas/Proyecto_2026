@@ -21,10 +21,12 @@
         /* 2. Header: Ahora sí ocupará el 100% real de la hoja sin dejar bordes blancos */
         .header {
             position: fixed;
-            top: -130px; /* Sube al espacio reservado */
+            top: -130px;
+            /* Sube al espacio reservado */
             left: 0px;
             right: 0px;
-            height: 60px; /* Fijamos altura interna para que cuadre exacto en los 140px */
+            height: 60px;
+            /* Fijamos altura interna para que cuadre exacto en los 140px */
             background-color: #1a202c;
             color: white;
             padding: 20px 40px;
@@ -105,9 +107,16 @@
             font-size: 13px;
         }
 
-        .grafico-placeholder { border: 1px dashed #cbd5e0; padding: 5px; text-align: center; margin-bottom: 30px; }
+        .grafico-placeholder {
+            border: 1px dashed #cbd5e0;
+            padding: 5px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-        .chart { width: 100%; }
+        .chart {
+            width: 100%;
+        }
 
         /* 4. Footer: Posicionado abajo del todo de forma fija, alineado con los lados del contenido */
         .footer {
@@ -163,7 +172,7 @@
 <body>
 
     <div class="header">
-        <h1>REPORTE ESTADISTICO DE ATLETAS POR CATEGORIAS</h1>
+        <h1>REPORTE DE Atletas</h1>
         <p>Sistema de Gestión Administrativo - Cannibals Lara</p>
         <img src="<?= $logo ?>" class="logo-mascota" alt="Logo">
     </div>
@@ -174,11 +183,8 @@
             <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?></div>
         </div>
         <div class="resumen-ejecutivo">
-            <strong>Resumen Ejecutivo:</strong> Este documento refleja la distribución actual de los atletas inscritos en el club según sus respectivos rangos de edad. Los datos visualizados permiten proyectar la apertura de nuevos horarios y la asignación óptima del cuerpo técnico para las temporadas competitivas.
+            <strong>Resumen Ejecutivo:</strong> El presente documento contiene el registro detallado de los atletas del club. Esta información es fundamental para la gestión administrativa de los atletas.
         </div>
-
-        <div class="section-title">Visualización Estadística</div>
-        <div class="grafico-placeholder"><img src="<?= $charC ?>" class="chart" alt="Grafico"></div>
 
         <div class="section-title">Desglose por Tabla</div>
 
@@ -186,21 +192,36 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Nombres Y Apellidos</th>
+                    <th>Documento de identidad</th>
+                    <th>edad</th>
+                    <th>Genero</th>
+                    <th>Pasicion</th>
                     <th>Categoria</th>
-                    <th>Edad Minima</th>
-                    <th>Edad Maxima</th>
-                    <th>Total de Atletas</th>
+                    <th>Representante</th>
+                    <th>Estatus</th>
                 </tr>
             </thead>
             <tbody>
                 <?php $id = 0;
-                foreach ($datos as $r): $id++; ?>
+                $anioActual = date('Y');
+                foreach ($datos as $r): $id++;
+                    $anioNacimiento = date('Y', strtotime($r['fecha_nac']));
+                    $edadCalendario = $anioActual - $anioNacimiento;
+                    $genero = ($r['genero'] === 'H') ? 'Hombre' : 'Mujer';
+                    $estatus = ((int)$r['estatus'] === 1) ? 'Activo' : 'Retirado';
+                    $representante = ($r['nombre_rep'] === null ) ? 'N/A' : $r['nombre_rep'] . ' ' . $r['apellido_rep'];
+                ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['categoria']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['edad_min']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['edad_max']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['total_atletas']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['nombres'] . ' ' . $r['apellidos']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['doc_identidad']) ?></td>
+                        <td class="data-cell"><?= $edadCalendario?></td>
+                        <td class="data-cell"><?= $genero?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['nombre_posicion']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['nombre_categoria']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($representante) ?></td>
+                        <td class="data-cell"><?= $estatus ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

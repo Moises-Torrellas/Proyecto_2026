@@ -17,7 +17,7 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina" id="titulo">Reportes</h2>
+                            <h2 class="titulo_pagina" id="titulo">Reportes Estadisticos</h2>
                         </div>
                         <div class="contenedor_busqueda">
                         </div>
@@ -27,25 +27,51 @@
                     <div class="contenedor_panel">
                         <div class="cards cards-reportes">
                             <div class="card card-reportes" style="border-bottom-color: #007bff;">
-                                <h3>Reportes Estadisticos de Atletas por Categorias</h3>
+                                <h3>Atletas por Categorias</h3>
                                 <div class="info_card">
                                     <button class="btn btn_azul" id="incluir">Nuevo Reporte</button>
                                 </div>
                             </div>
                             <div class="card card-reportes" style="border-bottom-color: #FF4040;">
-                                <h3>CUENTAS PENDIENTES</h3>
+                                <h3>Ingresos Mensuales</h3>
                                 <div class="info_card">
                                     <button class="btn btn_azul">Nuevo Reporte</button>
                                 </div>
                             </div>
                             <div class="card card-reportes" style="border-bottom-color: #28a745;">
-                                <h3>PARTICIPACIONES EN TORNEOS</h3>
+                                <h3>Deudas</h3>
                                 <div class="info_card">
                                     <button class="btn btn_azul">Nuevo Reporte</button>
                                 </div>
                             </div>
                             <div class="card card-reportes" style="border-bottom-color: #ffc107;">
-                                <h3>EQUIPAMIENTOS ASIGNADOS</h3>
+                                <h3>Pagos por Metodos</h3>
+                                <div class="info_card">
+                                    <button class="btn btn_azul">Nuevo Reporte</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cards cards-reportes">
+                            <div class="card card-reportes" style="border-bottom-color: #007bff;">
+                                <h3>Estadisticas</h3>
+                                <div class="info_card">
+                                    <button class="btn btn_azul">Nuevo Reporte</button>
+                                </div>
+                            </div>
+                            <div class="card card-reportes" style="border-bottom-color: #FF4040;">
+                                <h3>Premios</h3>
+                                <div class="info_card">
+                                    <button class="btn btn_azul">Nuevo Reporte</button>
+                                </div>
+                            </div>
+                            <div class="card card-reportes" style="border-bottom-color: #28a745;">
+                                <h3>Desgaste De Equipamientos</h3>
+                                <div class="info_card">
+                                    <button class="btn btn_azul">Nuevo Reporte</button>
+                                </div>
+                            </div>
+                            <div class="card card-reportes" style="border-bottom-color: #ffc107;">
+                                <h3>Asignaciones</h3>
                                 <div class="info_card">
                                     <button class="btn btn_azul">Nuevo Reporte</button>
                                 </div>

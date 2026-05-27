@@ -221,6 +221,24 @@ function enviaAjax(datos) {
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }
+                else if (lee.accion == "reporte") {
+                    // 1. Cerramos la alerta de espera de inmediato
+                    cerrarAlertaEspara();
+
+                    // 2. Cerramos el modal del formulario
+                    cerrarModal();
+
+                    // 3. Mostramos el mensaje de éxito (dura 2000ms en pantalla)
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
+                }
                 else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }

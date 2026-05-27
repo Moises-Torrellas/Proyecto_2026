@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-05-2026 a las 19:43:21
+-- Tiempo de generación: 27-05-2026 a las 23:16:53
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -69,8 +69,8 @@ CREATE TABLE `atletas` (
 INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `telefono`, `direccion`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`, `estatus`) VALUES
 (13, 'Jose Jose', 'Perez Perez', '32323232', NULL, NULL, 'H', '2012-05-18', 'atleta_2012-05-18_1779417290.png', 5, 7, 2, 1),
 (14, 'Mario Mario', 'Bros Bros', '34324324', NULL, NULL, 'H', '2009-05-19', 'atleta_2009-05-19_1779417273.png', 5, 8, 2, 1),
-(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779417262.png', 6, 4, NULL, 1),
-(16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779417253.png', 5, 3, 6, 0);
+(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779417262.png', 6, 4, NULL, 2),
+(16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779417253.png', 5, 3, 6, 2);
 
 -- --------------------------------------------------------
 
@@ -513,6 +513,7 @@ CREATE TABLE `vista_atletas` (
 ,`nombres` varchar(60)
 ,`apellidos` varchar(60)
 ,`estatus` tinyint(1)
+,`doc_identidad` varchar(15)
 ,`id_representante` int(11)
 ,`id_posicion` int(11)
 ,`id_categoria` int(11)
@@ -521,7 +522,6 @@ CREATE TABLE `vista_atletas` (
 ,`foto` varchar(100)
 ,`telefono` varchar(15)
 ,`direccion` varchar(150)
-,`doc_identidad` varchar(13)
 ,`nombre_rep` varchar(30)
 ,`apellido_rep` varchar(30)
 ,`cedula_rep` varchar(13)

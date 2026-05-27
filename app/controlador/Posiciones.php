@@ -1,6 +1,7 @@
 <?php
 
 use App\modelo\ModeloPosiciones;
+use App\servicios\GenerarReporte;
 
 //Cargamos las funciones base para los controladores
 require_once __DIR__ . '/Base.php';
@@ -62,6 +63,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
             case 'modificar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar posiciones.');
                 modificar($obj, $id_modulo, $bitacoraObj);
+                break;
+            case 'generar':
+                if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar un reporte de posiciones.');
+                generar($obj, $id_modulo, $bitacoraObj);
                 break;
 
             default:
@@ -193,6 +198,42 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Posiciones', $e->getMessage(), 'Controlador_Modificar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj)
+{
+    try {
+        $validacionesReporte = [];
+        $datosFiltro = ['accion' => 'generar'];
+
+        if (!empty($_POST['nombre'])) {
+            $validacionesReporte['nombre'] =['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'];
+            $datosFiltro['nombre'] = $_POST['nombre'];
+        }
+        if (!empty($_POST['abreviatura'])) {
+            $validacionesReporte['abreviatura'] =  ['regla' => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida.'];
+            $datosFiltro['abreviatura'] = $_POST['abreviatura'];
+        }
+
+        validar_datos($validacionesReporte);
+
+        $respuesta =  $obj->procesarDatos($datosFiltro);
+        $datos = $respuesta['datos'];
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron posiciones para hacer el reporte.']);
+            exit();
+        }
+        $nombreVista = 'R_Posiciones';
+        $objG = new GenerarReporte();
+        $pdf = $objG->generarPDF($nombreVista, $datos, 'Posiciones');
+        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de posiciones.");
+        }
+        echo json_encode($pdf);
+    } catch (Exception $e) {
+        logs('Posiciones', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
