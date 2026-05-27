@@ -140,7 +140,7 @@ if (isset($solo_lista) && $solo_lista === true):
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="tipo" id="tipo" class="formulario select">
-                                    <option value="" selected>Todos</option>
+                                    <option value="" disabled selected>Seleccione una opción</option>
                                     <option value="I">Individual</option>
                                     <option value="G">Grupal</option>
                                 </select>
