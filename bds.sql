@@ -3,11 +3,10 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-05-2026 a las 23:36:18
+-- Tiempo de generación: 27-05-2026 a las 03:40:38
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
-SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -86,7 +85,8 @@ INSERT INTO `modulo` (`id_modulo`, `nombre_modulo`, `estatus`) VALUES
 (103, 'Categoria de Equipamiento', 1),
 (104, 'Calidad', 1),
 (105, 'Participaciones', 1),
-(106, 'Respaldo BD', 1);
+(106, 'Respaldo BD', 1),
+(107, 'Reportes', 1);
 
 -- --------------------------------------------------------
 
@@ -221,7 +221,8 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `foto`, `telefonoUsuario`, `contraseña`, `correo`, `id_rol`, `estatus`, `bloqueo`) VALUES
-(1, '12345678', 'Admin', 'Admin', 'default.png', '0000-0000000', '$2y$10$z9rD8xGPyg4.JegVpLgfi.WEi2HPKEKGvOQYRDZfZPqwlzxRqS.y.', 'admin@gmail.com', 1, 1, 1);
+(1, '12345678', 'Admin', 'Admin', 'default.png', '0000-0000000', '$2y$10$z9rD8xGPyg4.JegVpLgfi.WEi2HPKEKGvOQYRDZfZPqwlzxRqS.y.', 'admin@gmail.com', 1, 1, 1),
+(25, '29506932', 'Moises', 'Torrellas', 'default.png', '0416-0526853', '$2y$10$2NK3nU2OeDem8q.VCoC25uFF0n2cvjmPWx35Cwfk4PJT/5t1oollu', 'moitcj@gmail.com', 2, 1, 1);
 
 --
 -- Índices para tablas volcadas
@@ -300,7 +301,7 @@ ALTER TABLE `bitacora`
 -- AUTO_INCREMENT de la tabla `modulo`
 --
 ALTER TABLE `modulo`
-  MODIFY `id_modulo` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
+  MODIFY `id_modulo` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
 
 --
 -- AUTO_INCREMENT de la tabla `notificaciones`
@@ -374,7 +375,6 @@ ALTER TABLE `respaldos`
 --
 ALTER TABLE `usuarios`
   ADD CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`);
-SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
