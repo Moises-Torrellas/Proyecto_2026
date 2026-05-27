@@ -56,6 +56,7 @@ function manejarRuta($pagina): void
         'Pagos' => 'Pagos',
         'Respaldo' => 'Respaldo',
         'CategoriaEquipamiento'=>'CategoriaEquipamiento',
+        'Premios' => 'Premios',
         'Reportes' => 'Reportes',
         'Catalogos'=>'Catalogos',
     ];

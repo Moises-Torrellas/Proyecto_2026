@@ -110,7 +110,7 @@
                 <li class="nav_identificador">Historial Deportivo</li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_PREMIOS_)): ?>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="award"></i> Premios</a>
+                        <a type="button" href="/Proyecto_2026/public/Premios" class="opciones"><i class="opciones_i" data-lucide="award"></i> Premios</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_PALMARES_)): ?>
