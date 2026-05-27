@@ -98,7 +98,7 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_EQUIPOS_)): ?>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="shield-half"></i> Equipos</a>
+                        <a type="button" href="/Proyecto_2026/public/Equipos" class="opciones"><i class="opciones_i" data-lucide="shield-half"></i> Equipos</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_PARTICIPACIONES_)): ?>
