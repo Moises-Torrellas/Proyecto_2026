@@ -18,6 +18,7 @@ function busqueda() {
 }
 $(document).ready(function () {
     inicializarPaginador();
+
     $("#cedula").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
         if (input.length > 4) {

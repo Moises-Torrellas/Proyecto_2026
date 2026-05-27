@@ -21,7 +21,7 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloPosiciones();
 // comprobamos si la solicitud es por medio de ajax
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudRepresentantes($objModelo, $id_modulo, $bitacora, $permisos);
+    manejarSolicitud($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
     registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
@@ -30,7 +30,7 @@ if (comprobarAjax() && !empty($_POST)) {
     cargarVista($pagina, $variables);
 }
 // Funcion para manejar las peticiones recibe como parametros el objeto del modelo, el id del modulo, la bitacora y el array de permisos
-function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $permisos): void
+function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
     try {
         //comprobamos el token de la sesion

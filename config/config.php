@@ -48,6 +48,7 @@ const _MD_CATEGORIA_EQUI_ = 103;
 const _MD_CALIDAD_ = 104;
 const _MD_PARTICIPACIONES_ = 105;
 const _MD_RESPALDO_ = 106;
+const _MD_REPORTES_ = 107;
 
 /* CODIGOS DE ERROR */
 const DUPLICATE_CEDULA = "001";

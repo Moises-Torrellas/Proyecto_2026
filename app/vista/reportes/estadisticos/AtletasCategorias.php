@@ -163,7 +163,7 @@
 <body>
 
     <div class="header">
-        <h1>REPORTE DE REPRESENTANTES</h1>
+        <h1>REPORTE ESTADISTICO DE ATLETAS POR CATEGORIAS</h1>
         <p>Sistema de Gestión Administrativo - Cannibals Lara</p>
         <img src="<?= $logo ?>" class="logo-mascota" alt="Logo">
     </div>
@@ -174,8 +174,11 @@
             <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?></div>
         </div>
         <div class="resumen-ejecutivo">
-            <strong>Resumen Ejecutivo:</strong> El presente documento contiene el registro detallado de los representantes legales asociados a los atletas del club. Esta información es fundamental para la gestión administrativa, el contacto de emergencia y la validación de responsabilidades.
+            <strong>Resumen Ejecutivo:</strong> Este documento refleja la distribución actual de los atletas inscritos en el club según sus respectivos rangos de edad. Los datos visualizados permiten proyectar la apertura de nuevos horarios y la asignación óptima del cuerpo técnico para las temporadas competitivas.
         </div>
+
+        <div class="section-title">Visualización Estadística</div>
+        <div class="grafico-placeholder"><img src="<?= $charC ?>" class="chart" alt="Grafico"></div>
 
         <div class="section-title">Desglose por Tabla</div>
 
@@ -190,16 +193,111 @@
                 </tr>
             </thead>
             <tbody>
-                <?php $id = 0;
-                foreach ($datos as $r): $id++; ?>
-                    <tr>
-                        <td class="data-cell"><?= $id ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['nacionalidad'] . '-' . $r['cedula']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['telefono']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['direccion']) ?></td>
-                    </tr>
-                <?php endforeach; ?>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
+                <tr>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                    <td class="data-cell">1</td>
+                </tr>
             </tbody>
         </table>
     </div>
