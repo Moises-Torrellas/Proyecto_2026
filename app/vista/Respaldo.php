@@ -17,7 +17,7 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina" id="titulo">Puntos de Restauración</h2>
+                            <h2 class="titulo_pagina" id="titulo">Mantenimiento BD</h2>
                         </div>
                         <div class="botones">
                             <button class="btn btn_azul" id="btn_generar">

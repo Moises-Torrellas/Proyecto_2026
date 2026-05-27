@@ -6,7 +6,8 @@ if (isset($solo_lista) && $solo_lista === true):
         </div>
     <?php else:
         foreach ($registro as $dato):
-            $txtTipo = (strtolower($dato['tipo']) === 'I') ? 'Individual' : 'Grupal';
+            // Evaluación por la letra 'I' en mayúscula según el ENUM
+            $txtTipo = (strtoupper($dato['tipo']) === 'I') ? 'Individual' : 'Grupal';
              ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
@@ -79,9 +80,8 @@ if (isset($solo_lista) && $solo_lista === true):
                                 </div>
                             <?php else:
                                 foreach ($registro as $dato): 
-                                    
-                                    $txtTipo = (strtolower($dato['tipo']) === 'I') ? 'Individual' : 'Grupal';
-                                    ?>
+                                    $txtTipo = (strtoupper($dato['tipo']) === 'I') ? 'Individual' : 'Grupal';
+                                     ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
                                             <div class="listado_col_datos">
@@ -140,11 +140,12 @@ if (isset($solo_lista) && $solo_lista === true):
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="tipo" id="tipo" class="formulario select">
+                                    <option value="" selected>Todos</option>
                                     <option value="I">Individual</option>
                                     <option value="G">Grupal</option>
                                 </select>
                                 <label for="tipo" class="titulo_formulario">Tipo</label>
-                                <span class="mensaje" id="tipo_span"></span>
+                                <span class="mensaje" id="nec_referencia_span"></span>
                             </div>
                         </div>
                     </div>

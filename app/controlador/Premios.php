@@ -22,7 +22,7 @@ if (!class_exists($nombreClaseModelo)) {
 }
 
 $objModelo = new ModeloPremios();
-$pagina = 'Premios'; // CORRECCIÓN: Se define la variable de la página para evitar errores en la carga de la vista
+$pagina = 'Premios'; // CORRECCIÓN: Definición de la página para evitar errores de variable indefinida
 
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudPremios($objModelo, $id_modulo, $bitacora, $permisos);
@@ -124,7 +124,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
     try {
         $validaciones = [
             'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'tipo'   => ['regla' => '/^[gi]$/', 'mensaje' => 'Tipo inválido. Solo se permite g o i.'] // CORRECCIÓN: Regex para 'g' o 'i'
+            'tipo'   => ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválido. Solo se permite G o I.'] // CORRECCIÓN: Validación adaptada al ENUM en mayúsculas
         ];
 
         validar_datos($validaciones);
@@ -161,7 +161,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $validaciones = [
             'id'     => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
             'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'tipo'   => ['regla' => '/^[gi]$/', 'mensaje' => 'Tipo inválido. Solo se permite g o i.'] // CORRECCIÓN: Regex para 'g' o 'i'
+            'tipo'   => ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválido. Solo se permite G o I.'] // CORRECCIÓN: Validación adaptada al ENUM en mayúsculas
         ];
 
         validar_datos($validaciones);
@@ -169,7 +169,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $datos = [
             'id'     => $_POST['id'],
             'nombre' => $_POST['nombre'],
-            'tipo'   => $_POST['tipo']
+            'tipo'   => $_POST['tipo'] // CORRECCIÓN: Mapeo completo de la clave tipo enviada por POST
         ];
         $datos['accion'] = 'modificar';
 
@@ -236,7 +236,7 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             $datosFiltro['nombre'] = $_POST['nombre'];
         }
         if (!empty($_POST['tipo'])) {
-            $validacionesReporte['tipo'] = ['regla' => '/^[gi]$/', 'mensaje' => 'Tipo inválido. Solo se permite g o i.']; // CORRECCIÓN: Regex para 'g' o 'i'
+            $validacionesReporte['tipo'] = ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválida. Solo se permite G o I.']; // CORRECCIÓN: Validación adaptada al ENUM en mayúsculas
             $datosFiltro['tipo'] = $_POST['tipo'];
         }
 

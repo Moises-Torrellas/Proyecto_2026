@@ -17,28 +17,25 @@ class ModeloPremios extends ModeloBase
         // Definimos los campos permitidos para usar en las validaciones
         $this->campoWhitelist = [
             'nombre' => 'nombre',
-            'id' => 'id_premios'
+            'id' => 'id_premio'
         ];
         // Definimos la llave primaria de la tabla en la base de datos
-        $this->llavePrimaria = 'id_premios';
+        $this->llavePrimaria = 'id_premio';
     }
 
     public function ProcesarDatos(array $datos): array
     {
-        // Si datos esta vacio ejecutamos la excepcion
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
 
-        // CORRECCIÓN 1: Capturamos el ID que faltaba
         $this->id = $datos['id'] ?? null;
         
-        // CORRECCIÓN 2: Procesamos el tipo forzando minúsculas ('i' o 'g')
-        $this->tipo = isset($datos['tipo']) ? strtolower(trim($datos['tipo'])) : null;
+        // CORRECCIÓN: Forzar mayúsculas ('I' o 'G') para coincidir con el ENUM de la base de datos
+        $this->tipo = isset($datos['tipo']) ? strtoupper(trim($datos['tipo'])) : null;
         
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         
-        // Ejecutamos la accion enviada por el controlador
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
             'incluir'   => $this->Incluir(),
@@ -56,45 +53,35 @@ class ModeloPremios extends ModeloBase
             $conex = $this->conex();
             $params = [];
 
-            // 1. Iniciamos la sentencia con WHERE 1=1 para concatenar AND tranquilamente
             $sentencia = "SELECT * FROM premios WHERE 1=1";
 
-            // 2. BUSCADOR GENERAL (El que viene del keyup)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
-                $sentencia .= " AND (
-                nombre LIKE :f1 OR 
-                tipo LIKE :f2
-            )";
+                $sentencia .= " AND (nombre LIKE :f1 OR tipo LIKE :f2)";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
             }
 
-            // 3. FILTROS ESPECÍFICOS (Si vienen del Modal o propiedades del objeto)
             if (!empty($this->nombre)) {
                 $sentencia .= " AND nombre LIKE :nombre";
                 $params[':nombre'] = trim($this->nombre) . "%";
             }
 
             if (!empty($this->tipo)) {
-                // CORRECCIÓN 3: Uso de '=' para búsqueda exacta del carácter
                 $sentencia .= " AND tipo = :tipo";
                 $params[':tipo'] = $this->tipo;
             }
 
-            // 4. Orden
-            $sentencia .= " ORDER BY id_premios ASC";
+            $sentencia .= " ORDER BY id_premio ASC";
 
             $stmt = $conex->prepare($sentencia);
-
-            // IMPORTANTE: Pasar los parámetros al execute
             $stmt->execute($params);
-
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Premios', $e->getMessage(), 'Modelo_Consultar');
+            die("Error técnico en la consulta SQL de la Base de Datos: " . $e->getMessage());
             return array('accion' => 'error');
         } finally {
             $conex = NULL;
@@ -117,7 +104,6 @@ class ModeloPremios extends ModeloBase
             $stmt->bindParam(':tipo', $this->tipo);
 
             $stmt->execute();
-
             $conex->commit();
             return array('accion' => 'exito');
         } catch (Exception $e) {
@@ -143,14 +129,11 @@ class ModeloPremios extends ModeloBase
                 }
             }
 
-            $sentencia = "UPDATE premios SET
-            nombre = :nombre, 
-            tipo = :tipo
-            WHERE id_premios = :id_premios";
+            $sentencia = "UPDATE premios SET nombre = :nombre, tipo = :tipo WHERE id_premio = :id_premio";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':tipo', $this->tipo);
-            $stmt->bindParam(':id_premios', $this->id);
+            $stmt->bindParam(':id_premio', $this->id);
             $stmt->execute();
 
             $conex->commit();
@@ -166,18 +149,18 @@ class ModeloPremios extends ModeloBase
         }
     }
 
-    function Buscar(): array
+    public function Buscar(): array
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM premios WHERE id_premios = :id";
+            $sentencia = "SELECT * FROM premios WHERE id_premio = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
-            logs('Premios', $e->getMessage(), 'Modelo');
+            logs('Premios', $e->getMessage(), 'Modelo_Buscar');
             return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
@@ -190,16 +173,15 @@ class ModeloPremios extends ModeloBase
             $conex = $this->conex();
             $conex->beginTransaction();
             
-            // CORRECCIÓN 4: Evaluar contra 'id_premios' en lugar de 'id'
-            if (!$this->verificarExistencia('id_premios', $this->id, 'premios', NULL, bloquear:true)) {
+            // CORRECCIÓN: Regresamos a la clave 'id' para que use la lista blanca de ModeloBase
+            if (!$this->verificarExistencia('id', $this->id, 'premios', NULL, bloquear:true)) {
                 throw new Exception(INVALID_ID);
             }
-            // Asegúrate de que en la tabla detalles_palmares la columna FK también se llame id_premios
-            if ($this->verificarExistencia('id_premios', $this->id, 'detalles_palmares', NULL, bloquear:true)) {
+            if ($this->verificarExistencia('id', $this->id, 'detalles_palmares', NULL, bloquear:true)) {
                 throw new Exception(ASSOCIATES);
             }
             
-            $sentencia = "DELETE FROM premios WHERE id_premios = :id";
+            $sentencia = "DELETE FROM premios WHERE id_premio = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();

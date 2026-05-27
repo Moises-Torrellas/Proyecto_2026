@@ -426,8 +426,8 @@ ul {
 
 /* --- Ventana Principal --- */
 .asistente_ventana {
-    width: 30%;
-    height: 80%;
+    width: 450px;
+    height: 600px;
     background: var(--fondo-contraste); /* Fondo oscuro sólido */
     border-radius: 12px;
     display: flex !important;
