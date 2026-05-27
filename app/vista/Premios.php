@@ -1,13 +1,13 @@
-<?php if (isset($solo_lista) && $solo_lista === true):
+<?php 
+if (isset($solo_lista) && $solo_lista === true):
     if (empty($registro)): ?>
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-        <?php else:
+    <?php else:
         foreach ($registro as $dato):
-            $txtReferencia = ($dato['tipo'] == 1)  ? 'Individual' : 'Grupal';
-            $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
-            $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a'; ?>
+            $txtTipo = (strtolower($dato['tipo']) === 'I') ? 'Individual' : 'Grupal';
+             ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
                     <div class="listado_col_datos">
@@ -24,10 +24,10 @@
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
                             <?php if ($permisos['modificar']): ?>
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_metodos'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_premio'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                             <?php endif; ?>
                             <?php if ($permisos['eliminar']): ?>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_metodos'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_premio'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -38,7 +38,7 @@
     <?php exit(); ?>
 <?php endif; ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <?php include('complementos/head.php'); ?>
@@ -64,10 +64,10 @@
                         </div>
                         <div class="botones">
                             <?php if($permisos['registrar']):?>
-                            <button class="btn btn_azul" id="incluir">Nuevo Premio</button>
+                                <button class="btn btn_azul" id="incluir">Nuevo Premio</button>
                             <?php endif; ?>
                             <?php if ($permisos['reporte']): ?>
-                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                                <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -77,11 +77,11 @@
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                                <?php else:
+                            <?php else:
                                 foreach ($registro as $dato): 
-                                    $txtReferencia = ($dato['tipo'] == 1)  ? 'Individual' : 'Grupal';
-                                    $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
-                                    $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a'; ?>
+                                    
+                                    $txtTipo = (strtolower($dato['tipo']) === 'I') ? 'Individual' : 'Grupal';
+                                    ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
                                             <div class="listado_col_datos">
@@ -98,10 +98,10 @@
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
                                                     <?php if ($permisos['modificar']): ?>
-                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_metodos'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_premio'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                                     <?php endif; ?>
                                                     <?php if ($permisos['eliminar']): ?>
-                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_metodos'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_premio'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
@@ -116,6 +116,7 @@
             </div>
         </div>
     </section>
+    
     <section class="contenedor_modal" id="contenedor_modal">
         <div class="modal ocultar" id="modal">
             <div class="cabecera_modal">
@@ -139,29 +140,26 @@
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="tipo" id="tipo" class="formulario select">
-                                    <option value="1" selected>Individual</option>
-                                    <option value="2" selected>Grupal</option>
+                                    <option value="I">Individual</option>
+                                    <option value="G">Grupal</option>
                                 </select>
                                 <label for="tipo" class="titulo_formulario">Tipo</label>
-                                <span class="mensaje" id="nec_referencia_span"></span>
+                                <span class="mensaje" id="tipo_span"></span>
                             </div>
                         </div>
                     </div>
 
+                    <div class="row">
+                        <div class="colum">
+                            <button type="button" class="btn btn_azul" id="proceso"></button>
+                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+                        </div>
+                    </div>
+                </form>
             </div>
-            <div class="row">
-                <div class="colum">
-                    <button type="button" class="btn btn_azul" id="proceso"></button>
-                    <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
-                </div>
-            </div>
-
-            </form>
-        </div>
         </div>
     </section>
     <script src="js/main.js"></script>
     <script src="js/premios.js"></script>
 </body>
-
 </html>
