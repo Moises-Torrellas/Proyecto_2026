@@ -341,7 +341,7 @@ endif;
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="edad" readonly>
+                                <input type="text" class="formulario" id="edad" name="edad" readonly>
                                 <label for="edad" class="titulo_formulario">Edad (Año Calendario)</label>
                                 <span class="mensaje" id="edad_spam"></span>
                             </div>
@@ -384,15 +384,26 @@ endif;
                         </div>
                     </div>
                     <div class="row">
-
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="genero" id="genero" class="formulario select">
+                                    <option id="todos" value="T" selected>Todos</option>
                                     <option value="H">Hombre</option>
                                     <option value="M">Mujer</option>
                                 </select>
                                 <label for="genero" class="titulo_formulario">Genero</label>
                                 <span class="mensaje" id="genero_span"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="estatus" id="estatus" class="formulario select" disabled>
+                                    <option value="T" selected>Todos</option>
+                                    <option value="1">Activos</option>
+                                    <option value="2">Retirados</option>
+                                </select>
+                                <label for="estatus" class="titulo_formulario">Estatus</label>
+                                <span class="mensaje" id="estatus_span"></span>
                             </div>
                         </div>
                     </div>

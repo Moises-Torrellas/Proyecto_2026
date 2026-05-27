@@ -125,7 +125,7 @@
 
             <li class="nav_identificador">Reportes</li>
             <li class="nav_opciones">
-                <a type="button" href="/Proyecto_2026/public/Reportes" class="opciones"><i class="opciones_i" data-lucide="chart-column-stacked"></i> Reportes</a>
+                <a type="button" href="/Proyecto_2026/public/Reportes" class="opciones"><i class="opciones_i" data-lucide="chart-column-stacked"></i> Reportes Estadisticos</a>
             </li>
 
             <?php if ($nivelUsuario === 1): ?>

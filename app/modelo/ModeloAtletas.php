@@ -18,6 +18,8 @@ class ModeloAtletas extends ModeloBase
     private $genero;
     private $categoria;
     private $fecha_nac;
+    private $estatus;
+    private $edad;
     private $foto;
 
 
@@ -49,7 +51,8 @@ class ModeloAtletas extends ModeloBase
         $this->genero        = $datos['genero'] ?? '';
         $this->categoria  = $datos['categoria'] ?? null;
         $this->posicion      = $datos['posicion'] ?? null;
-
+        $this->estatus      = $datos['estatus'] ?? null;
+        $this->edad      = $datos['edad'] ?? null;
         // Atributos con formato de Título (Standard de tu proyecto)
         $this->nombre   = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->apellido = mb_convert_case(trim($datos['apellido'] ?? ''), MB_CASE_TITLE, "UTF-8");
@@ -77,6 +80,7 @@ class ModeloAtletas extends ModeloBase
             'modificar' => $this->Modificar(),
             'eliminar'  => $this->Eliminar(),
             'buscar'    => $this->Buscar(),
+            'generar'    => $this->Consultar(),
             default     => throw new Exception('La acción solicitada para el atleta no es válida.')
         };
     }
@@ -116,15 +120,40 @@ class ModeloAtletas extends ModeloBase
 
             // 3. FILTROS ESPECÍFICOS
             if (!empty($this->doc_identidad)) {
-                $sentencia .= " AND doc_identidad = :doc_i";
-                $params[':doc_i'] = $this->doc_identidad;
+                // El formato final será: __25%
+                // Esto obliga a ignorar 2 caracteres (el prefijo 'V-') y buscar que empiece por '25'
+                $sentencia .= " AND doc_identidad LIKE :doc_i";
+                $params[':doc_i'] = "__" . trim($this->doc_identidad) . "%";
             }
-
+            if (!empty($this->nombre)) {
+                $sentencia .= " AND nombres LIKE :nombre";
+                $params[':nombre'] = '%' . trim($this->nombre) . "%";
+            }
+            if (!empty($this->apellido)) {
+                $sentencia .= " AND apellidos LIKE :apellido";
+                $params[':apellido'] = '%' . trim($this->apellido) . "%";
+            }
             if (!empty($this->categoria)) {
                 $sentencia .= " AND id_categoria = :id_cat";
                 $params[':id_cat'] = $this->categoria;
             }
-
+            if (!empty($this->posicion)) {
+                $sentencia .= " AND id_posicion = :id_p";
+                $params[':id_p'] = $this->posicion;
+            }
+            if (!empty($this->genero)) {
+                $sentencia .= " AND genero = :genero";
+                $params[':genero'] = $this->genero;
+            }
+            if (!empty($this->estatus)) {
+                $sentencia .= " AND estatus = :estatus";
+                $params[':estatus'] = $this->estatus;
+            }
+            if (!empty($this->edad)) {
+                // Calculamos el año actual menos el año de nacimiento
+                $sentencia .= " AND (YEAR(CURDATE()) - YEAR(fecha_nac)) = :edad";
+                $params[':edad'] = (int)$this->edad;
+            }
             // 4. ORDENAMIENTO
             $sentencia .= " ORDER BY CASE WHEN estatus = 1 THEN 0 ELSE 1 END ASC";
 
@@ -348,7 +377,7 @@ class ModeloAtletas extends ModeloBase
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
             }
-            logs('Atletas', $e->getMessage(), 'Modelo_Incluir');
+            logs('Atletas', $e->getMessage(), 'Modelo_Modificar');
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = null;
@@ -397,7 +426,7 @@ class ModeloAtletas extends ModeloBase
                 throw new Exception(INVALID_ID);
             }
 
-            $sql = "UPDATE `atletas` SET `estatus`= 0 WHERE id_atleta = :id";
+            $sql = "UPDATE `atletas` SET `estatus`= 2 WHERE id_atleta = :id";
             $stmt = $conex->prepare($sql);
             $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
             $stmt->execute();
