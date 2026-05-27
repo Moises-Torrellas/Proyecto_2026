@@ -3,11 +3,10 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-05-2026 a las 23:43:23
+-- Tiempo de generación: 27-05-2026 a las 19:43:21
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
-SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -21,7 +20,7 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `cannibalsbd`
 --
-CREATE DATABASE IF NOT EXISTS `cannibalsbd` DEFAULT CHARACTER SET utf8 COLLATE utf8_spanish_ci;
+CREATE DATABASE IF NOT EXISTS `cannibalsbd` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci;
 USE `cannibalsbd`;
 
 -- --------------------------------------------------------
@@ -86,8 +85,16 @@ CREATE TABLE `catalogos` (
   `stock_minimo` varchar(10) NOT NULL,
   `id_categoria` int(11) NOT NULL,
   `talla` varchar(10) DEFAULT NULL,
-  `id_posicion` int(11) NOT NULL
+  `id_posicion` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `catalogos`
+--
+
+INSERT INTO `catalogos` (`id_catalogo`, `nombre`, `stock_minimo`, `id_categoria`, `talla`, `id_posicion`) VALUES
+(2, 'Bolas', '15', 3, '', NULL),
+(3, 'Stick', '14', 4, '', NULL);
 
 -- --------------------------------------------------------
 
@@ -128,6 +135,14 @@ CREATE TABLE `categoria_catalogo` (
   `nombre` varchar(30) NOT NULL,
   `descripcion` varchar(150) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `categoria_catalogo`
+--
+
+INSERT INTO `categoria_catalogo` (`id_categoria`, `nombre`, `descripcion`) VALUES
+(3, 'BOLA', 'Bola'),
+(4, 'STICK', 'Palo');
 
 -- --------------------------------------------------------
 
@@ -180,7 +195,7 @@ CREATE TABLE `cuentas_cobrar` (
 
 INSERT INTO `cuentas_cobrar` (`id_cobrar`, `id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `monto_pendiente`, `fecha_emision`, `fecha_vencimiento`, `estatus`, `anulado`) VALUES
 (6, 4, 13, 5, 25.00, 2.00, '2026-05-24', '2026-06-23', 0, 0),
-(7, 4, 13, 4, 25.00, 25.00, '2026-05-25', '2026-06-24', 0, 0);
+(7, 4, 13, 4, 25.00, 25.00, '2026-05-25', '2026-06-24', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -431,6 +446,13 @@ CREATE TABLE `premios` (
   `nombre` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
+--
+-- Volcado de datos para la tabla `premios`
+--
+
+INSERT INTO `premios` (`id_premio`, `tipo`, `nombre`) VALUES
+(1, 'I', 'Maximo Goleador');
+
 -- --------------------------------------------------------
 
 --
@@ -544,7 +566,7 @@ CREATE TABLE `vista_cuentas_cobrar` (
 DROP TABLE IF EXISTS `vista_atletas`;
 
 DROP VIEW IF EXISTS `vista_atletas`;
-CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_atletas`  AS SELECT `a`.`id_atleta` AS `id_atleta`, `a`.`nombres` AS `nombres`, `a`.`apellidos` AS `apellidos`, `a`.`estatus` AS `estatus`, `a`.`id_representante` AS `id_representante`, `a`.`id_posicion` AS `id_posicion`, `a`.`id_categoria` AS `id_categoria`, `a`.`genero` AS `genero`, `a`.`fecha_nac` AS `fecha_nac`, `a`.`foto` AS `foto`, coalesce(`a`.`telefono`,`r`.`telefono`) AS `telefono`, coalesce(`a`.`direccion`,`r`.`direccion`) AS `direccion`, coalesce(`a`.`doc_identidad`,`r`.`cedula`) AS `doc_identidad`, `r`.`nombre` AS `nombre_rep`, `r`.`apellido` AS `apellido_rep`, `r`.`cedula` AS `cedula_rep`, `p`.`nombre` AS `nombre_posicion`, `p`.`abreviatura` AS `abrev_posicion`, `c`.`nombre` AS `nombre_categoria`, `c`.`edad_min` AS `edad_min`, `c`.`edad_max` AS `edad_max` FROM (((`atletas` `a` left join `representantes` `r` on(`a`.`id_representante` = `r`.`id_representante`)) left join `posiciones` `p` on(`a`.`id_posicion` = `p`.`id_posicion`)) left join `categorias` `c` on(`a`.`id_categoria` = `c`.`id_categorias`)) ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_atletas`  AS SELECT `a`.`id_atleta` AS `id_atleta`, `a`.`nombres` AS `nombres`, `a`.`apellidos` AS `apellidos`, `a`.`estatus` AS `estatus`, `a`.`id_representante` AS `id_representante`, `a`.`id_posicion` AS `id_posicion`, `a`.`id_categoria` AS `id_categoria`, `a`.`genero` AS `genero`, `a`.`fecha_nac` AS `fecha_nac`, `a`.`foto` AS `foto`, coalesce(`a`.`telefono`,`r`.`telefono`) AS `telefono`, coalesce(`a`.`direccion`,`r`.`direccion`) AS `direccion`, coalesce(`a`.`doc_identidad`,`r`.`cedula`) AS `doc_identidad`, `r`.`nombre` AS `nombre_rep`, `r`.`apellido` AS `apellido_rep`, `r`.`cedula` AS `cedula_rep`, `p`.`nombre` AS `nombre_posicion`, `p`.`abreviatura` AS `abrev_posicion`, `c`.`nombre` AS `nombre_categoria`, `c`.`edad_min` AS `edad_min`, `c`.`edad_max` AS `edad_max` FROM (((`atletas` `a` left join `representantes` `r` on(`a`.`id_representante` = `r`.`id_representante`)) left join `posiciones` `p` on(`a`.`id_posicion` = `p`.`id_posicion`)) left join `categorias` `c` on(`a`.`id_categoria` = `c`.`id_categorias`)) ;
 
 -- --------------------------------------------------------
 
@@ -554,7 +576,7 @@ CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_atletas` 
 DROP TABLE IF EXISTS `vista_cuentas_cobrar`;
 
 DROP VIEW IF EXISTS `vista_cuentas_cobrar`;
-CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_cuentas_cobrar`  AS SELECT `c`.`id_cobrar` AS `id_cobrar`, `c`.`id_atleta` AS `id_atleta`, `c`.`id_concepto` AS `id_concepto`, `c`.`id_moneda` AS `id_moneda`, `c`.`fecha_emision` AS `fecha_emision`, `c`.`fecha_vencimiento` AS `fecha_vencimiento`, `c`.`monto_personalizado` AS `monto_total`, `c`.`monto_pendiente` AS `monto_pendiente`, `c`.`anulado` AS `anulado`, `c`.`estatus` AS `estatus`, CASE WHEN `c`.`anulado` = 1 THEN 'Anulado' WHEN `c`.`estatus` = 0 THEN 'Pendiente' WHEN `c`.`estatus` = 1 THEN 'Pagado' ELSE 'Desconocido' END AS `estatus_texto`, `a`.`nombres` AS `atleta_nombre`, `a`.`apellidos` AS `atleta_apellido`, `co`.`nombre` AS `concepto_nombre`, `m`.`nombre` AS `moneda_nombre`, `m`.`simbolo` AS `moneda_simbolo` FROM (((`cuentas_cobrar` `c` join `atletas` `a` on(`c`.`id_atleta` = `a`.`id_atleta`)) join `conceptos` `co` on(`c`.`id_concepto` = `co`.`id_conceptos`)) join `monedas` `m` on(`c`.`id_moneda` = `m`.`id_moneda`)) ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_cuentas_cobrar`  AS SELECT `c`.`id_cobrar` AS `id_cobrar`, `c`.`id_atleta` AS `id_atleta`, `c`.`id_concepto` AS `id_concepto`, `c`.`id_moneda` AS `id_moneda`, `c`.`fecha_emision` AS `fecha_emision`, `c`.`fecha_vencimiento` AS `fecha_vencimiento`, `c`.`monto_personalizado` AS `monto_total`, `c`.`monto_pendiente` AS `monto_pendiente`, `c`.`anulado` AS `anulado`, `c`.`estatus` AS `estatus`, CASE WHEN `c`.`anulado` = 1 THEN 'Anulado' WHEN `c`.`estatus` = 0 THEN 'Pendiente' WHEN `c`.`estatus` = 1 THEN 'Pagado' ELSE 'Desconocido' END AS `estatus_texto`, `a`.`nombres` AS `atleta_nombre`, `a`.`apellidos` AS `atleta_apellido`, `co`.`nombre` AS `concepto_nombre`, `m`.`nombre` AS `moneda_nombre`, `m`.`simbolo` AS `moneda_simbolo` FROM (((`cuentas_cobrar` `c` join `atletas` `a` on(`c`.`id_atleta` = `a`.`id_atleta`)) join `conceptos` `co` on(`c`.`id_concepto` = `co`.`id_conceptos`)) join `monedas` `m` on(`c`.`id_moneda` = `m`.`id_moneda`)) ;
 
 --
 -- Índices para tablas volcadas
@@ -779,7 +801,7 @@ ALTER TABLE `atletas`
 -- AUTO_INCREMENT de la tabla `catalogos`
 --
 ALTER TABLE `catalogos`
-  MODIFY `id_catalogo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_catalogo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `categorias`
@@ -791,7 +813,7 @@ ALTER TABLE `categorias`
 -- AUTO_INCREMENT de la tabla `categoria_catalogo`
 --
 ALTER TABLE `categoria_catalogo`
-  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `conceptos`
@@ -893,7 +915,7 @@ ALTER TABLE `posiciones`
 -- AUTO_INCREMENT de la tabla `premios`
 --
 ALTER TABLE `premios`
-  MODIFY `id_premio` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_premio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `representantes`
@@ -1010,7 +1032,6 @@ ALTER TABLE `palmares`
 ALTER TABLE `participaciones`
   ADD CONSTRAINT `participaciones_ibfk_1` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipos`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `participaciones_ibfk_2` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE ON UPDATE CASCADE;
-SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
