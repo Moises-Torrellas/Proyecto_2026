@@ -17,9 +17,9 @@ class ModeloReportes extends ModeloBase
             c.edad_max,
             COUNT(a.id_atleta) AS total_atletas,
             SUM(CASE WHEN a.genero = 'H' AND a.estatus = 1 THEN 1 ELSE 0 END) AS masc_activos,
-            SUM(CASE WHEN a.genero = 'H' AND a.estatus = 0 THEN 1 ELSE 0 END) AS masc_retirados,
+            SUM(CASE WHEN a.genero = 'H' AND a.estatus = 2 THEN 1 ELSE 0 END) AS masc_retirados,
             SUM(CASE WHEN a.genero = 'M' AND a.estatus = 1 THEN 1 ELSE 0 END) AS fem_activos,
-            SUM(CASE WHEN a.genero = 'M' AND a.estatus = 0 THEN 1 ELSE 0 END) AS fem_retirados
+            SUM(CASE WHEN a.genero = 'M' AND a.estatus = 2 THEN 1 ELSE 0 END) AS fem_retirados
         FROM categorias c
         INNER JOIN atletas a ON c.id_categorias = a.id_categoria
         GROUP BY 
