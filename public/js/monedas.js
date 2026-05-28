@@ -16,9 +16,9 @@ function busqueda() {
         enviaAjax(datos);
     }, 500);
 }
-$(document).ready(function () {
-    consultar();
 
+$(document).ready(function () {
+    inicializarPaginador();
 
     // Validación de Nombre
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
@@ -192,50 +192,17 @@ function bloquear(id, b, elemento) {
     });
 }
 
-function crearConsulta(datos) {
+// Reemplaza por completo tu función anterior en monedas.js
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
-    } else {
-        datos.forEach(dato => {
-            let icon = dato.estatus == 1 ? 'fi-sr-unlock' : 'fi-sr-lock';
-            let color = dato.estatus == 1 ? 'cbt_g' : 'cbt_a';
+    // Inyectamos directamente el string de tarjetas HTML que escupió el PHP
+    contenedor.html(htmlRecibido);
 
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Nombre</small>
-                                <span>${dato.nombre}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Abreviatura</small>
-                                <span style="font-weight: bold; color: #2ec135;">${dato.abreviatura}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Simbolo</small>
-                                <span>${dato.simbolo}</span>
-                            </div>
-                        </div>
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_moneda})"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_moneda})"><i class="fi fi-sr-trash-xmark"></i></button>
-                                <button class="btn_t ${color}" onclick="bloquear(${dato.id_moneda}, ${dato.estatus}, this)"><i class="fi ${icon}"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-
+    // Ejecutamos tus inicializadores estéticos y paginadores normales
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -253,11 +220,17 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
+            // 1. COMPROBACIÓN CRÍTICA: ¿Es HTML? (Se evalúa ANTES de parsear JSON)
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return; // Cortamos el flujo de inmediato de forma exitosa
+            }
+
+            // 2. PROCESAMIENTO JSON: Si no es HTML, obligatoriamente es una respuesta JSON
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } else if (lee.accion == "incluir") {
+                
+                if (lee.accion == "incluir") {
                     consultar();
                     limpia();
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
@@ -268,30 +241,25 @@ function enviaAjax(datos) {
                     consultar();
                     limpia();
                     cerrarModal();
-
                     muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
-                }
-                else if (lee.accion == "bloquear") {
+                } else if (lee.accion == "bloquear") {
                     muestraMensaje("success", 2000, "Bloqueo Exitosa", lee.mensaje);
                     consultar();
-                }
-                else if (lee.accion == "error") {
+                } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }
             } catch (e) {
-                alert("Error en JSON " + e.name);
+                console.error("Error al procesar JSON:", e, respuesta);
+                alert("Error en JSON: " + e.message);
             }
         },
-
-
         error: function (request, status, err) {
-
             if (status == "timeout") {
                 muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
             } else {
-                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + request + status + err);
+                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + status + " " + err);
             }
         },
         complete: function () { },

@@ -5,19 +5,10 @@ function consultar() {
     datos.append('accion', 'consultar');
     enviaAjax(datos);
 }
-function consultarR() {
+
+function MultiConsulta() {
     let datos = new FormData();
-    datos.append('accion', 'consultarR');
-    enviaAjax(datos);
-}
-function consultarP() {
-    let datos = new FormData();
-    datos.append('accion', 'consultarP');
-    enviaAjax(datos);
-}
-function consultarC() {
-    let datos = new FormData();
-    datos.append('accion', 'consultarC');
+    datos.append('accion', 'MultiConsulta'); // Nueva acción unificada
     enviaAjax(datos);
 }
 function busqueda() {
@@ -35,10 +26,8 @@ function busqueda() {
 
 
 $(document).ready(function () {
-    consultar();
-    consultarR();
-    consultarP();
-    consultarC();
+    inicializarPaginador();
+    MultiConsulta();
 
     $("#doc_i").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
@@ -127,6 +116,17 @@ $(document).ready(function () {
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Atleta");
         $("#titulo_modal").text("Registrar Atleta");
+        $('#fecha_nac').closest('.colum').show();
+        $('#representante').closest('.colum').show();
+        $('#telefono').closest('.colum').show();
+        $('#direccion').closest('.colum').show();
+        $('#foto').closest('.colum').show();
+        $('#estatus').closest('.colum').hide().prop('disabled', true);
+        $("#todos").prop('disabled', true); 
+        $("#genero").val("H").trigger('change');
+
+        $('#edad').prop('readonly', true);
+        $
 
         $('#representante').val(null).trigger('change');
         $('#posicion').val(null).trigger('change');
@@ -140,6 +140,14 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
+        $('#fecha_nac').closest('.colum').hide();
+        $('#representante').closest('.colum').hide();
+        $('#telefono').closest('.colum').hide();
+        $('#direccion').closest('.colum').hide();
+        $('#foto').closest('.colum').hide();
+        $('#estatus').closest('.colum').show().prop('disabled', false);
+        $('#edad').prop('readonly', false);
+        $("#todos").prop('disabled', false); 
         abrirModal();
     });
 
@@ -258,7 +266,7 @@ function validarEdadAtleta(fechaValor) {
     }
 }
 
-function cargarEdad(fecha){
+function cargarEdad(fecha) {
     const hoy = new Date();
     const nacimiento = new Date(fecha);
     const edad = hoy.getFullYear() - nacimiento.getFullYear();
@@ -371,13 +379,20 @@ function modificar(datos) {
     $("#proceso").data("accion", "modificar");
     $("#proceso").text("Modificar Atleta");
     $("#titulo_modal").text("Modificar Atleta");
+    $('#fecha_nac').closest('.colum').show();
+    $('#representante').closest('.colum').show();
+    $('#telefono').closest('.colum').show();
+    $('#direccion').closest('.colum').show();
+    $('#foto').closest('.colum').show();
+    $('#estatus').closest('.colum').hide().prop('disabled', true);
+    $('#edad').prop('readonly', true);
+    $("#todos").prop('disabled', true); 
 
     $('#fecha_nac').val(datos[0].fecha_nac);
     $('#id').val(datos[0].id_atleta);
     $('#doc_i').val(datos[0].doc_identidad);
     $('#nombre').val(datos[0].nombres);
     $('#apellido').val(datos[0].apellidos);
-    $('#genero').val(datos[0].genero);
     $('#genero').val(datos[0].genero);
     $('#telefono').val(datos[0].telefono);
     $('#direccion').val(datos[0].direccion);
@@ -394,147 +409,16 @@ function modificar(datos) {
     abrirModal();
 }
 
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
-    } else {
-        const anioActual = new Date().getFullYear();
+    // Inyectamos directamente el bloque HTML estructurado que procesó el servidor
+    contenedor.html(htmlRecibido);
 
-        datos.forEach(dato => {
-            const anioNacimiento = new Date(dato.fecha_nac).getFullYear();
-            const estatus = dato.estatus === 1 ? `<span class="estatus_v">Activo</span>` : `<span class="estatus_r">Retirado</span>`;
-            const retirar = dato.estatus === 1 ? `<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_atleta})" data-tippy-content="Retirar"><i class="fi fi-sr-cross-circle"></i></button>` : ``;
-            const edadCalendario = anioActual - anioNacimiento;
-            const genero = dato.genero === 'H' ? 'Hombre' : 'Mujer';
-            const fotoHTML = (dato.foto === 'default.png' || !dato.foto)
-                ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>`
-                : `<img src="img/atletas/${dato.foto}" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">`;
-
-            // Lógica para el representante: Si no existe, no se crea el HTML de la tarjeta
-            let tarjetaRepresentante = "";
-            if (dato.nombre_rep && dato.nombre_rep.trim() !== "") {
-                tarjetaRepresentante = `
-                    <div class="detalle_card">
-                        <div class="detalle_card_icon"><i data-lucide="user-star"></i></div>
-                        <div class="detalle_card_txt">
-                            <label>Representante</label>
-                            <span>${escapeHTML(dato.nombre_rep)} ${escapeHTML(dato.apellido_rep)}</span>
-                            <small>${dato.cedula_rep || ''}</small>
-                        </div>
-                    </div>
-                `;
-            }
-
-            let registro = `
-                <div id="registro" class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_principal">
-                            ${fotoHTML}
-                            <div class="listado_info_base">
-                                <span class="listado_titulo">${escapeHTML(dato.nombres)} ${escapeHTML(dato.apellidos)}</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Doc de Identidad</small>
-                                <span>${dato.doc_identidad}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Edad (Año Cal.)</small>
-                                <span class="listado_resaltado">${edadCalendario} años</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Genero</small>
-                                <span>${escapeHTML(genero)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Estatus</small>
-                                ${estatus}
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_atleta})" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                ${retirar}
-                                <button id="cbt_sec" class="btn_t cbt_sec" onclick="" data-tippy-content="Generar Curriculum"><i class="fi fi-sr-clipboard-user"></i></button>
-                            </div>
-                            <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
-                        </div>
-                    </div>
-
-                    <div class="listado_detalle_oculto">
-                        <div class="detalle_expandido_container">
-                            <!-- Fila Superior Dinámica -->
-                            <div class="detalle_fila">
-                                <div class="detalle_card">
-                                    <div class="detalle_card_icon"><i data-lucide="bring-to-front"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Categoría Deportiva</label>
-                                        <span>${escapeHTML(dato.nombre_categoria)}</span>
-                                        <small>Rango: ${dato.edad_min}-${dato.edad_max} años</small>
-                                    </div>
-                                </div>
-
-                                ${tarjetaRepresentante}
-
-                                <div class="detalle_card">
-                                    <div class="detalle_card_icon"><i data-lucide="land-plot"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Posición Técnica</label>
-                                        <span>${escapeHTML(dato.nombre_posicion)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="detalle_fila">
-                                <div class="detalle_card">
-                                    <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Dirección</label>
-                                        <span>${escapeHTML(dato.direccion)}</span>
-                                    </div>
-                                </div>
-                                <div class="detalle_card">
-                                    <div class="detalle_card_icon"><i data-lucide="phone"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Telefono</label>
-                                        <span>${escapeHTML(dato.telefono)}</span>
-                                    </div>
-                                </div>
-                                <div class="detalle_card">
-                                    <div class="detalle_card_icon"><i data-lucide="calendar-1"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Fecha de Nacimiento</label>
-                                        <span>${escapeHTML(dato.fecha_nac)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-
+    // Reactivamos las librerías visuales y los comportamientos estéticos
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
-    tippy('[data-tippy-content]', { theme: 'light' });
-}
-
-function escapeHTML(texto) {
-    var caracteres = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return texto.replace(/[&<>"']/g, m => caracteres[m]);
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3 = null) {
@@ -565,6 +449,17 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
         var linea = `<option value="${dato[campoId]}" ${atributosExtra}>${textoMostrar}</option>`;
         select.append(linea);
     });
+}
+
+function escapeHTML(texto) {
+    var caracteres = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return texto.replace(/[&<>"']/g, m => caracteres[m]);
 }
 
 function validarCategoria() {
@@ -606,21 +501,19 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
+
+            // 2. Procesamos respuestas de datos y lógica del formulario (JSON)
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } else if (lee.accion == "consultarR") {
-                    // Para Representantes: ID, Nombre, Apellido, Cédula
-                    construirSelect('representante', lee.datos, 'id_representante', 'nombre', 'apellido', 'cedula');
 
-                } else if (lee.accion == "consultarP") {
-                    // Para Posiciones: ID, Nombre, Abreviatura
-                    construirSelect('posicion', lee.datos, 'id_posicion', 'nombre', 'abreviatura');
-
-                } else if (lee.accion == "consultarC") {
-                    // Para Categorías: ID, Nombre, Edad Mínima, Edad Máxima
-                    construirSelect('categoria', lee.datos, 'id_categorias', 'nombre', 'edad_min', 'edad_max');
+                if (lee.accion == "MultiConsulta") {
+                    construirSelect('representante', lee.representantes, 'id_representante', 'nombre', 'apellido', 'cedula');
+                    construirSelect('posicion', lee.posiciones, 'id_posicion', 'nombre', 'abreviatura');
+                    construirSelect('categoria', lee.categorias, 'id_categorias', 'nombre', 'edad_min', 'edad_max');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
@@ -632,26 +525,41 @@ function enviaAjax(datos) {
                     consultar();
                     limpia();
                     cerrarModal();
+                    muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
+                }
+                else if (lee.accion == "reporte") {
+                    // 1. Cerramos la alerta de espera de inmediato
+                    cerrarAlertaEspara();
 
-                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
+                    // 2. Cerramos el modal del formulario
+                    cerrarModal();
+
+                    // 3. Mostramos el mensaje de éxito (dura 2000ms en pantalla)
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
-                }
-                else if (lee.accion == "error") {
+                } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }
             } catch (e) {
-                alert("Error en JSON " + e.name);
+                console.error("Error al parsear el JSON del servidor. Respuesta recibida:", respuesta);
+                alert("Error en JSON: " + e.name);
             }
         },
-
-
         error: function (request, status, err) {
-
             if (status == "timeout") {
                 muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
             } else {
-                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + request + status + err);
+                // Se quita el objeto 'request' de la concatenación para evitar el '[object Object]'
+                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + status + ": " + err);
             }
         },
         complete: function () { },

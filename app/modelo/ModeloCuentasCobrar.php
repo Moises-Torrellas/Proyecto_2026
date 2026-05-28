@@ -22,10 +22,11 @@ class ModeloCuentasCobrar extends ModeloBase
         $this->campoWhitelist = [
             'id' => 'id_cobrar',
             'id_cobrar' => 'id_cobrar',
-            'id_concepto' => 'id_concepto',   // Para la tabla cuentas_cobrar
-            'id_conceptos' => 'id_conceptos', // Para la tabla conceptos (Validación)
+            'id_concepto' => 'id_concepto',
+            'id_conceptos' => 'id_conceptos',
             'id_atleta' => 'id_atleta',
-            'id_moneda' => 'id_moneda',     // NUEVO
+            'id_moneda' => 'id_moneda',
+            'monto_pendiente' => 'monto_pendiente', // <-- AGREGADO PARA LA LISTA BLANCA
             'estatus' => 'estatus'
         ];
         $this->llavePrimaria = 'id_cobrar';
@@ -40,15 +41,13 @@ class ModeloCuentasCobrar extends ModeloBase
         $this->id = $datos['id'] ?? null;
         $this->id_concepto = $datos['id_concepto'] ?? null;
         $this->id_atleta = $datos['id_atleta'] ?? null;
-        $this->id_moneda = $datos['id_moneda'] ?? null; // NUEVO
-
-        // TRUCO MANTENIDO: Tomamos el 'monto_total' del JS y lo asignamos al 'monto' real de la DB
+        $this->id_moneda = $datos['id_moneda'] ?? null;
         $this->monto = $datos['monto_total'] ?? 0;
 
-        $this->fecha_emision = $datos['fecha_emision'] ?? date('Y-m-d H:i:s');
+        // Leemos las fechas enviadas por el formulario
+        $this->fecha_emision = !empty($datos['fecha_emision']) ? $datos['fecha_emision'] : date('Y-m-d');
 
-        // Vencimiento a 30 días
-        $this->fecha_vencimiento = date('Y-m-d H:i:s', strtotime($this->fecha_emision . ' + 30 days'));
+        $this->fecha_vencimiento = !empty($datos['fecha_vencimiento']) ? $datos['fecha_vencimiento'] : date('Y-m-d', strtotime($this->fecha_emision . ' + 30 days'));
 
         $this->estatus = mb_convert_case(trim($datos['estatus'] ?? 'Pendiente'), MB_CASE_TITLE, "UTF-8");
 
@@ -68,36 +67,30 @@ class ModeloCuentasCobrar extends ModeloBase
             $conex = $this->conex();
             $params = [];
 
-            // CORRECCIÓN: Cambiado c.monto a c.monto_personalizado
-            $sentencia = "SELECT c.*, c.anulado, c.monto_personalizado as monto_total, 
-                                c.monto_personalizado as monto_pendiente,
-                                IF(c.estatus = '0', 'Pendiente', c.estatus) as estatus,
-                                a.nombres as atleta_nombre, 
-                                a.apellidos as atleta_apellido, 
-                                co.nombre as concepto_nombre,
-                                m.nombre as moneda_nombre,
-                                m.simbolo as moneda_simbolo
-                        FROM cuentas_cobrar c 
-                        INNER JOIN atletas a ON c.id_atleta = a.id_atleta 
-                        INNER JOIN conceptos co ON c.id_concepto = co.id_conceptos 
-                        INNER JOIN monedas m ON c.id_moneda = m.id_moneda
-                        WHERE 1=1";
+            // 1. Consultamos directamente la nueva vista
+            $sentencia = "SELECT * FROM vista_cuentas_cobrar WHERE 1=1";
 
+            // 2. Buscador general dinámico
             if (!empty($filtro['filtro'])) {
-                $p = "%" . $filtro['filtro'] . "%";
+                $p = "%" . trim($filtro['filtro']) . "%";
+
+                // Agregamos estatus_texto a la búsqueda
                 $sentencia .= " AND (
-                    a.nombres LIKE :f1 OR 
-                    a.apellidos LIKE :f2 OR 
-                    co.nombre LIKE :f3 OR
-                    m.nombre LIKE :f4
-                )";
+                atleta_nombre LIKE :f1 OR 
+                atleta_apellido LIKE :f2 OR 
+                concepto_nombre LIKE :f3 OR
+                moneda_nombre LIKE :f4 OR
+                estatus_texto LIKE :f5
+            )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
                 $params[':f3'] = $p;
                 $params[':f4'] = $p;
+                $params[':f5'] = $p;
             }
 
-            $sentencia .= " ORDER BY c.fecha_emision DESC";
+            // 3. Ordenamiento basado en la vista
+            $sentencia .= " ORDER BY fecha_emision DESC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -133,8 +126,8 @@ class ModeloCuentasCobrar extends ModeloBase
     {
         try {
             $conex = $this->conex();
-            // CORRECCIÓN: 'id_concepto' en singular según tu diagrama
-            $sentencia = "SELECT id_conceptos as id_concepto, nombre FROM conceptos ORDER BY nombre ASC";
+            // ADAPTACIÓN: Seleccionamos también la columna 'monto' de la tabla conceptos para usarla en JS
+            $sentencia = "SELECT id_conceptos as id_concepto, nombre, monto FROM conceptos ORDER BY nombre ASC";
             $stmt = $conex->prepare($sentencia);
             $stmt->execute();
             $datos = $stmt->fetchAll();
@@ -183,20 +176,24 @@ class ModeloCuentasCobrar extends ModeloBase
                 throw new Exception("La moneda seleccionada no existe.");
             }
 
-            $sentencia = "INSERT INTO cuentas_cobrar (`id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `fecha_emision`, `fecha_vencimiento`, `estatus`) 
-                              VALUES (:id_concepto, :id_atleta, :id_moneda, :monto, :fecha_emision, :fecha_vencimiento, :estatus)";
+            // Añadimos monto_pendiente a los campos y los valores de la sentencia SQL
+            $sentencia = "INSERT INTO cuentas_cobrar (`id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `monto_pendiente`, `fecha_emision`, `fecha_vencimiento`, `estatus`) 
+                        VALUES (:id_concepto, :id_atleta, :id_moneda, :monto, :monto_pendiente, :fecha_emision, :fecha_vencimiento, :estatus)";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id_concepto', $this->id_concepto);
             $stmt->bindParam(':id_atleta', $this->id_atleta);
             $stmt->bindParam(':id_moneda', $this->id_moneda);
-            $stmt->bindParam(':monto', $this->monto);
+            $stmt->bindParam(':monto', $this->monto); // Se guarda en monto_personalizado
+
+            // ASIGNACIÓN REQUERIDA: Al crear, el saldo inicial es el total
+            $stmt->bindParam(':monto_pendiente', $this->monto);
+
             $stmt->bindParam(':fecha_emision', $this->fecha_emision);
             $stmt->bindParam(':fecha_vencimiento', $this->fecha_vencimiento);
             $stmt->bindParam(':estatus', $this->estatus);
 
-            $stmt->execute(); // Ejecuta la inserción
-
+            $stmt->execute();
             // CRÍTICO: Si esta línea no se ejecuta o está antes del execute, los datos se borran al cerrar la conexión
             $conex->commit();
 
@@ -225,23 +222,24 @@ class ModeloCuentasCobrar extends ModeloBase
                 throw new Exception(INVALID_ID);
             }
 
-            // Mantenemos la consulta apuntando a tu columna real: monto_personalizado
+            // Agregamos fecha_emision y fecha_vencimiento al UPDATE
             $sentencia = "UPDATE cuentas_cobrar SET 
-                             id_concepto = :id_concepto, 
-                             id_atleta = :id_atleta, 
-                             id_moneda = :id_moneda,
-                             monto_personalizado = :monto, 
-                             estatus = :estatus 
-                             WHERE id_cobrar = :id_cobrar";
+                          id_concepto = :id_concepto, 
+                          id_atleta = :id_atleta, 
+                          id_moneda = :id_moneda,
+                          monto_personalizado = :monto, 
+                          fecha_emision = :fecha_emision,
+                          fecha_vencimiento = :fecha_vencimiento,
+                          estatus = :estatus 
+                          WHERE id_cobrar = :id_cobrar";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id_concepto', $this->id_concepto);
             $stmt->bindParam(':id_atleta', $this->id_atleta);
             $stmt->bindParam(':id_moneda', $this->id_moneda);
-
-            // CORRECCIÓN CRÍTICA: Usamos $this->monto que es la propiedad que se llenó en ProcesarDatos
             $stmt->bindParam(':monto', $this->monto);
-
+            $stmt->bindParam(':fecha_emision', $this->fecha_emision);
+            $stmt->bindParam(':fecha_vencimiento', $this->fecha_vencimiento);
             $stmt->bindParam(':estatus', $this->estatus);
             $stmt->bindParam(':id_cobrar', $this->id);
             $stmt->execute();

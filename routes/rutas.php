@@ -49,11 +49,18 @@ function manejarRuta($pagina): void
         'Bitacora' => 'Bitacora',
         'Atletas' => 'Atletas',
         'MetodosPago' => 'MetodosPago',
-        'Concepto' => 'Concepto',
+        'Conceptos' => 'Conceptos',
         'Monedas' => 'Monedas',
         'CuentasCobrar' => 'CuentasCobrar',
         'Notificaciones' => 'Notificaciones',
-];
+        'Pagos' => 'Pagos',
+        'Respaldo' => 'Respaldo',
+        'CategoriaEquipamiento'=>'CategoriaEquipamiento',
+        'Premios' => 'Premios',
+        'Reportes' => 'Reportes',
+        'Catalogos'=>'Catalogos',
+        'Equipos'=>'Equipos',
+    ];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {
         // Verificamos si el usuario está autenticado antes de permitir el acceso a otras páginas

@@ -2,25 +2,24 @@
 
 namespace App\modelo;
 
-use App\modelo\Conexion;
 use App\interface\InterBitacora;
 use Exception;
 use PDOException;
 
-class ModeloBitacora extends Conexion implements InterBitacora
+class ModeloBitacora extends ModeloBase implements InterBitacora
 {
-
-    private $conexion = null;
 
     public function __construct() {}
 
     public function RegistrarAccion($id_modulo, $accion, $id_usuario)
     {
+        $conex = null;
         try{
-            $this->conexion = self::conexSG();
+            $conex = $this->conexSG();
+            $conex->beginTransaction();
             $sql = 'INSERT INTO `bitacora`(`id_modulo`, `acciones`, `fecha`, `hora`, `idUsuario`) 
                             VALUES (:modulo,:accion,:fecha,:hora,:usuario)';
-            $stmt = $this->conexion->prepare($sql);
+            $stmt = $conex->prepare($sql);
             $parametros = [
                 ':modulo' => $id_modulo,
                 ':accion' => $accion,
@@ -30,10 +29,15 @@ class ModeloBitacora extends Conexion implements InterBitacora
             ];
             $stmt->execute($parametros);
 
+            $conex->commit();
+
         }catch(PDOException $e){
-            echo "Error al registrar la acción en la bitácora: " . $e->getMessage();
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            logs('Bitacora', $e->getMessage(), 'Modelo_RegistrarAccion');
         }finally{
-            $this->conexion = null;
+            $conex = null;
         }
     }
 

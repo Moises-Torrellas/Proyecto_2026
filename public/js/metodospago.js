@@ -20,9 +20,9 @@ function busqueda() {
 
 $(document).ready(function () {
     // 1. Cargar la tabla al iniciar
-    consultar();
+    inicializarPaginador();
 
-    Validacion("nombre",/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Permitido entre 2 y 30 caracteres", "proceso");
+    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Permitido entre 2 y 30 caracteres", "proceso");
 
 
     // 3. Lógica de los Botones Guardar/Modificar
@@ -149,48 +149,16 @@ function bloquear(id, b, elemento) {
     });
 }
 
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron métodos de pago registrados</p></div>');
-    } else {
-        datos.forEach(dato => {
-            let txtReferencia = dato.nec_referencia == 1  ? 'Sí' : 'No';
-            let icon = dato.estatus == 1 ? 'fi-sr-unlock' : 'fi-sr-lock';
-            let color = dato.estatus == 1 ? 'cbt_g' : 'cbt_a';
+    // Inyectamos directamente el string de tarjetas HTML que escupió el PHP
+    contenedor.html(htmlRecibido);
 
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Método de Pago</small>
-                                <span>${escapeHTML(dato.nombre)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>¿Requiere Ref?</small>
-                                <span>${txtReferencia}</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_metodos})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_metodos})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                <button class="btn_t ${color}" onclick="bloquear(${dato.id_metodos}, ${dato.estatus}, this)"><i class="fi ${icon}"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-
+    // Ejecutamos tus inicializadores estéticos y paginadores normales
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function escapeHTML(texto) {
@@ -221,13 +189,13 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return; // Cortamos el flujo de inmediato de forma exitosa
+            }
             try {
                 var lee = JSON.parse(respuesta);
-
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                }
-                else if (lee.accion == "incluir") {
+                if (lee.accion == "incluir") {
                     consultar();
                     limpia();
                     cerrarModal();

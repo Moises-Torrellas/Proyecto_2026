@@ -17,7 +17,7 @@ function busqueda() {
     }, 500);
 }
 $(document).ready(function () {
-    consultar();
+    inicializarPaginador();
 
     $("#cedula").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
@@ -47,7 +47,7 @@ $(document).ready(function () {
     // Validación de Teléfono
     Validacion("telefono", /^[0-9\-\b]*$/, /^[0-9]{4}[-]{1}[0-9]{7}$/, "El formato es 0400-0000000");
 
-    Validacion("nacionalidad", /^[VEP]$/, /^[VEP]$/, "Solo puede ingresar V, E o P");
+    Validacion("nacionalidad", /^[VEP]$/, /^[VEP]$/, "Solo puede ingresar V, E o P", "proceso");
 
     Validacion("direccion", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/, "Solo letras entre 3 y 150 caracteres", "proceso");
 
@@ -95,6 +95,8 @@ $(document).ready(function () {
         $("#titulo_modal").text("Registrar Representante");
         $('#direccion').closest('.colum').show();
         $('#telefono').closest('.colum').show();
+        $('#apellido').closest('.colum').show();
+        $('#nombre').closest('.colum').show();
         abrirModal();
     });
 
@@ -106,6 +108,9 @@ $(document).ready(function () {
         $("#titulo_modal").text("Generar Reporte");
         $('#telefono').closest('.colum').hide();
         $('#direccion').closest('.colum').hide();
+        $('#apellido').closest('.colum').hide();
+        $('#nombre').closest('.colum').hide();
+        $('#nacionalidad').val(null).trigger('change');
         abrirModal();
     });
 
@@ -211,6 +216,8 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Representante");
     $('#direccion').closest('.colum').show();
     $('#telefono').closest('.colum').show();
+    $('#apellido').closest('.colum').show();
+    $('#nombre').closest('.colum').show();
     $('#id').val(datos[0].id_representante);
     $('#cedula').val(datos[0].cedula);
     $('#nombre').val(datos[0].nombre);
@@ -220,62 +227,16 @@ function modificar(datos) {
 
     abrirModal();
 }
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
-    } else {
-        datos.forEach(dato => {
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Nombre y Apellido</small>
-                                <span>${dato.nombre} ${dato.apellido}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Cedula</small>
-                                <span>${dato.nacionalidad}. ${dato.cedula}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Telefono</small>
-                                <span>${dato.telefono}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Direccion</small>
-                                <span>${escapeHTML(dato.direccion)}</span>
-                            </div>
-                        </div>
+    // Inyectamos directamente el bloque HTML estructurado que procesó el servidor
+    contenedor.html(htmlRecibido);
 
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_representante})"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_representante})"><i class="fi fi-sr-trash-xmark"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-
+    // Reactivamos las librerías visuales y los comportamientos estéticos
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
-}
-
-function escapeHTML(texto) {
-    var caracteres = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return texto.replace(/[&<>"']/g, m => caracteres[m]);
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -293,11 +254,13 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } else if (lee.accion == "incluir") {
+                if (lee.accion == "incluir") {
                     consultar();
                     limpia();
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
@@ -312,6 +275,24 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
+                }
+                else if (lee.accion == "reporte") {
+                    // 1. Cerramos la alerta de espera de inmediato
+                    cerrarAlertaEspara();
+
+                    // 2. Cerramos el modal del formulario
+                    cerrarModal();
+
+                    // 3. Mostramos el mensaje de éxito (dura 2000ms en pantalla)
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
                 }
                 else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);

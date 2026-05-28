@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_TORNEOS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, $bitacora);
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloTorneos';
@@ -22,8 +22,9 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloTorneos();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudTorneos($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitudTorneos($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
+    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
     cargarVista($pagina);
 }
 
@@ -41,7 +42,6 @@ function manejarSolicitudTorneos($obj, $id_modulo, $bitacoraObj, array $permisos
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
-        // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
                 consultar($obj);
@@ -62,12 +62,11 @@ function manejarSolicitudTorneos($obj, $id_modulo, $bitacoraObj, array $permisos
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar torneos.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
-
             default:
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Torneos', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -80,6 +79,11 @@ function consultar($obj): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
+    
+    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+        $respuesta['mensaje'] = 'Error al listar los torneos.';
+    }
+    
     echo json_encode($respuesta);
 }
 
@@ -97,7 +101,7 @@ function buscar($obj): void
         $resultado = $obj->procesarDatos($datos);
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('Torneos', $e->getMessage(), 'Controlador');
+        logs('Torneos', $e->getMessage(), 'Controlador_Buscar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -110,12 +114,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             'fecha_inicio' => ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Fecha de inicio inválida.'],
             'fecha_fin'    => ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Fecha de fin inválida.'],
             'ubicacion'    => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,#-]{5,150}$/u', 'mensaje' => 'Ubicación inválida.'],
-            'estatus'      => ['regla' => '/^[0-9]$/', 'mensaje' => 'Estatus inválido.'] // Asumiendo que es un número (Ej: 0 Inactivo, 1 Activo)
+            'estatus'      => ['regla' => '/^[0-9]$/', 'mensaje' => 'Estatus inválido.']
         ];
 
         validar_datos($validaciones);
 
-        // Validación lógica adicional: la fecha de inicio no puede ser mayor a la fecha de fin
         if (strtotime($_POST['fecha_inicio']) > strtotime($_POST['fecha_fin'])) {
             throw new Exception('La fecha de inicio no puede ser mayor que la fecha de fin.');
         }
@@ -125,19 +128,26 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             'fecha_inicio' => $_POST['fecha_inicio'],
             'fecha_fin'    => $_POST['fecha_fin'],
             'ubicacion'    => $_POST['ubicacion'],
-            'estatus'      => $_POST['estatus']
-        ];  
-        $datos['accion'] = 'incluir';
+            'estatus'      => $_POST['estatus'],
+            'accion'       => 'incluir'
+        ];
 
         $resultado = $obj->procesarDatos($datos);
 
-        if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Registró el torneo: " . $_POST['nombre']);
+            $resultado = ['accion' => 'incluir', 'mensaje' => 'Torneo registrado exitosamente.'];
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            // Mapeo de errores específicos del modelo
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                'Ya existe un torneo registrado con este nombre.' => $resultado['codigo'],
+                default => 'Ocurrió un error inesperado en el registro del torneo.'
+            };
         }
 
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('Torneos', $e->getMessage(), 'Controlador');
+        logs('Torneos', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -166,20 +176,25 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'fecha_inicio' => $_POST['fecha_inicio'],
             'fecha_fin'    => $_POST['fecha_fin'],
             'ubicacion'    => $_POST['ubicacion'],
-            'estatus'      => $_POST['estatus']
+            'estatus'      => $_POST['estatus'],
+            'accion'       => 'modificar'
         ];
-        $datos['accion'] = 'modificar';
 
         $resultado = $obj->procesarDatos($datos);
 
-        // CORRECCIÓN: Aquí decía === 'incluir', se cambió a 'modificar'
-        if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') {
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Modificó el torneo: " . $_POST['nombre']);
+            $resultado = ['accion' => 'modificar', 'mensaje' => 'Torneo modificado exitosamente.'];
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                'Ya existe otro torneo registrado con este nombre.' => $resultado['codigo'],
+                default => 'Ocurrió un error inesperado al modificar el torneo.'
+            };
         }
 
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('Torneos', $e->getMessage(), 'Controlador');
+        logs('Torneos', $e->getMessage(), 'Controlador_Modificar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -196,12 +211,21 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         ];
 
         $resultado = $obj->procesarDatos($datos);
-        if (isset($resultado['accion']) && $resultado['accion'] === 'eliminar') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el torneo ID: " . $_POST['id']);
+        
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el torneo con ID: " . $_POST['id']);
+            $resultado = ['accion' => 'eliminar', 'mensaje' => 'Torneo eliminado exitosamente.'];
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                'El torneo no existe.' => $resultado['codigo'],
+                'No se puede eliminar: el torneo tiene equipos o atletas asociados.' => $resultado['codigo'],
+                default => 'Ocurrió un error inesperado al eliminar el torneo.'
+            };
         }
+        
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('Torneos', $e->getMessage(), 'Controlador');
+        logs('Torneos', $e->getMessage(), 'Controlador_Eliminar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

@@ -51,7 +51,7 @@ function manejarSolicitudRecuperacion($obj, $id_modulo, $bitacoraObj): void
                 throw new Exception('Acción no reconocida en el sistema de recuperación.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Recuperación', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

@@ -1,39 +1,40 @@
 <?php
 
 use App\modelo\ModeloPosiciones;
+use App\servicios\GenerarReporte;
 
-// 1. Cargamos las funciones base
+//Cargamos las funciones base para los controladores
 require_once __DIR__ . '/Base.php';
 
-// 2. Configuración del módulo (Corregido al ID de Representantes)
-$id_modulo = _MD_REPRESENTANTES_;
+// Configuración del id del módulo
+$id_modulo = _MD_POSICIONES_;
 
-// 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+//Procesar permisos (Retorna el array de permisos)
+$permisos = procesarPermisos($id_modulo, $bitacora);
 
-// 4. Lógica de despacho (Router interno)
+//Comprobar si el modelo existe
 $nombreClaseModelo = 'App\modelo\ModeloPosiciones';
-
 if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
     exit();
 }
-
+// Instanciamos la clase del objeto
 $objModelo = new ModeloPosiciones();
-
+// comprobamos si la solicitud es por medio de ajax
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudRepresentantes($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitud($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-    cargarVista($pagina);
+    registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
-
-/**
- * --- FUNCIONES DEL CONTROLADOR ---
- */
-
-function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $permisos): void
+// Funcion para manejar las peticiones recibe como parametros el objeto del modelo, el id del modulo, la bitacora y el array de permisos
+function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
     try {
+        //comprobamos el token de la sesion
         $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
             throw new Exception('Error de seguridad: Token inválido o expirado.');
@@ -44,7 +45,8 @@ function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $p
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar posiciones.');
+                consultar($obj, $permisos);
                 break;
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar posiciones.');
@@ -62,21 +64,29 @@ function manejarSolicitudRepresentantes($obj, $id_modulo, $bitacoraObj, array $p
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar posiciones.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar':
+                if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar un reporte de posiciones.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
 
             default:
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Posiciones', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    echo json_encode($respuesta);
+
+    $registro = $respuesta['datos'] ?? [];
+    $solo_lista = true;
+
+    include(__DIR__ . '/../vista/Posiciones.php');
 }
 
 function buscar($obj): void
@@ -127,7 +137,6 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         }
 
         echo json_encode($resultado);
-
     } catch (Exception $e) {
         logs('Posiciones', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
@@ -189,6 +198,42 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Posiciones', $e->getMessage(), 'Controlador_Modificar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj)
+{
+    try {
+        $validacionesReporte = [];
+        $datosFiltro = ['accion' => 'generar'];
+
+        if (!empty($_POST['nombre'])) {
+            $validacionesReporte['nombre'] =['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'];
+            $datosFiltro['nombre'] = $_POST['nombre'];
+        }
+        if (!empty($_POST['abreviatura'])) {
+            $validacionesReporte['abreviatura'] =  ['regla' => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida.'];
+            $datosFiltro['abreviatura'] = $_POST['abreviatura'];
+        }
+
+        validar_datos($validacionesReporte);
+
+        $respuesta =  $obj->procesarDatos($datosFiltro);
+        $datos = $respuesta['datos'];
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron posiciones para hacer el reporte.']);
+            exit();
+        }
+        $nombreVista = 'R_Posiciones';
+        $objG = new GenerarReporte();
+        $pdf = $objG->generarPDF($nombreVista, $datos, 'Posiciones');
+        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de posiciones.");
+        }
+        echo json_encode($pdf);
+    } catch (Exception $e) {
+        logs('Posiciones', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

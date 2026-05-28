@@ -17,7 +17,6 @@ class ModeloTorneos extends ModeloBase
     public function __construct()
     {
         parent::__construct();
-        // Agregamos 'nombre' al whitelist para evitar el error al Modificar
         $this->campoWhitelist = [
             'id' => 'id_torneo', 
             'nombre' => 'nombre'
@@ -35,7 +34,6 @@ class ModeloTorneos extends ModeloBase
         $this->nombre = mb_strtoupper(trim($datos['nombre'] ?? ''), "UTF-8");
         $this->fecha_inicio = $datos['fecha_inicio'] ?? null;
         $this->fecha_fin = $datos['fecha_fin'] ?? null;
-        // Convertimos la ubicación a formato Título o Mayúsculas para mantener orden
         $this->ubicacion = mb_convert_case(trim($datos['ubicacion'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->estatus = $datos['estatus'] ?? null; 
         
@@ -59,20 +57,17 @@ class ModeloTorneos extends ModeloBase
 
             $sentencia = "SELECT * FROM torneos WHERE 1=1";
 
-            // BUSCADOR GENERAL (Por nombre de torneo)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
                 $sentencia .= " AND nombre LIKE :f1";
                 $params[':f1'] = $p;
             }
 
-            // FILTROS ESPECÍFICOS
             if (!empty($this->nombre)) {    
                 $sentencia .= " AND nombre LIKE :nombre";
                 $params[':nombre'] = trim($this->nombre) . "%";
             }
 
-            // ORDEN 
             $sentencia .= " ORDER BY id_torneo ASC";
 
             $stmt = $conex->prepare($sentencia);
@@ -82,7 +77,8 @@ class ModeloTorneos extends ModeloBase
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Torneos', $e->getMessage(), 'Modelo_Consultar');
-            return array('accion' => 'error', 'mensaje' => 'Error al listar: ' . $e->getMessage());
+            // Como en Representantes, en consultar el error va sin mensaje
+            return array('accion' => 'error'); 
         } finally {
             $conex = NULL;
         }
@@ -91,11 +87,13 @@ class ModeloTorneos extends ModeloBase
     private function Incluir(): array
     {
         try {
+            $conex = $this->conex();
+            
+            // Usamos Exception en lugar de un return directo
             if ($this->verificarExistencia('nombre', $this->nombre, 'torneos', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'Ya existe un torneo registrado con este nombre.');
+                throw new Exception('Ya existe un torneo registrado con este nombre.');
             }
 
-            $conex = $this->conex();
             $sentencia = "INSERT INTO torneos (`nombre`, `fecha_inicio`, `fecha_fin`, `ubicacion`, `estatus`) VALUES (:nombre, :fecha_inicio, :fecha_fin, :ubicacion, :estatus)";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
@@ -105,10 +103,12 @@ class ModeloTorneos extends ModeloBase
             $stmt->bindParam(':estatus', $this->estatus);
             $stmt->execute();
 
-            return array('accion' => 'incluir', 'mensaje' => 'Torneo registrado exitosamente.');
+            // Retorno estándar
+            return array('accion' => 'exito');
         } catch (Exception $e) {
             logs('Torneos', $e->getMessage(), 'Modelo');
-            return array('accion' => 'error', 'mensaje' => 'Error al incluir: ' . $e->getMessage());
+            // Capturamos la excepción y la mandamos en el formato 'codigo'
+            return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
@@ -117,12 +117,14 @@ class ModeloTorneos extends ModeloBase
     private function Modificar(): array
     {
         try {
+            $conex = $this->conex();
+            
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'torneos', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'torneos', NULL)) {
-                    return array('accion' => 'error', 'mensaje' => 'Ya existe otro torneo registrado con este nombre.');
+                    throw new Exception('Ya existe otro torneo registrado con este nombre.');
                 }
             }
-            $conex = $this->conex();
+            
             $sentencia = "UPDATE torneos SET 
             nombre = :nombre, 
             fecha_inicio = :fecha_inicio, 
@@ -140,10 +142,10 @@ class ModeloTorneos extends ModeloBase
             $stmt->bindParam(':id_torneo', $this->id);
             $stmt->execute();
 
-            return array('accion' => 'modificar', 'mensaje' => 'Torneo modificado exitosamente.');
+            return array('accion' => 'exito');
         } catch (Exception $e) {
-            logs('Torneos', $e->getMessage(), 'Modelo');
-            return array('accion' => 'error', 'mensaje' => 'Error al modificar: ' . $e->getMessage());
+            logs('Torneos', $e->getMessage(), 'Modelo_Modificar');
+            return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
@@ -162,7 +164,7 @@ class ModeloTorneos extends ModeloBase
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Torneos', $e->getMessage(), 'Modelo');
-            return array('accion' => 'error', 'mensaje' => 'Error al buscar: ' . $e->getMessage());
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
@@ -171,25 +173,25 @@ class ModeloTorneos extends ModeloBase
     private function Eliminar(): array
     {
         try {
+            $conex = $this->conex();
+
             if (!$this->verificarExistencia('id', $this->id, 'torneos', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'El torneo no existe.');
+                throw new Exception('El torneo no existe.');
             }
             
-            // Validación de dependencias: Evita borrar un torneo si ya tiene equipos o atletas
             if ($this->verificarExistencia('id', $this->id, 'equipos', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'No se puede eliminar: el torneo tiene equipos o atletas asociados.');
+                throw new Exception('No se puede eliminar: el torneo tiene equipos o atletas asociados.');
             }
 
-            $conex = $this->conex();
             $sentencia = "DELETE FROM torneos WHERE id_torneo = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
             
-            return array('accion' => 'eliminar', 'mensaje' => 'Torneo eliminado exitosamente.');
+            return array('accion' => 'exito');
         } catch (Exception $e) {
-            logs('Torneos', $e->getMessage(), 'Modelo');
-            return array('accion' => 'error', 'mensaje' => 'Hubo un error al eliminar el torneo.');
+            logs('Torneos', $e->getMessage(), 'Modelo_Eliminar');
+            return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
         }

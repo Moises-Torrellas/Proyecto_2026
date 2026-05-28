@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_CUENTAS_;   
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, $bitacora);
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloCuentasCobrar';
@@ -22,9 +22,13 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloCuentasCobrar();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudCuentasCobrar($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitudCuentasCobrar($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-    cargarVista($pagina);
+    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables =['registro' => $registro, 'permisos' => $permisos ];
+    cargarVista($pagina, $variables);
 }
 
 /**
@@ -44,15 +48,19 @@ function manejarSolicitudCuentasCobrar($obj, $id_modulo, $bitacoraObj, array $pe
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
+                consultar($obj, $permisos);
                 break;
             case 'consultarA':
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
                 consultarA($obj);
                 break;
             case 'consultarCo':
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
                 consultarCo($obj);
                 break;
-            case 'consultarM': // NUEVO: Para cargar las monedas en el formulario
+            case 'consultarM':
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
                 consultarM($obj);
                 break;
             case 'buscar':
@@ -85,14 +93,15 @@ function manejarSolicitudCuentasCobrar($obj, $id_modulo, $bitacoraObj, array $pe
  * --- LÓGICA DE ACCIONES ---
  */
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] ='Error al listar las cuentas por cobrar';
-    }
-    echo json_encode($respuesta);
+    
+    $registro = $respuesta['datos'] ?? []; 
+    $solo_lista = true;
+
+    include (__DIR__.'/../vista/CuentasCobrar.php');
 }
 
 function consultarA($obj): void
@@ -137,23 +146,28 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $reglaMonto = '/^[0-9]+(\.[0-9]{1,2})?$/';
+        $reglaFecha = '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/';
 
         $validaciones = [
-            'id_concepto' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
-            'id_atleta'   => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
-            'id_moneda'   => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'], // AGREGADO
-            'monto_total' => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido. Use formato numérico (ej. 10.50).']
+            'id_concepto'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
+            'id_atleta'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
+            'id_moneda'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'],
+            'monto_total'       => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido.'],
+            'fecha_emision'     => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de emisión inválida.'],
+            'fecha_vencimiento' => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de vencimiento inválida.']
         ];
 
         validar_datos($validaciones);
 
         $datos = [
-            'id_concepto' => $_POST['id_concepto'],
-            'id_atleta'   => $_POST['id_atleta'],
-            'id_moneda'   => $_POST['id_moneda'], // AGREGADO
-            'monto_total' => $_POST['monto_total'],
-            'estatus'     => 'Pendiente', 
-            'accion'      => 'incluir'
+            'id_concepto'       => $_POST['id_concepto'],
+            'id_atleta'         => $_POST['id_atleta'],
+            'id_moneda'         => $_POST['id_moneda'],
+            'monto_total'       => $_POST['monto_total'],
+            'fecha_emision'     => $_POST['fecha_emision'],
+            'fecha_vencimiento' => $_POST['fecha_vencimiento'],
+            'estatus'           => 'Pendiente', 
+            'accion'            => 'incluir'
         ];
 
         $resultado = $obj->procesarDatos($datos);
@@ -166,7 +180,6 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         }
 
         echo json_encode($resultado);
-
     } catch (Exception $e) {
         logs('CuentasCobrar', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
@@ -177,26 +190,31 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $reglaMonto = '/^[0-9]+(\.[0-9]{1,2})?$/';
+        $reglaFecha = '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/';
 
         $validaciones = [
-             'id'              => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-             'id_concepto'     => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
-             'id_atleta'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
-             'id_moneda'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'], // AGREGADO
-             'monto_total'     => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido.'],
-             'estatus'         => ['regla' => '/^.+$/', 'mensaje' => 'El campo estatus es obligatorio.']
+             'id'                => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
+             'id_concepto'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
+             'id_atleta'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
+             'id_moneda'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'],
+             'monto_total'       => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido.'],
+             'fecha_emision'     => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de emisión inválida.'],
+             'fecha_vencimiento' => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de vencimiento inválida.'],
+             'estatus'           => ['regla' => '/^.+$/', 'mensaje' => 'El campo estatus es obligatorio.']
         ];
 
         validar_datos($validaciones);
 
         $datos = [
-            'id'              => $_POST['id'],
-            'id_concepto'     => $_POST['id_concepto'],
-            'id_atleta'       => $_POST['id_atleta'],
-            'id_moneda'       => $_POST['id_moneda'], // AGREGADO
-            'monto_total'     => $_POST['monto_total'],
-            'estatus'         => $_POST['estatus'],
-            'accion'          => 'modificar'
+            'id'                => $_POST['id'],
+            'id_concepto'       => $_POST['id_concepto'],
+            'id_atleta'         => $_POST['id_atleta'],
+            'id_moneda'         => $_POST['id_moneda'],
+            'monto_total'       => $_POST['monto_total'],
+            'fecha_emision'     => $_POST['fecha_emision'],
+            'fecha_vencimiento' => $_POST['fecha_vencimiento'],
+            'estatus'           => $_POST['estatus'],
+            'accion'            => 'modificar'
         ];
 
         $resultado = $obj->procesarDatos($datos);

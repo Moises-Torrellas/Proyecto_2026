@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <?php include('complementos/head.php'); ?>
-    <title>Conceptos</title>
+    <title>Categorías</title>
 </head>
 
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
@@ -17,15 +17,14 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina" id="titulo">Conceptos de Cuentas</h2>
+                            <h2 class="titulo_pagina" id="titulo">Categoría de Equipamientos</h2>
                         </div>
                         <div class="contenedor_busqueda">
                             <input type="text" placeholder="Buscar..." autocomplete="off" id="busqueda">
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <button class="btn btn_azul" id="incluir">Nuevo Concepto</button>
-
+                            <button class="btn btn_azul" id="incluir">Nueva Categoría Equipamiento</button>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
@@ -39,14 +38,15 @@
         </div>
     </section>
     <section class="contenedor_modal" id="contenedor_modal">
-        <div class="modal ocultar" id="modal">
+        <div class="modal modal_grande ocultar" id="modal">
             <div class="cabecera_modal">
-                <h2 class="titulo_modal" id="titulo_modal">Registrar Concepto</h2>
+                <h2 class="titulo_modal" id="titulo_modal"></h2>
                 <a type="button" class="cerrar_modal" id="cerrar_modal">&times;</a>
             </div>
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
+                    
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
@@ -55,17 +55,21 @@
                                 <span class="mensaje" id="nombre_spam"></span>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="monto" name="monto">
-                                <label for="monto" class="titulo_formulario">Monto</label>
-                                <span class="mensaje" id="monto_spam"></span>
+                                <input type="text" class="formulario" id="descripcion" name="descripcion">
+                                <label for="descripcion" class="titulo_formulario">Descripcion</label>
+                                <span class="mensaje" id="descripcion_spam"></span>
                             </div>
                         </div>
                     </div>
+
                     <div class="row">
                         <div class="colum">
-                            <button type="button" class="btn btn_azul" id="proceso">Registra Concepto</button>
+                            <button type="button" class="btn btn_azul" id="proceso"></button>
                             <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
                         </div>
                     </div>
@@ -74,7 +78,7 @@
         </div>
     </section>
     <script src="js/main.js"></script>
-    <script src="js/Concepto.js"></script>
+    <script src="js/Categoriaequipamiento.js"></script>
 </body>
 
 </html>

@@ -5,6 +5,8 @@ use App\modelo\ModeloRepresentantes;
 use App\modelo\ModeloPosiciones;
 use App\modelo\ModeloCategorias;
 
+use App\servicios\GenerarReporte;
+
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
@@ -12,7 +14,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_ATLETAS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, $bitacora);
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloAtletas';
@@ -27,8 +29,13 @@ $objModelo = new ModeloAtletas();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables =['registro' => $registro, 'permisos' => $permisos ];
+    cargarVista($pagina, $variables);
 }
+
 
 function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
@@ -43,16 +50,12 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar atletas.');
+                consultar($obj, $permisos);
                 break;
-            case 'consultarR':
-                consultarRepresentantes();
-                break;
-            case 'consultarP':
-                consultarPosiciones();
-                break;
-            case 'consultarC':
-                consultarCategorias();
+            case 'MultiConsulta':
+                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar atletas.');
+                MultiConsulta();
                 break;
             case 'incluir':
                 if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar atletas.');
@@ -70,11 +73,15 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (!$permisos['eliminar']) throw new Exception('No tienes permisos para retirar Atletas.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar':
+                if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar un reporte de Atletas.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Atletas', $e->getMessage(), 'Controlador_manejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -83,60 +90,37 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
  * --- LÓGICA DE ACCIONES ---
  */
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] = 'Error al listar los atletas';
-    }
-    echo json_encode($respuesta);
+    
+    $registro = $respuesta['datos'] ?? []; 
+    $solo_lista = true;
+
+    include (__DIR__.'/../vista/Atletas.php');
 }
-function consultarRepresentantes(): void
+function MultiConsulta(): void 
 {
     try {
         $modeloRep = new ModeloRepresentantes();
-        $respuesta = $modeloRep->Consultar();
-        $respuesta['accion'] = 'consultarR'; // Mantenemos tu estándar de respuesta
-
-        if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-            $respuesta['mensaje'] = 'Error al listar los representantes';
-        }
-        echo json_encode($respuesta);
-    } catch (Exception $e) {
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
-    }
-}
-
-function consultarCategorias(): void
-{
-    try {
-        $modeloCat = new ModeloCategorias();
-        $respuesta = $modeloCat->Consultar();
-        $respuesta['accion'] = 'consultarC';
-
-        if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-            $respuesta['mensaje'] = 'Error al listar las categorías';
-        }
-        echo json_encode($respuesta);
-    } catch (Exception $e) {
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
-    }
-}
-
-function consultarPosiciones(): void
-{
-    try {
         $modeloPos = new ModeloPosiciones();
-        $respuesta = $modeloPos->Consultar();
-        $respuesta['accion'] = 'consultarP';
+        $modeloCat = new ModeloCategorias();
 
-        if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-            $respuesta['mensaje'] = 'Error al listar las posiciones';
-        }
-        echo json_encode($respuesta);
+        $repRespuesta = $modeloRep->Consultar();
+        $posRespuesta = $modeloPos->Consultar();
+        $catRespuesta = $modeloCat->Consultar();
+
+        // Armamos el JSON con la estructura exacta que pide el JavaScript
+        echo json_encode([
+            'accion'         => 'MultiConsulta',
+            'representantes' => $repRespuesta['datos'] ?? [],
+            'posiciones'     => $posRespuesta['datos'] ?? [],
+            'categorias'     => $catRespuesta['datos'] ?? []
+        ]);
     } catch (Exception $e) {
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+        logs('Atletas', $e->getMessage(), 'Controlador_MultiConsulta');
+        echo json_encode(['accion' => 'error', 'mensaje' => 'Error al inicializar los catálogos del módulo.']);
     }
 }
 function buscar($obj): void
@@ -355,6 +339,65 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 
     } catch (Exception $e) {
         logs('Atletas', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validacionesReporte = [];
+        $datosFiltro = ['accion' => 'generar'];
+
+        if (!empty($_POST['edad'])) {
+            $validacionesReporte['edad'] = ['regla' => '/^[0-9]{1,2}$/', 'mensaje' => 'Edad inválida.'];
+            $datosFiltro['edad'] = $_POST['edad'];
+        }
+        if (!empty($_POST['nombre'])) {
+            $validacionesReporte['nombre'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,60}$/', 'mensaje' => 'Nombres inválido.'];
+            $datosFiltro['nombre'] = $_POST['nombre'];
+        }
+        if (!empty($_POST['apellido'])) {
+            $validacionesReporte['apellido'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,60}$/', 'mensaje' => 'Apellido inválido.'];
+            $datosFiltro['apellido'] = $_POST['apellido'];
+        }
+        if (!empty($_POST['categoria'])) {
+            $validacionesReporte['categoria'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'categoria inválida.'];
+            $datosFiltro['categoria'] = $_POST['categoria'];
+        }
+        if (!empty($_POST['posicion'])) {
+            $validacionesReporte['posicion'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'posicion inválida.'];
+            $datosFiltro['posicion'] = $_POST['posicion'];
+        }
+        if (!empty($_POST['genero']) && $_POST['genero'] != 'T') {
+            $validacionesReporte['genero'] = ['regla' => '/^[HM]$/', 'mensaje' => 'genero inválido.'];
+            $datosFiltro['genero'] = $_POST['genero'];
+        }
+        if (!empty($_POST['estatus']) && $_POST['estatus'] != 'T') {
+            $validacionesReporte['estatus'] = ['regla' => '/^[1-2]$/', 'mensaje' => 'estatus inválido.'];
+            $datosFiltro['estatus'] = $_POST['estatus'];
+        }
+        if (!empty($_POST['doc_i'])) {
+            $validacionesReporte['doc_i'] = ['regla' => '/^[0-9]{1,8}$/', 'mensaje' => 'documento de identidad inválido.'];
+            $datosFiltro['doc_identidad'] = $_POST['doc_i'];
+        }
+
+        validar_datos($validacionesReporte);
+
+        $respuesta =  $obj->procesarDatos($datosFiltro);
+        $datos = $respuesta['datos'];
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron atletas para hacer el reporte.']);
+            exit();
+        }
+        $nombreVista = 'R_Atletas';
+        $objG = new GenerarReporte();
+        $pdf = $objG->generarPDF($nombreVista, $datos, 'Atletas');
+        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de atletas.");
+        }
+        echo json_encode($pdf);
+    } catch (Exception $e) {
+        logs('Atletas', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

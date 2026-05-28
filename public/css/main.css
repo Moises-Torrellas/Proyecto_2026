@@ -974,6 +974,14 @@ option {
     border-bottom: 4px solid #ddd;
 }
 
+.cards-reportes{
+    height: 150px;
+}
+.card-reportes {
+    gap: 20px;
+    justify-content: center;
+}
+
 .info_card {
     display: flex;
     justify-content: start;

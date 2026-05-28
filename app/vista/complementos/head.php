@@ -13,6 +13,7 @@
 <script src="libraries/js/popper.min.js"></script>
 <script src="libraries/js/tippy.min.js"></script>
 <script src="libraries/js/chart.min.js"></script>
+<script src="libraries/js/plugin-chart.min.js"></script>
 <script src="libraries/js/cropper.min.js"></script>
 <script src="libraries/js/fullCalendar.min.js"></script>
 

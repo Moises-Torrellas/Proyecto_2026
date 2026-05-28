@@ -1,7 +1,6 @@
 <?php
 
 use App\modelo\ModeloUsuarios;
-use App\servicios\ReporteUsuario;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -10,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_USUARIOS_;
 
 // 3. Procesar permisos (esto llena la variable global $permisosGenerales)
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, $bitacora);
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloUsuarios';
@@ -23,9 +22,11 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloUsuarios();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudUsuarios($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitudUsuarios($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-    cargarVista($pagina, $permisos);
+    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
+    $variables = ['permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
 
 function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): void
@@ -75,17 +76,11 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 bloquearUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
 
-            case 'generar':
-                if (!$permisos['reporte']) throw new Exception('No tienes permisos para reportes.');
-                $reporte = new ReporteUsuario();
-                generarReporteUsuarios($obj, $reporte);
-                break;
-
             default:
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        logs('Usuarios', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -307,7 +302,7 @@ function bloquearUsuario($obj, $id_modulo, $bitacoraObj): void
     }
 }
 
-function generarReporteUsuarios($obj, $reporte): void
+/* function generarReporteUsuarios($obj, $reporte): void
 {
     $validacionesReporte = [];
     $datosFiltro = ['accion' => 'reporte'];
@@ -343,3 +338,4 @@ function generarReporteUsuarios($obj, $reporte): void
         throw new Exception('No se encontraron registros para el reporte.');
     }
 }
+ */

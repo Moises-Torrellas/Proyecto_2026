@@ -19,9 +19,7 @@ function busqueda() {
 }
 
 $(document).ready(function () {
-    // 1. Cargar la tabla al iniciar
-    consultar();
-
+    inicializarPaginador();
     // 2. Filtros de escritura (evitar letras en las edades)
     $("#edad_min, #edad_max").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, ''); // Solo números
@@ -40,7 +38,7 @@ $(document).ready(function () {
     // 4. Lógica de los Botones Guardar/Modificar
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
-        
+
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
                 confirmar('¿Está seguro que quiere registrar esta categoría?', function (confirmado) {
@@ -143,7 +141,7 @@ function modificar(datos) {
     $("#proceso").data("accion", "modificar");
     $("#proceso").text("Modificar Categoría");
     $("#titulo_modal").text("Modificar Categoría");
-    
+
     // Llenamos el formulario con los datos recibidos de la BD
     $('#id').val(datos[0].id_categorias);
     $('#nombre').val(datos[0].nombre);
@@ -153,58 +151,14 @@ function modificar(datos) {
     abrirModal();
 }
 
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron categorías registradas</p></div>');
-    } else {
-        datos.forEach(dato => {
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Categoría</small>
-                                <span style="font-weight: bold; color: #2ec135;">${escapeHTML(dato.nombre)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Edad Mínima</small>
-                                <span>${dato.edad_min} años</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Edad Máxima</small>
-                                <span>${dato.edad_max} años</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_categorias})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_categorias})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
+    contenedor.html(htmlRecibido);
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
-}
-
-function escapeHTML(texto) {
-    var caracteres = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return texto.replace(/[&<>"']/g, m => caracteres[m]);
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -223,28 +177,28 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
-                
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } 
-                else if (lee.accion == "incluir") {
+                if (lee.accion == "incluir") {
                     consultar();
                     limpia();
                     cerrarModal(); // Agregado para que se cierre al guardar
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
-                } 
+                }
                 else if (lee.accion == "eliminar") {
                     consultar();
                     muestraMensaje("success", 2000, "Eliminación Exitosa", lee.mensaje);
-                } 
+                }
                 else if (lee.accion == "modificar") {
                     consultar();
                     limpia();
                     cerrarModal();
                     muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
-                } 
+                }
                 else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }

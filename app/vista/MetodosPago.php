@@ -1,3 +1,45 @@
+<?php if (isset($solo_lista) && $solo_lista === true):
+    if (empty($registro)): ?>
+        <div class="listado_vacio">
+            <p>No se encontraron registros</p>
+        </div>
+        <?php else:
+        foreach ($registro as $dato):
+            $txtReferencia = ($dato['nec_referencia'] == 1)  ? 'Sí' : 'No';
+            $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
+            $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a'; ?>
+            <div class="listado_contenedor_grupal">
+                <div class="listado_item" onclick="toggleDetalles(this)">
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Método de Pago</small>
+                            <span><?= htmlspecialchars($dato['nombre']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>¿Requiere Ref?</small>
+                            <span><?= $txtReferencia ?></span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                            <?php if ($permisos['modificar']): ?>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_metodos'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                            <?php endif; ?>
+                            <?php if ($permisos['eliminar']): ?>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_metodos'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                            <?php endif; ?>
+                            <?php if ($permisos['otros']): ?>
+                                <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_metodos'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    <?php exit(); ?>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -24,13 +66,55 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
+                            <?php if($permisos['registrar']):?>
                             <button class="btn btn_azul" id="incluir">Nuevo Metodo de Pago</button>
-
+                            <?php endif; ?>
+                            <?php if ($permisos['reporte']): ?>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
+                            <?php if (empty($registro)): ?>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros</p>
+                                </div>
+                                <?php else:
+                                foreach ($registro as $dato): 
+                                    $txtReferencia = ($dato['nec_referencia'] == 1)  ? 'Sí' : 'No';
+                                    $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
+                                    $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a'; ?>
+                                    <div class="listado_contenedor_grupal">
+                                        <div class="listado_item" onclick="toggleDetalles(this)">
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo">
+                                                    <small>Método de Pago</small>
+                                                    <span><?= htmlspecialchars($dato['nombre']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>¿Requiere Ref?</small>
+                                                    <span><?= $txtReferencia ?></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_acciones">
+                                                <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                                    <?php if ($permisos['modificar']): ?>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_metodos'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if ($permisos['eliminar']): ?>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_metodos'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if ($permisos['otros']): ?>
+                                                        <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_metodos'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
@@ -69,17 +153,17 @@
                             </div>
                         </div>
                     </div>
-                        
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
-                        </div>
-                    </div>
-                    
-                </form>
+
             </div>
+            <div class="row">
+                <div class="colum">
+                    <button type="button" class="btn btn_azul" id="proceso"></button>
+                    <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+                </div>
+            </div>
+
+            </form>
+        </div>
         </div>
     </section>
     <script src="js/main.js"></script>

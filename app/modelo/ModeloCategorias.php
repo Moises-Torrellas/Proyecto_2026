@@ -4,18 +4,19 @@ namespace App\modelo;
 
 use App\modelo\ModeloBase;
 use Exception;
-use SensitiveParameter;
 
 class ModeloCategorias extends ModeloBase
 {
     private $id;
     private $nombre;
-    private $edad_minima;
-    private $edad_maxima;
+    private $edad_min;
+    private $edad_max;
+
 
     public function __construct()
     {
         parent::__construct();
+        // Definimos el diccionario de campos para las validaciones del ModeloBase
         $this->campoWhitelist = [
             'id' => 'id_categorias',
             'nombre' => 'nombre'
@@ -28,17 +29,21 @@ class ModeloCategorias extends ModeloBase
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
+        
         $this->id = $datos['id'] ?? null;
         $this->nombre = mb_strtoupper(trim($datos['nombre'] ?? ''), "UTF-8");
-        $this->edad_minima = $datos['edad_minima'] ?? null;
-        $this->edad_maxima = $datos['edad_maxima'] ?? null;
+        $this->edad_min = $datos['edad_minima'] ?? null;
+        $this->edad_max = $datos['edad_maxima'] ?? null;
+        
         $accion = $datos['accion'] ?? null;
+        
         return match ($accion) {
             'incluir'   => $this->Incluir(),
             'eliminar'  => $this->Eliminar(),
-            'buscar' => $this->Buscar(),
+            'buscar'    => $this->Buscar(),
             'modificar' => $this->Modificar(),
-            default => throw new Exception('La accion no es valida')
+            'consultar' => $this->Consultar(), 
+            default => throw new Exception('La acción no es válida')
         };
     }
 
@@ -70,16 +75,13 @@ class ModeloCategorias extends ModeloBase
             $sentencia .= " ORDER BY id_categorias ASC";
 
             $stmt = $conex->prepare($sentencia);
-
-            // IMPORTANTE: Pasar los parámetros al execute
             $stmt->execute($params);
-
             $datos = $stmt->fetchAll();
 
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Categorias', $e->getMessage(), 'Modelo_Consultar');
-            return array('accion' => 'error', 'mensaje' => 'Error al listar: ' . $e->getMessage());
+            return array('accion' => 'error'); 
         } finally {
             $conex = NULL;
         }
@@ -88,52 +90,58 @@ class ModeloCategorias extends ModeloBase
     private function Incluir(): array
     {
         try {
+            $conex = $this->conex();
+            
             if ($this->verificarExistencia('nombre', $this->nombre, 'categorias', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'Ya existe una categoria registrada con este nombre.');
+                throw new Exception('Ya existe una categoría registrada con este nombre.');
             }
 
-            $conex = $this->conex();
             $sentencia = "INSERT INTO categorias (`nombre`, `edad_min`, `edad_max`) VALUES (:nombre, :edad_min, :edad_max)";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
-            $stmt->bindParam(':edad_min', $this->edad_minima);
-            $stmt->bindParam(':edad_max', $this->edad_maxima);
+            $stmt->bindParam(':edad_min', $this->edad_min);
+            $stmt->bindParam(':edad_max', $this->edad_max);
             $stmt->execute();
 
-            return array('accion' => 'incluir', 'mensaje' => 'Categoria registrada exitosamente.');
+            return array('accion' => 'exito');
         } catch (Exception $e) {
             logs('Categorias', $e->getMessage(), 'Modelo');
-            return array('accion' => 'error', 'mensaje' => 'Error al incluir: ' . $e->getMessage());
+            return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
-    }                                                      
+    }                                                   
 
     private function Modificar(): array
     {
+        $conex = NULL;
         try {
+            $conex = $this->conex(); // <-- CORRECCIÓN 1: Se inicializa la conexión
+            
+            // <-- CORRECCIÓN 2: Se cambia 'representantes' por 'categorias'
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'categorias', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'categorias', NULL)) {
-                    return array('accion' => 'error', 'mensaje' => 'Ya existe otra categoria registrada con este nombre.');
+                    throw new Exception('Ya existe otra categoría registrada con este nombre.');
                 }
             }
-            $conex = $this->conex();
+            
             $sentencia = "UPDATE categorias SET 
             nombre = :nombre, 
             edad_min = :edad_min, 
             edad_max = :edad_max 
             WHERE id_categorias = :id_categorias";
+            
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
-            $stmt->bindParam(':edad_min', $this->edad_minima);
-            $stmt->bindParam(':edad_max', $this->edad_maxima);
+            $stmt->bindParam(':edad_min', $this->edad_min);
+            $stmt->bindParam(':edad_max', $this->edad_max);
             $stmt->bindParam(':id_categorias', $this->id);
             $stmt->execute();
 
-            return array('accion' => 'modificar', 'mensaje' => 'Categoria modificada exitosamente.');
+            return array('accion' => 'exito');
         } catch (Exception $e) {
-            logs('Categorias', $e->getMessage(), 'Modelo');
-            return array('accion' => 'error', 'mensaje' => 'Error al modificar: ' . $e->getMessage());
+            logs('Categorias', $e->getMessage(), 'Modelo_Modificar');
+            return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
@@ -148,6 +156,7 @@ class ModeloCategorias extends ModeloBase
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
             $datos = $stmt->fetchAll();
+            
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Categorias', $e->getMessage(), 'Modelo');
@@ -156,20 +165,20 @@ class ModeloCategorias extends ModeloBase
             $conex = NULL;
         }
     }
-private function Eliminar(): array
+
+    private function Eliminar(): array
     {
         try {
-            // CORRECCIÓN 1: Volvemos a usar 'id' genérico como lo espera tu ModeloBase
+            $conex = $this->conex();
+
             if (!$this->verificarExistencia('id', $this->id, 'categorias', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'La categoría no existe.');
+                throw new Exception('La categoría no existe.');
             }
             
-            // CORRECCIÓN 2: Aquí también usamos 'id' (Asegúrate de que la tabla 'atletas' exista)
             if ($this->verificarExistencia('id', $this->id, 'atletas', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'No se puede eliminar: la categoría tiene atletas asociados.');
+                throw new Exception('No se puede eliminar: la categoría tiene atletas asociados.');
             }
 
-            $conex = $this->conex();
             $sentencia = "DELETE FROM categorias WHERE id_categorias = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
@@ -177,10 +186,10 @@ private function Eliminar(): array
             
             return array('accion' => 'eliminar', 'mensaje' => 'Categoría eliminada exitosamente.');
         } catch (Exception $e) {
-            logs('Categorias', $e->getMessage(), 'Modelo');
-            return array('accion' => 'error', 'mensaje' => 'Hubo un error al eliminar la categoría.');
+            logs('Categorias', $e->getMessage(), 'Modelo_Eliminar');
+            return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
     }   
-} 
+}
