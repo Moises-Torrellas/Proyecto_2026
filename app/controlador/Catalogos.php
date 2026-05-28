@@ -256,6 +256,16 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             $datosFiltro['id_categoria'] = $_POST['id_categoria'];
         }
 
+        if (!empty($_POST['id_posicion'])) {
+            $validacionesReporte['id_posicion'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Posición inválida.'];
+            $datosFiltro['id_posicion'] = $_POST['id_posicion'];
+        }
+        // NUEVO: Atrapamos la talla para el reporte
+        if (!empty($_POST['talla'])) {
+            $validacionesReporte['talla'] = ['regla' => '/^[a-zA-Z0-9\s\-\/]{1,10}$/', 'mensaje' => 'Talla inválida.'];
+            $datosFiltro['talla'] = $_POST['talla'];
+        }
+
         validar_datos($validacionesReporte);
 
         $respuesta = $obj->procesarDatos($datosFiltro);
@@ -265,7 +275,7 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             exit();
         }
         
-        $nombreVista = 'R_Catalogo'; 
+        $nombreVista = 'R_Catalogos'; 
         $objG = new GenerarReporte();
         $pdf = $objG->generarPDF($nombreVista, $datos, 'Catalogo de Equipamientos');
         

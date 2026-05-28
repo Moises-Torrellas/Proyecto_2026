@@ -90,6 +90,16 @@ class ModeloCatalogos extends ModeloBase
                 $params[':id_categoria'] = $this->id_categoria;
             }
 
+            if (!empty($this->id_posicion)) {
+                $sentencia .= " AND c.id_posicion = :id_posicion";
+                $params[':id_posicion'] = $this->id_posicion;
+            }
+            // NUEVO: Filtro SQL por talla
+            if (!empty($this->talla)) {
+                $sentencia .= " AND c.talla = :talla";
+                $params[':talla'] = $this->talla;
+            }
+
             $sentencia .= " ORDER BY c.nombre ASC";
 
             $stmt = $conex->prepare($sentencia);
