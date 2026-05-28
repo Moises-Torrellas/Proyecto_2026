@@ -21,6 +21,15 @@ class ModeloUsuarios extends ModeloBase
 
     private $actualizar_contraseña = false;
 
+    private $c_ingresar;
+    private $c_registrar;
+    private $c_modificar;
+    private $c_eliminar;
+    private $c_reporte;
+    private $c_otros;
+
+    private $obj_roles;
+
     public function __construct()
     {
         parent::__construct();
@@ -33,6 +42,8 @@ class ModeloUsuarios extends ModeloBase
             'rol' => 'id_rol',
         ];
         $this->llavePrimaria = 'idUsuario';
+
+        $this->obj_roles = new ModeloRoles;
     }
 
     public function procesarDatos(array $datos): array
@@ -58,6 +69,13 @@ class ModeloUsuarios extends ModeloBase
             $this->actualizar_contraseña = true;
         }
 
+        $this->c_ingresar  = $datos['c_ingresar']  ?? [];
+        $this->c_registrar = $datos['c_registrar'] ?? [];
+        $this->c_modificar = $datos['c_modificar'] ?? [];
+        $this->c_eliminar  = $datos['c_eliminar']  ?? [];
+        $this->c_reporte   = $datos['c_reporte']   ?? [];
+        $this->c_otros     = $datos['c_otros']     ?? [];
+        
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
             'incluir'   => $this->Incluir(),
@@ -66,6 +84,8 @@ class ModeloUsuarios extends ModeloBase
             'buscar' => $this->Buscar(),
             'bloquear' => $this->Bloquear(),
             'reporte' => $this->Consultar(),
+            'CargarPermisosUsuario' => $this->CargarPermisosUsuario(),
+            'guardar_permisos_usuario' => $this->GuardarPermisosUsuario(),
             default     => throw new Exception("Acción no válida."),
         };
     }
@@ -204,6 +224,19 @@ class ModeloUsuarios extends ModeloBase
 
             $stmt->execute();
 
+            $idUsuario = $Reactivacion
+                ? $conex->query("SELECT idUsuario FROM usuarios WHERE cedulaUsuario = '{$this->cedula}'")->fetchColumn()
+                : $conex->lastInsertId();
+
+            $stmtDel = $conex->prepare("DELETE FROM permisos_usuarios WHERE idUsuario = :idUsuario");
+            $stmtDel->execute([':idUsuario' => $idUsuario]);
+
+            $sqlCopy = "INSERT INTO permisos_usuarios (idUsuario, id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros)
+                        SELECT :idUsuario, id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros
+                        FROM permisos_roles WHERE id_rol = :idRol";
+            $stmtCopy = $conex->prepare($sqlCopy);
+            $stmtCopy->execute([':idUsuario' => $idUsuario, ':idRol' => $this->rol]);
+
             $conex->commit();
             return ['accion' => 'exito'];
         } catch (Exception $e) {
@@ -239,6 +272,10 @@ class ModeloUsuarios extends ModeloBase
 
             $conex = $this->conexSG();
             $conex->beginTransaction();
+
+            $stmtRolActual = $conex->prepare("SELECT id_rol FROM usuarios WHERE idUsuario = :id");
+            $stmtRolActual->execute([':id' => $this->id]);
+            $rolActual = $stmtRolActual->fetchColumn();
 
             if (!$this->verificarExistenciaPropia('cedula', $this->cedula, $this->id, 'usuarios', 1, 'sg', bloquear: true)) {
                 if ($this->verificarExistencia('cedula', $this->cedula, 'usuarios', 1, 'sg', bloquear: true)) {
@@ -285,6 +322,17 @@ class ModeloUsuarios extends ModeloBase
             }
             $stmt->execute();
 
+            if ($rolActual != $this->rol) {
+                $stmtDel = $conex->prepare("DELETE FROM permisos_usuarios WHERE idUsuario = :idUsuario");
+                $stmtDel->execute([':idUsuario' => $this->id]);
+
+                $sqlCopy = "INSERT INTO permisos_usuarios (idUsuario, id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros)
+                            SELECT :idUsuario, id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros
+                            FROM permisos_roles WHERE id_rol = :idRol";
+                $stmtCopy = $conex->prepare($sqlCopy);
+                $stmtCopy->execute([':idUsuario' => $this->id, ':idRol' => $this->rol]);
+            }
+
             $conex->commit();
             return ['accion' => 'exito'];
         } catch (Exception $e) {
@@ -316,10 +364,11 @@ class ModeloUsuarios extends ModeloBase
                             `estatus` = 0
                             WHERE idUsuario = :id";
             $stmt = $conex->prepare($sql);
-            $parametros = [
-                ':id' => $this->id
-            ];
-            $stmt->execute($parametros);
+            $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
+            $stmt->execute();
+
+            $stmtDel = $conex->prepare("DELETE FROM permisos_usuarios WHERE idUsuario = :idUsuario");
+            $stmtDel->execute([':idUsuario' => $this->id]);
 
 
             $conex->commit();
@@ -393,5 +442,97 @@ class ModeloUsuarios extends ModeloBase
             $conex = null;
         }
         return $resultado;
+    }
+
+    public function ConsultarRoles()
+    {
+        $respuesta = $this->obj_roles->Consultar();
+        $respuesta['accion'] = 'consultarRoles';
+        return $respuesta;
+    }
+
+    public function CargarPermisosUsuario()
+    {
+        try {
+            $conex = $this->conexSG();
+            $sentencia = 'SELECT :id1 AS idUsuario, 
+                                (SELECT id_rol FROM usuarios WHERE idUsuario = :id3) AS id_rol,
+                                m.id_modulo, m.nombre_modulo, 
+                                COALESCE(MAX(pu.ingresar), 0) AS ingresar, COALESCE(MAX(pu.registrar), 0) AS registrar, 
+                                COALESCE(MAX(pu.eliminar), 0) AS eliminar, COALESCE(MAX(pu.modificar), 0) AS modificar, 
+                                COALESCE(MAX(pu.reporte), 0) AS reporte, COALESCE(MAX(pu.otros), 0) AS otros 
+                        FROM modulo m 
+                        LEFT JOIN permisos_usuarios pu ON m.id_modulo = pu.id_modulo AND pu.idUsuario = :id2 
+                        WHERE m.id_modulo NOT IN (4, 5, 8, 1, 2, 3, 99)
+                        GROUP BY m.id_modulo, m.nombre_modulo
+                        ORDER BY m.id_modulo ASC';
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindParam(':id1', $this->id);
+            $stmt->bindParam(':id2', $this->id);
+            $stmt->bindParam(':id3', $this->id);
+            $stmt->execute();
+            $datos = $stmt->fetchAll();
+            $resultado = array('accion' => 'CargarPermisosUsuario', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Usuarios', $e->getMessage(), 'Modelo_CargarPermisosUsuario');
+            $resultado = array('accion' => 'error', 'mensaje' => $e->getMessage());
+        }
+        return $resultado;
+    }
+
+    private function GuardarPermisosUsuario()
+    {
+        try {
+            $conex = null;
+            $conex = $this->conexSG();
+            $conex->beginTransaction();
+
+            $sql = 'DELETE FROM `permisos_usuarios` WHERE `idUsuario` = :id';
+            $stmt = $conex->prepare($sql);
+            $stmt->execute([':id' => $this->id]);
+
+            $sql = 'INSERT INTO `permisos_usuarios`(`idUsuario`, `id_modulo`, `ingresar`, `registrar`, `eliminar`, `modificar`, `reporte`, `otros`) 
+                    VALUES (:idUsuario,:id_modulo,:ingresar,:registrar,:eliminar,:modificar,:reporte,:otros)';
+            $stmt = $conex->prepare($sql);
+
+            // Fetch all valid module ids first
+            $sqlModulos = 'SELECT id_modulo FROM modulo WHERE id_modulo NOT IN (4, 5, 8, 1, 2, 3, 99)';
+            $stmtModulos = $conex->prepare($sqlModulos);
+            $stmtModulos->execute();
+            $modulosValidos = $stmtModulos->fetchAll(\PDO::FETCH_COLUMN);
+
+            foreach ($modulosValidos as $modulo) {
+                $ing = isset($this->c_ingresar[$modulo]) ? 1 : 0;
+                $reg = isset($this->c_registrar[$modulo]) ? 1 : 0;
+                $eli = isset($this->c_eliminar[$modulo]) ? 1 : 0;
+                $mod = isset($this->c_modificar[$modulo]) ? 1 : 0;
+                $rep = isset($this->c_reporte[$modulo]) ? 1 : 0;
+                $otr = isset($this->c_otros[$modulo]) ? 1 : 0;
+
+                if ($ing || $reg || $eli || $mod || $rep || $otr) {
+                    $stmt->execute([
+                        ':idUsuario' => $this->id,
+                        ':id_modulo' => (int)$modulo,
+                        ':ingresar'  => $ing,
+                        ':registrar' => $reg,
+                        ':eliminar'  => $eli,
+                        ':modificar' => $mod,
+                        ':reporte'   => $rep,
+                        ':otros'     => $otr
+                    ]);
+                }
+            }
+
+            $conex->commit();
+            return ['accion' => 'exito'];
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            logs('Usuarios', $e->getMessage(), 'Modelo_GuardarPermisosUsuario');
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+        } finally {
+            $conex = null;
+        }
     }
 }

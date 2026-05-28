@@ -128,6 +128,28 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row" id="row_permisos" style="display: none;">
+                        <div class="colum colum_tabla_completa" style="padding: 0;">
+                            <div id="tabla_permisos_container">
+                                <table id="tabla_permisos_ui">
+                                    <thead>
+                                        <tr>
+                                            <th>Módulo</th>
+                                            <th>Ingresar</th>
+                                            <th>Registrar</th>
+                                            <th>Modificar</th>
+                                            <th>Eliminar</th>
+                                            <th>Reportes</th>
+                                            <th>Otras Opciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabla_permisos">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>

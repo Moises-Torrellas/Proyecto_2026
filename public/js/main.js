@@ -527,7 +527,7 @@ function limpia() {
 }
 
 function limpia_Tablas() {
-    $('.caja_tabla tbody').find('tr').remove();
+    $('#tabla_permisos').find('tr').remove();
 }
 
 function eliminaLinea(boton) {
