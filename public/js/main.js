@@ -29,6 +29,9 @@ $('#cerrar_modal').on("click", function () {
 $('#cerrar_modal_asistente').on("click", function () {
     cerrarModalAsistente();
 });
+$('#cerrar_modal_Secundario').on("click", function () {
+    cerrarModalSecundario();
+});
 
 
 function cerrarModal() {
@@ -54,6 +57,17 @@ function cerrarModalAsistente() {
     $("#asistente_modal").removeClass("expandir")
     $("#asistente_modal_contenedor").css('opacity', '0')
     $("#asistente_modal_contenedor").css('visibility', 'hidden')
+}
+function abrirModalSecundario() {
+    $("#secundario_modal_contenedor").css('opacity', '1')
+    $("#secundario_modal_contenedor").css('visibility', 'visible')
+    $("#secundario_modal").addClass("expandir")
+}
+
+function cerrarModalSecundario() {
+    $("#secundario_modal").removeClass("expandir")
+    $("#secundario_modal_contenedor").css('opacity', '0')
+    $("#secundario_modal_contenedor").css('visibility', 'hidden')
 }
 
 $(document).ready(function () {
