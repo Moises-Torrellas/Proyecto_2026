@@ -234,16 +234,25 @@ class ModeloRoles extends ModeloBase
             $stmt = $conex->prepare($sql);
 
             foreach ($this->id_modulo as $modulo) {
-                $stmt->execute([
-                    ':id_rol'    => $this->id,
-                    ':id_modulo' => (int)$modulo,
-                    ':ingresar'  => isset($this->c_ingresar[$modulo]) ? 1 : 0,
-                    ':registrar' => isset($this->c_registrar[$modulo]) ? 1 : 0,
-                    ':eliminar'  => isset($this->c_eliminar[$modulo]) ? 1 : 0,
-                    ':modificar' => isset($this->c_modificar[$modulo]) ? 1 : 0,
-                    ':reporte'   => isset($this->c_reporte[$modulo]) ? 1 : 0,
-                    ':otros'     => isset($this->c_otros[$modulo]) ? 1 : 0
-                ]);
+                $ing = isset($this->c_ingresar[$modulo]) ? 1 : 0;
+                $reg = isset($this->c_registrar[$modulo]) ? 1 : 0;
+                $eli = isset($this->c_eliminar[$modulo]) ? 1 : 0;
+                $mod = isset($this->c_modificar[$modulo]) ? 1 : 0;
+                $rep = isset($this->c_reporte[$modulo]) ? 1 : 0;
+                $otr = isset($this->c_otros[$modulo]) ? 1 : 0;
+
+                if ($ing || $reg || $eli || $mod || $rep || $otr) {
+                    $stmt->execute([
+                        ':id_rol'    => $this->id,
+                        ':id_modulo' => (int)$modulo,
+                        ':ingresar'  => $ing,
+                        ':registrar' => $reg,
+                        ':eliminar'  => $eli,
+                        ':modificar' => $mod,
+                        ':reporte'   => $rep,
+                        ':otros'     => $otr
+                    ]);
+                }
             }
 
             $conex->commit();

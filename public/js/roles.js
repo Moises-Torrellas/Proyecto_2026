@@ -141,7 +141,7 @@ $(document).ready(function () {
         driver.start();
     });
 
-    // Auto-check "ingresar" if any other permission is checked
+    // Auto-check logic
     $('#tabla_permisos').on('change', '.checkbox', function() {
         var id = $(this).attr('id');
         var partes = id.split('_');
@@ -151,6 +151,14 @@ $(document).ready(function () {
             
             if (accion !== 'ingresar' && $(this).is(':checked')) {
                 $('#check_ingresar_' + idModulo).prop('checked', true);
+            }
+            
+            if (accion === 'ingresar' && !$(this).is(':checked')) {
+                $('#check_registrar_' + idModulo).prop('checked', false);
+                $('#check_modificar_' + idModulo).prop('checked', false);
+                $('#check_eliminar_' + idModulo).prop('checked', false);
+                $('#check_reporte_' + idModulo).prop('checked', false);
+                $('#check_otros_' + idModulo).prop('checked', false);
             }
         }
     });

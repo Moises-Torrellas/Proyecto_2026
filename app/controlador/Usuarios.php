@@ -76,6 +76,16 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 bloquearUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
 
+            case 'CargarPermisosUsuario':
+                if (!$permisos['otros']) throw new Exception('No tiene permisos para ver permisos de usuarios.');
+                CargarPermisosUsuario($obj);
+                break;
+
+            case 'guardar_permisos_usuario':
+                if (!$permisos['otros']) throw new Exception('No tiene permisos para modificar permisos de usuarios.');
+                guardarPermisosUsuario($obj, $id_modulo, $bitacoraObj);
+                break;
+
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -298,6 +308,75 @@ function bloquearUsuario($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Usuarios', $e->getMessage(), 'Controlador_Bloquear');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function CargarPermisosUsuario($obj): void
+{
+    try {
+        validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+        
+        $datos = ['id' => $_POST['id'], 'accion' => 'CargarPermisosUsuario'];
+        $resultado = $obj->procesarDatos($datos);
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Usuarios', $e->getMessage(), 'Controlador_CargarPermisosUsuario');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function guardarPermisosUsuario($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        validar_datos([
+            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']
+        ]);
+
+        $datos = [
+            'id'             => $_POST['id'],
+            'accion'         => 'guardar_permisos_usuario'
+        ];
+
+        $validacionesP = [];
+        if (isset($_POST['check_ingresar']) && !empty($_POST['check_ingresar'])) {
+            $validacionesP['check_ingresar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso ingresar inválido.'];
+            $datos['c_ingresar'] = $_POST['check_ingresar'];
+        }
+        if (isset($_POST['check_registrar']) && !empty($_POST['check_registrar'])) {
+            $validacionesP['check_registrar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso registrar inválido.'];
+            $datos['c_registrar'] = $_POST['check_registrar'];
+        }
+        if (isset($_POST['check_modificar']) && !empty($_POST['check_modificar'])) {
+            $validacionesP['check_modificar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso modificar inválido.'];
+            $datos['c_modificar'] = $_POST['check_modificar'];
+        }
+        if (isset($_POST['check_eliminar']) && !empty($_POST['check_eliminar'])) {
+            $validacionesP['check_eliminar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso eliminar inválido.'];
+            $datos['c_eliminar'] = $_POST['check_eliminar'];
+        }
+        if (isset($_POST['check_reporte']) && !empty($_POST['check_reporte'])) {
+            $validacionesP['check_reporte'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso reporte inválido.'];
+            $datos['c_reporte'] = $_POST['check_reporte'];
+        }
+        if (isset($_POST['check_otros']) && !empty($_POST['check_otros'])) {
+            $validacionesP['check_otros'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso otras opciones inválido.'];
+            $datos['c_otros'] = $_POST['check_otros'];
+        }
+
+        if (!empty($validacionesP)) {
+            validarArrays($validacionesP);
+        }
+
+        $resultado = $obj->procesarDatos($datos);
+        if ($resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico permisos al usuario: " . $_POST['id']);
+            echo json_encode(['accion' => 'guardar_permisos_usuario', 'mensaje' => 'Permisos guardados correctamente.']);
+        } else {
+            throw new Exception($resultado['codigo']);
+        }
+    } catch (Exception $e) {
+        logs('Usuarios', $e->getMessage(), 'Controlador_GuardarPermisosUsuario');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

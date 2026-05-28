@@ -100,6 +100,15 @@ $(document).ready(function () {
                 }
             });
         }
+        else if (accion == "permisos_usuario") {
+            confirmar('¿Está seguro que quiere guardar los permisos?', function (confirmado) {
+                if (confirmado) {
+                    var datos = new FormData($('#f')[0]);
+                    datos.append('accion', 'guardar_permisos_usuario');
+                    enviaAjax(datos);
+                }
+            });
+        }
     });
 
     $('#roles').select2({
@@ -146,6 +155,28 @@ $(document).ready(function () {
         $('#limpiar').show();
         $('#roles').val(null).trigger('change');
         abrirModal();
+    });
+
+    // Auto-check logic
+    $('#tabla_permisos').on('change', '.checkbox', function() {
+        var id = $(this).attr('id');
+        var partes = id.split('_');
+        if (partes.length >= 3) {
+            var accion = partes[1];
+            var idModulo = partes[2];
+            
+            if (accion !== 'ingresar' && $(this).is(':checked')) {
+                $('#check_ingresar_' + idModulo).prop('checked', true);
+            }
+            
+            if (accion === 'ingresar' && !$(this).is(':checked')) {
+                $('#check_registrar_' + idModulo).prop('checked', false);
+                $('#check_modificar_' + idModulo).prop('checked', false);
+                $('#check_eliminar_' + idModulo).prop('checked', false);
+                $('#check_reporte_' + idModulo).prop('checked', false);
+                $('#check_otros_' + idModulo).prop('checked', false);
+            }
+        }
     });
 
     $('#ayuda').on('click', function () {
@@ -235,6 +266,58 @@ function validarEnvio(proceso) {
     return true;
 }
 
+function generarFilaPermisos(dato) {
+    var ingresarChecked = dato.ingresar == 1 ? 'checked' : '';
+    var registrarChecked = dato.registrar == 1 ? 'checked' : '';
+    var modificarChecked = dato.modificar == 1 ? 'checked' : '';
+    var eliminarChecked = dato.eliminar == 1 ? 'checked' : '';
+    var reporteChecked = dato.reporte == 1 ? 'checked' : '';
+    var otrosChecked = dato.otros == 1 ? 'checked' : '';
+
+    return `<tr>
+                <td style="display: none;">
+                    <input type="hidden" name="id_modulo[]" value="${dato.id_modulo}">
+                </td>
+                <td>${escapeHTML(dato.nombre_modulo)}</td>
+                <td>
+                    <label class="checkbox-container">
+                        <input class="checkbox" type="checkbox" id="check_ingresar_${dato.id_modulo}" name="check_ingresar[${dato.id_modulo}]" value="1" ${ingresarChecked}>
+                        <span class="custom-checkbox"></span>
+                    </label>
+                </td>
+                <td>
+                    <label class="checkbox-container">
+                        <input class="checkbox" type="checkbox" id="check_registrar_${dato.id_modulo}" name="check_registrar[${dato.id_modulo}]" value="1" ${registrarChecked}>
+                        <span class="custom-checkbox"></span>
+                    </label>
+                </td>
+                <td>
+                    <label class="checkbox-container">
+                        <input class="checkbox" type="checkbox" id="check_modificar_${dato.id_modulo}" name="check_modificar[${dato.id_modulo}]" value="1" ${modificarChecked}>
+                        <span class="custom-checkbox"></span>
+                    </label>
+                </td>
+                <td>
+                    <label class="checkbox-container">
+                        <input class="checkbox" type="checkbox" id="check_eliminar_${dato.id_modulo}" name="check_eliminar[${dato.id_modulo}]" value="1" ${eliminarChecked}>
+                        <span class="custom-checkbox"></span>
+                    </label>
+                </td>
+                <td>
+                    <label class="checkbox-container">
+                        <input class="checkbox" type="checkbox" id="check_reporte_${dato.id_modulo}" name="check_reporte[${dato.id_modulo}]" value="1" ${reporteChecked}>
+                        <span class="custom-checkbox"></span>
+                    </label>
+                </td>
+                <td>
+                    <label class="checkbox-container">
+                        <input class="checkbox" type="checkbox" id="check_otros_${dato.id_modulo}" name="check_otros[${dato.id_modulo}]" value="1" ${otrosChecked}>
+                        <span class="custom-checkbox"></span>
+                    </label>
+                </td>
+            </tr>`;
+}
+
 function buscar(id) {
     var datos = new FormData();
     datos.append('accion', 'buscar');
@@ -297,7 +380,13 @@ function bloquear(id, b, elemento) {
     });
 }
 
-function CargarPermisos() {
+function mostrarPermisosUsuario(datos) {
+    limpia();
+    limpia_Tablas();
+    $("#proceso").data("accion", "permisos_usuario");
+    $("#proceso").text("Guardar Permisos");
+    $("#titulo_modal").text("Permisos del Usuario");
+    
     $('#contraseña').closest('.colum').hide();
     $('#telefono').closest('.colum').hide();
     $('#correo').closest('.colum').hide();
@@ -309,7 +398,21 @@ function CargarPermisos() {
     $('#row_permisos').show();
     $('#limpiar').hide();
 
+    $('#id').val(datos[0].idUsuario); // Add the ID for saving
+    $('#roles').val(datos[0].id_rol).trigger('change');
+
+    datos.forEach(dato => {
+        $("#tabla_permisos").append(generarFilaPermisos(dato));
+    });
+
     abrirModal();
+}
+
+function CargarPermisos(idUsuario) {
+    var datos = new FormData();
+    datos.append('accion', 'CargarPermisosUsuario');
+    datos.append('id', idUsuario);
+    enviaAjax(datos);
 }
 
 const icon = 'fi-sr-lock';
@@ -356,7 +459,7 @@ function crearConsulta(datos) {
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button class="btn_t cbt_m" onclick="CargarPermisos()"><i class="fi fi-sr-user-permissions"></i></button>
+                                <button class="btn_t cbt_m" onclick="CargarPermisos(${dato.idUsuario})"><i class="fi fi-sr-user-permissions"></i></button>
                                 <button class="btn_t cbt_v" onclick="buscar(${dato.idUsuario})"><i class="fi fi-sr-pencil"></i></button>
                                 <button class="btn_t cbt_r" onclick="eliminar(${dato.idUsuario})"><i class="fi fi-sr-trash-xmark"></i></button>
                                 <button class="btn_t ${color}" onclick="bloquear(${dato.idUsuario}, ${dato.bloqueo}, this)"><i class="fi ${icon}"></i></button>
@@ -444,12 +547,17 @@ function enviaAjax(datos) {
                 else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }
+                else if (lee.accion == "CargarPermisosUsuario") {
+                    mostrarPermisosUsuario(lee.datos);
+                }
                 else if (lee.accion == "incluir") {
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                     consultar();
                     limpia();
-                } else if (lee.accion == "modificar") {
-                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
+                    cerrarModal(); // Agregado para cerrar el modal después de guardar exitosamente
+                } else if (lee.accion == "modificar" || lee.accion == "guardar_permisos_usuario") {
+                    var msjTitle = lee.accion == "modificar" ? "Modificacion Exitosa" : "Permisos Guardados";
+                    muestraMensaje("success", 2000, msjTitle, lee.mensaje);
                     consultar();
                     limpia();
                     cerrarModal();
