@@ -113,13 +113,16 @@ $(document).ready(function () {
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Reporte de Catálogo");
         
-        // Ocultamos los campos que no sirven para el filtro del PDF
         $('#nombre').closest('.colum').hide();
         $('#stock_minimo').closest('.colum').hide();
-        $('#talla').closest('.colum').hide();
-        $('#id_posicion').closest('.colum').hide();
+        
+        $('#id_posicion').closest('.colum').show();
+        $('#talla').closest('.colum').show();
 
-        if ($.fn.select2) $('#id_categoria').val(null).trigger('change');
+        if ($.fn.select2) {
+            $('#id_categoria').val(null).trigger('change');
+            $('#id_posicion').val(null).trigger('change');
+        }
         
         abrirModal();
     });

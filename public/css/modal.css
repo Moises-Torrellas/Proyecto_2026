@@ -24,7 +24,7 @@
 }
 
 .modal {
-    width: 600px;
+    width: 700px;
     height: 650px;
     background: var(--fondo-principal);
     border-radius: 10px;
@@ -41,7 +41,8 @@
     grid-row: 1;
     display: grid;
     grid-template-columns: 1fr auto;
-    border-bottom: 2px solid var(--color-claro); ;
+    border-bottom: 2px solid var(--color-claro);
+    ;
     place-items: start;
     align-items: center;
 }
@@ -103,6 +104,7 @@
 .colum_tabla_completa {
     position: relative;
     place-items: center;
+    width: 100%;
 }
 
 .caja_formulario {
@@ -154,26 +156,30 @@
 .input-group-custom {
     display: flex;
     align-items: flex-start;
-    width: 350px; /* Ajusta según necesites */
+    width: 350px;
+    /* Ajusta según necesites */
 }
 
 /* Ajuste para el Select (Nacionalidad) */
 .nacionalidad_ext {
     width: 50px !important;
-    height: 100% !important; /* Más pequeño */
+    height: 100% !important;
+    /* Más pequeño */
 }
 
 .nacionalidad_ext .formulario {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
-    border-right: none; /* Quita la línea del medio */
+    border-right: none;
+    /* Quita la línea del medio */
     padding: 0 10px;
     width: 100%;
 }
 
 /* Ajuste para el Input (Cedula) */
 .cedula_ext {
-    flex-grow: 1; /* Que ocupe el resto */
+    flex-grow: 1;
+    /* Que ocupe el resto */
     width: auto !important;
 }
 
@@ -358,10 +364,6 @@
     font-size: .9rem;
 }
 
-.titulo_formulario_tabla {
-    left: 60px;
-}
-
 .td_oculto {
     position: absolute !important;
     visibility: hidden !important;
@@ -375,7 +377,8 @@
     align-items: center;
     gap: 15px;
     padding: 20px;
-    border: 2px dashed #ccc; /* Borde punteado profesional */
+    border: 2px dashed #ccc;
+    /* Borde punteado profesional */
     border-radius: 12px;
     background-color: var(--fondo-form);
     transition: all 0.3s ease;
@@ -395,25 +398,30 @@
 .preview_contenedor {
     width: 120px;
     height: 120px;
-    border-radius: 50%; /* Círculo perfecto */
+    border-radius: 50%;
+    /* Círculo perfecto */
     overflow: hidden;
     border: 3px solid #fff;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Sombreado elegante */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    /* Sombreado elegante */
     background-color: var(--fondo-form);
 }
 
 .preview_contenedor img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Evita que las fotos rectangulares se aplasten */
+    object-fit: cover;
+    /* Evita que las fotos rectangulares se aplasten */
 }
 
 /* El Label convertido en Botón */
 .btn_subir_foto {
-    background-color: var(--color-primario); /* Color del botón */
+    background-color: var(--color-primario);
+    /* Color del botón */
     color: var(--boton-texto);
     padding: 10px 24px;
-    border-radius: 10px; /* Bordes redondeados modernos */
+    border-radius: 10px;
+    /* Bordes redondeados modernos */
     cursor: pointer;
     font-weight: 600;
     font-size: 14px;
@@ -424,15 +432,80 @@
 }
 
 .btn_subir_foto:hover {
-    transform: translateY(-2px); /* Pequeño salto al pasar el mouse */
+    transform: translateY(-2px);
+    /* Pequeño salto al pasar el mouse */
 }
 
 .campo_deshabilitado {
     opacity: 0.5;
-    pointer-events: none; /* Evita clics */
+    pointer-events: none;
+    /* Evita clics */
     background-color: #f8f9fa;
 }
+
 .btn_bloqueado {
     filter: grayscale(1);
     cursor: not-allowed;
+}
+
+#tabla_permisos_container {
+    width: 98%; 
+    max-width: 650px; 
+    overflow-x: hidden; 
+    overflow-y: auto;   
+    margin: 0 auto 20px auto;
+    border: 2px solid var(--borde-color); 
+    border-radius: 10px;
+}
+
+#tabla_permisos_ui {
+    width: 100%;
+    table-layout: fixed; /* Mantiene el control estricto de los anchos */
+    border-collapse: collapse;
+}
+
+/* MODIFICADO: Se añaden divisiones suaves horizontales y verticales */
+#tabla_permisos_ui th,
+#tabla_permisos_ui td {
+    padding: 10px 4px; /* Un pelín más de espacio vertical */
+    font-size: 0.9rem; /* Ajustado sutilmente para evitar desbordes */
+    font-weight: 600;
+    text-align: center;
+    word-wrap: break-word; 
+    border-bottom: 2px solid var(--borde-color); /* División horizontal clara */
+    border-right: 2px solid var(--borde-form);  /* División vertical clara */
+}
+
+/* NOTA: Si usas un tema oscuro, cambia 'rgba(0,0,0,0.08)' por 'rgba(255,255,255,0.08)' */
+
+#tabla_permisos_ui td {
+    color: var(--texto-principal);
+}
+
+#tabla_permisos_ui thead th {
+    background-color: var(--color-primario);
+    text-align: center;
+    border-bottom: none;
+    border-right: none; /* División más marcada para la cabecera */
+}
+
+/* Remueve la línea vertical sobrante en la última columna */
+#tabla_permisos_ui th:last-child,
+#tabla_permisos_ui td:last-child {
+    border-right: none;
+}
+
+/* Remueve la línea de abajo en la última fila para que no choque con el borde redondeado */
+#tabla_permisos_ui tr:last-child td {
+    border-bottom: none;
+}
+
+/* MODIFICADO: Mayor ancho para módulos (40%) y reducción automática del resto */
+#tabla_permisos_ui th:first-child,
+#tabla_permisos_ui td:first-child {
+    width: 20%; /* Subió de 30% a 40% */
+    text-align: center;
+    font-weight: bold;
+    font-size: .9rem;
+    padding-left: 12px; /* Margen interno para que el texto no pegue de la orilla */
 }

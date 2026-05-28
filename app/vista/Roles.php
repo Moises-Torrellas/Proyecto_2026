@@ -46,8 +46,7 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
-                    <input type="hidden" id="token" name="token" value="<?php echo $_SESSION['token']; ?>">
-                    <div class="row">
+                    <div class="row" id="row_nombre">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="nombre" name="nombre">
@@ -56,36 +55,23 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="" id="modulo" class="formulario select">
-
-                                </select>
-                                <label for="modulo" class="titulo_formulario">Modulo</label>
-                                <span class="mensaje" id="modulo_span"></span>
-                                <button type="button" class="btn btn_azul btn_formulario" id="add">Agregar</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum colum_tabla_completa">
-                            <label for="" class="titulo_formulario titulo_formulario_tabla">Permisos</label>
-                            <div class="caja_formulario caja_tabla ct_t">
-                                <table>
+                    <div class="row" id="row_permisos" style="display: none;">
+                        <div class="colum colum_tabla_completa" style="padding: 0;">
+                            <div id="tabla_permisos_container">
+                                <table id="tabla_permisos_ui">
                                     <thead>
                                         <tr>
-                                            <th>Modulo</th>
-                                            <th>Incluir</th>
+                                            <th>Módulo</th>
+                                            <th>Ingresar</th>
+                                            <th>Registrar</th>
                                             <th>Modificar</th>
                                             <th>Eliminar</th>
                                             <th>Reportes</th>
                                             <th>Otras Opciones</th>
-                                            <th>Opción</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tabla_permisos">
-                                        
+
                                     </tbody>
                                 </table>
                             </div>
