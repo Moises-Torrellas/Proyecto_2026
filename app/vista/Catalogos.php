@@ -184,7 +184,7 @@ if (isset($solo_lista) && $solo_lista === true):
                     </div>
 
                     <div class="row">
-                        <div class="colum" style="max-width: 50%;">
+                        <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="talla" name="talla">
                                 <label for="talla" class="titulo_formulario">Talla (Opcional)</label>
@@ -192,7 +192,6 @@ if (isset($solo_lista) && $solo_lista === true):
                             </div>
                         </div>
                     </div>
-
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
