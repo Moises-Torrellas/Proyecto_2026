@@ -10,13 +10,12 @@ use App\servicios\GenerarReporte;
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
-// 2. Configuración del módulo (Corregido al ID de Representantes)
+// 2. Configuración del módulo
 $id_modulo = _MD_ATLETAS_;
 
-// 3. Procesar permisos (Retorna el array de permisos)
+// 3. Procesar permisos 
 $permisos = procesarPermisos($id_modulo, $bitacora);
 
-// 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloAtletas';
 
 if (!class_exists($nombreClaseModelo)) {
@@ -47,7 +46,6 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
-        // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
                 if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar atletas.');
@@ -111,7 +109,6 @@ function MultiConsulta(): void
         $posRespuesta = $modeloPos->Consultar();
         $catRespuesta = $modeloCat->Consultar();
 
-        // Armamos el JSON con la estructura exacta que pide el JavaScript
         echo json_encode([
             'accion'         => 'MultiConsulta',
             'representantes' => $repRespuesta['datos'] ?? [],
@@ -187,7 +184,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         $fecha_nac = $_POST['fecha_nac'];
         $anio_nac = (int)date('Y', strtotime($fecha_nac));
-        $anio_act = (int)date('Y'); // 2026
+        $anio_act = (int)date('Y'); 
         $edad_cal = $anio_act - $anio_nac;
         if ($edad_cal < 18) {
             if (empty($_POST['representante']) || $_POST['representante'] == "0") {

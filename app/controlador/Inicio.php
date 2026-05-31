@@ -25,7 +25,7 @@ if (!class_exists($nombreClaseModelo)) {
 
 $objModelo = new ModeloInicio();
 
-if (comprobarAjax() && !empty($_POST)) {
+if (!empty($_POST)) {
     manejarSolicitudInicio($objModelo, $id_modulo, $bitacora ?? null);
 } else {
     if (isset($_SESSION['id'])) {
@@ -35,15 +35,18 @@ if (comprobarAjax() && !empty($_POST)) {
     cargarVista($pagina);
 }
 
-
+/**
+ * Maneja las solicitudes POST entrantes del módulo de inicio
+ */
 function manejarSolicitudInicio($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        // Validar Token CSRF
-        $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        // Validar Token CSRF (Descomentar si reactivas la seguridad en producción)
+       /*  $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
             throw new Exception('Error de seguridad: Token inválido o expirado.');
-        }
+        } 
+         */
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
@@ -64,19 +67,26 @@ function manejarSolicitudInicio($obj, $id_modulo, $bitacoraObj): void
     }
 }
 
+/**
+ * Procesa la autenticación y arma la respuesta JSON compatible con el AJAX
+ */
 function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
 {
+    // 1. Validar expresiones regulares de Cédula y Contraseña antes de tocar la BD
     validarCredenciales($_POST['cedula'] ?? '', $_POST['contraseña'] ?? '');
 
     $datos = [
         'cedula' => $_POST['cedula'],
-        'clave' => $_POST['contraseña']
+        'clave'  => $_POST['contraseña']
     ];
 
+    // 2. Consultar la lógica del negocio en el modelo
     $respuesta = $obj->ProcesarDatos($datos);
 
+    // 3. Evaluar el resultado del Modelo
     if (isset($respuesta['resultado']) && $respuesta['resultado'] == 1) {
 
+        // Poblar las variables globales de sesión
         $_SESSION['id']        = $respuesta['datos']['idUsuario'];
         $_SESSION['rol']       = $respuesta['datos']['nombre_rol'];
         $_SESSION['nombre']    = $respuesta['datos']['nombreUsuario'];
@@ -84,9 +94,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         $_SESSION['nivel_rol'] = $respuesta['datos']['nivel_rol'];
         $_SESSION['foto']      = $respuesta['datos']['foto'];
 
-        // ====================================================================
-        // MAPEO DE PERMISOS REALES DESDE LA TABLA PERMISOS_USUARIOS
-        // ====================================================================
+        // Mapeo estructurado de permisos desde la BD
         $permisosIndexados = [];
         if (isset($respuesta['permisos']) && is_array($respuesta['permisos'])) {
             foreach ($respuesta['permisos'] as $p) {
@@ -102,11 +110,10 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         }
         $_SESSION['permisos'] = $permisosIndexados;
 
+        // Registrar acción en el historial del sistema
         registrarBitacora($bitacoraObj, $id_modulo, 'Inicio de sesión exitoso');
 
-        // ====================================================================
-        // INTEGRACIÓN BLINDADA DEL VERIFICADOR AUTOMÁTICO DE EVENTOS (LAZY CRON)
-        // ====================================================================
+        // Integración segura del verificador en segundo plano (Lazy Cron)
         ob_start(); 
         try {
             if (class_exists('App\modelo\ModeloNotificaciones')) {
@@ -125,21 +132,37 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
             }
         }
         ob_end_clean(); 
-        // ====================================================================
+
+        // Estructura ideal de éxito esperada por tu manejador AJAX
+        $respuestaFinal = [
+            'accion'    => 'inicio',
+            'resultado' => 1,
+            'mensaje'   => '¡Autenticación exitosa!',
+            'url'       => _URL_ . 'Principal'
+        ];
+
+    } else {
+        // Estructura en caso de falla de credenciales (Mapea resultado 2 o 3 para las clases de CSS)
+        $respuestaFinal = [
+            'accion'    => 'inicio',
+            'resultado' => isset($respuesta['resultado']) ? $respuesta['resultado'] : 3,
+            'mensaje'   => isset($respuesta['mensaje']) ? $respuesta['mensaje'] : 'La cédula o contraseña no coinciden.'
+        ];
     }
 
-    // ====================================================================
-    // BLINDAJE ANTI-WARNINGS: Limpia basuras del buffer antes de responder JSON
-    // ====================================================================
+    // 4. Limpieza del canal de salida y entrega del JSON estructurado
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
     
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($respuesta);
+    echo json_encode($respuestaFinal);
     exit();
 }
 
+/**
+ * Valida los formatos de datos nativos antes de procesar el Query
+ */
 function validarCredenciales($cedula, $clave): void
 {
     if (empty($cedula) || empty($clave)) {

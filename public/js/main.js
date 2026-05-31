@@ -33,7 +33,20 @@ $('#cerrar_modal_Secundario').on("click", function () {
     cerrarModalSecundario();
 });
 
+$('#cerrar_modal_Secundario').on("click", function () {
+    cerrarModalSecundario();
+});
+function abrirModalSecundario() {
+    $("#secundario_modal_contenedor").css('opacity', '1')
+    $("#secundario_modal_contenedor").css('visibility', 'visible')
+    $("#secundario_modal").addClass("expandir")
+}
 
+function cerrarModalSecundario() {
+    $("#secundario_modal").removeClass("expandir")
+    $("#secundario_modal_contenedor").css('opacity', '0')
+    $("#secundario_modal_contenedor").css('visibility', 'hidden')
+}
 function cerrarModal() {
     $("#modal").removeClass("expandir")
     $("#contenedor_modal").css('opacity', '0')
@@ -764,4 +777,33 @@ function manejarErrorCamara(img) {
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
+}
+
+function ModeloBancario (selector) {
+    $(selector).on('input', function () {
+        let entrada = $(this).val().replace(/\D/g, '');
+
+        if (entrada === '' || entrada === '00') {
+            $(this).val('0.00');
+            return;
+        }
+
+        let valorFlotante = parseFloat(entrada) / 100;
+
+        // Cambiamos a 'en-US' para que use punto (.) como separador decimal
+        // y eliminamos los separadores de miles para que no choque con tu Regex de validación
+        let valorFormateado = valorFlotante.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+            useGrouping: false // Evita que ponga comas en los miles (ej: 1,000.00 -> 1000.00)
+        });
+
+        $(this).val(valorFormateado);
+    });
+
+    $(selector).on('focus', function() {
+        if ($(this).val() === '') {
+            $(this).val('0.00');
+        }
+    });
 }
