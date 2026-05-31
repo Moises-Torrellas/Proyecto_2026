@@ -60,6 +60,8 @@ const ASSOCIATES  = "006";
 const VALIDATION = "007";
 const DB_CONNECTION    = "500";
 
+
+const EXCHANGE_RATE_API_KEY = 'eb4ded73b72a7239fcce3154' ;
 if (session_status() === PHP_SESSION_NONE) {
     // Configuramos la sesión antes de iniciarla
     ini_set('session.cookie_httponly', 1);
