@@ -137,13 +137,17 @@ composer install
 Instala el servidor de bases de datos:
 
 ```bash
-sudo apt install mysql-server -y
+sudo apt install mariadb-server -y
 ```
 
-Accede a la consola de MySQL con:
+Accede a la consola de Mariadb con:
 
 ```bash
-sudo mysql
+sudo mariadb
+```
+*(Si alguna vez te llegara a pedir contraseña para entrar al usuario root de la base de datos (por seguridad extra), simplemente usa:)*
+```bash
+sudo mariadb -u root -p
 ```
 
 Ejecuta los siguientes comandos para crear las bases de datos y el usuario:
