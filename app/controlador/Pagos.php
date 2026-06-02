@@ -237,7 +237,8 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id de pago inválido.']];
+        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id de pago inválido.'],
+                        'motivo_anulacion' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/', 'mensaje' => 'Motivo de anulación inválido.']];
         $_POST['id'] = trim($_POST['id']);
         validar_datos($validaciones);
         
@@ -249,7 +250,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->ProcesarDatos($datos);
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Anulación del Pago: " . $datos['id']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Anulación del Pago: " . $datos['id'].' Motivo: '.$_POST['motivo_anulacion']);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Pago anulado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {

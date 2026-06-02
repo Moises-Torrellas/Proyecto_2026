@@ -75,7 +75,7 @@ class ModeloInicio extends Conexion
                 'datos' => $resultado, 
                 'permisos' => $permisos, 
                 'mensaje' => 'BIENVENIDO', 
-                'url' => _URL_ . 'Principal'
+                'url' => 'Principal'
             ];
 
         } catch (Exception $e) {

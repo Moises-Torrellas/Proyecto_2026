@@ -14,7 +14,7 @@ date_default_timezone_set('America/Caracas');
 setlocale(LC_TIME, 'es_ES.UTF-8');
 setlocale(LC_CTYPE, 'es_ES.UTF-8');
 
-define('_URL_', '/Proyecto_2026/public/');
+//define('_URL_', '/Proyecto_2026/public/');
 
 define('_TEMA_', $_COOKIE['tema_preferido'] ?? 'claro');
 
