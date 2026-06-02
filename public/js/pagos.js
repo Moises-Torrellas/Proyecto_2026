@@ -366,11 +366,13 @@ function crearConsulta(htmlRecibido) {
 }
 
 function eliminar(id) {
-    confirmar('¿Está seguro que quiere anular este pago?', function (confirmado) {
-        if (confirmado) {
+    confirmarAnulacion('¿Está seguro que quiere anular este pago?', function (motivo) {
+        
+        if (motivo !== false) { 
             var datos = new FormData();
             datos.append('accion', 'eliminar');
             datos.append('id', id);
+            datos.append('motivo_anulacion', motivo);
             enviaAjax(datos);
         }
     });

@@ -57,10 +57,11 @@ function enviaAjax(datos) {
                 var lee = typeof respuesta === 'object' ? respuesta : JSON.parse(respuesta);
                 if (lee.accion == "inicio") {
                     if (lee.resultado == 1) {
+                        console.log(lee);
                         muestraMensaje("success", 2000, "Inicio Validado", lee.mensaje);
                         limpia();
                         setTimeout(function () {
-                            window.location.href = lee.url;
+                            location.href = lee.url;
                         }, 2000)
                     } else if (lee.resultado == 2) {
                         muestraMensaje("error", 2000, "Error", lee.mensaje);

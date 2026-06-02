@@ -29,7 +29,7 @@ if (!empty($_POST)) {
     manejarSolicitudInicio($objModelo, $id_modulo, $bitacora ?? null);
 } else {
     if (isset($_SESSION['id'])) {
-        header("Location:" . _URL_ . "Principal");
+        header("Location:" . "Principal");
         exit();
     }
     cargarVista($pagina);
@@ -138,7 +138,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
             'accion'    => 'inicio',
             'resultado' => 1,
             'mensaje'   => '¡Autenticación exitosa!',
-            'url'       => _URL_ . 'Principal'
+            'url'       => 'Principal'
         ];
 
     } else {
@@ -157,6 +157,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
     
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($respuestaFinal);
+
     exit();
 }
 
