@@ -184,7 +184,7 @@ Añade la siguiente estructura básica:
     ServerAdmin webmaster@localhost
     DocumentRoot /var/www/html/Proyecto_2026/public
 
-    <Directory /var/www/html/Proyecto_2026/public>
+    <Directory /var/www/html/Proyecto_2026>
         Options Indexes FollowSymLinks
         AllowOverride All
         Require all granted

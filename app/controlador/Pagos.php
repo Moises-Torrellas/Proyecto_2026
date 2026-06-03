@@ -62,7 +62,7 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 MultiConsulta();
                 break;
             case 'consultarTasa':
-                consultarTasa();
+                consultarTasa($obj);
                 break;
             default:
                 throw new Exception('Acción no permitida.');
@@ -76,51 +76,18 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 /**
  * --- LÓGICA DE ACCIONES ---
  */
-function consultarTasa(): void
+function consultarTasa($obj): void
 {
     try {
         $moneda_base = isset($_POST['moneda_base']) ? strtoupper(trim($_POST['moneda_base'])) : 'USD';
         $moneda_pago = isset($_POST['moneda_pago']) ? strtoupper(trim($_POST['moneda_pago'])) : 'VES';
 
-        // ATAJO 1:1 AUTOMÁTICO (Evita consumir peticiones a la API para USD <-> USDT)
-        if (($moneda_base === 'USD' && $moneda_pago === 'USDT') || ($moneda_base === 'USDT' && $moneda_pago === 'USD')) {
-            echo json_encode(['accion' => 'consultarTasa', 'exito' => true, 'tasa' => 1.0000]);
-            return;
-        }
-
-        // Validación de existencia de la constante segura de tu API Key
-        if (!defined('EXCHANGE_RATE_API_KEY')) {
-            throw new Exception("La clave de la API (EXCHANGE_RATE_API_KEY) no está definida en la configuración global.");
-        }
+        $tasa = $obj->obtenerTasaBackend($moneda_base, $moneda_pago);
         
-        $apiKey = EXCHANGE_RATE_API_KEY;
-
-        // URL directa para la tasa del día actual (Soportado en plan gratuito)
-        $url = "https://v6.exchangerate-api.com/v6/{$apiKey}/pair/{$moneda_base}/{$moneda_pago}";
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5); 
-        $response = curl_exec($ch);
-        curl_close($ch);
-
-        $datosApi = json_decode($response, true);
-
-        if (isset($datosApi['result']) && $datosApi['result'] === 'success') {
-            $tasa = $datosApi['conversion_rate'] ?? $datosApi['conversion_rates'][$moneda_pago] ?? null;
-
-            if ($tasa !== null) {
-                echo json_encode(['accion' => 'consultarTasa', 'exito' => true, 'tasa' => floatval($tasa)]);
-            } else {
-                throw new Exception("No se localizó la tasa correspondiente a la divisa seleccionada.");
-            }
-        } else {
-            $errorApi = $datosApi['error-type'] ?? 'Error de conexión externa';
-            throw new Exception("API error: " . $errorApi);
-        }
+        echo json_encode(['accion' => 'consultarTasa', 'exito' => true, 'tasa' => $tasa]);
 
     } catch (Exception $e) {
+        logs('Pagos', $e->getMessage(), 'Controlador_consultarTasa');
         echo json_encode(['accion' => 'consultarTasa', 'exito' => false, 'mensaje' => $e->getMessage()]);
     }
 }
@@ -143,10 +110,9 @@ function MultiConsulta() : void
         $modeloMonedas = new ModeloMonedas();
         $modeloMP      = new ModeloMetodosPago();
 
-        // 2. Obtener y filtrar Cuentas por Cobrar (Pendientes, no anuladas y con saldo)
-        $respCuentas = $modeloCuentas->Consultar(['estatus_cuenta' => 'Pendiente']);
+        $respCuentas = $modeloCuentas->Consultar();
         $cuentasFiltradas = array_filter($respCuentas['datos'] ?? [], function($item) {
-            return (int)$item['anulado'] === 0 && floatval($item['monto_pendiente']) > 0;
+            return (int)$item['anulado'] === 0 && floatval($item['monto_pendiente']) > 0 && (int)$item['estatus'] === 0;
         });
 
         // 3. Obtener y filtrar Monedas (Solo estatus 1)
@@ -179,8 +145,12 @@ function MultiConsulta() : void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
+        $validacionesArrays = [
+            'cuenta' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Cuenta por cobrar inválida.']
+        ];
+        validarArrays($validacionesArrays);
+
         $validaciones = [
-            'cuenta' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Cuenta por cobrar inválida.'],
             'metodo' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Método de pago inválido.'],
             'moneda' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Moneda inválida.'],
             'monto'  => ['regla' => '/^\d+(\.\d{1,2})?$/', 'mensaje' => 'Monto del pago inválido.'],
@@ -188,7 +158,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         ];
 
         $datos = [
-            'cuenta' => trim($_POST['cuenta']),
+            'cuenta' => $_POST['cuenta'],
             'metodo' => trim($_POST['metodo']),
             'moneda' => trim($_POST['moneda']),
             'monto'  => trim($_POST['monto']),
@@ -219,7 +189,8 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->ProcesarDatos($datos);
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registro de Pago a la cuenta por cobrar: " . $datos['cuenta']);
+            $cuentas_str = is_array($datos['cuenta']) ? implode(', ', $datos['cuenta']) : $datos['cuenta'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Registro de Pago a las cuentas por cobrar: " . $cuentas_str);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Pago registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {

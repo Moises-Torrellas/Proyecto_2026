@@ -23,7 +23,7 @@ $(document).ready(function () {
 
     // Validación de monto
     Validacion("monto", /^[0-9\b\,]*$/, /^[0-9]+(.[0-9]{1,2})?$/, "Solo números con hasta dos decimales (solo comas)", "proceso");
-    
+
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
         if (accion == "incluir") {
@@ -154,16 +154,21 @@ function cambiarEstatus(id, estadoActual) {
 }
 
 function validarEnvio(proceso) {
-        if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-            $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres", true)) {
-            muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
-            return false;
+    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
+        $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
+        return false;
     }
     else if (validarkeyup(/^[0-9]+(.[0-9]{1,2})?$/, $('#monto'),
-    $("#monto_spam"), "Solo números con hasta dos decimales (solo comas)", true)) {
-    muestraMensaje("error", 2000, "Error", "Tiene que ingresar un monto válido");
-    return false;
-}
+        $("#monto_spam"), "Solo números con hasta dos decimales (solo comas)", true)) {
+        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un monto válido");
+        return false;
+    }
+    else if ($('#regla').val() == "" || $('#regla').val() == null) {
+        muestraMensaje("error", 2000, "Error", "Debe elegir la frecuencia");
+        return false;
+    }
+
     return true;
 }
 
@@ -174,7 +179,7 @@ function modificar(datos) {
     $('#id').val(datos[0].id_conceptos);
     $('#nombre').val(datos[0].nombre);
     $('#monto').val(datos[0].monto);
-
+    $('#regla').val(datos[0].regla);
     abrirModal();
 }
 function crearConsulta(htmlRecibido) {

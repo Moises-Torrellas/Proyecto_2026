@@ -30,7 +30,7 @@ function busqueda() {
 
 $(document).ready(function () {
     MultiConsulta();
-
+    inicializarPaginador();
     ModeloBancario("#monto");
     ModeloBancario("#tasa");
 
@@ -202,30 +202,29 @@ $(document).ready(function () {
 
     // Evento dinámico interactivo al seleccionar una Cuenta por Cobrar
     $('#cuenta').on('change', function () {
-        let idCobrar = $(this).val();
-        if (!idCobrar) {
+        let idsCobrar = $(this).val();
+        if (!idsCobrar || idsCobrar.length === 0) {
             cuentaSeleccionadaActual = null;
             $('#detalles_deuda_ayuda').html(''); 
             return;
         }
         
-        cuentaSeleccionadaActual = listadoCuentas.find(c => c.id_cobrar == idCobrar);
+        cuentaSeleccionadaActual = listadoCuentas.find(c => c.id_cobrar == idsCobrar[0]);
         
-        if (cuentaSeleccionadaActual) {
-            let pendiente = parseFloat(cuentaSeleccionadaActual.monto_pendiente).toFixed(2);
-            let simboloMoneda = cuentaSeleccionadaActual.moneda_simbolo;
-            let nombreMoneda = cuentaSeleccionadaActual.moneda_nombre;
+        let htmlDeudas = '<div class="alerta-info-deuda" style="background-color: #f0f7ff; border-left: 4px solid #007bff; padding: 10px; margin-top: 5px; border-radius: 4px;"><p style="margin: 0; font-size: 13px; color: #333;">⚠️ <strong>Cuentas seleccionadas:</strong></p><ul style="margin: 5px 0 0 20px;">';
+        
+        idsCobrar.forEach(id => {
+            let cuenta = listadoCuentas.find(c => c.id_cobrar == id);
+            if (cuenta) {
+                let pendiente = parseFloat(cuenta.monto_pendiente).toFixed(2);
+                let simboloMoneda = cuenta.moneda_simbolo;
+                htmlDeudas += `<li style="font-size: 12px; color: #555;">${cuenta.concepto_nombre} - ${cuenta.atleta_nombre}: <span style="color: #dc3545; font-weight: bold;">${pendiente} ${simboloMoneda}</span></li>`;
+            }
+        });
+        htmlDeudas += '</ul></div>';
 
-            // Inyección visual en el modal de los datos de cobro pendientes
-            $('#detalles_deuda_ayuda').html(`
-                <div class="alerta-info-deuda" style="background-color: #f0f7ff; border-left: 4px solid #007bff; padding: 10px; margin-top: 5px; border-radius: 4px;">
-                    <p style="margin: 0; font-size: 13px; color: #333;">
-                        ⚠️ <strong>Detalles de la Deuda:</strong> Pasivo pendiente por pagar: 
-                        <span style="color: #dc3545; font-weight: bold;">${pendiente} ${simboloMoneda}</span> (${nombreMoneda}).
-                    </p>
-                </div>
-            `);
-        }
+        // Inyección visual en el modal de los datos de cobro pendientes
+        $('#detalles_deuda_ayuda').html(htmlDeudas);
 
         solicitarTasaAPI();
     });
@@ -328,10 +327,14 @@ function recalcularAmortizacion() {
     }
 }
 
-function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3 = null) {
+function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3 = null, campo4 = null, campo5= null) {
     var select = $('#' + idSelect);
     select.empty();
-    select.append('<option value="" selected disabled>Seleccione una opción</option>');
+    
+    // Evitar poner la opción vacía como seleccionable en selects múltiples
+    if (!select.prop('multiple')) {
+        select.append('<option value="" selected disabled>Seleccione una opción</option>');
+    }
 
     datos.forEach(dato => {
         let textoMostrar = "";
@@ -345,7 +348,7 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
             atributosExtra = `data-nec_ref="${dato[campo2]}"`;
         }
         else if (idSelect === 'cuenta' && campo1 && campo2 && campo3) {
-            textoMostrar = `${dato[campo1]} - ${dato[campo2]} ${dato[campo3]}`;
+            textoMostrar = `${dato[campo1]} ${dato[campo4]}${dato[campo5]} - ${dato[campo2]} ${dato[campo3]}`;
         }
         else {
             textoMostrar = escapeHTML(String(dato[campo1]));
@@ -391,7 +394,7 @@ function escapeHTML(texto) {
 
 function validarEnvio(accion) {
     if (accion == "incluir" || accion == "modificar") {
-        if ($('#cuenta').val() == "" || $('#cuenta').val() == null) {
+        if ($('#cuenta').val() == "" || $('#cuenta').val() == null || $('#cuenta').val().length == 0) {
             muestraMensaje("error", 2000, "Error", "Debe seleccionar una cuenta por cobrar");
             return false;
         }
@@ -460,7 +463,7 @@ function enviaAjax(datos) {
 
                     construirSelect('moneda', lee.monedas, 'id_moneda', 'simbolo', 'nombre');
                     construirSelect('metodo', lee.metodos, 'id_metodos', 'nombre', 'nec_referencia');
-                    construirSelect('cuenta', lee.cuentas, 'id_cobrar', 'concepto_nombre', 'atleta_nombre', 'atleta_apellido');
+                    construirSelect('cuenta', lee.cuentas, 'id_cobrar', 'concepto_nombre', 'atleta_nombre', 'atleta_apellido', 'moneda_simbolo', 'monto_pendiente');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();

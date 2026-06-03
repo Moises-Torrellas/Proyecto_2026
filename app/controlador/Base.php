@@ -23,7 +23,7 @@ function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = 
             'titulo'  => 'Acceso denegado',
             'mensaje' => 'No tienes permisos asignados para este módulo.'
         ];
-        header("Location:" . _URL_ . "Principal");
+        header("Location:"."Principal");
         exit();
     }
 
@@ -50,7 +50,7 @@ function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = 
                 'titulo'  => 'Acceso denegado',
                 'mensaje' => 'No tienes permitido ingresar a este módulo.'
             ];
-            header("Location:" . _URL_ . "Principal");
+            header("Location:"."Principal");
             exit();
         }
 
@@ -72,7 +72,7 @@ function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = 
             'titulo'  => 'Acceso denegado',
             'mensaje' => 'No tienes permisos asignados para este módulo.'
         ];
-        header("Location:" . _URL_ . "Principal");
+        header("Location:"."Principal");
         exit();
     }
 }

@@ -176,6 +176,10 @@ class ModeloCuentasCobrar extends ModeloBase
                 throw new Exception("La moneda seleccionada no existe.");
             }
 
+            if ($this->validarFrecuencia($conex, $this->id_concepto, $this->id_atleta, $this->fecha_emision)) {
+                throw new Exception("El atleta ya tiene asignado este concepto para el periodo correspondiente.");
+            }
+
             // Añadimos monto_pendiente a los campos y los valores de la sentencia SQL
             $sentencia = "INSERT INTO cuentas_cobrar (`id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `monto_pendiente`, `fecha_emision`, `fecha_vencimiento`, `estatus`) 
                         VALUES (:id_concepto, :id_atleta, :id_moneda, :monto, :monto_pendiente, :fecha_emision, :fecha_vencimiento, :estatus)";
@@ -312,6 +316,45 @@ class ModeloCuentasCobrar extends ModeloBase
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
+        }
+    }
+
+    public function validarFrecuencia($conex, $id_concepto, $id_atleta, $fecha_emision): bool
+    {
+        try {
+            $sql = "SELECT (SELECT COUNT(id_cobrar) 
+                            FROM cuentas_cobrar 
+                            WHERE id_concepto = c.id_conceptos 
+                              AND id_atleta = :id_atleta 
+                              AND (anulado = 0 OR anulado IS NULL)
+                              AND (
+                                  (c.regla = 'M' AND MONTH(fecha_emision) = MONTH(:fecha1) AND YEAR(fecha_emision) = YEAR(:fecha2)) OR
+                                  (c.regla = 'A' AND YEAR(fecha_emision) = YEAR(:fecha3)) OR
+                                  (c.regla = 'U')
+                              )
+                           ) as colisiones
+                    FROM conceptos c 
+                    WHERE c.id_conceptos = :id_concepto";
+
+            $stmt = $conex->prepare($sql);
+            $stmt->bindParam(':id_concepto', $id_concepto);
+            $stmt->bindParam(':id_atleta', $id_atleta);
+
+            // Asignamos la fecha a cada uno de los parámetros que exige el SQL
+            $stmt->bindParam(':fecha1', $fecha_emision);
+            $stmt->bindParam(':fecha2', $fecha_emision);
+            $stmt->bindParam(':fecha3', $fecha_emision);
+
+            $stmt->execute();
+
+            $resultado = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            // Si hay colisiones retorna true, si da 0 o la regla es 'L' retorna false
+            return ($resultado && $resultado['colisiones'] > 0);
+        } catch (Exception $e) {
+            logs('CuentasCobrar', $e->getMessage(), 'Modelo_ValidarFrecuencia');
+            // Lanzamos la excepción hacia arriba para que la transacción haga rollback
+            throw new Exception("Error al validar la frecuencia del concepto en la base de datos.");
         }
     }
 }
