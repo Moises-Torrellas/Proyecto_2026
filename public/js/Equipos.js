@@ -34,6 +34,7 @@ $(document).ready(function () {
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
 
     $('#proceso').on('click', function () {
+
         accion = $(this).data("accion");
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
@@ -41,21 +42,35 @@ $(document).ready(function () {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
+
+                        // Enviar atletas seleccionados
+                        atletasSeleccionados.forEach(function (a) {
+                            datos.append('atletas[]', a.id);
+                        });
+
                         enviaAjax(datos);
+
                     }
                 });
             }
         }
         else if (accion == "modificar") {
-            if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar este equipo?', function (confirmado) {
-                    if (confirmado) {
-                        var datos = new FormData($('#f')[0]);
-                        datos.append('accion', 'modificar');
-                        enviaAjax(datos);
-                    }
-                });
-            }
+                if (validarEnvio(accion)) {
+                    confirmar('¿Está seguro que quiere modificar este equipo?', function (confirmado) {
+                        if (confirmado) {
+                            var datos = new FormData($('#f')[0]);
+                            datos.append('accion', 'modificar');
+
+                            // Enviar atletas seleccionados
+                            atletasSeleccionados.forEach(function (a) {
+                                datos.append('atletas[]', a.id);
+                            });
+
+                            enviaAjax(datos);
+                        }
+                    });
+                }
+
         }
         else if (accion == "generar") {
             confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
@@ -77,6 +92,7 @@ $(document).ready(function () {
 
     $("#incluir").on("click", function () {
         limpia();
+        limpia_Tablas();
 
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Equipo");
@@ -97,7 +113,7 @@ $(document).ready(function () {
     });
     $("#asignar").on("click", function () {
         $("#buscar_atleta_modal").val("");
-        renderizarModalSecundario(poolAtletas);
+        cargarAtletasModal();
         abrirModalSecundario();
     });
 
@@ -163,6 +179,49 @@ function buscar(id) {
     enviaAjax(datos);
 }
 
+// Cargar atletas ya asignados al equipo (para preseleccionarlos al modificar)
+function cargarAtletasAsignadosEquipo(idEquipo, onDone) {
+    let datos = new FormData();
+    datos.append('accion', 'consultarAtletasAsignadosEquipo');
+    datos.append('id', idEquipo);
+
+    $.ajax({
+        async: true,
+        url: "",
+        type: "POST",
+        contentType: false,
+        data: datos,
+        processData: false,
+        cache: false,
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
+        timeout: 10000,
+        success: function (respuesta) {
+            try {
+                var lee = typeof respuesta === 'string' ? JSON.parse(respuesta) : respuesta;
+                if (lee.accion === 'consultarAtletasAsignadosEquipo' && Array.isArray(lee.datos)) {
+                    atletasSeleccionados = lee.datos;
+                    if (typeof onDone === 'function') onDone();
+                } else {
+                    // si no hay datos, igual dejamos vacío
+                    atletasSeleccionados = [];
+                    if (typeof onDone === 'function') onDone();
+                }
+            } catch (e) {
+                console.error('Error parseando consultarAtletasAsignadosEquipo:', e, respuesta);
+                atletasSeleccionados = [];
+                if (typeof onDone === 'function') onDone();
+            }
+        },
+        error: function () {
+            atletasSeleccionados = [];
+            if (typeof onDone === 'function') onDone();
+        }
+    });
+}
+
+
 
 function eliminar(id) {
     confirmar('¿Está seguro que quiere eliminar este ?', function (confirmado) {
@@ -198,15 +257,23 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Equipo");
     $('#nombre').closest('.colum').show();
 
-    $('#id').val(datos[0].id_equipos);
+    const idEquipo = datos[0].id_equipos;
+    $('#id').val(idEquipo);
     $('#nombre').val(datos[0].nombre);
 
     // Compatibilidad: algunos endpoints pueden devolver id_categoria (equipos) o id_categorias (join)
     const idCategoria = (datos[0].id_categorias ?? datos[0].id_categoria ?? "");
     $('#categoria').val(idCategoria).trigger('change');
 
-    abrirModal();
+    // Cargar atletas ya asociados al equipo para que se muestren al modificar
+    // Al modificar, precargamos atletas asignados
+    cargarAtletasAsignadosEquipo(idEquipo, function () {
+        renderizarModalPrincipal();
+        abrirModal();
+    });
+
 }
+
 
 
 function crearConsulta(htmlRecibido) {
@@ -330,14 +397,8 @@ function enviaAjax(datos) {
     });
 }
 
-//DATOS PROEBA DE SELECCION DE ATLETAS
-const poolAtletas = [
-    { id: 1, doc_i: "V-25111222", nombre: "Moises Torrellas", categoria: "Sub-18", posicion: "Delantero Centro" },
-    { id: 2, doc_i: "V-28456123", nombre: "Carlos Mendoza", categoria: "Sub-14", posicion: "Portero" },
-    { id: 3, doc_i: "V-29123456", nombre: "Luis Rodríguez", categoria: "Sub-16", posicion: "Defensa Izquierdo" },
-    { id: 4, doc_i: "V-30111222", nombre: "Andrés Pérez", categoria: "Sub-16", posicion: "Medio Centro" },
-    { id: 5, doc_i: "V-31444555", nombre: "Gabriel Gómez", categoria: "Sub-18", posicion: "Extremo Derecho" }
-];
+// Lista dinámica de atletas para el modal (se carga desde backend)
+let poolAtletas = [];
 
 let atletasSeleccionados = [];
 
@@ -401,16 +462,51 @@ $("#check_todos_atletas").on("change", function () {
     $(".check_atleta_modal").prop("checked", estado);
 });
 
-// --- 3. BUSCADOR EN TIEMPO REAL ---
+// Carga desde backend para el modal
+let timerAtletas;
+function cargarAtletasModal(filtro = '') {
+    const datos = new FormData();
+    datos.append('accion', 'consultarAtletasModal');
+    datos.append('filtro', filtro);
+
+    $.ajax({
+        async: true,
+        url: "",
+        type: "POST",
+        contentType: false,
+        data: datos,
+        processData: false,
+        cache: false,
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
+        timeout: 10000,
+        success: function (respuesta) {
+            try {
+                const lee = typeof respuesta === 'string' ? JSON.parse(respuesta) : respuesta;
+                if (lee.accion === 'consultarAtletasModal' && Array.isArray(lee.datos)) {
+                    poolAtletas = lee.datos;
+                    renderizarModalSecundario(poolAtletas);
+                } else if (lee.accion === 'error') {
+                    muestraMensaje("error", 3000, "Error", lee.mensaje || 'Error al cargar atletas');
+                }
+            } catch (e) {
+                console.error('Error parseando respuesta consultarAtletasModal:', e, respuesta);
+                muestraMensaje("error", 3000, "Error", "Respuesta inesperada del servidor (no JSON). Revisa consola F12.");
+            }
+        },
+        error: function (request, status, err) {
+            muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + status + " " + err);
+        }
+    });
+}
+
+// --- 3. BUSCADOR EN TIEMPO REAL (backend con debounce) ---
 $("#buscar_atleta_modal").on("keyup", function () {
-    const termino = $(this).val().toLowerCase().trim();
-
-    const filtrados = poolAtletas.filter(atleta =>
-        atleta.nombre.toLowerCase().includes(termino) ||
-        atleta.doc_i.toLowerCase().includes(termino)
-    );
-
-    renderizarModalSecundario(filtrados);
+    clearTimeout(timerAtletas);
+    timerAtletas = setTimeout(function () {
+        cargarAtletasModal($("#buscar_atleta_modal").val() || '');
+    }, 400);
 });
 
 // --- 4. BOTÓN LISTO (PERSISTENCIA ARREGLADA) ---
