@@ -176,7 +176,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             registrarBitacora($bitacoraObj, $id_modulo, "Generó un cargo de " . $_POST['monto_total'] . " al atleta ID: " . $_POST['id_atleta']);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Cuenta por cobrar registrada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-            $resultado['mensaje'] = 'Ocurrió un error inesperado al registrar el cargo: ' . ($resultado['codigo'] ?? '');
+            $resultado['mensaje'] = ($resultado['codigo'] ?? '');
         }
 
         echo json_encode($resultado);
