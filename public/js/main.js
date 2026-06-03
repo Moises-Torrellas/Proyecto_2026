@@ -541,6 +541,7 @@ function limpia() {
 
 function limpia_Tablas() {
     $('#tabla_permisos').find('tr').remove();
+    $('#tabla_Atletas_Seleccionados').find('tr').remove();
 }
 
 function eliminaLinea(boton) {
