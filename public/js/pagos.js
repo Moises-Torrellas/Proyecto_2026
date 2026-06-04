@@ -112,7 +112,7 @@ $(document).ready(function () {
 
         // Forzar fecha del sistema y bloquear a solo lectura para evitar errores de API histórica
         let hoy = new Date().toISOString().split('T')[0];
-        $('#fecha').val(hoy).attr('readonly', true);
+        $('#fecha').val(hoy);
         
         abrirModal();
     });
