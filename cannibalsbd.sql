@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 04-06-2026 a las 01:24:39
+-- Tiempo de generación: 04-06-2026 a las 04:24:41
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -67,7 +67,7 @@ CREATE TABLE `atletas` (
 --
 
 INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `telefono`, `direccion`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`, `estatus`) VALUES
-(13, 'Jose Jose', 'Perez Perez', '32323232', NULL, NULL, 'H', '2011-05-18', 'atleta_2012-05-18_1779417290.png', 5, 8, 2, 1),
+(13, 'Jose Jose', 'Perez Perez', '32323232', NULL, NULL, 'H', '2008-05-18', 'atleta_2012-05-18_1779417290.png', 5, 8, 2, 1),
 (14, 'Mario Mario', 'Bros Bros', '34324324', NULL, NULL, 'H', '2009-05-19', 'atleta_2009-05-19_1779417273.png', 5, 8, 2, 1),
 (15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779417262.png', 6, 4, NULL, 2),
 (16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779417253.png', 5, 3, 6, 2);
@@ -93,7 +93,6 @@ CREATE TABLE `catalogos` (
 --
 
 INSERT INTO `catalogos` (`id_catalogo`, `nombre`, `stock_minimo`, `id_categoria`, `talla`, `id_posicion`) VALUES
-(2, 'Bolas', '15', 3, '', NULL),
 (3, 'Stick', '14', 4, '', NULL),
 (4, 'Stick De Carbono', '10', 4, '6', NULL);
 
@@ -142,7 +141,7 @@ CREATE TABLE `categoria_catalogo` (
 --
 
 INSERT INTO `categoria_catalogo` (`id_categoria`, `nombre`, `descripcion`) VALUES
-(3, 'BOLA', 'Bola'),
+(3, 'POW', 'moises'),
 (4, 'STICK', 'Palo');
 
 -- --------------------------------------------------------
@@ -200,7 +199,8 @@ INSERT INTO `cuentas_cobrar` (`id_cobrar`, `id_concepto`, `id_atleta`, `id_moned
 (13, 3, 14, 5, 10000.00, 10000.00, '2026-06-03', '2026-07-17', 0, 0),
 (14, 2, 14, 4, 30.00, 30.00, '2026-06-03', '2026-07-03', 0, 1),
 (15, 2, 14, 4, 30.00, 30.00, '2026-06-03', '2026-07-03', 0, 1),
-(16, 2, 16, 4, 30.00, 30.00, '2026-06-03', '2026-07-03', 0, 0);
+(16, 2, 16, 4, 30.00, 0.00, '2026-06-03', '2026-07-03', 1, 0),
+(17, 2, 15, 5, 30.00, 30.00, '2026-06-03', '2026-07-03', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -214,13 +214,6 @@ CREATE TABLE `detalles_equipos` (
   `id_equipo` int(11) NOT NULL,
   `id_atleta` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
-
---
--- Volcado de datos para la tabla `detalles_equipos`
---
-
-INSERT INTO `detalles_equipos` (`id_detalle`, `id_equipo`, `id_atleta`) VALUES
-(1, 4, 15);
 
 -- --------------------------------------------------------
 
@@ -241,14 +234,10 @@ CREATE TABLE `detalles_pagos` (
 --
 
 INSERT INTO `detalles_pagos` (`id_detalle_pago`, `id_pago`, `id_cobrar`, `monto_abonado`) VALUES
-(4, 10, 13, 10000.00),
-(5, 10, 12, 30.00),
-(6, 11, 13, 5000.00),
-(7, 12, 13, 5000.00),
-(8, 13, 12, 30.00),
-(9, 14, 16, 30.00),
-(10, 15, 16, 30.00),
-(11, 15, 12, 23.70);
+(12, 16, 13, 10000.00),
+(13, 16, 12, 30.00),
+(14, 17, 16, 0.05),
+(15, 18, 16, 30.00);
 
 -- --------------------------------------------------------
 
@@ -306,13 +295,6 @@ CREATE TABLE `equipos` (
   `id_categoria` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
-
---
--- Volcado de datos para la tabla `equipos`
---
-
-INSERT INTO `equipos` (`id_equipos`, `id_categoria`, `nombre`) VALUES
-(4, 4, 'Hola');
 
 -- --------------------------------------------------------
 
@@ -438,12 +420,9 @@ CREATE TABLE `pagos` (
 --
 
 INSERT INTO `pagos` (`id_pago`, `id_metodo`, `id_moneda`, `monto_pago`, `tasa_cambio`, `monto_vuelto`, `fecha`, `referencia`, `estatus`) VALUES
-(10, 3, 4, 55.00, 0.0018, 7.10, '2026-06-03', '5454', 2),
-(11, 2, 5, 5000.00, 1.0000, 0.00, '2026-06-03', '5858', 2),
-(12, 1, 4, 12.00, 0.0018, 3.05, '2026-06-03', '', 2),
-(13, 2, 5, 16759.31, 558.6436, 0.00, '2026-06-03', '45454', 2),
-(14, 1, 4, 30.00, 1.0000, 0.00, '2026-06-03', '', 2),
-(15, 2, 5, 30000.00, 558.6436, 0.00, '2026-06-03', '5857', 2);
+(16, 1, 4, 50.00, 0.0018, 2.15, '2026-06-03', '', 2),
+(17, 1, 5, 30.00, 560.3753, 0.00, '2026-06-03', '', 2),
+(18, 1, 4, 30.00, 1.0000, 0.00, '2026-06-03', '', 1);
 
 -- --------------------------------------------------------
 
@@ -619,6 +598,8 @@ CREATE TABLE `vista_cuentas_cobrar` (
 ,`moneda_nombre` varchar(40)
 ,`moneda_simbolo` varchar(3)
 ,`moneda_abreviatura` varchar(4)
+,`deuda_moneda_atleta` decimal(32,2)
+,`total_facturas_atleta` bigint(21)
 );
 
 -- --------------------------------------------------------
@@ -639,7 +620,7 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_atletas`  AS SELECT 
 DROP TABLE IF EXISTS `vista_cuentas_cobrar`;
 
 DROP VIEW IF EXISTS `vista_cuentas_cobrar`;
-CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_cuentas_cobrar`  AS SELECT `c`.`id_cobrar` AS `id_cobrar`, `c`.`id_atleta` AS `id_atleta`, `c`.`id_concepto` AS `id_concepto`, `c`.`id_moneda` AS `id_moneda`, `c`.`fecha_emision` AS `fecha_emision`, `c`.`fecha_vencimiento` AS `fecha_vencimiento`, `c`.`monto_personalizado` AS `monto_total`, `c`.`monto_pendiente` AS `monto_pendiente`, `c`.`anulado` AS `anulado`, `c`.`estatus` AS `estatus`, CASE WHEN `c`.`anulado` = 1 THEN 'Anulado' WHEN `c`.`estatus` = 0 THEN 'Pendiente' WHEN `c`.`estatus` = 1 THEN 'Pagado' ELSE 'Desconocido' END AS `estatus_texto`, `a`.`nombres` AS `atleta_nombre`, `a`.`apellidos` AS `atleta_apellido`, `co`.`nombre` AS `concepto_nombre`, `m`.`nombre` AS `moneda_nombre`, `m`.`simbolo` AS `moneda_simbolo`, `m`.`abreviatura` AS `moneda_abreviatura` FROM (((`cuentas_cobrar` `c` join `atletas` `a` on(`c`.`id_atleta` = `a`.`id_atleta`)) join `conceptos` `co` on(`c`.`id_concepto` = `co`.`id_conceptos`)) join `monedas` `m` on(`c`.`id_moneda` = `m`.`id_moneda`)) ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_cuentas_cobrar`  AS SELECT `c`.`id_cobrar` AS `id_cobrar`, `c`.`id_atleta` AS `id_atleta`, `c`.`id_concepto` AS `id_concepto`, `c`.`id_moneda` AS `id_moneda`, `c`.`fecha_emision` AS `fecha_emision`, `c`.`fecha_vencimiento` AS `fecha_vencimiento`, `c`.`monto_personalizado` AS `monto_total`, `c`.`monto_pendiente` AS `monto_pendiente`, `c`.`anulado` AS `anulado`, `c`.`estatus` AS `estatus`, CASE WHEN `c`.`anulado` = 1 THEN 'Anulado' WHEN `c`.`estatus` = 0 THEN 'Pendiente' WHEN `c`.`estatus` = 1 THEN 'Pagado' ELSE 'Desconocido' END AS `estatus_texto`, `a`.`nombres` AS `atleta_nombre`, `a`.`apellidos` AS `atleta_apellido`, `co`.`nombre` AS `concepto_nombre`, `m`.`nombre` AS `moneda_nombre`, `m`.`simbolo` AS `moneda_simbolo`, `m`.`abreviatura` AS `moneda_abreviatura`, sum(case when `c`.`estatus` = 0 and `c`.`anulado` = 0 then `c`.`monto_pendiente` else 0 end) over ( partition by `c`.`id_atleta`,`m`.`id_moneda`) AS `deuda_moneda_atleta`, count(`c`.`id_cobrar`) over ( partition by `c`.`id_atleta`) AS `total_facturas_atleta` FROM (((`cuentas_cobrar` `c` join `atletas` `a` on(`c`.`id_atleta` = `a`.`id_atleta`)) join `conceptos` `co` on(`c`.`id_concepto` = `co`.`id_conceptos`)) join `monedas` `m` on(`c`.`id_moneda` = `m`.`id_moneda`)) ;
 
 --
 -- Índices para tablas volcadas
@@ -895,7 +876,7 @@ ALTER TABLE `conceptos`
 -- AUTO_INCREMENT de la tabla `cuentas_cobrar`
 --
 ALTER TABLE `cuentas_cobrar`
-  MODIFY `id_cobrar` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id_cobrar` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_equipos`
@@ -907,7 +888,7 @@ ALTER TABLE `detalles_equipos`
 -- AUTO_INCREMENT de la tabla `detalles_pagos`
 --
 ALTER TABLE `detalles_pagos`
-  MODIFY `id_detalle_pago` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id_detalle_pago` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_palmares`
@@ -967,7 +948,7 @@ ALTER TABLE `monedas`
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT de la tabla `palmares`
