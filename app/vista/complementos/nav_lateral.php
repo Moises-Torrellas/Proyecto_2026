@@ -65,7 +65,7 @@
                 <li class="nav_identificador">Inventario</li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_EQUIPAMIENTO_)): ?>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="boxes"></i> Equipamientos</a>
+                        <a type="button" href="Equipamientos" class="opciones"><i class="opciones_i" data-lucide="boxes"></i> Equipamientos</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_CATALOGO_)): ?>
