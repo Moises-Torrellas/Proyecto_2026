@@ -39,7 +39,6 @@ function manejarSolicitudAsignacion($obj, $id_modulo, $bitacoraObj, array $permi
                 echo json_encode($obj->ProcesarDatos(['accion' => 'consultar']));
                 break;
                 
-            // NUEVA FUNCIÓN ESTILO "ATLETAS"
             case 'MultiConsulta':
                 if (empty($permisos['ingresar'])) throw new Exception('No tiene permisos para consultar datos.');
                 MultiConsulta();
