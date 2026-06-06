@@ -60,6 +60,7 @@ function manejarRuta($pagina): void
         'Reportes' => 'Reportes',
         'Catalogos'=>'Catalogos',
         'Equipos'=>'Equipos',
+        'Asignaciones' => 'Asignaciones',
     ];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {

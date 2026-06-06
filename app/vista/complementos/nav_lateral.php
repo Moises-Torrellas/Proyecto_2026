@@ -81,7 +81,7 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_ASIGNACIONES_)): ?>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="list-plus"></i> Asignaciones</a>
+                        <a type="button" href="Asignaciones" class="opciones"><i class="opciones_i" data-lucide="list-plus"></i> Asignaciones</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_DEVOLUCIONES_)): ?>
