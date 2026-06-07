@@ -58,6 +58,8 @@ const DUPLICATE_NAME  = "004";
 const DUPLICATE_PHONE  = "005";
 const ASSOCIATES  = "006";
 const VALIDATION = "007";
+const ALREADY_ANNULLED = "008";
+const EMPTY_SELECTION  = "009";
 const DB_CONNECTION    = "500";
 
 

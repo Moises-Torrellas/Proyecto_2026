@@ -56,7 +56,6 @@ abstract class ModeloBase extends Conexion
             $stmt->execute();
             return (int)$stmt->fetchColumn() > 0;
         } catch (Exception $e) {
-            error_log("[" . get_class($this) . "][verificarExistencia] " . $e->getMessage());
             return false;
         }
     }
@@ -91,7 +90,6 @@ abstract class ModeloBase extends Conexion
             
             return (int)$stmt->fetchColumn() > 0;
         } catch (Exception $e) {
-            error_log("Error en pertenencia con bloqueo: " . $e->getMessage());
             return false;
         }
     }

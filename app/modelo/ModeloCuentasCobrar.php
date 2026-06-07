@@ -261,20 +261,23 @@ class ModeloCuentasCobrar extends ModeloBase
         }
     }
 
-    function Buscar(): array
+    public function Buscar(int $id = null): array
     {
         try {
             $conex = $this->conex();
 
             // CORRECCIÓN: Cambiado monto a monto_personalizado para evitar el error 1054
             $sentencia = "SELECT *, 
-                                     monto_personalizado as monto_total, 
-                                     monto_personalizado as monto_pendiente 
-                              FROM cuentas_cobrar 
-                              WHERE id_cobrar = :id";
+                                    monto_personalizado as monto_total, 
+                                    monto_pendiente as monto_pendiente 
+                            FROM cuentas_cobrar 
+                            WHERE id_cobrar = :id";
 
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            if ($id===null) {
+                $id = $this->id;
+            }
+            $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             return array('accion' => 'buscar', 'datos' => $datos);
@@ -355,6 +358,42 @@ class ModeloCuentasCobrar extends ModeloBase
             logs('CuentasCobrar', $e->getMessage(), 'Modelo_ValidarFrecuencia');
             // Lanzamos la excepción hacia arriba para que la transacción haga rollback
             throw new Exception("Error al validar la frecuencia del concepto en la base de datos.");
+        }
+    }
+
+    public function ModificarEstatus(int $id, int $estatus, float $monto, ?\PDO $conexExterna = null): bool
+    {
+        $transaccionPropia = false;
+        try {
+            if ($conexExterna !== null) {
+                $conex = $conexExterna;
+            } else {
+                $conex = $this->conex();
+                $conex->beginTransaction();
+                $transaccionPropia = true;
+            }
+
+            $sentencia = "UPDATE cuentas_cobrar SET estatus = :estatus, monto_pendiente = :monto WHERE id_cobrar = :id";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':estatus', $estatus);
+            $stmt->bindParam(':monto', $monto);
+            $stmt->execute();
+
+            if ($transaccionPropia) {
+                $conex->commit();
+            }
+            return true;
+        } catch (Exception $e) {
+            if ($transaccionPropia && isset($conex) && $conex->inTransaction()) {
+                $conex->rollback();
+            }
+            logs('CuentasCobrar', $e->getMessage(), 'Modelo_ModificarEstatus');
+            return false;
+        } finally {
+            if ($transaccionPropia) {
+                $conex = NULL;
+            }
         }
     }
 }

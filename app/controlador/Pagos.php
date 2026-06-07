@@ -186,6 +186,10 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             }
         }
 
+        $obj->setCuentas(new ModeloCuentasCobrar());
+        //$obj->setMetodos(new ModeloMetodosPago());
+        $obj->setMonedas(new ModeloMonedas());
+
         $datos['accion'] = 'incluir';
         $resultado = $obj->ProcesarDatos($datos);
         
@@ -195,8 +199,10 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Pago registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID       => 'La cuenta por cobrar o el método/moneda seleccionados no existen.',
-                default          => $resultado['codigo']
+                INVALID_ID         => 'El método de pago seleccionado no existe.',
+                INVALID_ID . '0'   => 'La moneda seleccionada no es válida.',
+                EMPTY_SELECTION    => 'Debe seleccionar al menos una cuenta por cobrar.',
+                default            => 'Ocurrió un error inesperado en el registro del pago.'
             };
         }
         echo json_encode($resultado);
@@ -219,6 +225,8 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
 
+        $obj->setCuentas(new ModeloCuentasCobrar());
+
         $resultado = $obj->ProcesarDatos($datos);
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
@@ -226,8 +234,9 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Pago anulado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID       => 'El pago no existe.',
-                default          => 'Ocurrió un error inesperado en la anulación del pago.'
+                INVALID_ID         => 'El pago no existe.',
+                ALREADY_ANNULLED   => 'El pago ya se encuentra anulado.',
+                default            => 'Ocurrió un error inesperado en la anulación del pago.'
             };
         }
         echo json_encode($resultado);
