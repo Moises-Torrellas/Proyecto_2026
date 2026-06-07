@@ -3,11 +3,13 @@
 namespace App\modelo;
 
 use App\modelo\ModeloBase;
+use App\modelo\ModeloEquipamientos;
 use Exception;
 use PDO;
 
 class ModeloAsignaciones extends ModeloBase
 {
+    // Atributos privados encapsulados
     private $id_asignacion;
     private $id_atleta;
     private $id_equipamiento;
@@ -19,11 +21,17 @@ class ModeloAsignaciones extends ModeloBase
     public function __construct()
     {
         parent::__construct();
+    
         $this->campoWhitelist = [
-            'id_atleta' => 'id_atleta',
-            'id_equipamiento' => 'id_equipamiento',
-            'id' => 'id_asignacion'
+            'id_asignacion'    => 'id_asignacion',
+            'id_atleta'        => 'id_atleta',
+            'id_equipamiento'  => 'id_equipamiento',
+            'fecha_asignacion' => 'fecha_asignacion',
+            'estatus'          => 'estatus',
+            'anulado'          => 'anulado',
+            'motivo'           => 'motivo'
         ];
+        
         $this->llavePrimaria = 'id_asignacion';
     }
 
@@ -33,22 +41,22 @@ class ModeloAsignaciones extends ModeloBase
             throw new Exception('No se proporcionaron datos para procesar la asignación.');
         }
 
-        $this->id_asignacion   = $datos['id_asignacion'] ?? null;
-        $this->id_atleta       = $datos['id_atleta'] ?? null;
-        $this->id_equipamiento = $datos['id_equipamiento'] ?? null;
+        $this->id_asignacion    = $datos['id_asignacion'] ?? null;
+        $this->id_atleta        = $datos['id_atleta'] ?? null;
+        $this->id_equipamiento  = $datos['id_equipamiento'] ?? null;
         $this->fecha_asignacion = $datos['fecha_asignacion'] ?? null; 
-        $this->estatus         = $datos['estatus'] ?? null;
-        $this->anulado         = $datos['anulado'] ?? null;
-        $this->motivo          = isset($datos['motivo']) ? trim($datos['motivo']) : '';
+        $this->estatus          = $datos['estatus'] ?? null;
+        $this->anulado          = $datos['anulado'] ?? null;
+        $this->motivo           = isset($datos['motivo']) ? trim($datos['motivo']) : '';
 
         $accion = $datos['accion'] ?? null;
 
         return match ($accion) {
-            'consultar'     => $this->ConsultarAsignaciones(),
-            'incluir'       => $this->IncluirAsignacion(),
-            'modificar'     => $this->ModificarAsignacion(),
-            'anular'        => $this->AnularAsignacion(),
-            default         => throw new Exception('La acción solicitada para la asignación no es válida.')
+            'consultar' => $this->ConsultarAsignaciones(),
+            'incluir'   => $this->IncluirAsignacion(),
+            'modificar' => $this->ModificarAsignacion(),
+            'anular'    => $this->AnularAsignacion(),
+            default     => throw new Exception('La acción solicitada para la asignación no es válida.')
         };
     }
 
@@ -94,21 +102,23 @@ class ModeloAsignaciones extends ModeloBase
             $conex = $this->conex();
             $conex->beginTransaction();
 
+            // 1. Bloqueo transaccional: Verificamos si el equipo físico sigue disponible
             $stmtCheck = $conex->prepare("SELECT estatus FROM equipamientos WHERE id_equipamiento = ? FOR UPDATE");
             $stmtCheck->execute([$this->id_equipamiento]);
             $estadoEquipo = $stmtCheck->fetchColumn();
             
             if ($estadoEquipo != 1) {
-                throw new Exception("El equipo seleccionado ya fue asignado o no está disponible.");
+                throw new Exception("El equipo seleccionado ya fue asignado o no está disponible en almacén.");
             }
 
+            // 2. Inserción del documento legal del préstamo (Estatus 1 = Activa, Anulado = 0)
             $sqlInsert = "INSERT INTO asignaciones (id_atleta, id_equipamiento, fecha_asignacion, estatus, anulado) VALUES (?, ?, ?, 1, 0)";
             $stmtInsert = $conex->prepare($sqlInsert);
             $stmtInsert->execute([$this->id_atleta, $this->id_equipamiento, $this->fecha_asignacion]);
 
-            $sqlUpdate = "UPDATE equipamientos SET estatus = 2 WHERE id_equipamiento = ?";
-            $stmtUpdate = $conex->prepare($sqlUpdate);
-            $stmtUpdate->execute([$this->id_equipamiento]);
+            // 3. SRP: Delegamos la modificación física del equipo a su propio modelo inyectándole la conexión
+            $modeloEquipos = new ModeloEquipamientos();
+            $modeloEquipos->CambiarEstatus($this->id_equipamiento, 2, $conex);
 
             $conex->commit();
             return ['accion' => 'exito', 'mensaje' => 'Asignación procesada. Equipo descontado del almacén.'];
@@ -130,6 +140,7 @@ class ModeloAsignaciones extends ModeloBase
             $conex = $this->conex();
             $conex->beginTransaction();
 
+            // 1. Rastreamos cuál era el equipo asignado originalmente para devolverlo si es necesario
             $stmtOld = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
             $stmtOld->execute([$this->id_asignacion]);
             $viejoEquipo = $stmtOld->fetchColumn();
@@ -138,18 +149,27 @@ class ModeloAsignaciones extends ModeloBase
                 throw new Exception("La asignación original no existe en el sistema.");
             }
 
+            // 2. Lógica de Intercambio Físico: Si el usuario seleccionó un activo diferente
             if ($viejoEquipo != $this->id_equipamiento) {
+                
+                // Aseguramos que el activo nuevo esté disponible
                 $stmtCheck = $conex->prepare("SELECT estatus FROM equipamientos WHERE id_equipamiento = ? FOR UPDATE");
                 $stmtCheck->execute([$this->id_equipamiento]);
                 
                 if ($stmtCheck->fetchColumn() != 1) {
-                    throw new Exception("El nuevo equipo seleccionado no está disponible.");
+                    throw new Exception("El nuevo equipo seleccionado no está disponible en almacén.");
                 }
 
-                $conex->prepare("UPDATE equipamientos SET estatus = 1 WHERE id_equipamiento = ?")->execute([$viejoEquipo]);
-                $conex->prepare("UPDATE equipamientos SET estatus = 2 WHERE id_equipamiento = ?")->execute([$this->id_equipamiento]);
+                $modeloEquipos = new ModeloEquipamientos();
+                
+                // Reingresamos la pieza anterior (estatus 1 = Disponible)
+                $modeloEquipos->CambiarEstatus($viejoEquipo, 1, $conex);
+                
+                // Bloqueamos la nueva pieza (estatus 2 = Prestado)
+                $modeloEquipos->CambiarEstatus($this->id_equipamiento, 2, $conex);
             }
 
+            // 3. Actualizamos la cabecera de la asignación
             $sqlUpdate = "UPDATE asignaciones SET id_atleta = ?, id_equipamiento = ?, fecha_asignacion = ? WHERE id_asignacion = ?";
             $stmtUpdate = $conex->prepare($sqlUpdate);
             $stmtUpdate->execute([$this->id_atleta, $this->id_equipamiento, $this->fecha_asignacion, $this->id_asignacion]);
@@ -174,11 +194,13 @@ class ModeloAsignaciones extends ModeloBase
             $conex = $this->conex();
             $conex->beginTransaction();
 
+            // 1. Anulación Lógica: Mantenemos el registro histórico pero lo invalidamos
             $stmtAnular = $conex->prepare("UPDATE asignaciones SET anulado = 1, estatus = 0 WHERE id_asignacion = ?");
             $stmtAnular->execute([$this->id_asignacion]);
 
-            $stmtDevolver = $conex->prepare("UPDATE equipamientos SET estatus = 1 WHERE id_equipamiento = ?");
-            $stmtDevolver->execute([$this->id_equipamiento]);
+            // 2. SRP: Usamos el modelo cruzado para liberar la pieza
+            $modeloEquipos = new ModeloEquipamientos();
+            $modeloEquipos->CambiarEstatus($this->id_equipamiento, 1, $conex);
 
             $conex->commit();
             return ['accion' => 'exito', 'mensaje' => 'Asignación anulada. El equipo regresó al inventario libre.'];

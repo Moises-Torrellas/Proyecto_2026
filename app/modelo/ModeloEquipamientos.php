@@ -157,4 +157,49 @@ class ModeloEquipamientos extends ModeloBase
             return ['accion' => 'error', 'codigo' => 'Error al eliminar el equipamiento.'];
         }
     }
+
+    public function ConsultarEquiposLibres(): array
+    {
+        $conex = null;
+        try {
+            $conex = $this->conex();
+            
+            $sql = "SELECT e.id_equipamiento, IFNULL(c.nombre, 'Artículo sin registrar') as articulo 
+                    FROM equipamientos e 
+                    LEFT JOIN catalogos c ON e.id_catalogo = c.id_catalogo 
+                    WHERE e.estatus = 1";
+                    
+            $equipos = $conex->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+            return ['accion' => 'exito', 'datos' => $equipos];
+        } catch (Exception $e) {
+            logs('Equipamientos', $e->getMessage(), 'Modelo_EquiposLibres');
+            return ['accion' => 'error', 'datos' => []];
+        } finally {
+            $conex = null;
+        }
+    }
+
+    public function CambiarEstatus($id_equipamiento, $nuevo_estatus, $conexion_transaccional = null): bool
+    {
+        $conex = $conexion_transaccional ?? $this->conex();
+
+        try {
+            $sql = "UPDATE equipamientos SET estatus = :estatus WHERE id_equipamiento = :id";
+            $stmt = $conex->prepare($sql);
+            $stmt->execute([
+                ':estatus' => $nuevo_estatus,
+                ':id'     => $id_equipamiento
+            ]);
+
+            return true;
+        } catch (Exception $e) {
+            logs('Equipamientos', $e->getMessage(), 'Modelo_CambiarEstatus');
+            throw new Exception("Error interno al actualizar el estado físico del equipo.");
+        } finally {
+            if ($conexion_transaccional === null) {
+                $conex = null;
+            }
+        }
+    }
 }
