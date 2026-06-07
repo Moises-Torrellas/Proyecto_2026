@@ -1,3 +1,4 @@
+<?php if (!isset($solo_lista)) { ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,17 +16,62 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina">Asignaciones</h2>
+                            <h2 class="titulo_pagina">Equipos Asignados</h2>
                         </div>
                         <div class="botones">
+                            <?php if (!empty($permisos['registrar'])) { ?>
                             <button class="btn btn_azul" id="btn_nuevo">
                                 <i class="fi fi-sr-add-document"></i> Nueva Asignación
                             </button>
+                            <?php } ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-                            </div>
+<?php } ?>
+
+                            <?php if (empty($registro)) { ?>
+                                <div class="listado_vacio"><p>No hay asignaciones activas.</p></div>
+                            <?php } else { 
+                                foreach ($registro as $dato) { ?>
+                                    <div class="listado_contenedor_grupal">
+                                        <div class="listado_item">
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo" style="width: 15%;">
+                                                    <small>Fecha</small>
+                                                    <span style="font-weight: bold;"><?= $dato['fecha_vista'] ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo" style="width: 35%;">
+                                                    <small>Atleta</small>
+                                                    <span style="font-weight: bold; color: var(--texto-principal);"><?= $dato['atleta'] ?></span>
+                                                    <small>CI: <?= $dato['doc_identidad'] ?></small>
+                                                </div>
+                                                <div class="listado_dato_grupo" style="width: 30%;">
+                                                    <small>Equipo Asignado</small>
+                                                    <span><?= $dato['articulo'] ?></span>
+                                                    <small style="color: #6c757d;">(Pza ID: #<?= $dato['id_equipamiento'] ?>)</small>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Estado</small>
+                                                    <span style="color:#ffc107; font-weight:bold;">EN USO</span>
+                                                </div>
+                                            </div>
+                                            <div class="listado_col_acciones">
+                                                <div style="display:flex; gap:5px;">
+                                                    <?php if (!empty($permisos['modificar'])) { ?>
+                                                        <button class="btn_t cbt_v" onclick="editar(<?= $dato['id_asignacion'] ?>, <?= $dato['id_atleta'] ?>, <?= $dato['id_equipamiento'] ?>, '<?= $dato['fecha_real'] ?>')" title="Modificar"><i class="fi fi-sr-edit"></i></button>
+                                                    <?php } ?>
+                                                    <?php if (!empty($permisos['eliminar'])) { ?>
+                                                        <button class="btn_t cbt_r" onclick="anular(<?= $dato['id_asignacion'] ?>, <?= $dato['id_equipamiento'] ?>)" title="Anular Asignación"><i class="fi fi-sr-ban"></i></button>
+                                                    <?php } ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            <?php } } ?>
+
+<?php if (!isset($solo_lista)) { ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -41,7 +87,6 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id_asignacion" name="id_asignacion">
-                    
                     <div class="row">
                         <div class="colum" style="width: 100%;">
                             <label>Atleta</label>
@@ -57,7 +102,7 @@
                             <label>Equipamiento (Almacén Libre)</label>
                             <div class="caja_formulario">
                                 <select class="formulario select2" id="id_equipamiento" name="id_equipamiento" required>
-                                    <option value="">Seleccione una pieza disponible...</option>
+                                    <option value="">Seleccione una pieza...</option>
                                 </select>
                             </div>
                         </div>
@@ -79,8 +124,8 @@
             </div>
         </div>
     </section>
-    
     <script src="js/main.js"></script>
     <script src="js/asignaciones.js"></script>
 </body>
 </html>
+<?php } ?>

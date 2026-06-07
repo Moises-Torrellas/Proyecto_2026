@@ -1,14 +1,13 @@
 $(document).ready(function () {
-    consultar();
-    cargarCombos();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    MultiConsulta();
 
     $("#btn_nuevo").on("click", function () {
         $("#f")[0].reset();
         $("#id_asignacion").val('');
         $("#titulo_modal").text("Registrar Asignación");
-        $("#btn_guardar").text("Confirmar Préstamo").attr("data-accion", "incluir");
+        $("#btn_guardar").text("Confirmar Préstamo").data("accion", "incluir");
         $('#fecha_asignacion').val(new Date().toISOString().split('T')[0]);
-        
         abrirModal(); 
     });
 
@@ -17,9 +16,9 @@ $(document).ready(function () {
             muestraMensaje("error", 2000, "Validación", "Debe seleccionar un atleta y una pieza.");
             return false;
         }
-
+        let accion = $(this).data("accion");
         let datos = new FormData($('#f')[0]);
-        datos.append('accion', $(this).attr('data-accion'));
+        datos.append('accion', accion);
         enviaAjax(datos);
     });
 });
@@ -30,8 +29,7 @@ function consultar() {
     enviaAjax(datos);
 }
 
-// Ahora llamamos a MultiConsulta
-function cargarCombos() {
+function MultiConsulta() {
     let datos = new FormData();
     datos.append('accion', 'MultiConsulta');
     enviaAjax(datos);
@@ -40,36 +38,31 @@ function cargarCombos() {
 function editar(id_asignacion, id_atleta, id_equipamiento, fecha) {
     $("#f")[0].reset();
     $("#titulo_modal").text("Modificar Asignación");
-    $("#btn_guardar").text("Guardar Cambios").attr("data-accion", "modificar");
-    
+    $("#btn_guardar").text("Guardar Cambios").data("accion", "modificar");
     $("#id_asignacion").val(id_asignacion);
     $("#fecha_asignacion").val(fecha);
     $("#id_atleta").val(id_atleta).trigger('change');
     
     if ($(`#id_equipamiento option[value='${id_equipamiento}']`).length === 0) {
         $("#id_equipamiento").append(new Option("Equipo Actual (Mantenido)", id_equipamiento, true, true));
-    } else {
-        $("#id_equipamiento").val(id_equipamiento).trigger('change');
     }
-    
+    $("#id_equipamiento").val(id_equipamiento).trigger('change');
     abrirModal();
 }
 
 function anular(id_asignacion, id_equipamiento) {
     Swal.fire({
         title: 'Anular Asignación',
-        text: "Ingrese el motivo de la anulación (Mínimo 5 caracteres):",
+        text: "Ingrese el motivo (Mínimo 5 caracteres):",
         input: 'text',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
+        confirmButtonColor: '#39b015',
+        cancelButtonColor: '#d33',
         confirmButtonText: 'Sí, anular',
         cancelButtonText: 'Cancelar',
         inputValidator: (value) => {
-            if (!value || value.trim().length < 5) {
-                return '¡El motivo no es válido!'
-            }
+            if (!value || value.trim().length < 5) return '¡El motivo no es válido!';
         }
     }).then((result) => {
         if (result.isConfirmed) {
@@ -83,51 +76,6 @@ function anular(id_asignacion, id_equipamiento) {
     });
 }
 
-function crearConsulta(datos) {
-    const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
-
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No hay asignaciones activas.</p></div>');
-    } else {
-        datos.forEach(dato => {
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo" style="width: 15%;">
-                                <small>Fecha</small>
-                                <span style="font-weight: bold;">${dato.fecha_vista}</span>
-                            </div>
-                            <div class="listado_dato_grupo" style="width: 35%;">
-                                <small>Atleta</small>
-                                <span style="font-weight: bold; color: var(--texto-principal);">${dato.atleta}</span>
-                                <small>CI: ${dato.doc_identidad}</small>
-                            </div>
-                            <div class="listado_dato_grupo" style="width: 30%;">
-                                <small>Equipo Asignado</small>
-                                <span>${dato.articulo}</span>
-                                <small style="color: #6c757d;">(Pza ID: #${dato.id_equipamiento})</small>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Estado</small>
-                                <span style="color:#ffc107; font-weight:bold;">EN USO</span>
-                            </div>
-                        </div>
-                        <div class="listado_col_acciones">
-                            <div style="display:flex; gap:5px;">
-                                <button class="btn_t cbt_v" onclick="editar(${dato.id_asignacion}, ${dato.id_atleta}, ${dato.id_equipamiento}, '${dato.fecha_real}')" title="Modificar"><i class="fi fi-sr-edit"></i></button>
-                                <button class="btn_t cbt_r" onclick="anular(${dato.id_asignacion}, ${dato.id_equipamiento})" title="Anular Asignación"><i class="fi fi-sr-ban"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-}
-
 function poblarCombos(atletas, equipos) {
     let comboAtleta = $("#id_atleta");
     let comboEquipo = $("#id_equipamiento");
@@ -137,10 +85,7 @@ function poblarCombos(atletas, equipos) {
 
     if (atletas && atletas.length > 0) {
         atletas.forEach(a => {
-            // Evaluamos que el atleta esté activo (estatus = 1) según el ModeloAtletas
-            if(a.estatus == 1) {
-                comboAtleta.append(`<option value="${a.id_atleta}">${a.nombres} ${a.apellidos} (CI: ${a.doc_identidad})</option>`);
-            }
+            if(a.estatus == 1) comboAtleta.append(`<option value="${a.id_atleta}">${a.nombres} ${a.apellidos} (CI: ${a.doc_identidad})</option>`);
         });
     }
 
@@ -154,42 +99,41 @@ function poblarCombos(atletas, equipos) {
     comboEquipo.trigger('change');
 }
 
+var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
-    var token = $('meta[name="csrf-token"]').attr('content');
-
     $.ajax({
         async: true,
-        url: "", 
+        url: "",
         type: "POST",
         contentType: false,
         data: datos,
         processData: false,
         cache: false,
         beforeSend: function (request) { request.setRequestHeader("X-CSRF-TOKEN", token); },
+        timeout: 10000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                $('#resultadoconsulta').html(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } else if (lee.accion == "MultiConsulta") {
-                    // Lee las llaves que configuramos en PHP
+                if (lee.accion == "MultiConsulta") {
                     poblarCombos(lee.atletas, lee.equipos);
-                } else if (lee.accion == "exito") {
-                    cerrarModal(); 
+                } else if (lee.accion == "incluir" || lee.accion == "modificar" || lee.accion == "exito") {
                     consultar();
-                    cargarCombos(); 
-                    muestraMensaje("success", 3000, "Operación Exitosa", lee.mensaje);
+                    MultiConsulta();
+                    cerrarModal();
+                    muestraMensaje("success", 2000, "Operación Exitosa", lee.mensaje);
                 } else if (lee.accion == "error") {
-                    muestraMensaje("error", 4000, "Alerta", lee.mensaje || lee.codigo);
+                    muestraMensaje("error", 2000, "Error", lee.mensaje || lee.codigo);
                 }
             } catch (e) {
-                console.error("Error del servidor:", respuesta);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de Comunicación',
-                    text: 'El servidor falló. Presiona F12 y revisa la pestaña Console o Network para ver el código del error.'
-                });
+                Swal.fire({ icon: 'error', title: 'Error de Comunicación', text: 'El servidor falló.' });
             }
+        },
+        error: function (request, status, err) {
+            muestraMensaje("error", 2000, "Error", "ERROR: " + err);
         }
     });
 }
