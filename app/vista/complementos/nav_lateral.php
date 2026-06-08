@@ -85,7 +85,7 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_DEVOLUCIONES_)): ?>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="list-restart"></i> Devoluciones</a>
+                        <a type="button" href="Devoluciones" class="opciones"><i class="opciones_i" data-lucide="list-restart"></i> Devoluciones</a>
                     <?php endif; ?>
                 </li>
             <?php endif; ?>
