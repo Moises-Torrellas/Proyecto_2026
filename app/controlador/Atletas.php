@@ -149,6 +149,7 @@ if (comprobarAjax() && !empty($_POST)) {
                         INVALID_ID       => 'La categoria ingresada no existe en los registros del club.',
                         INVALID_ID . '0'   => 'La posicion ingresada no existe en los registros del club.',
                         INVALID_ID . '1'   => 'El representante ingresado no existe en los registros del club.',
+                        DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                         default          => 'Ocurrió un error inesperado en el registro.'
                     };
                 }
@@ -251,7 +252,9 @@ if (comprobarAjax() && !empty($_POST)) {
                         INVALID_ID       => 'La categoria ingresada no existe en los registros del club.',
                         INVALID_ID . '0'   => 'La posicion ingresada no existe en los registros del club.',
                         INVALID_ID . '1'   => 'El representante ingresado no existe en los registros del club.',
+                        DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                         default          => 'Ocurrió un error inesperado en el registro.'
+                        
                     };
                 }
                 echo json_encode($resultado);
@@ -274,6 +277,7 @@ if (comprobarAjax() && !empty($_POST)) {
 
                     $resultado['mensaje'] = match ($resultado['codigo']) {
                         INVALID_ID       => 'El atleta no existe.',
+                        DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                         default          => 'Ocurrió un error inesperado en el retiro.'
                     };
                 }

@@ -3,26 +3,36 @@
 namespace App\modelo;
 
 use App\modelo\Conexion;
-use \PDO;
-use \Exception;
+use Exception;
+use PDOException;
 
 abstract class ModeloBase extends Conexion
 {
-    protected $conexSG;
-    protected $conex;
+    protected $conexSG = null;
+    protected $conex = null;
     protected $llavePrimaria;
     protected $campoWhitelist = [];
+    public function __construct() {}
+   
 
-    public function __construct()
-    {
-        // Inicializamos ambas conexiones desde la clase padre
-        $this->conexSG = parent::conexSG();
-        $this->conex = parent::conex();
-    }
-
+    // Tu método protegido con el control de errores centralizado
     protected function getConexion(string $db = 'general')
     {
-        return ($db === 'general') ? $this->conex : $this->conexSG;
+        try {
+            if ($db === 'general') {
+                if ($this->conex === null) {
+                    $this->conex = parent::conex();
+                }
+                return $this->conex;
+            } else {
+                if ($this->conexSG === null) {
+                    $this->conexSG = parent::conexSG();
+                }
+                return $this->conexSG;
+            }
+        } catch (PDOException $e) {
+            throw new Exception(DB_CONNECTION);
+        }
     }
 
     protected function verificarExistencia(string $campo, $valor, string $tabla, ?int $estatus = 1, string $db = 'general', bool $bloquear = false): bool
@@ -34,18 +44,17 @@ abstract class ModeloBase extends Conexion
 
             $columna = $this->campoWhitelist[$campo];
 
-            // 1. Construimos la consulta
             $sql = "SELECT COUNT(*) FROM `{$tabla}` WHERE $columna = :valor";
 
             if ($estatus !== null) {
                 $sql .= " AND estatus = :estatus";
             }
 
-            // 2. Aplicamos FOR UPDATE si se solicita (requiere transacción activa)
             if ($bloquear) {
                 $sql .= " FOR UPDATE";
             }
 
+            // Aquí se gatilla la conexión perezosa
             $stmt = $this->getConexion($db)->prepare($sql);
             $stmt->bindValue(':valor', $valor);
 
@@ -73,11 +82,11 @@ abstract class ModeloBase extends Conexion
                 $sql .= " AND estatus = :estatus";
             }
 
-            // Bloqueo preventivo de la fila específica por su llave primaria
             if ($bloquear) {
                 $sql .= " FOR UPDATE";
             }
 
+            // Aquí se gatilla la conexión perezosa
             $stmt = $this->getConexion($db)->prepare($sql);
             $stmt->bindValue(':id', $id);
             $stmt->bindValue(':valor', $valor);
@@ -87,7 +96,7 @@ abstract class ModeloBase extends Conexion
             }
 
             $stmt->execute();
-            
+
             return (int)$stmt->fetchColumn() > 0;
         } catch (Exception $e) {
             return false;

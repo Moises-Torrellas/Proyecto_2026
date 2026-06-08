@@ -202,6 +202,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
                 INVALID_ID         => 'El método de pago seleccionado no existe.',
                 INVALID_ID . '0'   => 'La moneda seleccionada no es válida.',
                 EMPTY_SELECTION    => 'Debe seleccionar al menos una cuenta por cobrar.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default            => 'Ocurrió un error inesperado en el registro del pago.'
             };
         }
@@ -236,6 +237,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID         => 'El pago no existe.',
                 ALREADY_ANNULLED   => 'El pago ya se encuentra anulado.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default            => 'Ocurrió un error inesperado en la anulación del pago.'
             };
         }

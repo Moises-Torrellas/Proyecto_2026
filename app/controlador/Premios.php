@@ -145,6 +145,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un Premio registrado con ese Nombre.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default        => 'Ocurrió un error inesperado en el registro.'
             };
         }
@@ -215,6 +216,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El Premio no existe.',
                 ASSOCIATES => 'El Premio tiene detalle palmare asociados.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default    => 'Ocurrió un error inesperado en la eliminacion.'
             };
         }
