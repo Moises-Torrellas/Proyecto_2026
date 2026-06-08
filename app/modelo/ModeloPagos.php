@@ -17,6 +17,10 @@ class ModeloPagos extends ModeloBase
     private $referencia;
     private $estatus;
 
+    private $objCuentas;
+    //private $objMetodos;
+    private $objMonedas;
+
     public function __construct()
     {
         parent::__construct();
@@ -34,14 +38,26 @@ class ModeloPagos extends ModeloBase
         $this->llavePrimaria = 'id_pago';
     }
 
+    public function setCuentas(ModeloCuentasCobrar $cuentas)
+    {
+        $this->objCuentas = $cuentas;
+    }
+    /* public function setMetodos(ModeloMetodosPago $metodos)
+    {
+        $this->objMetodos = $metodos;
+    } */
+    public function setMonedas(ModeloMonedas $monedas)
+    {
+        $this->objMonedas = $monedas;
+    }
+
     public function ProcesarDatos(array $datos): array
     {
-        // 1. Verificación de integridad inicial
+
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
 
-        // 2. Asignación y saneamiento de atributos básicos
         $this->id         = $datos['id'] ?? null;
         $this->id_cuenta  = $datos['cuenta'] ?? null;
         $this->id_metodo  = $datos['metodo'] ?? null;
@@ -52,7 +68,6 @@ class ModeloPagos extends ModeloBase
         $this->referencia = isset($datos['referencia']) ? trim($datos['referencia']) : null;
         $this->estatus    = $datos['estatus'] ?? 1;
 
-        // 5. Ejecución de la acción vía Match
         $accion = $datos['accion'] ?? null;
 
         return match ($accion) {
@@ -69,41 +84,16 @@ class ModeloPagos extends ModeloBase
             $conex = $this->conex();
             $params = [];
 
-            $sentencia = "SELECT 
-                            p.id_pago,
-                            p.fecha AS fecha_pago,
-                            p.monto_pago AS monto_pagado,
-                            p.monto_vuelto,
-                            p.referencia,
-                            p.estatus,
-                            p.tasa_cambio,
-                            m.simbolo,
-                            m.abreviatura AS abre,
-                            m.nombre AS moneda,
-                            dp.id_detalle_pago,
-                            dp.monto_abonado,
-                            con.nombre AS concepto_pago,
-                            atl.nombres AS nombre_atleta,
-                            atl.apellidos AS nombre_apellido,
-                            m_cuenta.simbolo AS simbolo_cuenta,
-                            m_cuenta.abreviatura AS abre_cuenta
-                        FROM pagos p
-                        INNER JOIN monedas m ON p.id_moneda = m.id_moneda
-                        LEFT JOIN detalles_pagos dp ON p.id_pago = dp.id_pago
-                        LEFT JOIN cuentas_cobrar cc ON dp.id_cobrar = cc.id_cobrar
-                        LEFT JOIN conceptos con ON cc.id_concepto = con.id_conceptos
-                        LEFT JOIN atletas atl ON cc.id_atleta = atl.id_atleta
-                        LEFT JOIN monedas m_cuenta ON cc.id_moneda = m_cuenta.id_moneda
-                        WHERE 1=1";
+            $sentencia = "SELECT * FROM vista_pagos WHERE 1=1";
 
             if (!empty($filtro['filtro'])) {
                 $p = "%" . trim($filtro['filtro']) . "%";
                 $sentencia .= " AND (
-                    con.nombre LIKE :f1 OR 
-                    atl.nombres LIKE :f2 OR 
-                    atl.apellidos LIKE :f3 OR
-                    p.referencia LIKE :f4 OR
-                    m.nombre LIKE :f5
+                    concepto_pago LIKE :f1 OR 
+                    nombre_atleta LIKE :f2 OR 
+                    nombre_apellido LIKE :f3 OR
+                    referencia LIKE :f4 OR
+                    moneda LIKE :f5
                 )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
@@ -112,7 +102,8 @@ class ModeloPagos extends ModeloBase
                 $params[':f5'] = $p;
             }
 
-            $sentencia .= " ORDER BY p.fecha DESC, p.id_pago DESC";
+            // Quitamos el prefijo p. del ORDER BY y usamos el alias fecha_pago
+            $sentencia .= " ORDER BY fecha_pago DESC, id_pago DESC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -130,16 +121,15 @@ class ModeloPagos extends ModeloBase
                         'monto_vuelto' => $row['monto_vuelto'],
                         'referencia' => $row['referencia'],
                         'estatus' => $row['estatus'],
-                        'tasa_cambio' => $row['tasa_cambio'],
                         'simbolo' => $row['simbolo'],
                         'abre' => $row['abre'],
                         'moneda' => $row['moneda'],
-                        'concepto_pago' => 'Pago Múltiple', 
+                        'concepto_pago' => 'Pago Múltiple',
+                        'nombre_metodo_pago' => $row['nombre_metodo_pago'],
                         'detalles' => []
                     ];
                 }
-                
-                // Si el pago es de una sola cuenta o queremos mostrar el primer concepto
+
                 if (count($pagosAgrupados[$id]['detalles']) === 0 && !empty($row['concepto_pago'])) {
                     $pagosAgrupados[$id]['concepto_pago'] = $row['concepto_pago'];
                 } else if (count($pagosAgrupados[$id]['detalles']) > 0) {
@@ -152,7 +142,9 @@ class ModeloPagos extends ModeloBase
                         'atleta' => $row['nombre_atleta'] . ' ' . $row['nombre_apellido'],
                         'concepto' => $row['concepto_pago'],
                         'monto' => $row['monto_abonado'],
-                        'moneda' => $row['simbolo_cuenta'] . ' ' . $row['abre_cuenta']
+                        'tasa' => $row['tasa_cambio'],
+                        'moneda' => $row['simbolo_cuenta'] . ' ' . $row['abre_cuenta'],
+                        'moneda_tasa' => $row['simbolo'] . ' ' . $row['abre']
                     ];
                 }
             }
@@ -177,17 +169,13 @@ class ModeloPagos extends ModeloBase
             return 1.0000;
         }
 
-        if (!defined('EXCHANGE_RATE_API_KEY')) {
-            throw new Exception("La clave de la API (EXCHANGE_RATE_API_KEY) no está definida.");
-        }
-        
         $apiKey = EXCHANGE_RATE_API_KEY;
         $url = "https://v6.exchangerate-api.com/v6/{$apiKey}/pair/{$monedaBase}/{$monedaPago}";
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5); 
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         $response = curl_exec($ch);
         curl_close($ch);
 
@@ -207,30 +195,26 @@ class ModeloPagos extends ModeloBase
         $conex = null;
         try {
             if (!is_array($this->id_cuenta) || empty($this->id_cuenta)) {
-                throw new Exception("Debe seleccionar al menos una cuenta por cobrar.");
+                throw new Exception(EMPTY_SELECTION);
             }
 
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            // Verificar método y moneda del pago
             if (!$this->verificarExistencia('id_metodo', $this->id_metodo, 'metodos_pago', NULL)) {
-                throw new Exception("El método de pago no es válido.");
+                throw new Exception(INVALID_ID);
             }
             if (!$this->verificarExistencia('id_moneda', $this->id_moneda, 'monedas', NULL)) {
-                throw new Exception("La moneda seleccionada no es válida.");
+                throw new Exception(INVALID_ID . '0');
             }
 
-            // Obtener ISO de la moneda de pago
-            $stmtMonedaPago = $conex->prepare("SELECT abreviatura FROM monedas WHERE id_moneda = ?");
-            $stmtMonedaPago->execute([$this->id_moneda]);
-            $monedaPagoObj = $stmtMonedaPago->fetch(PDO::FETCH_ASSOC);
-            if (!$monedaPagoObj) throw new Exception("Moneda de pago no encontrada.");
-            $isoPago = mb_strtoupper($monedaPagoObj['abreviatura']);
+            $monedaPago = $this->objMonedas->Buscar($this->id_moneda);
+            $monedaPagoObj = $monedaPago['datos'];
+            if (!$monedaPagoObj) throw new Exception(INVALID_ID . '0');
+            $isoPago = mb_strtoupper($monedaPagoObj[0]['abreviatura']);
 
-            // Insertar el pago principal
-            $columnas = ["id_metodo", "id_moneda", "monto_pago", "tasa_cambio", "fecha", "estatus"];
-            $marcadores = [":id_metodo", ":id_moneda", ":monto_pago", ":tasa_cambio", ":fecha", "1"];
+            $columnas = ["id_metodo", "id_moneda", "monto_pago", "fecha", "estatus"];
+            $marcadores = [":id_metodo", ":id_moneda", ":monto_pago", ":fecha", "1"];
 
             if ($this->referencia !== null && $this->referencia !== '') {
                 $columnas[] = "referencia";
@@ -243,7 +227,6 @@ class ModeloPagos extends ModeloBase
             $stmt->bindValue(':id_metodo', $this->id_metodo, PDO::PARAM_INT);
             $stmt->bindValue(':id_moneda', $this->id_moneda, PDO::PARAM_INT);
             $stmt->bindValue(':monto_pago', $this->monto);
-            $stmt->bindValue(':tasa_cambio', $this->tasa);
             $stmt->bindValue(':fecha', $this->fecha);
 
             if ($this->referencia !== null && $this->referencia !== '') {
@@ -252,52 +235,53 @@ class ModeloPagos extends ModeloBase
 
             $stmt->execute();
             $id_pago = $conex->lastInsertId();
+            //$stmtCuenta = $conex->prepare("SELECT c.monto_pendiente, m.abreviatura FROM cuentas_cobrar c INNER JOIN monedas m ON c.id_moneda = m.id_moneda WHERE c.id_cobrar = ?");
+            //$stmtUpdateCuenta = $conex->prepare("UPDATE cuentas_cobrar SET monto_pendiente = ?, estatus = ? WHERE id_cobrar = ?");
+            $stmtInsertDetalle = $conex->prepare("INSERT INTO detalles_pagos (id_pago, id_cobrar, monto_abonado, tasa_cambio) VALUES (?, ?, ?, ?)");
 
-            // Preparar statements para el bucle
-            $stmtCuenta = $conex->prepare("SELECT c.monto_pendiente, m.abreviatura FROM cuentas_cobrar c INNER JOIN monedas m ON c.id_moneda = m.id_moneda WHERE c.id_cobrar = ?");
-            $stmtUpdateCuenta = $conex->prepare("UPDATE cuentas_cobrar SET monto_pendiente = ?, estatus = ? WHERE id_cobrar = ?");
-            $stmtInsertDetalle = $conex->prepare("INSERT INTO detalles_pagos (id_pago, id_cobrar, monto_abonado) VALUES (?, ?, ?)");
-
-            $vuelto_pago_currency = $this->monto;
+            $vuelto = $this->monto;
 
             foreach ($this->id_cuenta as $id_cobrar) {
-                if ($vuelto_pago_currency <= 0) break; // Si ya se acabó el dinero, no procesar más cuentas
+                if ($vuelto <= 0) break;
 
-                $stmtCuenta->execute([$id_cobrar]);
-                $cuentaData = $stmtCuenta->fetch(PDO::FETCH_ASSOC);
-                
-                if (!$cuentaData || floatval($cuentaData['monto_pendiente']) <= 0) {
-                    continue; // Cuenta inválida o ya pagada
+                $stmtCuenta = $this->objCuentas->Buscar($id_cobrar);
+                $cuentaData = $stmtCuenta['datos'] ?? null;
+
+                if (!$cuentaData || floatval($cuentaData[0]['monto_pendiente']) <= 0) {
+                    continue;
                 }
 
-                $monto_pendiente = floatval($cuentaData['monto_pendiente']);
-                $isoCuenta = mb_strtoupper($cuentaData['abreviatura']);
+                $resultadoMoneda = $this->objMonedas->Buscar((int)$cuentaData[0]['id_moneda']);
+
+                $monedaData = $resultadoMoneda['datos'][0];
+
+                $isoCuenta = mb_strtoupper($monedaData['abreviatura']);
+                $monto_pendiente = floatval($cuentaData[0]['monto_pendiente']);
 
                 $tasa_cambio = $this->obtenerTasaBackend($isoCuenta, $isoPago);
                 $deuda_en_moneda_pago = $monto_pendiente * $tasa_cambio;
 
-                if ($vuelto_pago_currency >= $deuda_en_moneda_pago) {
+                if ($vuelto >= $deuda_en_moneda_pago) {
                     $monto_abonado_cuenta = $monto_pendiente;
-                    $vuelto_pago_currency -= $deuda_en_moneda_pago;
+                    $vuelto -= $deuda_en_moneda_pago;
                     $nuevo_pendiente = 0;
                     $nuevo_estatus = 1; // Pagada
                 } else {
-                    $monto_abonado_cuenta = $vuelto_pago_currency / $tasa_cambio;
+                    $monto_abonado_cuenta = $vuelto / $tasa_cambio;
                     $nuevo_pendiente = $monto_pendiente - $monto_abonado_cuenta;
                     $nuevo_estatus = 0; // Sigue pendiente
-                    $vuelto_pago_currency = 0;
+                    $vuelto = 0;
                 }
 
-                $stmtUpdateCuenta->execute([$nuevo_pendiente, $nuevo_estatus, $id_cobrar]);
-                $stmtInsertDetalle->execute([$id_pago, $id_cobrar, $monto_abonado_cuenta]);
+                $this->objCuentas->ModificarEstatus($id_cobrar, $nuevo_estatus, $nuevo_pendiente, $conex);
+                $stmtInsertDetalle->execute([$id_pago, $id_cobrar, $monto_abonado_cuenta, $tasa_cambio]);
             }
 
-            // Actualizar vuelto en el pago principal
             $stmtVuelto = $conex->prepare("UPDATE pagos SET monto_vuelto = ? WHERE id_pago = ?");
-            $stmtVuelto->execute([$vuelto_pago_currency, $id_pago]);
+            $stmtVuelto->execute([$vuelto, $id_pago]);
 
             $conex->commit();
-            return array('accion' => 'exito', 'mensaje' => 'Pago registrado correctamente.');
+            return array('accion' => 'exito');
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
@@ -311,41 +295,41 @@ class ModeloPagos extends ModeloBase
 
     private function Eliminar(): array
     {
+        $conex = null;
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            // Bloquear el pago y verificar estatus actual
             $stmtVerif = $conex->prepare("SELECT estatus FROM pagos WHERE id_pago = ? FOR UPDATE");
             $stmtVerif->execute([$this->id]);
-            $pago = $stmtVerif->fetch(PDO::FETCH_ASSOC);
+            $pago = $stmtVerif->fetch();
 
             if (!$pago) {
                 throw new Exception(INVALID_ID);
             }
             if ((int)$pago['estatus'] === 2) {
-                throw new Exception("El pago ya se encuentra anulado.");
+                throw new Exception(ALREADY_ANNULLED);
             }
 
-            // 1. Obtener los detalles del pago para restaurar las cuentas
             $stmtDetalles = $conex->prepare("SELECT id_cobrar, monto_abonado FROM detalles_pagos WHERE id_pago = ?");
             $stmtDetalles->execute([$this->id]);
-            $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);
+            $detalles = $stmtDetalles->fetchAll();
 
-            // 2. Restaurar el monto pendiente y el estatus a pendiente (0) en cada cuenta
-            $stmtRestaurar = $conex->prepare("UPDATE cuentas_cobrar SET monto_pendiente = monto_pendiente + ?, estatus = 0 WHERE id_cobrar = ?");
             foreach ($detalles as $det) {
-                $stmtRestaurar->execute([$det['monto_abonado'], $det['id_cobrar']]);
+                $cuentaData = $this->objCuentas->Buscar((int)$det['id_cobrar']);
+                $cuenta = $cuentaData['datos'][0] ?? null;
+                if ($cuenta) {
+                    $nuevoPendiente = floatval($cuenta['monto_pendiente']) + floatval($det['monto_abonado']);
+                    $this->objCuentas->ModificarEstatus((int)$det['id_cobrar'], 0, $nuevoPendiente, $conex);
+                }
             }
 
-            // 3. Cambiar el estatus del pago a anulado (2)
-            $sql = "UPDATE `pagos` SET `estatus`= 2 WHERE id_pago = :id";
-            $stmt = $conex->prepare($sql);
+            $stmt = $conex->prepare("UPDATE pagos SET estatus = 2 WHERE id_pago = :id");
             $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
             $stmt->execute();
 
             $conex->commit();
-            return ['accion' => 'exito', 'mensaje' => 'Pago anulado y cuentas restauradas exitosamente.'];
+            return ['accion' => 'exito'];
         } catch (Exception $e) {
             if (isset($conex) && $conex->inTransaction()) {
                 $conex->rollBack();

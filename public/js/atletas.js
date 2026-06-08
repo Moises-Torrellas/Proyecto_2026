@@ -27,7 +27,6 @@ function busqueda() {
 
 $(document).ready(function () {
     inicializarPaginador();
-    MultiConsulta();
 
     $("#doc_i").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
@@ -112,7 +111,7 @@ $(document).ready(function () {
 
     $("#incluir").on("click", function () {
         limpia();
-
+        MultiConsulta();
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Atleta");
         $("#titulo_modal").text("Registrar Atleta");
@@ -122,7 +121,7 @@ $(document).ready(function () {
         $('#direccion').closest('.colum').show();
         $('#foto').closest('.colum').show();
         $('#estatus').closest('.colum').hide().prop('disabled', true);
-        $("#todos").prop('disabled', true); 
+        $("#todos").prop('disabled', true);
         $("#genero").val("H").trigger('change');
 
         $('#edad').prop('readonly', true);
@@ -147,7 +146,7 @@ $(document).ready(function () {
         $('#foto').closest('.colum').hide();
         $('#estatus').closest('.colum').show().prop('disabled', false);
         $('#edad').prop('readonly', false);
-        $("#todos").prop('disabled', false); 
+        $("#todos").prop('disabled', false);
         abrirModal();
     });
 
@@ -359,6 +358,7 @@ function validarEnvio(proceso) {
 
 function buscar(id) {
     var datos = new FormData();
+    MultiConsulta();
     datos.append('accion', 'buscar');
     datos.append('id', id);
     enviaAjax(datos);
@@ -386,7 +386,7 @@ function modificar(datos) {
     $('#foto').closest('.colum').show();
     $('#estatus').closest('.colum').hide().prop('disabled', true);
     $('#edad').prop('readonly', true);
-    $("#todos").prop('disabled', true); 
+    $("#todos").prop('disabled', true);
 
     $('#fecha_nac').val(datos[0].fecha_nac);
     $('#id').val(datos[0].id_atleta);

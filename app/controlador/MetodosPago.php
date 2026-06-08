@@ -140,6 +140,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un metodo de pago registrado con este nombre.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
         }
@@ -178,6 +179,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un metodo de pago registrado con este nombre.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
         }
@@ -211,6 +213,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El metodo de pago no existe.',
                 ASSOCIATES  => 'El metodo de pago tiene pagos asociados.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la eliminacion.'
             };
         }
@@ -247,6 +250,7 @@ function bloquear($obj, $id_modulo, $bitacoraObj): void
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El metodo que intenta bloquear ya no existe.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default    => 'No se pudo completar la operación de bloqueo.'
             };
         }

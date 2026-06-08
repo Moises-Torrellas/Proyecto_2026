@@ -126,7 +126,7 @@ class ModeloRecuperacion extends Conexion
                 $this->conexion->commit();
                 unset($_SESSION['verificacion']);
                 unset($_SESSION['cedula_r']);
-                return ['accion' => 'cambiar', 'mensaje' => 'Contraseña modificada correctamente.', 'url' => _URL_];
+                return ['accion' => 'cambiar', 'mensaje' => 'Contraseña modificada correctamente.', 'url' => 'Inicio'];
             } else {
                 $this->conexion->rollBack();
                 return ['accion' => 'error', 'mensaje' => 'Error al modificar la contraseña.'];

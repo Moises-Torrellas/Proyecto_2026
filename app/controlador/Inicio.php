@@ -42,11 +42,11 @@ function manejarSolicitudInicio($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         // Validar Token CSRF (Descomentar si reactivas la seguridad en producción)
-       /*  $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
             throw new Exception('Error de seguridad: Token inválido o expirado.');
-        } 
-         */
+        }
+
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
@@ -114,7 +114,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         registrarBitacora($bitacoraObj, $id_modulo, 'Inicio de sesión exitoso');
 
         // Integración segura del verificador en segundo plano (Lazy Cron)
-        ob_start(); 
+        ob_start();
         try {
             if (class_exists('App\modelo\ModeloNotificaciones')) {
                 $notificacion = new ModeloNotificaciones();
@@ -122,7 +122,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
                 if (!$notificacion->verificarChequeoDeHoy()) {
                     if (class_exists('App\servicios\verificarEvento')) {
                         $verificador = new verificarEvento();
-                        $verificador->procesar(); 
+                        $verificador->procesar();
                     }
                 }
             }
@@ -131,7 +131,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
                 logs('Notificaciones_Cron', $cronException->getMessage(), 'Fallo_Chequeo_Login');
             }
         }
-        ob_end_clean(); 
+        ob_end_clean();
 
         // Estructura ideal de éxito esperada por tu manejador AJAX
         $respuestaFinal = [
@@ -140,21 +140,27 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
             'mensaje'   => '¡Autenticación exitosa!',
             'url'       => 'Principal'
         ];
-
     } else {
-        // Estructura en caso de falla de credenciales (Mapea resultado 2 o 3 para las clases de CSS)
-        $respuestaFinal = [
-            'accion'    => 'inicio',
-            'resultado' => isset($respuesta['resultado']) ? $respuesta['resultado'] : 3,
-            'mensaje'   => isset($respuesta['mensaje']) ? $respuesta['mensaje'] : 'La cédula o contraseña no coinciden.'
-        ];
+        if ($respuesta['accion'] == 'error') {
+            $respuestaFinal = [
+                'accion' => 'error',
+                'resultado' => 500,
+                'mensaje' => 'Error: Servidor de base de datos no disponible.'
+            ];
+        } else {
+            $respuestaFinal = [
+                'accion'    => 'inicio',
+                'resultado' => isset($respuesta['resultado']) ? $respuesta['resultado'] : 3,
+                'mensaje'   => isset($respuesta['mensaje']) ? $respuesta['mensaje'] : 'La cédula o contraseña no coinciden.'
+            ];
+        }
     }
 
     // 4. Limpieza del canal de salida y entrega del JSON estructurado
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
-    
+
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($respuestaFinal);
 

@@ -617,16 +617,20 @@ function iniciarTourConPasos(pasos) {
 }
 
 function toggleDetalles(elemento) {
+    // 1. Identificamos el contenedor padre y el panel específico que el usuario clickeó
     const contenedorActual = $(elemento).closest('.listado_contenedor_grupal');
     const panelActual = contenedorActual.find('.listado_detalle_oculto');
 
-    // 1. Buscamos todos los demás contenedores que estén expandidos y los cerramos
-    $('.listado_contenedor_grupal.expandido').not(contenedorActual).each(function () {
-        $(this).removeClass('expandido');
-        $(this).find('.listado_detalle_oculto').slideUp(300);
+    // 2. Buscamos TODOS los paneles ocultos, EXCEPTO el que acabamos de clickear
+    $('.listado_detalle_oculto').not(panelActual).each(function() {
+        // Validamos la realidad visual: ¿Está abierto en la pantalla?
+        if ($(this).is(':visible')) {
+            $(this).slideUp(300); // Lo cerramos suavemente
+            $(this).closest('.listado_contenedor_grupal').removeClass('expandido'); // Limpiamos la clase por si acaso
+        }
     });
 
-    // 2. Toggle del registro actual (lo que ya tenías)
+    // 3. Alternamos el estado del registro actual
     contenedorActual.toggleClass('expandido');
     panelActual.slideToggle(300);
 }
