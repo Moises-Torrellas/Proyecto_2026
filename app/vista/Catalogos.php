@@ -13,7 +13,7 @@ if (isset($solo_lista) && $solo_lista === true):
                         <div class="listado_avatar_null"><i class="icon_con" data-lucide="box"></i></div>
                         <div class="listado_info_base">
                             <span class="listado_titulo"><?= htmlspecialchars($dato['nombre']) ?></span>
-                            <small><?= htmlspecialchars($dato['categoria_nombre']) ?></small>
+                            <small class="listado_subtitulo"><?= htmlspecialchars($dato['categoria_nombre']) ?></small>
                         </div>
                     </div>
 
@@ -97,7 +97,7 @@ if (isset($solo_lista) && $solo_lista === true):
                                                 <div class="listado_avatar_null"><i class="icon_con" data-lucide="box"></i></div>
                                                 <div class="listado_info_base">
                                                     <span class="listado_titulo"><?= htmlspecialchars($dato['nombre']) ?></span>
-                                                    <small><?= htmlspecialchars($dato['categoria_nombre']) ?></small>
+                                                    <small class="listado_subtitulo"><?= htmlspecialchars($dato['categoria_nombre']) ?></small>
                                                 </div>
                                             </div>
 
@@ -184,7 +184,7 @@ if (isset($solo_lista) && $solo_lista === true):
                     </div>
 
                     <div class="row">
-                        <div class="colum" style="max-width: 50%;">
+                        <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="talla" name="talla">
                                 <label for="talla" class="titulo_formulario">Talla (Opcional)</label>
@@ -192,7 +192,6 @@ if (isset($solo_lista) && $solo_lista === true):
                             </div>
                         </div>
                     </div>
-
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>

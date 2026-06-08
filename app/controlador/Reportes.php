@@ -43,8 +43,11 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         // Seguridad centralizada
         switch ($accion) {
+            case 'consultar':
+                consultar($obj);
+                break;
             case 'generar':
-                generar($obj, $id_modulo, $bitacoraObj);
+                generar($id_modulo, $bitacoraObj);
                 break;
             default:
                 throw new Exception('Acción no permitida.');
@@ -55,13 +58,22 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
     }
 }
 
-function generar($obj, $id_modulo, $bitacoraObj): void
+function consultar($obj){
+    $respuesta = $obj->Consultar();
+    echo json_encode($respuesta);
+}
+
+function generar($id_modulo, $bitacoraObj): void
 {
     try {
         $nombreVista = 'AtletasCategorias';
         $grafico = $_POST['grafico_img'];
+        $datos = isset($_POST['datos_json']) ? json_decode($_POST['datos_json'], true) : [];
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron representantes para hacer el reporte.']);
+            exit();
+        }
         $objG = new GenerarReporteEstadistico();
-        $datos = [];
         $pdf = $objG->generarPDF($nombreVista, $datos, 'Reportes', $grafico);
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
             registrarBitacora($bitacoraObj, $id_modulo, "Generó un reporte estadisticos.");

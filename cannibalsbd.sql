@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-05-2026 a las 05:13:26
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Tiempo de generación: 04-06-2026 a las 04:24:41
+-- Versión del servidor: 10.4.28-MariaDB
+-- Versión de PHP: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `cannibalsbd`
 --
+CREATE DATABASE IF NOT EXISTS `cannibalsbd` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci;
+USE `cannibalsbd`;
 
 -- --------------------------------------------------------
 
@@ -27,6 +29,7 @@ SET time_zone = "+00:00";
 -- Estructura de tabla para la tabla `asignaciones`
 --
 
+DROP TABLE IF EXISTS `asignaciones`;
 CREATE TABLE `asignaciones` (
   `id_asignacion` int(11) NOT NULL,
   `id_atleta` int(11) NOT NULL,
@@ -42,6 +45,7 @@ CREATE TABLE `asignaciones` (
 -- Estructura de tabla para la tabla `atletas`
 --
 
+DROP TABLE IF EXISTS `atletas`;
 CREATE TABLE `atletas` (
   `id_atleta` int(11) NOT NULL,
   `nombres` varchar(60) NOT NULL,
@@ -63,10 +67,10 @@ CREATE TABLE `atletas` (
 --
 
 INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `telefono`, `direccion`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`, `estatus`) VALUES
-(13, 'Jose Jose', 'Perez Perez', '32323232', NULL, NULL, 'H', '2012-05-18', 'atleta_2012-05-18_1779417290.png', 5, 7, 2, 1),
+(13, 'Jose Jose', 'Perez Perez', '32323232', NULL, NULL, 'H', '2008-05-18', 'atleta_2012-05-18_1779417290.png', 5, 8, 2, 1),
 (14, 'Mario Mario', 'Bros Bros', '34324324', NULL, NULL, 'H', '2009-05-19', 'atleta_2009-05-19_1779417273.png', 5, 8, 2, 1),
-(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779417262.png', 6, 4, NULL, 1),
-(16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779417253.png', 5, 3, 6, 0);
+(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779417262.png', 6, 4, NULL, 2),
+(16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779417253.png', 5, 3, 6, 2);
 
 -- --------------------------------------------------------
 
@@ -74,6 +78,7 @@ INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `te
 -- Estructura de tabla para la tabla `catalogos`
 --
 
+DROP TABLE IF EXISTS `catalogos`;
 CREATE TABLE `catalogos` (
   `id_catalogo` int(11) NOT NULL,
   `nombre` varchar(150) NOT NULL,
@@ -88,8 +93,8 @@ CREATE TABLE `catalogos` (
 --
 
 INSERT INTO `catalogos` (`id_catalogo`, `nombre`, `stock_minimo`, `id_categoria`, `talla`, `id_posicion`) VALUES
-(2, 'Bolas', '15', 3, '', NULL),
-(3, 'Stick', '14', 4, '', NULL);
+(3, 'Stick', '14', 4, '', NULL),
+(4, 'Stick De Carbono', '10', 4, '6', NULL);
 
 -- --------------------------------------------------------
 
@@ -97,6 +102,7 @@ INSERT INTO `catalogos` (`id_catalogo`, `nombre`, `stock_minimo`, `id_categoria`
 -- Estructura de tabla para la tabla `categorias`
 --
 
+DROP TABLE IF EXISTS `categorias`;
 CREATE TABLE `categorias` (
   `id_categorias` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
@@ -123,6 +129,7 @@ INSERT INTO `categorias` (`id_categorias`, `nombre`, `edad_min`, `edad_max`) VAL
 -- Estructura de tabla para la tabla `categoria_catalogo`
 --
 
+DROP TABLE IF EXISTS `categoria_catalogo`;
 CREATE TABLE `categoria_catalogo` (
   `id_categoria` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -134,7 +141,7 @@ CREATE TABLE `categoria_catalogo` (
 --
 
 INSERT INTO `categoria_catalogo` (`id_categoria`, `nombre`, `descripcion`) VALUES
-(3, 'BOLA', 'Bola'),
+(3, 'POW', 'moises'),
 (4, 'STICK', 'Palo');
 
 -- --------------------------------------------------------
@@ -143,11 +150,12 @@ INSERT INTO `categoria_catalogo` (`id_categoria`, `nombre`, `descripcion`) VALUE
 -- Estructura de tabla para la tabla `conceptos`
 --
 
+DROP TABLE IF EXISTS `conceptos`;
 CREATE TABLE `conceptos` (
   `id_conceptos` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
   `monto` decimal(10,2) NOT NULL,
-  `estatus` tinyint(4) NOT NULL,
+  `estatus` tinyint(4) NOT NULL DEFAULT 1,
   `regla` enum('A','M','L','U') NOT NULL DEFAULT 'L'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
@@ -156,10 +164,11 @@ CREATE TABLE `conceptos` (
 --
 
 INSERT INTO `conceptos` (`id_conceptos`, `nombre`, `monto`, `estatus`, `regla`) VALUES
-(2, 'Mensualidad', 30.00, 1, 'L'),
+(2, 'Mensualidad', 30.00, 1, 'M'),
 (3, 'Viaticos', 0.00, 1, 'L'),
-(4, 'Inscripcion', 25.00, 1, 'L'),
-(5, 'Viaticos Torneos', 0.00, 1, 'L');
+(4, 'Inscripcion', 25.00, 1, 'A'),
+(7, 'Equipamineto', 30.00, 1, 'A'),
+(8, 'Equipamiento Especial', 50.00, 1, 'U');
 
 -- --------------------------------------------------------
 
@@ -167,6 +176,7 @@ INSERT INTO `conceptos` (`id_conceptos`, `nombre`, `monto`, `estatus`, `regla`) 
 -- Estructura de tabla para la tabla `cuentas_cobrar`
 --
 
+DROP TABLE IF EXISTS `cuentas_cobrar`;
 CREATE TABLE `cuentas_cobrar` (
   `id_cobrar` int(11) NOT NULL,
   `id_concepto` int(11) NOT NULL,
@@ -185,8 +195,12 @@ CREATE TABLE `cuentas_cobrar` (
 --
 
 INSERT INTO `cuentas_cobrar` (`id_cobrar`, `id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `monto_pendiente`, `fecha_emision`, `fecha_vencimiento`, `estatus`, `anulado`) VALUES
-(6, 4, 13, 5, 25.00, 2.00, '2026-05-24', '2026-06-23', 0, 0),
-(7, 4, 13, 4, 25.00, 25.00, '2026-05-25', '2026-06-24', 0, 1);
+(12, 2, 14, 4, 30.00, 30.00, '2026-06-03', '2026-07-10', 0, 0),
+(13, 3, 14, 5, 10000.00, 10000.00, '2026-06-03', '2026-07-17', 0, 0),
+(14, 2, 14, 4, 30.00, 30.00, '2026-06-03', '2026-07-03', 0, 1),
+(15, 2, 14, 4, 30.00, 30.00, '2026-06-03', '2026-07-03', 0, 1),
+(16, 2, 16, 4, 30.00, 0.00, '2026-06-03', '2026-07-03', 1, 0),
+(17, 2, 15, 5, 30.00, 30.00, '2026-06-03', '2026-07-03', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -194,6 +208,7 @@ INSERT INTO `cuentas_cobrar` (`id_cobrar`, `id_concepto`, `id_atleta`, `id_moned
 -- Estructura de tabla para la tabla `detalles_equipos`
 --
 
+DROP TABLE IF EXISTS `detalles_equipos`;
 CREATE TABLE `detalles_equipos` (
   `id_detalle` int(11) NOT NULL,
   `id_equipo` int(11) NOT NULL,
@@ -203,9 +218,34 @@ CREATE TABLE `detalles_equipos` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `detalles_pagos`
+--
+
+DROP TABLE IF EXISTS `detalles_pagos`;
+CREATE TABLE `detalles_pagos` (
+  `id_detalle_pago` int(255) NOT NULL,
+  `id_pago` int(100) NOT NULL,
+  `id_cobrar` int(100) NOT NULL,
+  `monto_abonado` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `detalles_pagos`
+--
+
+INSERT INTO `detalles_pagos` (`id_detalle_pago`, `id_pago`, `id_cobrar`, `monto_abonado`) VALUES
+(12, 16, 13, 10000.00),
+(13, 16, 12, 30.00),
+(14, 17, 16, 0.05),
+(15, 18, 16, 30.00);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `detalles_palmares`
 --
 
+DROP TABLE IF EXISTS `detalles_palmares`;
 CREATE TABLE `detalles_palmares` (
   `id_detalle_palmares` int(100) NOT NULL,
   `id_palmares` int(100) NOT NULL,
@@ -220,6 +260,7 @@ CREATE TABLE `detalles_palmares` (
 -- Estructura de tabla para la tabla `devoluciones`
 --
 
+DROP TABLE IF EXISTS `devoluciones`;
 CREATE TABLE `devoluciones` (
   `id_devolución` int(100) NOT NULL,
   `id_asignacion` int(100) NOT NULL,
@@ -234,6 +275,7 @@ CREATE TABLE `devoluciones` (
 -- Estructura de tabla para la tabla `equipamientos`
 --
 
+DROP TABLE IF EXISTS `equipamientos`;
 CREATE TABLE `equipamientos` (
   `id_equipamiento` int(11) NOT NULL,
   `id_catalogo` int(11) NOT NULL,
@@ -247,6 +289,7 @@ CREATE TABLE `equipamientos` (
 -- Estructura de tabla para la tabla `equipos`
 --
 
+DROP TABLE IF EXISTS `equipos`;
 CREATE TABLE `equipos` (
   `id_equipos` int(11) NOT NULL,
   `id_categoria` int(11) NOT NULL,
@@ -259,6 +302,7 @@ CREATE TABLE `equipos` (
 -- Estructura de tabla para la tabla `estadisticas`
 --
 
+DROP TABLE IF EXISTS `estadisticas`;
 CREATE TABLE `estadisticas` (
   `id_estadisticas` int(11) NOT NULL,
   `id_torneo` int(11) NOT NULL,
@@ -276,6 +320,7 @@ CREATE TABLE `estadisticas` (
 -- Estructura de tabla para la tabla `estado_equipamiento`
 --
 
+DROP TABLE IF EXISTS `estado_equipamiento`;
 CREATE TABLE `estado_equipamiento` (
   `id_estado` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -297,6 +342,7 @@ INSERT INTO `estado_equipamiento` (`id_estado`, `nombre`, `nivel_estado`) VALUES
 -- Estructura de tabla para la tabla `historial`
 --
 
+DROP TABLE IF EXISTS `historial`;
 CREATE TABLE `historial` (
   `id_historial` int(100) NOT NULL,
   `id_atleta` int(100) NOT NULL,
@@ -309,6 +355,7 @@ CREATE TABLE `historial` (
 -- Estructura de tabla para la tabla `metodos_pago`
 --
 
+DROP TABLE IF EXISTS `metodos_pago`;
 CREATE TABLE `metodos_pago` (
   `id_metodos` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -321,7 +368,9 @@ CREATE TABLE `metodos_pago` (
 --
 
 INSERT INTO `metodos_pago` (`id_metodos`, `nombre`, `nec_referencia`, `estatus`) VALUES
-(1, 'Efectivo', 2, 1);
+(1, 'Efectivo', 2, 1),
+(2, 'Transferencia', 1, 1),
+(3, 'Zelle', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -329,6 +378,7 @@ INSERT INTO `metodos_pago` (`id_metodos`, `nombre`, `nec_referencia`, `estatus`)
 -- Estructura de tabla para la tabla `monedas`
 --
 
+DROP TABLE IF EXISTS `monedas`;
 CREATE TABLE `monedas` (
   `id_moneda` int(11) NOT NULL,
   `nombre` varchar(40) NOT NULL,
@@ -343,7 +393,8 @@ CREATE TABLE `monedas` (
 
 INSERT INTO `monedas` (`id_moneda`, `nombre`, `abreviatura`, `simbolo`, `estatus`) VALUES
 (4, 'Dolar', 'USD', '$', 1),
-(5, 'Bolivares', 'VES', 'Bs', 1);
+(5, 'Bolivares', 'VES', 'Bs', 1),
+(6, 'Euro', 'EUR', '€', 1);
 
 -- --------------------------------------------------------
 
@@ -351,17 +402,27 @@ INSERT INTO `monedas` (`id_moneda`, `nombre`, `abreviatura`, `simbolo`, `estatus
 -- Estructura de tabla para la tabla `pagos`
 --
 
+DROP TABLE IF EXISTS `pagos`;
 CREATE TABLE `pagos` (
   `id_pago` int(11) NOT NULL,
-  `id_cobrar` int(11) NOT NULL,
   `id_metodo` int(11) NOT NULL,
   `id_moneda` int(11) NOT NULL,
-  `monto_pago` decimal(10,0) NOT NULL,
-  `tasa_cambio` decimal(10,0) NOT NULL,
-  `fecha_tasa` date NOT NULL,
+  `monto_pago` decimal(10,2) NOT NULL,
+  `tasa_cambio` decimal(10,4) NOT NULL,
+  `monto_vuelto` decimal(10,2) NOT NULL,
+  `fecha` date NOT NULL,
   `referencia` varchar(40) NOT NULL,
   `estatus` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `pagos`
+--
+
+INSERT INTO `pagos` (`id_pago`, `id_metodo`, `id_moneda`, `monto_pago`, `tasa_cambio`, `monto_vuelto`, `fecha`, `referencia`, `estatus`) VALUES
+(16, 1, 4, 50.00, 0.0018, 2.15, '2026-06-03', '', 2),
+(17, 1, 5, 30.00, 560.3753, 0.00, '2026-06-03', '', 2),
+(18, 1, 4, 30.00, 1.0000, 0.00, '2026-06-03', '', 1);
 
 -- --------------------------------------------------------
 
@@ -369,6 +430,7 @@ CREATE TABLE `pagos` (
 -- Estructura de tabla para la tabla `palmares`
 --
 
+DROP TABLE IF EXISTS `palmares`;
 CREATE TABLE `palmares` (
   `id_palmares` int(100) NOT NULL,
   `id_torneo` int(100) NOT NULL,
@@ -381,6 +443,7 @@ CREATE TABLE `palmares` (
 -- Estructura de tabla para la tabla `participaciones`
 --
 
+DROP TABLE IF EXISTS `participaciones`;
 CREATE TABLE `participaciones` (
   `id_participacion` int(11) NOT NULL,
   `id_torneo` int(11) NOT NULL,
@@ -393,6 +456,7 @@ CREATE TABLE `participaciones` (
 -- Estructura de tabla para la tabla `posiciones`
 --
 
+DROP TABLE IF EXISTS `posiciones`;
 CREATE TABLE `posiciones` (
   `id_posicion` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -416,11 +480,19 @@ INSERT INTO `posiciones` (`id_posicion`, `nombre`, `abreviatura`, `descripcion`)
 -- Estructura de tabla para la tabla `premios`
 --
 
+DROP TABLE IF EXISTS `premios`;
 CREATE TABLE `premios` (
   `id_premio` int(11) NOT NULL,
   `tipo` enum('I','G') NOT NULL,
   `nombre` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `premios`
+--
+
+INSERT INTO `premios` (`id_premio`, `tipo`, `nombre`) VALUES
+(1, 'I', 'Maximo Goleador');
 
 -- --------------------------------------------------------
 
@@ -428,6 +500,7 @@ CREATE TABLE `premios` (
 -- Estructura de tabla para la tabla `representantes`
 --
 
+DROP TABLE IF EXISTS `representantes`;
 CREATE TABLE `representantes` (
   `id_representante` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -452,6 +525,7 @@ INSERT INTO `representantes` (`id_representante`, `nombre`, `apellido`, `cedula`
 -- Estructura de tabla para la tabla `torneos`
 --
 
+DROP TABLE IF EXISTS `torneos`;
 CREATE TABLE `torneos` (
   `id_torneo` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL,
@@ -474,11 +548,13 @@ INSERT INTO `torneos` (`id_torneo`, `nombre`, `fecha_inicio`, `fecha_fin`, `ubic
 -- Estructura Stand-in para la vista `vista_atletas`
 -- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_atletas`;
 CREATE TABLE `vista_atletas` (
 `id_atleta` int(11)
 ,`nombres` varchar(60)
 ,`apellidos` varchar(60)
 ,`estatus` tinyint(1)
+,`doc_identidad` varchar(15)
 ,`id_representante` int(11)
 ,`id_posicion` int(11)
 ,`id_categoria` int(11)
@@ -487,7 +563,6 @@ CREATE TABLE `vista_atletas` (
 ,`foto` varchar(100)
 ,`telefono` varchar(15)
 ,`direccion` varchar(150)
-,`doc_identidad` varchar(13)
 ,`nombre_rep` varchar(30)
 ,`apellido_rep` varchar(30)
 ,`cedula_rep` varchar(13)
@@ -504,6 +579,7 @@ CREATE TABLE `vista_atletas` (
 -- Estructura Stand-in para la vista `vista_cuentas_cobrar`
 -- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_cuentas_cobrar`;
 CREATE TABLE `vista_cuentas_cobrar` (
 `id_cobrar` int(11)
 ,`id_atleta` int(11)
@@ -521,6 +597,9 @@ CREATE TABLE `vista_cuentas_cobrar` (
 ,`concepto_nombre` varchar(50)
 ,`moneda_nombre` varchar(40)
 ,`moneda_simbolo` varchar(3)
+,`moneda_abreviatura` varchar(4)
+,`deuda_moneda_atleta` decimal(32,2)
+,`total_facturas_atleta` bigint(21)
 );
 
 -- --------------------------------------------------------
@@ -530,7 +609,8 @@ CREATE TABLE `vista_cuentas_cobrar` (
 --
 DROP TABLE IF EXISTS `vista_atletas`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_atletas`  AS SELECT `a`.`id_atleta` AS `id_atleta`, `a`.`nombres` AS `nombres`, `a`.`apellidos` AS `apellidos`, `a`.`estatus` AS `estatus`, `a`.`id_representante` AS `id_representante`, `a`.`id_posicion` AS `id_posicion`, `a`.`id_categoria` AS `id_categoria`, `a`.`genero` AS `genero`, `a`.`fecha_nac` AS `fecha_nac`, `a`.`foto` AS `foto`, coalesce(`a`.`telefono`,`r`.`telefono`) AS `telefono`, coalesce(`a`.`direccion`,`r`.`direccion`) AS `direccion`, coalesce(`a`.`doc_identidad`,`r`.`cedula`) AS `doc_identidad`, `r`.`nombre` AS `nombre_rep`, `r`.`apellido` AS `apellido_rep`, `r`.`cedula` AS `cedula_rep`, `p`.`nombre` AS `nombre_posicion`, `p`.`abreviatura` AS `abrev_posicion`, `c`.`nombre` AS `nombre_categoria`, `c`.`edad_min` AS `edad_min`, `c`.`edad_max` AS `edad_max` FROM (((`atletas` `a` left join `representantes` `r` on(`a`.`id_representante` = `r`.`id_representante`)) left join `posiciones` `p` on(`a`.`id_posicion` = `p`.`id_posicion`)) left join `categorias` `c` on(`a`.`id_categoria` = `c`.`id_categorias`)) ;
+DROP VIEW IF EXISTS `vista_atletas`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_atletas`  AS SELECT `a`.`id_atleta` AS `id_atleta`, `a`.`nombres` AS `nombres`, `a`.`apellidos` AS `apellidos`, `a`.`estatus` AS `estatus`, CASE WHEN `a`.`doc_identidad` is not null AND `a`.`doc_identidad` <> '' THEN concat('A-',`a`.`doc_identidad`) WHEN `r`.`cedula` is not null AND `r`.`cedula` <> '' THEN concat('R-',`r`.`cedula`) ELSE '' END AS `doc_identidad`, `a`.`id_representante` AS `id_representante`, `a`.`id_posicion` AS `id_posicion`, `a`.`id_categoria` AS `id_categoria`, `a`.`genero` AS `genero`, `a`.`fecha_nac` AS `fecha_nac`, `a`.`foto` AS `foto`, coalesce(`a`.`telefono`,`r`.`telefono`) AS `telefono`, coalesce(`a`.`direccion`,`r`.`direccion`) AS `direccion`, `r`.`nombre` AS `nombre_rep`, `r`.`apellido` AS `apellido_rep`, `r`.`cedula` AS `cedula_rep`, `p`.`nombre` AS `nombre_posicion`, `p`.`abreviatura` AS `abrev_posicion`, `c`.`nombre` AS `nombre_categoria`, `c`.`edad_min` AS `edad_min`, `c`.`edad_max` AS `edad_max` FROM (((`atletas` `a` left join `representantes` `r` on(`a`.`id_representante` = `r`.`id_representante`)) left join `posiciones` `p` on(`a`.`id_posicion` = `p`.`id_posicion`)) left join `categorias` `c` on(`a`.`id_categoria` = `c`.`id_categorias`)) ;
 
 -- --------------------------------------------------------
 
@@ -539,7 +619,8 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `vista_cuentas_cobrar`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_cuentas_cobrar`  AS SELECT `c`.`id_cobrar` AS `id_cobrar`, `c`.`id_atleta` AS `id_atleta`, `c`.`id_concepto` AS `id_concepto`, `c`.`id_moneda` AS `id_moneda`, `c`.`fecha_emision` AS `fecha_emision`, `c`.`fecha_vencimiento` AS `fecha_vencimiento`, `c`.`monto_personalizado` AS `monto_total`, `c`.`monto_pendiente` AS `monto_pendiente`, `c`.`anulado` AS `anulado`, `c`.`estatus` AS `estatus`, CASE WHEN `c`.`anulado` = 1 THEN 'Anulado' WHEN `c`.`estatus` = 0 THEN 'Pendiente' WHEN `c`.`estatus` = 1 THEN 'Pagado' ELSE 'Desconocido' END AS `estatus_texto`, `a`.`nombres` AS `atleta_nombre`, `a`.`apellidos` AS `atleta_apellido`, `co`.`nombre` AS `concepto_nombre`, `m`.`nombre` AS `moneda_nombre`, `m`.`simbolo` AS `moneda_simbolo` FROM (((`cuentas_cobrar` `c` join `atletas` `a` on(`c`.`id_atleta` = `a`.`id_atleta`)) join `conceptos` `co` on(`c`.`id_concepto` = `co`.`id_conceptos`)) join `monedas` `m` on(`c`.`id_moneda` = `m`.`id_moneda`)) ;
+DROP VIEW IF EXISTS `vista_cuentas_cobrar`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_cuentas_cobrar`  AS SELECT `c`.`id_cobrar` AS `id_cobrar`, `c`.`id_atleta` AS `id_atleta`, `c`.`id_concepto` AS `id_concepto`, `c`.`id_moneda` AS `id_moneda`, `c`.`fecha_emision` AS `fecha_emision`, `c`.`fecha_vencimiento` AS `fecha_vencimiento`, `c`.`monto_personalizado` AS `monto_total`, `c`.`monto_pendiente` AS `monto_pendiente`, `c`.`anulado` AS `anulado`, `c`.`estatus` AS `estatus`, CASE WHEN `c`.`anulado` = 1 THEN 'Anulado' WHEN `c`.`estatus` = 0 THEN 'Pendiente' WHEN `c`.`estatus` = 1 THEN 'Pagado' ELSE 'Desconocido' END AS `estatus_texto`, `a`.`nombres` AS `atleta_nombre`, `a`.`apellidos` AS `atleta_apellido`, `co`.`nombre` AS `concepto_nombre`, `m`.`nombre` AS `moneda_nombre`, `m`.`simbolo` AS `moneda_simbolo`, `m`.`abreviatura` AS `moneda_abreviatura`, sum(case when `c`.`estatus` = 0 and `c`.`anulado` = 0 then `c`.`monto_pendiente` else 0 end) over ( partition by `c`.`id_atleta`,`m`.`id_moneda`) AS `deuda_moneda_atleta`, count(`c`.`id_cobrar`) over ( partition by `c`.`id_atleta`) AS `total_facturas_atleta` FROM (((`cuentas_cobrar` `c` join `atletas` `a` on(`c`.`id_atleta` = `a`.`id_atleta`)) join `conceptos` `co` on(`c`.`id_concepto` = `co`.`id_conceptos`)) join `monedas` `m` on(`c`.`id_moneda` = `m`.`id_moneda`)) ;
 
 --
 -- Índices para tablas volcadas
@@ -615,6 +696,14 @@ ALTER TABLE `detalles_equipos`
   ADD PRIMARY KEY (`id_detalle`),
   ADD KEY `id_atleta` (`id_atleta`),
   ADD KEY `id_equipo` (`id_equipo`);
+
+--
+-- Indices de la tabla `detalles_pagos`
+--
+ALTER TABLE `detalles_pagos`
+  ADD PRIMARY KEY (`id_detalle_pago`),
+  ADD KEY `id_pago` (`id_pago`,`id_cobrar`),
+  ADD KEY `id_cobrar` (`id_cobrar`);
 
 --
 -- Indices de la tabla `detalles_palmares`
@@ -695,7 +784,6 @@ ALTER TABLE `monedas`
 --
 ALTER TABLE `pagos`
   ADD PRIMARY KEY (`id_pago`),
-  ADD KEY `id_cobrar` (`id_cobrar`),
   ADD KEY `id_metodo` (`id_metodo`),
   ADD KEY `id_moneda` (`id_moneda`);
 
@@ -764,7 +852,7 @@ ALTER TABLE `atletas`
 -- AUTO_INCREMENT de la tabla `catalogos`
 --
 ALTER TABLE `catalogos`
-  MODIFY `id_catalogo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_catalogo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `categorias`
@@ -782,19 +870,25 @@ ALTER TABLE `categoria_catalogo`
 -- AUTO_INCREMENT de la tabla `conceptos`
 --
 ALTER TABLE `conceptos`
-  MODIFY `id_conceptos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_conceptos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `cuentas_cobrar`
 --
 ALTER TABLE `cuentas_cobrar`
-  MODIFY `id_cobrar` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id_cobrar` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_equipos`
 --
 ALTER TABLE `detalles_equipos`
-  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `detalles_pagos`
+--
+ALTER TABLE `detalles_pagos`
+  MODIFY `id_detalle_pago` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_palmares`
@@ -818,7 +912,7 @@ ALTER TABLE `equipamientos`
 -- AUTO_INCREMENT de la tabla `equipos`
 --
 ALTER TABLE `equipos`
-  MODIFY `id_equipos` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_equipos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `estadisticas`
@@ -842,19 +936,19 @@ ALTER TABLE `historial`
 -- AUTO_INCREMENT de la tabla `metodos_pago`
 --
 ALTER TABLE `metodos_pago`
-  MODIFY `id_metodos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_metodos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `monedas`
 --
 ALTER TABLE `monedas`
-  MODIFY `id_moneda` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_moneda` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT de la tabla `palmares`
@@ -878,7 +972,7 @@ ALTER TABLE `posiciones`
 -- AUTO_INCREMENT de la tabla `premios`
 --
 ALTER TABLE `premios`
-  MODIFY `id_premio` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_premio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `representantes`
@@ -934,6 +1028,13 @@ ALTER TABLE `detalles_equipos`
   ADD CONSTRAINT `detalles_equipos_ibfk_2` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipos`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Filtros para la tabla `detalles_pagos`
+--
+ALTER TABLE `detalles_pagos`
+  ADD CONSTRAINT `detalles_pagos_ibfk_1` FOREIGN KEY (`id_pago`) REFERENCES `pagos` (`id_pago`),
+  ADD CONSTRAINT `detalles_pagos_ibfk_2` FOREIGN KEY (`id_cobrar`) REFERENCES `cuentas_cobrar` (`id_cobrar`);
+
+--
 -- Filtros para la tabla `detalles_palmares`
 --
 ALTER TABLE `detalles_palmares`
@@ -979,7 +1080,6 @@ ALTER TABLE `historial`
 -- Filtros para la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`id_cobrar`) REFERENCES `cuentas_cobrar` (`id_cobrar`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`id_metodo`) REFERENCES `metodos_pago` (`id_metodos`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `pagos_ibfk_3` FOREIGN KEY (`id_moneda`) REFERENCES `monedas` (`id_moneda`) ON DELETE CASCADE ON UPDATE CASCADE;
 

@@ -11,6 +11,7 @@ class ModeloConceptos extends ModeloBase
     private $nombre;
     private $monto;
     private $estatus;
+    private $regla;
     public function __construct()
     {
         parent::__construct();
@@ -36,6 +37,7 @@ class ModeloConceptos extends ModeloBase
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->monto = floatval(str_replace(',', '.', trim($datos['monto'] ?? '')));
         $this->estatus = $datos['estatus'] ?? null;
+        $this->regla = $datos['regla'] ?? null;
         //ejecutamos la accion enviada por el controlador
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
@@ -70,14 +72,16 @@ class ModeloConceptos extends ModeloBase
 
             // 3. FILTROS ESPECÍFICOS (Si vienen del Modal o propiedades del objeto)
             if (!empty($this->nombre)) {
-            $sentencia .= " AND nombre LIKE :nombre";
-            $params[':nombre'] = "%" . trim($this->nombre) . "%";}
+                $sentencia .= " AND nombre LIKE :nombre";
+                $params[':nombre'] = "%" . trim($this->nombre) . "%";
+            }
 
             if (!empty($this->monto)) {
-            $sentencia .= " AND monto = :monto";
-            $params[':monto'] = trim($this->monto);}
+                $sentencia .= " AND monto = :monto";
+                $params[':monto'] = trim($this->monto);
+            }
 
-            
+
 
             // 4. Orden (Asegúrate de usar una columna que exista, como id_conceptos)
             $sentencia .= " ORDER BY id_conceptos ASC";
@@ -108,10 +112,11 @@ class ModeloConceptos extends ModeloBase
                 throw new Exception(DUPLICATE_NAME);
             }
 
-            $sentencia = "INSERT INTO conceptos (`nombre`, `monto`) VALUES (:nombre, :monto)";
+            $sentencia = "INSERT INTO conceptos (`nombre`, `monto`, `regla`) VALUES (:nombre, :monto, :regla)";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':monto', $this->monto);
+            $stmt->bindParam(':regla', $this->regla);
             $stmt->execute();
 
             $conex->commit();
@@ -138,15 +143,17 @@ class ModeloConceptos extends ModeloBase
                     throw new Exception(DUPLICATE_NAME);
                 }
             }
-            
+
             $sentencia = "UPDATE conceptos SET 
             nombre = :nombre, 
-            monto = :monto
+            monto = :monto,
+            regla = :regla
             WHERE id_conceptos = :id_conceptos";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':monto', $this->monto);
             $stmt->bindParam(':id_conceptos', $this->id);
+            $stmt->bindParam(':regla', $this->regla);
             $stmt->execute();
 
             $conex->commit();
@@ -162,7 +169,7 @@ class ModeloConceptos extends ModeloBase
         }
     }
 
-    function Buscar(): array
+    public function Buscar(): array
     {
         try {
             $conex = $this->conex();
@@ -185,7 +192,7 @@ class ModeloConceptos extends ModeloBase
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
-            if (!$this->verificarExistencia('id', $this->id, 'conceptos', NULL, bloquear:true)) {
+            if (!$this->verificarExistencia('id', $this->id, 'conceptos', NULL, bloquear: true)) {
                 throw new Exception('El registro no existe.');
             }
             $sentencia = "DELETE FROM conceptos WHERE id_conceptos = :id";
@@ -205,35 +212,35 @@ class ModeloConceptos extends ModeloBase
         }
     }
 
-private function Estatus(): array
-{
-    try {
-        $conex = $this->conex();
-        $conex->beginTransaction();
+    private function Estatus(): array
+    {
+        try {
+            $conex = $this->conex();
+            $conex->beginTransaction();
 
-        if (!$this->verificarExistencia('id', $this->id, 'conceptos', NULL, bloquear: true)) {
-            throw new Exception('El concepto de pago no existe.');
+            if (!$this->verificarExistencia('id', $this->id, 'conceptos', NULL, bloquear: true)) {
+                throw new Exception('El concepto de pago no existe.');
+            }
+
+            // Alternar entre 1 y 2
+            $nuevoEstado = ($this->estatus == 1) ? 2 : 1;
+
+            $sentencia = "UPDATE conceptos SET estatus = :estatus WHERE id_conceptos = :id_conceptos";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindParam(':estatus', $nuevoEstado);
+            $stmt->bindParam(':id_conceptos', $this->id);
+            $stmt->execute();
+
+            $conex->commit();
+            return array('accion' => 'exito');
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollback();
+            }
+            logs('Concepto', $e->getMessage(), 'Modelo_Estatus');
+            return array('accion' => 'error', 'codigo' => $e->getMessage());
+        } finally {
+            $conex = NULL;
         }
-
-        // Alternar entre 1 y 2
-        $nuevoEstado = ($this->estatus == 1) ? 2 : 1;
-
-        $sentencia = "UPDATE conceptos SET estatus = :estatus WHERE id_conceptos = :id_conceptos";
-        $stmt = $conex->prepare($sentencia);
-        $stmt->bindParam(':estatus', $nuevoEstado);
-        $stmt->bindParam(':id_conceptos', $this->id);
-        $stmt->execute();
-
-        $conex->commit();
-        return array('accion' => 'exito');
-    } catch (Exception $e) {
-        if ($conex && $conex->inTransaction()) {
-            $conex->rollback();
-        }
-        logs('Concepto', $e->getMessage(), 'Modelo_Estatus');
-        return array('accion' => 'error', 'codigo' => $e->getMessage());
-    } finally {
-        $conex = NULL;
     }
-}
 }

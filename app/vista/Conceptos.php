@@ -6,7 +6,14 @@
         <?php else:
         foreach ($registro as $dato):
             $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
-            $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a'; ?>
+            $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
+            $regla = match ($dato['regla']) {
+                'L' => 'Libre',
+                'M' => 'Mensual',
+                'A' => 'Anual',
+                'U' => 'Unico'
+            };
+        ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
                     <div class="listado_col_datos">
@@ -17,6 +24,10 @@
                         <div class="listado_dato_grupo">
                             <small>Monto</small>
                             <span><?= $dato['monto'] ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Frecuencia</small>
+                            <span><?= $regla ?></span>
                         </div>
                     </div>
 
@@ -79,7 +90,14 @@
                                 <?php else:
                                 foreach ($registro as $dato):
                                     $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
-                                    $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a'; ?>
+                                    $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
+                                    $regla = match ($dato['regla']) {
+                                        'L' => 'Libre',
+                                        'M' => 'Mensual',
+                                        'A' => 'Anual',
+                                        'U' => 'Unico'
+                                    };
+                                ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
                                             <div class="listado_col_datos">
@@ -90,6 +108,10 @@
                                                 <div class="listado_dato_grupo">
                                                     <small>Monto</small>
                                                     <span><?= $dato['monto'] ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Frecuencia</small>
+                                                    <span><?= $regla ?></span>
                                                 </div>
                                             </div>
 
@@ -144,10 +166,23 @@
                     </div>
                     <div class="row">
                         <div class="colum">
-                            <button type="button" class="btn btn_azul" id="proceso">Registra Concepto</button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+                            <div class="caja_formulario">
+                                <select name="regla" id="regla" class="formulario select">
+                                    <option value="L" selected>Libre</option>
+                                    <option value="M">Mensual</option>
+                                    <option value="A">Anual</option>
+                                    <option value="U">Unico</option>
+                                </select>
+                                <label for="regla" class="titulo_formulario">Frecuencia</label>
+                                <span class="mensaje" id="regla_span"></span>
+                            </div>
                         </div>
-                    </div>
+                        <div class="row">
+                            <div class="colum">
+                                <button type="button" class="btn btn_azul" id="proceso">Registra Concepto</button>
+                                <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+                            </div>
+                        </div>
                 </form>
             </div>
         </div>

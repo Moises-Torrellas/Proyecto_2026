@@ -30,7 +30,20 @@ $('#cerrar_modal_asistente').on("click", function () {
     cerrarModalAsistente();
 });
 
+$('#cerrar_modal_Secundario').on("click", function () {
+    cerrarModalSecundario();
+});
+function abrirModalSecundario() {
+    $("#secundario_modal_contenedor").css('opacity', '1')
+    $("#secundario_modal_contenedor").css('visibility', 'visible')
+    $("#secundario_modal").addClass("expandir")
+}
 
+function cerrarModalSecundario() {
+    $("#secundario_modal").removeClass("expandir")
+    $("#secundario_modal_contenedor").css('opacity', '0')
+    $("#secundario_modal_contenedor").css('visibility', 'hidden')
+}
 function cerrarModal() {
     $("#modal").removeClass("expandir")
     $("#contenedor_modal").css('opacity', '0')
@@ -473,6 +486,57 @@ function confirmar(titulo, callback) {
     });
 }
 
+function confirmarAnulacion(titulo, callback) {
+    
+    const regexMotivo = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-]+$/;
+
+    Swal.fire({
+        icon: "warning",
+        title: titulo,
+        input: "text",
+        inputPlaceholder: "Escribe el motivo de la anulación aquí...",
+        showCancelButton: true,
+        confirmButtonText: "SI, ANULAR",
+        confirmButtonColor: "#00a200",
+        cancelButtonText: "NO",
+        cancelButtonColor: "#d30000",
+        customClass: {
+            popup: "mi-popup",
+            title: "mi-titulo",
+            content: "mi-contenido"
+        },
+        // Doble validación: existencia y formato seguro
+        inputValidator: (value) => {
+            let textoLimpio = value ? value.trim() : "";
+
+            // 1. Validar que no esté vacío
+            if (textoLimpio === "") {
+                return "¡Es obligatorio ingresar un motivo para la anulación!";
+            }
+            
+            // 2. Validar que cumpla con la longitud mínima (ej. 10 caracteres para que sea un motivo real)
+            if (textoLimpio.length < 5) {
+                return "Por favor, escribe un motivo más detallado (mínimo 10 caracteres).";
+            }
+
+            // 3. Validar con la Expresión Regular
+            if (!regexMotivo.test(textoLimpio)) {
+                return "El motivo contiene caracteres no permitidos. Evita usar símbolos como <, >, $, %, etc.";
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Pasamos el texto ya validado y limpio al callback para el AJAX
+            callback(result.value.trim());
+        } else {
+            callback(false);
+        }
+    }).catch((e) => {
+        alert("Error en confirmación: " + e.name);
+        callback(false);
+    });
+}
+
 function abrirAlertaEspara(titulo, texto) {
     Swal.fire({
         title: titulo,
@@ -527,7 +591,8 @@ function limpia() {
 }
 
 function limpia_Tablas() {
-    $('.caja_tabla tbody').find('tr').remove();
+    $('#tabla_permisos').find('tr').remove();
+    $('#tabla_Atletas_Seleccionados').find('tr').remove();
 }
 
 function eliminaLinea(boton) {
@@ -750,4 +815,33 @@ function manejarErrorCamara(img) {
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
+}
+
+function ModeloBancario (selector) {
+    $(selector).on('input', function () {
+        let entrada = $(this).val().replace(/\D/g, '');
+
+        if (entrada === '' || entrada === '00') {
+            $(this).val('0.00');
+            return;
+        }
+
+        let valorFlotante = parseFloat(entrada) / 100;
+
+        // Cambiamos a 'en-US' para que use punto (.) como separador decimal
+        // y eliminamos los separadores de miles para que no choque con tu Regex de validación
+        let valorFormateado = valorFlotante.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+            useGrouping: false // Evita que ponga comas en los miles (ej: 1,000.00 -> 1000.00)
+        });
+
+        $(this).val(valorFormateado);
+    });
+
+    $(selector).on('focus', function() {
+        if ($(this).val() === '') {
+            $(this).val('0.00');
+        }
+    });
 }

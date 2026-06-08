@@ -18,13 +18,13 @@
             background-color: #ffffff;
         }
 
-        /* 2. Header: Ahora sí ocupará el 100% real de la hoja sin dejar bordes blancos */
+        /* 2. Header: Ocupará el 100% real de la hoja sin dejar bordes blancos */
         .header {
             position: fixed;
-            top: -130px; /* Sube al espacio reservado */
+            top: -130px; 
             left: 0px;
             right: 0px;
-            height: 60px; /* Fijamos altura interna para que cuadre exacto en los 140px */
+            height: 60px; 
             background-color: #1a202c;
             color: white;
             padding: 20px 40px;
@@ -52,7 +52,7 @@
             width: 60px;
         }
 
-        /* 3. Contenedor de datos: Maneja los espacios de la tabla hacia los bordes de la hoja */
+        /* 3. Contenedor de datos */
         .content {
             padding: 10px 40px;
         }
@@ -92,6 +92,9 @@
             padding: 10px;
             border-bottom: 1px solid #e2e8f0;
             font-size: 12px;
+            /* Evita que textos largos rompan la tabla */
+            word-wrap: break-word; 
+            max-width: 200px; 
         }
 
         .info-grid {
@@ -105,15 +108,10 @@
             font-size: 13px;
         }
 
-        .grafico-placeholder { border: 1px dashed #cbd5e0; padding: 5px; text-align: center; margin-bottom: 30px; }
-
-        .chart { width: 100%; }
-
-        /* 4. Footer: Posicionado abajo del todo de forma fija, alineado con los lados del contenido */
+        /* 4. Footer */
         .footer {
             position: fixed;
             bottom: -50px;
-            /* Pequeño despegue estético del borde inferior del papel */
             left: 40px;
             right: 40px;
             height: 50px;
@@ -123,7 +121,6 @@
             background-color: #ffffff;
         }
 
-        /* Contenedor del logo centrado en el footer */
         .footer-logo-container {
             text-align: center;
             margin-bottom: 12px;
@@ -134,7 +131,6 @@
             display: inline-block;
         }
 
-        /* Estructura para separar los textos informativos a los extremos */
         .footer-meta {
             width: 100%;
             border-collapse: collapse;
@@ -146,24 +142,16 @@
             color: #4a5568;
         }
 
-        .text-left {
-            text-align: left;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .page-number:before {
-            content: "Página " counter(page);
-        }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .page-number:before { content: "Página " counter(page); }
     </style>
 </head>
 
 <body>
 
     <div class="header">
-        <h1>REPORTE ESTADISTICO DE ATLETAS POR CATEGORIAS</h1>
+        <h1>REPORTE DE DEVOLUCIONES</h1>
         <p>Sistema de Gestión Administrativo - Cannibals Lara</p>
         <img src="<?= $logo ?>" class="logo-mascota" alt="Logo">
     </div>
@@ -173,34 +161,39 @@
             <div class="info-item"><strong>FECHA DE EMISIÓN</strong><br><?= $fecha_reporte ?></div>
             <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?></div>
         </div>
+        
         <div class="resumen-ejecutivo">
-            <strong>Resumen Ejecutivo:</strong> Este documento refleja la distribución actual de los atletas inscritos en el club según sus respectivos rangos de edad. Los datos visualizados permiten proyectar la apertura de nuevos horarios y la asignación óptima del cuerpo técnico para las temporadas competitivas.
+            <strong>Resumen Ejecutivo:</strong> El presente documento detalla el historial de devoluciones de equipamiento deportivo registrado en el sistema. Esta información permite realizar un control riguroso sobre el estado, la calidad y las condiciones en las que los atletas reintegran el material asignado al inventario de la academia.
         </div>
 
-        <div class="section-title">Visualización Estadística</div>
-        <div class="grafico-placeholder"><img src="<?= $charC ?>" class="chart" alt="Grafico"></div>
-
-        <div class="section-title">Desglose por Tabla</div>
+        <div class="section-title">Listado de Devoluciones</div>
 
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Categoria</th>
-                    <th>Edad Minima</th>
-                    <th>Edad Maxima</th>
-                    <th>Total de Atletas</th>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 15%;">Fecha</th>
+                    <th style="width: 35%;">Asignación</th>
+                    <th style="width: 20%;">Calidad</th>
+                    <th style="width: 25%;">Observación</th>
                 </tr>
             </thead>
             <tbody>
-                <?php $id = 0;
-                foreach ($datos as $r): $id++; ?>
+                <?php 
+                $id = 0;
+                foreach ($datos as $r): 
+                    $id++; 
+                    $observacion = !empty(trim($r['observacion'])) ? htmlspecialchars($r['observacion']) : 'Sin observaciones';
+                ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['categoria']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['edad_min']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['edad_max']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['total_atletas']) ?></td>
+                        <td class="data-cell"><?= $r['fecha_devolucion'] ?></td>
+                        <td class="data-cell">
+                            <strong><?= htmlspecialchars($r['asignaciones']) ?></strong><br>
+                            <span style="font-size: 10px; color: #718096;">ID Asig: #<?= $r['id_asignacion'] ?></span>
+                        </td>
+                        <td class="data-cell"><?= htmlspecialchars($r['articulo']) ?></td>
+                        <td class="data-cell"><?= $observacion ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

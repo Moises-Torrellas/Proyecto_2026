@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-05-2026 a las 03:40:38
+-- Tiempo de generación: 28-05-2026 a las 06:19:48
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -128,8 +128,10 @@ CREATE TABLE `permisos_roles` (
 --
 
 INSERT INTO `permisos_roles` (`id_permiso_rol`, `id_rol`, `id_modulo`, `ingresar`, `registrar`, `eliminar`, `modificar`, `reporte`, `otros`) VALUES
-(91, 9, 10, 0, 0, 1, 1, 0, 0),
-(92, 9, 13, 0, 1, 1, 1, 0, 0);
+(139, 9, 9, 1, 0, 0, 0, 0, 0),
+(140, 9, 10, 1, 0, 0, 0, 0, 0),
+(141, 9, 11, 1, 0, 0, 0, 0, 0),
+(142, 9, 12, 1, 0, 0, 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -155,7 +157,10 @@ CREATE TABLE `permisos_usuarios` (
 --
 
 INSERT INTO `permisos_usuarios` (`id_permiso_usuario`, `idUsuario`, `id_modulo`, `ingresar`, `registrar`, `eliminar`, `modificar`, `reporte`, `otros`) VALUES
-(0, 25, 100, 1, 1, 0, 0, 0, 0);
+(54, 25, 9, 1, 1, 1, 1, 0, 0),
+(55, 25, 10, 1, 0, 1, 1, 0, 0),
+(56, 25, 11, 1, 0, 0, 0, 0, 0),
+(57, 25, 12, 1, 0, 0, 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -222,7 +227,7 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `foto`, `telefonoUsuario`, `contraseña`, `correo`, `id_rol`, `estatus`, `bloqueo`) VALUES
 (1, '12345678', 'Admin', 'Admin', 'default.png', '0000-0000000', '$2y$10$z9rD8xGPyg4.JegVpLgfi.WEi2HPKEKGvOQYRDZfZPqwlzxRqS.y.', 'admin@gmail.com', 1, 1, 1),
-(25, '29506932', 'Moises', 'Torrellas', 'default.png', '0416-0526853', '$2y$10$2NK3nU2OeDem8q.VCoC25uFF0n2cvjmPWx35Cwfk4PJT/5t1oollu', 'moitcj@gmail.com', 2, 1, 1);
+(25, '29506932', 'Moises', 'Torrellas', 'default.png', '0415-6548585', '$2y$10$nbHVdqm0D.1BxZfSNqSCgu3xJIZKG6ZqTuea6nW6DLpcALyW8jAw6', 'moitcj@gmail.com', 9, 1, 1);
 
 --
 -- Índices para tablas volcadas
@@ -313,7 +318,13 @@ ALTER TABLE `notificaciones`
 -- AUTO_INCREMENT de la tabla `permisos_roles`
 --
 ALTER TABLE `permisos_roles`
-  MODIFY `id_permiso_rol` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
+  MODIFY `id_permiso_rol` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=143;
+
+--
+-- AUTO_INCREMENT de la tabla `permisos_usuarios`
+--
+ALTER TABLE `permisos_usuarios`
+  MODIFY `id_permiso_usuario` int(100) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT de la tabla `respaldos`

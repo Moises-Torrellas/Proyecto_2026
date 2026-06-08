@@ -1,3 +1,113 @@
+<?php
+if (isset($solo_lista) && $solo_lista === true):
+    if (empty($registro)): ?>
+        <div class="listado_vacio">
+            <p>No se encontraron registros de pagos</p>
+        </div>
+        <?php else:
+        foreach ($registro as $dato):
+            $fechaPago = date('d/m/Y', strtotime($dato['fecha_pago']));
+            $simboloMoneda = htmlspecialchars($dato['simbolo'] . ' ' . $dato['abre']);
+            $montoFormateado = number_format($dato['monto_pagado'], 2, ',', '.');
+
+            // LÓGICA DE ANULADO ADAPTADA
+            // Evaluamos si el estatus es diferente de 1 (lo que significa que está anulado)
+            $esAnulado = ((int)$dato['estatus']) !== 1;
+            $estiloGris = $esAnulado ? 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"' : '';
+
+            if ($esAnulado) {
+                $estatusHTML = '<span class="estatus_r">Anulado</span>';
+                $botonesAccion = ''; // Si ya está anulado, no se muestran acciones
+            } else {
+                $estatusHTML = '<span class="estatus_v">Realizado</span>';
+
+                // Si está activo y tiene permiso, construimos el botón de anulación
+                $botonesAccion = '';
+                if ($permisos['eliminar']) {
+                    $botonesAccion .= '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular Transacción">';
+                    $botonesAccion .= '<i class="fi fi-sr-cross-circle"></i>';
+                    $botonesAccion .= '</button>';
+                }
+            }
+        ?>
+            <div id="registro" class="listado_contenedor_grupal" <?= $estiloGris ?>>
+                <div class="listado_item" onclick="toggleDetalles(this)">
+
+                    <div class="listado_col_principal">
+                        <div class="listado_avatar_null" style="background-color: var(--verde-suave, #22c55e20); color: var(--verde, #22c55e);">
+                            <i class="icon_con" data-lucide="banknote"></i>
+                        </div>
+                        <div class="listado_info_base">
+                            <span class="listado_titulo">
+                                <?= !empty($dato['concepto_pago']) ? htmlspecialchars($dato['concepto_pago']) : 'Pago General' ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Monto Pagado</small>
+                            <span><?= $simboloMoneda ?> <?= $montoFormateado ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Referencia</small>
+                            <span><?= !empty($dato['referencia']) ? htmlspecialchars($dato['referencia']) : 'N/A' ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Fecha</small>
+                            <span><?= $fechaPago ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Estatus</small>
+                            <?= $estatusHTML ?>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                            <?= $botonesAccion ?>
+                        </div>
+                        <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                    </div>
+                </div>
+
+                <div class="listado_detalle_oculto">
+                    <div class="detalle_expandido_container">
+                        <div class="detalle_fila">
+                            <div class="detalle_card" style="width: 100%;">
+                                <div class="detalle_card_icon"><i data-lucide="trending-up"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Detalles Financieros del Pago General</label>
+                                    <span>Moneda: <?= htmlspecialchars($dato['moneda']) ?></span>
+                                    <small>Vuelto Generado: <b style="color:#28a745;"><?= number_format($dato['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($dato['abre']) ?></b></small>
+                                </div>
+                            </div>
+                        </div>
+                        <h4>Desglose de Cuentas Abonadas:</h4>
+                        <div class="detalle_fila">
+                            <?php if (!empty($dato['detalles'])): foreach ($dato['detalles'] as $det): ?>
+                                    <div class="detalle_card">
+                                        <div class="detalle_card_icon"><i data-lucide="file-text"></i></div>
+                                        <div class="detalle_card_txt">
+                                            <label><?= htmlspecialchars($det['concepto']) ?></label>
+                                            <span><?= htmlspecialchars($det['atleta']) ?></span>
+                                            <small>Abono: <b style="color:#28a745;"><?= number_format($det['monto'], 2, ',', '.') ?> <?= htmlspecialchars($det['moneda']) ?></b></small>
+                                        </div>
+                                    </div>
+                                <?php endforeach;
+                            else: ?>
+                                <span>No hay cuentas asociadas a este pago.</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+<?php
+        endforeach;
+    endif;
+    exit();
+endif;
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -31,6 +141,113 @@
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
+                            <?php
+                            if (empty($registro)): ?>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros de pagos</p>
+                                </div>
+                                <?php else:
+                                foreach ($registro as $dato):
+                                    $fechaPago = date('d/m/Y', strtotime($dato['fecha_pago']));
+                                    $simboloMoneda = htmlspecialchars($dato['simbolo'] . ' ' . $dato['abre']);
+                                    $montoFormateado = number_format($dato['monto_pagado'], 2, ',', '.');
+
+                                    // LÓGICA DE ANULADO ADAPTADA
+                                    // Evaluamos si el estatus es diferente de 1 (lo que significa que está anulado)
+                                    $esAnulado = ((int)$dato['estatus']) !== 1;
+                                    $estiloGris = $esAnulado ? 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"' : '';
+
+                                    if ($esAnulado) {
+                                        $estatusHTML = '<span class="estatus_r">Anulado</span>';
+                                        $botonesAccion = ''; // Si ya está anulado, no se muestran acciones
+                                    } else {
+                                        $estatusHTML = '<span class="estatus_v">Realizado</span>';
+
+                                        // Si está activo y tiene permiso, construimos el botón de anulación
+                                        $botonesAccion = '';
+                                        if ($permisos['eliminar']) {
+                                            $botonesAccion .= '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular Transacción">';
+                                            $botonesAccion .= '<i class="fi fi-sr-cross-circle"></i>';
+                                            $botonesAccion .= '</button>';
+                                        }
+                                    }
+                                ?>
+                                    <div id="registro" class="listado_contenedor_grupal" <?= $estiloGris ?>>
+                                        <div class="listado_item" onclick="toggleDetalles(this)">
+
+                                            <div class="listado_col_principal">
+                                                <div class="listado_avatar_null" style="background-color: var(--verde-suave, #22c55e20); color: var(--verde, #22c55e);">
+                                                    <i class="icon_con" data-lucide="banknote"></i>
+                                                </div>
+                                                <div class="listado_info_base">
+                                                    <span class="listado_titulo">
+                                                        <?= !empty($dato['concepto_pago']) ? htmlspecialchars($dato['concepto_pago']) : 'Pago General' ?>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo">
+                                                    <small>Monto Pagado</small>
+                                                    <span><?= $simboloMoneda ?> <?= $montoFormateado ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Referencia</small>
+                                                    <span><?= !empty($dato['referencia']) ? htmlspecialchars($dato['referencia']) : 'N/A' ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Fecha</small>
+                                                    <span><?= $fechaPago ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Estatus</small>
+                                                    <?= $estatusHTML ?>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_acciones">
+                                                <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                                    <?= $botonesAccion ?>
+                                                </div>
+                                                <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                                            </div>
+                                        </div>
+
+                                        <div class="listado_detalle_oculto">
+                                            <div class="detalle_expandido_container">
+                                                <div class="detalle_fila">
+                                                    <div class="detalle_card" style="width: 100%;">
+                                                        <div class="detalle_card_icon"><i data-lucide="trending-up"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Detalles Financieros del Pago General</label>
+                                                            <span>Moneda: <?= htmlspecialchars($dato['moneda']) ?></span>
+                                                            <small>Vuelto Generado: <b style="color:#28a745;"><?= number_format($dato['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($dato['abre']) ?></b></small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <h4>Desglose de Cuentas Abonadas:</h4>
+                                                <div class="detalle_fila">
+                                                    <?php if (!empty($dato['detalles'])): foreach ($dato['detalles'] as $det): ?>
+                                                            <div class="detalle_card">
+                                                                <div class="detalle_card_icon"><i data-lucide="file-text"></i></div>
+                                                                <div class="detalle_card_txt">
+                                                                    <label><?= htmlspecialchars($det['concepto']) ?></label>
+                                                                    <span><?= htmlspecialchars($det['atleta']) ?></span>
+                                                                    <small>Abono: <b style="color:#28a745;"><?= number_format($det['monto'], 2, ',', '.') ?> <?= htmlspecialchars($det['moneda']) ?></b></small>
+                                                                </div>
+                                                            </div>
+                                                        <?php endforeach;
+                                                    else: ?>
+                                                        <span>No hay cuentas asociadas a este pago.</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            <?php
+                                endforeach;
+                            endif;
+                            ?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
@@ -48,16 +265,18 @@
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
                     <div class="row">
-                        <div class="colum">
+                        <div class="colum colum_select_multiple">
                             <div class="caja_formulario">
-                                <select name="cuenta" id="cuenta" class="formulario select">
+                                <select name="cuenta[]" id="cuenta" class="formulario select" multiple="multiple">
 
                                 </select>
                                 <label for="cuenta" class="titulo_formulario">Cuenta por Cobrar</label>
                                 <span class="mensaje" id="cuenta_span"></span>
                             </div>
                         </div>
-                        <div class="colum">
+                    </div>
+                    <div class="row">
+                        <div class="colum ">
                             <div class="caja_formulario">
                                 <select name="metodo" id="metodo" class="formulario select">
 
@@ -88,16 +307,16 @@
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="tasa" name="tasa">
-                                <label for="tasa" class="titulo_formulario">Tasa de Cambio</label>
-                                <span class="mensaje" id="tasa_spam"></span>
+                                <input type="date" class="formulario" id="fecha" name="fecha">
+                                <label for="fecha" class="titulo_formulario">Fecha del Pago</label>
+                                <span class="mensaje" id="fecha_spam"></span>
                             </div>
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="fecha" name="fecha">
-                                <label for="fecha" class="titulo_formulario">Fecha del Pago</label>
-                                <span class="mensaje" id="fecha_spam"></span>
+                                <input type="text" class="formulario" id="tasa" name="tasa">
+                                <label for="tasa" class="titulo_formulario">Tasa de Cambio (Si aplica)</label>
+                                <span class="mensaje" id="tasa_spam"></span>
                             </div>
                         </div>
                     </div>

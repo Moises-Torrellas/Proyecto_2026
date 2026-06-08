@@ -31,7 +31,7 @@ function manejarRuta($pagina): void
         // Finalmente, destruimos la sesión
         session_destroy();
         // Redirigimos al usuario a la página de inicio después de cerrar sesión
-        header("Location: " . _URL_);
+        header("Location: " . "Inicio");
         exit();
     }
     // Definimos las rutas disponibles en el sistema
@@ -60,13 +60,16 @@ function manejarRuta($pagina): void
         'Reportes' => 'Reportes',
         'Catalogos'=>'Catalogos',
         'Devoluciones' => 'Devoluciones',
+        'Equipos'=>'Equipos',
+        'Asignaciones' => 'Asignaciones',
+        'Equipamientos'=>'Equipamientos',
     ];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {
         // Verificamos si el usuario está autenticado antes de permitir el acceso a otras páginas
         if (!isset($_SESSION['id']) && $pagina !== 'Inicio' && $pagina !== 'Recuperacion') {
             // Si el usuario no está autenticado, redirigimos a la página de inicio
-            header("Location: " . _URL_);
+            header("Location: " . "Inicio");
             exit();
         }
         // Construimos el nombre completo de la clase del controlador

@@ -18,13 +18,13 @@
             background-color: #ffffff;
         }
 
-        /* 2. Header: Ahora sí ocupará el 100% real de la hoja sin dejar bordes blancos */
+        /* 2. Header: Ocupa el 100% real de la hoja sin dejar bordes blancos */
         .header {
             position: fixed;
             top: -130px; /* Sube al espacio reservado */
             left: 0px;
             right: 0px;
-            height: 60px; /* Fijamos altura interna para que cuadre exacto en los 140px */
+            height: 60px; /* Fijamos altura interna para que cuadre exacto */
             background-color: #1a202c;
             color: white;
             padding: 20px 40px;
@@ -105,15 +105,10 @@
             font-size: 13px;
         }
 
-        .grafico-placeholder { border: 1px dashed #cbd5e0; padding: 5px; text-align: center; margin-bottom: 30px; }
-
-        .chart { width: 100%; }
-
         /* 4. Footer: Posicionado abajo del todo de forma fija, alineado con los lados del contenido */
         .footer {
             position: fixed;
             bottom: -50px;
-            /* Pequeño despegue estético del borde inferior del papel */
             left: 40px;
             right: 40px;
             height: 50px;
@@ -163,7 +158,7 @@
 <body>
 
     <div class="header">
-        <h1>REPORTE ESTADISTICO DE ATLETAS POR CATEGORIAS</h1>
+        <h1>REPORTE DE CATÁLOGO DE EQUIPAMIENTOS</h1>
         <p>Sistema de Gestión Administrativo - Cannibals Lara</p>
         <img src="<?= $logo ?>" class="logo-mascota" alt="Logo">
     </div>
@@ -173,34 +168,43 @@
             <div class="info-item"><strong>FECHA DE EMISIÓN</strong><br><?= $fecha_reporte ?></div>
             <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?></div>
         </div>
+        
         <div class="resumen-ejecutivo">
-            <strong>Resumen Ejecutivo:</strong> Este documento refleja la distribución actual de los atletas inscritos en el club según sus respectivos rangos de edad. Los datos visualizados permiten proyectar la apertura de nuevos horarios y la asignación óptima del cuerpo técnico para las temporadas competitivas.
+            <strong>Resumen Ejecutivo:</strong> El presente documento contiene el registro detallado de los artículos, indumentaria e implementos deportivos registrados en el inventario maestro de la academia. Esta información permite auditar de forma centralizada los requerimientos técnicos por posición, la asignación de tallas disponibles y los umbrales de stock mínimo exigidos para garantizar la correcta continuidad de los entrenamientos.
         </div>
 
-        <div class="section-title">Visualización Estadística</div>
-        <div class="grafico-placeholder"><img src="<?= $charC ?>" class="chart" alt="Grafico"></div>
-
-        <div class="section-title">Desglose por Tabla</div>
+        <div class="section-title">Listado de Artículos Registrados</div>
 
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Categoria</th>
-                    <th>Edad Minima</th>
-                    <th>Edad Maxima</th>
-                    <th>Total de Atletas</th>
+                    <th style="width: 8%;">N°</th>
+                    <th style="width: 32%;">Nombre del Artículo</th>
+                    <th style="width: 25%;">Categoría</th>
+                    <th style="width: 15%;">Posición</th>
+                    <th style="width: 10%;">Talla</th>
+                    <th style="width: 10%; text-align: right;">Stock Mín.</th>
                 </tr>
             </thead>
             <tbody>
-                <?php $id = 0;
-                foreach ($datos as $r): $id++; ?>
+                <?php 
+                $contador = 0;
+                foreach ($datos as $item): 
+                    $contador++; 
+                ?>
                     <tr>
-                        <td class="data-cell"><?= $id ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['categoria']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['edad_min']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['edad_max']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['total_atletas']) ?></td>
+                        <td class="data-cell"><?= $contador ?></td>
+                        <td class="data-cell" style="font-weight: bold;"><?= htmlspecialchars($item['nombre']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($item['categoria_nombre']) ?></td>
+                        <td class="data-cell">
+                            <?= !empty($item['posicion_nombre']) ? htmlspecialchars($item['posicion_nombre']) : '<span style="color: #a0aec0;">N/A</span>' ?>
+                        </td>
+                        <td class="data-cell" style="text-align: center;">
+                            <?= !empty($item['talla']) ? htmlspecialchars($item['talla']) : '<span style="color: #a0aec0;">N/A</span>' ?>
+                        </td>
+                        <td class="data-cell" style="text-align: right; font-weight: bold; color: #2b6cb0;">
+                            <?= htmlspecialchars($item['stock_minimo']) ?> u.
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -214,7 +218,7 @@
 
         <table class="footer-meta">
             <tr>
-                <td class="text-left">Cannibals Lara - Reporte Automatizado</td>
+                <td class="text-left">Cannibals Lara - Reporte Automatizado de Catálogo</td>
                 <td class="text-right"><span class="page-number"></span></td>
             </tr>
         </table>

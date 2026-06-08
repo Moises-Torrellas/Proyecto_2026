@@ -121,6 +121,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $validaciones = [
             'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
             'monto' => ['regla' => '/^[0-9]+(.[0-9]{1,2})?$/', 'mensaje' => 'Monto inválido.'],
+            'regla' => ['regla' => '/^[LMAU]$/', 'mensaje' => 'Frecuencia inválido.']
         ];
 
         validar_datos($validaciones);
@@ -128,6 +129,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $datos = [
             'nombre'     => $_POST['nombre'],
             'monto'   => $_POST['monto'],
+            'regla'   => $_POST['regla']
         ];
         $datos['accion'] = 'incluir';
 
@@ -160,6 +162,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
             'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
             'monto' => ['regla' => '/^[0-9]+(.[0-9]{1,2})?$/', 'mensaje' => 'Monto inválido.'],
+            'regla' => ['regla' => '/^[LMAU]$/', 'mensaje' => 'Frecuencia inválido.']
         ];
 
         validar_datos($validaciones);
@@ -168,6 +171,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'id' => $_POST['id'],
             'nombre' => $_POST['nombre'],
             'monto'     => $_POST['monto'],
+            'regla'   => $_POST['regla']
         ];
         $datos['accion'] = 'modificar';
 

@@ -12,11 +12,22 @@ if (isset($solo_lista) && $solo_lista === true):
             $edadCalendario = $anioActual - $anioNacimiento;
             $genero = ($dato['genero'] === 'H') ? 'Hombre' : 'Mujer';
 
+            // Validación del rango de edad para la categoría
+            $edadMin = $dato['edad_min'] ?? 0;
+            $edadMax = $dato['edad_max'] ?? 99;
+            $fueraDeRango = ($edadCalendario < $edadMin || $edadCalendario > $edadMax);
+
             // Renderizado dinámico del Avatar/Foto
             $foto = $dato['foto'] ?? '';
-            $fotoHTML = ($foto === 'default.png' || empty($foto))
-                ? '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>'
-                : '<img src="img/atletas/' . htmlspecialchars($foto) . '" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">';
+
+            if ($fueraDeRango) {
+                $fotoHTML = '<div class="listado_avatar_null" style="color: #eab308;" data-tippy-content="Edad fuera del rango de la categoría"><i class="icon_con" data-lucide="circle-alert"></i></div>';
+            } else {
+                // Comportamiento normal si está en rango
+                $fotoHTML = ($foto === 'default.png' || empty($foto))
+                    ? '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>'
+                    : '<img src="img/atletas/' . htmlspecialchars($foto) . '" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">';
+            }
         ?>
             <div id="registro" class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
@@ -37,7 +48,9 @@ if (isset($solo_lista) && $solo_lista === true):
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Edad (Año Cal.)</small>
-                            <span class="listado_resaltado"><?= $edadCalendario ?> años</span>
+                            <span class="listado_resaltado" <?= $fueraDeRango ? 'style="color: #eab308;"' : '' ?>>
+                                <?= $edadCalendario ?> años
+                            </span>
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Género</small>
@@ -84,7 +97,9 @@ if (isset($solo_lista) && $solo_lista === true):
                                 <div class="detalle_card_txt">
                                     <label>Categoría Deportiva</label>
                                     <span><?= htmlspecialchars($dato['nombre_categoria']) ?></span>
-                                    <small>Rango: <?= $dato['edad_min'] ?>-<?= $dato['edad_max'] ?> años</small>
+                                    <small <?= $fueraDeRango ? 'style="color: #eab308; font-weight: bold;"' : '' ?>>
+                                        Rango: <?= $dato['edad_min'] ?>-<?= $dato['edad_max'] ?> años
+                                    </small>
                                 </div>
                             </div>
 
@@ -185,14 +200,28 @@ endif;
                                 <?php else:
                                 $anioActual = date('Y');
                                 foreach ($registro as $dato):
+                                    // Cálculos y transformaciones de datos del Atleta
                                     $anioNacimiento = date('Y', strtotime($dato['fecha_nac']));
                                     $edadCalendario = $anioActual - $anioNacimiento;
                                     $genero = ($dato['genero'] === 'H') ? 'Hombre' : 'Mujer';
 
+                                    // Validación del rango de edad para la categoría
+                                    $edadMin = $dato['edad_min'] ?? 0;
+                                    $edadMax = $dato['edad_max'] ?? 99;
+                                    $fueraDeRango = ($edadCalendario < $edadMin || $edadCalendario > $edadMax);
+
+                                    // Renderizado dinámico del Avatar/Foto
                                     $foto = $dato['foto'] ?? '';
-                                    $fotoHTML = ($foto === 'default.png' || empty($foto))
-                                        ? '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>'
-                                        : '<img src="img/atletas/' . htmlspecialchars($foto) . '" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">';
+
+                                    if ($fueraDeRango) {
+                                        // Icono de alerta amarillo si no cumple con la edad de la categoría
+                                        $fotoHTML = '<div class="listado_avatar_null" style="color: #eab308;" data-tippy-content="Edad fuera del rango de la categoría"><i class="icon_con" data-lucide="circle-alert"></i></div>';
+                                    } else {
+                                        // Comportamiento normal si está en rango
+                                        $fotoHTML = ($foto === 'default.png' || empty($foto))
+                                            ? '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>'
+                                            : '<img src="img/atletas/' . htmlspecialchars($foto) . '" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">';
+                                    }
                                 ?>
                                     <div id="registro" class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
@@ -213,7 +242,9 @@ endif;
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Edad (Año Cal.)</small>
-                                                    <span class="listado_resaltado"><?= $edadCalendario ?> años</span>
+                                                    <span class="listado_resaltado" <?= $fueraDeRango ? 'style="color: #eab308;"' : '' ?>>
+                                                        <?= $edadCalendario ?> años
+                                                    </span>
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Género</small>
@@ -249,7 +280,6 @@ endif;
                                                 </div>
                                                 <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                                             </div>
-
                                         </div>
 
                                         <div class="listado_detalle_oculto">
@@ -261,7 +291,9 @@ endif;
                                                         <div class="detalle_card_txt">
                                                             <label>Categoría Deportiva</label>
                                                             <span><?= htmlspecialchars($dato['nombre_categoria']) ?></span>
-                                                            <small>Rango: <?= $dato['edad_min'] ?>-<?= $dato['edad_max'] ?> años</small>
+                                                            <small <?= $fueraDeRango ? 'style="color: #eab308; font-weight: bold;"' : '' ?>>
+                                                                Rango: <?= $dato['edad_min'] ?>-<?= $dato['edad_max'] ?> años
+                                                            </small>
                                                         </div>
                                                     </div>
 
@@ -314,7 +346,8 @@ endif;
                                     </div>
                             <?php
                                 endforeach;
-                            endif; ?>
+                            endif;
+                            ?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
@@ -341,7 +374,7 @@ endif;
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="edad" readonly>
+                                <input type="text" class="formulario" id="edad" name="edad" readonly>
                                 <label for="edad" class="titulo_formulario">Edad (Año Calendario)</label>
                                 <span class="mensaje" id="edad_spam"></span>
                             </div>
@@ -384,15 +417,26 @@ endif;
                         </div>
                     </div>
                     <div class="row">
-
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="genero" id="genero" class="formulario select">
+                                    <option id="todos" value="T" selected>Todos</option>
                                     <option value="H">Hombre</option>
                                     <option value="M">Mujer</option>
                                 </select>
                                 <label for="genero" class="titulo_formulario">Genero</label>
                                 <span class="mensaje" id="genero_span"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="estatus" id="estatus" class="formulario select" disabled>
+                                    <option value="T" selected>Todos</option>
+                                    <option value="1">Activos</option>
+                                    <option value="2">Retirados</option>
+                                </select>
+                                <label for="estatus" class="titulo_formulario">Estatus</label>
+                                <span class="mensaje" id="estatus_span"></span>
                             </div>
                         </div>
                     </div>

@@ -51,8 +51,8 @@
                 <ul class="nav_contenedor_superior">
                     <li class="nav_opciones nav_opciones_superior">
                         <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="user-cog"></i> Mi Perfil</a>
-                        <a type="button" href="#" id="modo_oscuro" class="opciones"><i class="opciones_i" data-lucide="<?php echo _TEMA_ === 'oscuro' ? 'sun' : 'moon' ?>"></i> Modo Oscuro</a>
-                        <a type="button" href="#" id="salir" class="opciones"><i class="opciones_i" data-lucide="log-out"></i> Cerrar Sesión</a>
+                        <a type="button" style="cursor: pointer;" id="modo_oscuro" class="opciones"><i class="opciones_i" data-lucide="<?php echo _TEMA_ === 'oscuro' ? 'sun' : 'moon' ?>"></i> Modo Oscuro</a>
+                        <a type="button" style="cursor: pointer;" id="salir" class="opciones"><i class="opciones_i" data-lucide="log-out"></i> Cerrar Sesión</a>
                     </li>
                 </ul>
             </div>

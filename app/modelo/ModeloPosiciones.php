@@ -38,17 +38,21 @@ class ModeloPosiciones extends ModeloBase
             'incluir' => $this->Incluir(),
             'eliminar' => $this->Eliminar(),
             'modificar' => $this->Modificar(),
+            'generar' => $this->Consultar(),
             default => throw new Exception('La accion no es valida')
         };
     }
 
-    public function Consultar(array $filtro = [])
+    public function Consultar(array $filtro = []): array
     {
         try {
             $conex = $this->conex();
             $params = [];
+
+            // 1. Iniciamos la sentencia
             $sentencia = "SELECT * FROM posiciones WHERE 1=1";
 
+            // 2. BUSCADOR GENERAL (El que viene del buscador o keyup)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
                 $sentencia .= " AND (
@@ -59,13 +63,31 @@ class ModeloPosiciones extends ModeloBase
                 $params[':f2'] = $p;
             }
 
+            // 3. FILTROS ESPECÍFICOS (Si vienen definidos en el objeto)
+            if (!empty($this->nombre)) {
+                $sentencia .= " AND nombre LIKE :nombre";
+                $params[':nombre'] = "%" . trim($this->nombre) . "%";
+            }
+
+            if (!empty($this->abreviatura)) {
+                $sentencia .= " AND abreviatura LIKE :abreviatura";
+                $params[':abreviatura'] = "%" . trim($this->abreviatura) . "%";
+            }
+
+            // 4. ORDENAMIENTO
+            $sentencia .= " ORDER BY id_posicion ASC";
+
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
+
             $datos = $stmt->fetchAll();
+
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Posiciones', $e->getMessage(), 'Modelo_Consultar');
             return array('accion' => 'error', 'mensaje' => 'Error al listar las posiciones.');
+        } finally {
+            $conex = NULL;
         }
     }
 
@@ -87,7 +109,7 @@ class ModeloPosiciones extends ModeloBase
         }
     }
 
-    private function Incluir() :array
+    private function Incluir(): array
     {
         try {
             if ($this->verificarExistencia('nombre', $this->nombre, 'posiciones', NULL)) {
@@ -135,16 +157,16 @@ class ModeloPosiciones extends ModeloBase
         }
     }
 
-    private function Modificar() : array
+    private function Modificar(): array
     {
         try {
-            if(!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'posiciones', NULL)){
-                if($this->verificarExistencia('nombre', $this->nombre, 'posiciones', NULL)){
+            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'posiciones', NULL)) {
+                if ($this->verificarExistencia('nombre', $this->nombre, 'posiciones', NULL)) {
                     return array('accion' => 'error', 'mensaje' => 'Ya existe una posición registrada con este nombre.');
                 }
             }
-            if(!$this->verificarExistenciaPropia('abreviatura', $this->abreviatura, $this->id, 'posiciones', NULL)){
-                if($this->verificarExistencia('abreviatura', $this->abreviatura, 'posiciones', NULL)){
+            if (!$this->verificarExistenciaPropia('abreviatura', $this->abreviatura, $this->id, 'posiciones', NULL)) {
+                if ($this->verificarExistencia('abreviatura', $this->abreviatura, 'posiciones', NULL)) {
                     return array('accion' => 'error', 'mensaje' => 'Ya existe una posición registrada con esta abreviatura.');
                 }
             }

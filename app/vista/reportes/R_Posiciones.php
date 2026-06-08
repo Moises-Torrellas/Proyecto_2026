@@ -163,7 +163,7 @@
 <body>
 
     <div class="header">
-        <h1>REPORTE ESTADISTICO DE ATLETAS POR CATEGORIAS</h1>
+        <h1>REPORTE DE POSICIONES</h1>
         <p>Sistema de Gestión Administrativo - Cannibals Lara</p>
         <img src="<?= $logo ?>" class="logo-mascota" alt="Logo">
     </div>
@@ -174,11 +174,8 @@
             <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?></div>
         </div>
         <div class="resumen-ejecutivo">
-            <strong>Resumen Ejecutivo:</strong> Este documento refleja la distribución actual de los atletas inscritos en el club según sus respectivos rangos de edad. Los datos visualizados permiten proyectar la apertura de nuevos horarios y la asignación óptima del cuerpo técnico para las temporadas competitivas.
+            <strong>Resumen Ejecutivo:</strong> El presente documento contiene el registro detallado de las posiciones asociados a los atletas del club.
         </div>
-
-        <div class="section-title">Visualización Estadística</div>
-        <div class="grafico-placeholder"><img src="<?= $charC ?>" class="chart" alt="Grafico"></div>
 
         <div class="section-title">Desglose por Tabla</div>
 
@@ -186,21 +183,19 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Categoria</th>
-                    <th>Edad Minima</th>
-                    <th>Edad Maxima</th>
-                    <th>Total de Atletas</th>
+                    <th>Posicion</th>
+                    <th>Abreviatura</th>
+                    <th>Descripción</th>
                 </tr>
             </thead>
             <tbody>
                 <?php $id = 0;
-                foreach ($datos as $r): $id++; ?>
+                foreach ($datos as $r): $id++; $descripcion = ($r['descripcion'] == null) ? 'Sin Descripción' : $r['descripcion']; ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['categoria']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['edad_min']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['edad_max']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['total_atletas']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['nombre']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['abreviatura']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($descripcion) ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
