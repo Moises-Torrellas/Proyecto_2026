@@ -18,12 +18,15 @@
                         <div class="contenedor_titulo">
                             <h2 class="titulo_pagina">Asignaciones</h2>
                         </div>
+                        
+                        <div class="contenedor_busqueda">
+                            <input type="text" placeholder="Buscar..." autocomplete="off" id="busqueda">
+                            <i class="fi fi-br-search icon_input"></i>
+                        </div>
+
                         <div class="botones">
-                            <?php if (!empty($permisos['registrar'])) { ?>
-                            <button class="btn btn_azul" id="btn_nuevo">
-                                <i class="fi fi-sr-add-document"></i> Nueva Asignación
-                            </button>
-                            <?php } ?>
+                            <button class="btn btn_azul" id="btn_nuevo">Nueva Asignación</button>
+                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
@@ -58,19 +61,25 @@
                                             </div>
                                             <div class="listado_col_acciones">
                                                 <div style="display:flex; gap:5px;">
+                                                    
                                                     <?php if (!empty($permisos['modificar'])) { ?>
-                                                        <button class="btn_t cbt_v" onclick="editar(<?= $dato['id_asignacion'] ?>, <?= $dato['id_atleta'] ?>, <?= $dato['id_equipamiento'] ?>, '<?= $dato['fecha_real'] ?>')" title="Modificar"><i class="fi fi-sr-edit"></i></button>
+                                                        <button class="btn_t cbt_v" onclick="editar(<?= $dato['id_asignacion'] ?>, <?= $dato['id_atleta'] ?>, <?= $dato['id_equipamiento'] ?>, '<?= $dato['fecha_real'] ?>')" data-tippy-content="Modificar">
+                                                            <i class="fi fi-sr-pencil"></i>
+                                                        </button>
                                                     <?php } ?>
+                                                    
                                                     <?php if (!empty($permisos['eliminar'])) { ?>
-                                                        <button class="btn_t cbt_r" onclick="anular(<?= $dato['id_asignacion'] ?>, <?= $dato['id_equipamiento'] ?>)" title="Anular Asignación"><i class="fi fi-sr-ban"></i></button>
+                                                        <button class="btn_t cbt_r" onclick="anular(<?= $dato['id_asignacion'] ?>, <?= $dato['id_equipamiento'] ?>)" data-tippy-content="Anular Asignación">
+                                                            <i class="fi fi-sr-trash"></i>
+                                                        </button>
                                                     <?php } ?>
+
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                             <?php } } ?>
-
-<?php if (!isset($solo_lista)) { ?>
+                            <?php if (!isset($solo_lista)) { ?>
                         </div>
                     </div>
                 </div>
@@ -87,35 +96,42 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id_asignacion" name="id_asignacion">
+                    
                     <div class="row">
                         <div class="colum" style="width: 100%;">
-                            <label>Atleta</label>
                             <div class="caja_formulario">
-                                <select class="formulario select2" id="id_atleta" name="id_atleta" required>
-                                    <option value="">Seleccione un atleta...</option>
+                                <select class="formulario select" id="id_atleta" name="id_atleta">
+                                    <option value="" selected disabled>Seleccione un atleta...</option>
                                 </select>
+                                <label for="id_atleta" class="titulo_formulario">Atleta</label>
+                                <span class="mensaje" id="id_atleta_span"></span>
                             </div>
                         </div>
                     </div>
-                    <div class="row" style="margin-top: 15px;">
+                    
+                    <div class="row">
                         <div class="colum" style="width: 100%;">
-                            <label>Equipamiento (Almacén Libre)</label>
                             <div class="caja_formulario">
-                                <select class="formulario select2" id="id_equipamiento" name="id_equipamiento" required>
-                                    <option value="">Seleccione una pieza...</option>
+                                <select class="formulario select" id="id_equipamiento" name="id_equipamiento">
+                                    <option value="" selected disabled>Seleccione una pieza...</option>
                                 </select>
+                                <label for="id_equipamiento" class="titulo_formulario">Equipamiento (Almacén Libre)</label>
+                                <span class="mensaje" id="id_equipamiento_span"></span>
                             </div>
                         </div>
                     </div>
-                    <div class="row" style="margin-top: 15px;">
+                    
+                    <div class="row">
                         <div class="colum" style="width: 100%;">
-                            <label>Fecha de Asignación</label>
                             <div class="caja_formulario">
-                                <input type="date" class="formulario" id="fecha_asignacion" name="fecha_asignacion" required>
+                                <input type="date" class="formulario" id="fecha_asignacion" name="fecha_asignacion">
+                                <label for="fecha_asignacion" class="titulo_formulario">Fecha de Asignación</label>
+                                <span class="mensaje" id="fecha_asignacion_span"></span>
                             </div>
                         </div>
                     </div>
-                    <div class="row" style="margin-top: 25px;">
+                    
+                    <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="btn_guardar" data-accion="incluir">Confirmar Préstamo</button>
                         </div>
@@ -124,6 +140,7 @@
             </div>
         </div>
     </section>
+    
     <script src="js/main.js"></script>
     <script src="js/asignaciones.js"></script>
 </body>
