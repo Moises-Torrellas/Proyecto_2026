@@ -7,12 +7,9 @@ if (isset($solo_lista) && $solo_lista === true):
         <?php else:
         $anioActual = date('Y');
         foreach ($registro as $dato):
-            // Cálculos y transformaciones de datos del Atleta
             $anioNacimiento = date('Y', strtotime($dato['fecha_nac']));
             $edadCalendario = $anioActual - $anioNacimiento;
             $genero = ($dato['genero'] === 'H') ? 'Hombre' : 'Mujer';
-
-            // Validación del rango de edad para la categoría
             $edadMin = $dato['edad_min'] ?? 0;
             $edadMax = $dato['edad_max'] ?? 99;
             $fueraDeRango = ($edadCalendario < $edadMin || $edadCalendario > $edadMax);

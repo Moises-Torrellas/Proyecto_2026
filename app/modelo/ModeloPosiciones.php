@@ -187,4 +187,9 @@ class ModeloPosiciones extends ModeloBase
             $conex = NULL;
         }
     }
+
+    public function verificarPosiciones(int $id): bool
+    {
+        return $this->verificarExistencia('id', $id, 'posiciones', NULL);
+    }
 }

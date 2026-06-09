@@ -10,23 +10,19 @@ if (isset($solo_lista) && $solo_lista === true):
             $simboloMoneda = htmlspecialchars($dato['simbolo'] . ' ' . $dato['abre']);
             $montoFormateado = number_format($dato['monto_pagado'], 2, ',', '.');
 
-            // LÓGICA DE ANULADO ADAPTADA
-            // Evaluamos si el estatus es diferente de 1 (lo que significa que está anulado)
             $esAnulado = ((int)$dato['estatus']) !== 1;
             $estiloGris = $esAnulado ? 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"' : '';
 
             if ($esAnulado) {
                 $estatusHTML = '<span class="estatus_r">Anulado</span>';
-                $botonesAccion = ''; // Si ya está anulado, no se muestran acciones
+                $botonesAccion = '';
             } else {
                 $estatusHTML = '<span class="estatus_v">Realizado</span>';
 
-                // Si está activo y tiene permiso, construimos el botón de anulación
+
                 $botonesAccion = '';
                 if ($permisos['eliminar']) {
-                    $botonesAccion .= '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular Transacción">';
-                    $botonesAccion .= '<i class="fi fi-sr-cross-circle"></i>';
-                    $botonesAccion .= '</button>';
+                    $botonesAccion = '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
                 }
             }
         ?>
@@ -82,6 +78,15 @@ if (isset($solo_lista) && $solo_lista === true):
                                     <small>Vuelto Generado: <b style="color:#28a745;"><?= number_format($dato['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($dato['abre']) ?></b></small>
                                 </div>
                             </div>
+                            <div class="detalle_fila">
+                                <div class="detalle_card" style="width: 100%;">
+                                    <div class="detalle_card_icon"><i data-lucide="wallet"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Metodo de Pago</label>
+                                        <span>Metodo: <?= htmlspecialchars($dato['nombre_metodo_pago']) ?></span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <h4>Desglose de Cuentas Abonadas:</h4>
                         <div class="detalle_fila">
@@ -92,6 +97,7 @@ if (isset($solo_lista) && $solo_lista === true):
                                             <label><?= htmlspecialchars($det['concepto']) ?></label>
                                             <span><?= htmlspecialchars($det['atleta']) ?></span>
                                             <small>Abono: <b style="color:#28a745;"><?= number_format($det['monto'], 2, ',', '.') ?> <?= htmlspecialchars($det['moneda']) ?></b></small>
+                                            <small>Tasa: <b style="color:#28a745;"><?= number_format($det['tasa'], 4, ',', '.') ?> <?= htmlspecialchars($det['moneda_tasa']) ?></b></small>
                                         </div>
                                     </div>
                                 <?php endforeach;
@@ -152,23 +158,19 @@ endif;
                                     $simboloMoneda = htmlspecialchars($dato['simbolo'] . ' ' . $dato['abre']);
                                     $montoFormateado = number_format($dato['monto_pagado'], 2, ',', '.');
 
-                                    // LÓGICA DE ANULADO ADAPTADA
-                                    // Evaluamos si el estatus es diferente de 1 (lo que significa que está anulado)
                                     $esAnulado = ((int)$dato['estatus']) !== 1;
                                     $estiloGris = $esAnulado ? 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"' : '';
 
                                     if ($esAnulado) {
                                         $estatusHTML = '<span class="estatus_r">Anulado</span>';
-                                        $botonesAccion = ''; // Si ya está anulado, no se muestran acciones
+                                        $botonesAccion = '';
                                     } else {
                                         $estatusHTML = '<span class="estatus_v">Realizado</span>';
 
-                                        // Si está activo y tiene permiso, construimos el botón de anulación
+
                                         $botonesAccion = '';
                                         if ($permisos['eliminar']) {
-                                            $botonesAccion .= '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular Transacción">';
-                                            $botonesAccion .= '<i class="fi fi-sr-cross-circle"></i>';
-                                            $botonesAccion .= '</button>';
+                                            $botonesAccion = '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
                                         }
                                     }
                                 ?>
@@ -224,6 +226,13 @@ endif;
                                                             <small>Vuelto Generado: <b style="color:#28a745;"><?= number_format($dato['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($dato['abre']) ?></b></small>
                                                         </div>
                                                     </div>
+                                                    <div class="detalle_card" style="width: 100%;">
+                                                        <div class="detalle_card_icon"><i data-lucide="wallet"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Metodo de Pago</label>
+                                                            <span>Metodo: <?= htmlspecialchars($dato['nombre_metodo_pago']) ?></span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <h4>Desglose de Cuentas Abonadas:</h4>
                                                 <div class="detalle_fila">
@@ -234,6 +243,7 @@ endif;
                                                                     <label><?= htmlspecialchars($det['concepto']) ?></label>
                                                                     <span><?= htmlspecialchars($det['atleta']) ?></span>
                                                                     <small>Abono: <b style="color:#28a745;"><?= number_format($det['monto'], 2, ',', '.') ?> <?= htmlspecialchars($det['moneda']) ?></b></small>
+                                                                    <small>Tasa: <b style="color:#28a745;"><?= number_format($det['tasa'], 4, ',', '.') ?> <?= htmlspecialchars($det['moneda_tasa']) ?></b></small>
                                                                 </div>
                                                             </div>
                                                         <?php endforeach;

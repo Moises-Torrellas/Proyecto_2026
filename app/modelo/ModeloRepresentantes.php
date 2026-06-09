@@ -235,4 +235,8 @@ class ModeloRepresentantes extends ModeloBase
             $conex = NULL;
         }
     }
+    public function verificarRepresentantes(int $id): bool
+    {
+        return $this->verificarExistencia('id', $id, 'representantes', NULL);
+    }
 }
