@@ -20,6 +20,10 @@
         "ext-intl": "*",
         "phpmailer/phpmailer": "^7.0",
         "dompdf/dompdf": "^3.1",
-        "cboden/ratchet": "^0.4.4"
+        "cboden/ratchet": "^0.4.4",
+        "designsecurity/progpilot": "1.2.0"
+    },
+    "require-dev": {
+        "vimeo/psalm": "^6.0"
     }
 }

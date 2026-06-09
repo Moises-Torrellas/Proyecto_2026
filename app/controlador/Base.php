@@ -1,4 +1,11 @@
 <?php
+use App\modelo\ModeloAsignaciones;
+use App\modelo\ModeloAtletas;
+use App\modelo\ModeloEquipamientos;
+
+/**
+ * Procesa y valida los permisos del usuario según su nivel de rol.
+ */
 function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = false): array
 {
     $nivelUsuario = $_SESSION['nivel_rol'] ?? 99;
@@ -28,7 +35,6 @@ function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = 
     }
 
     if ($nivelUsuario === 2) {
-
         return [
             'ingresar'  => true,
             'registrar' => true,
@@ -77,13 +83,34 @@ function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = 
     }
 }
 
-function cargarVista(string $pagina,array $datos = []): void
+/**
+ * Carga la vista e inyecta las cabeceras de seguridad estrictas exigidas por OWASP ZAP.
+ */
+function cargarVista(string $pagina, array $datos = []): void
 {   
-    
+    // 1. Configuración de Cookies de Sesión Seguras (Mitiga SameSite y HttpOnly)
+    if (session_status() === PHP_SESSION_NONE) {
+        ini_set('session.cookie_httponly', 1);
+        ini_set('session.cookie_samesite', 'Lax');
+    }
+
+    // 2. Generar un token único por petición (Nonce) para mitigar alertas CSP inline
+    $nonce = bin2hex(random_bytes(16));
+
+    // 3. Inyección de Cabeceras HTTP estrictas (Baja alertas de CSP, Clickjacking y Sniffing)
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$nonce'; style-src 'self' 'nonce-$nonce'; img-src 'self' data:; font-src 'self';");
+    header("X-Frame-Options: DENY");
+    header("X-Content-Type-Options: nosniff");
+    header("X-XSS-Protection: 1; mode=block");
+
     $archivoVista = sprintf(__DIR__ . '/../vista/%s.php', $pagina);
 
     if (is_file($archivoVista)) {
         $_SESSION['token'] = bin2hex(random_bytes(32));
+        
+        // Compartimos el valor de $nonce con la vista HTML de forma automática
+        $datos['nonce'] = $nonce; 
+        
         extract($datos);
         require($archivoVista);
     } else {
@@ -92,14 +119,16 @@ function cargarVista(string $pagina,array $datos = []): void
     }
 }
 
-
+/**
+ * Comprueba si la petición fue realizada mediante AJAX (XMLHttpRequest).
+ */
 function comprobarAjax(): bool
 {
     return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 }
 
 /**
- * Registra una acción en la bitácora.
+ * Registra una acción en el módulo de bitácora del sistema.
  */
 function registrarBitacora($bitacora, int $id_modulo, string $mensaje): void
 {
@@ -128,19 +157,17 @@ function validar_datos(array $data): void
 }
 
 /**
- * Valida datos que vienen en formato de arreglo desde el formulario.
+ * Valida datos complejos que vienen estructurados en formato de matriz o arreglo.
  */
 function validarArrays(array $data): void
 {
     foreach ($data as $campo => $valor) {
-        // 1. Verificar si el campo existe en el POST
         if (!isset($_POST[$campo])) {
             throw new Exception("El campo $campo es obligatorio.");
         }
 
         $datosRecibidos = $_POST[$campo];
 
-        // 2. Si es un array, validamos cada elemento interno
         if (is_array($datosRecibidos)) {
             foreach ($datosRecibidos as $indice => $contenido) {
                 if (isset($valor['regla'])) {
@@ -150,7 +177,6 @@ function validarArrays(array $data): void
                 }
             }
         } else {
-            // 3. Si por error no es un array, lo validamos como campo simple
             if (isset($valor['regla']) && !preg_match($valor['regla'], (string)$datosRecibidos)) {
                 throw new Exception($valor['mensaje']);
             }
@@ -158,8 +184,10 @@ function validarArrays(array $data): void
     }
 }
 
+/**
+ * Gestiona la subida segura de imágenes al servidor, validando extensión y peso.
+ */
 function subirImagen ($archivo, $prefijo, $cedula, $carpeta_destino, $foto_actual = 'default.png') {
-    // Si no hay archivo o viene con error, devolvemos el nombre de la foto actual
     if (!isset($archivo) || $archivo['error'] !== UPLOAD_ERR_OK) {
         return $foto_actual;
     }
@@ -169,26 +197,21 @@ function subirImagen ($archivo, $prefijo, $cedula, $carpeta_destino, $foto_actua
     $file_size = $archivo['size'];
     $file_ext  = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
 
-    // 1. Validación de Tipo
     $extensiones_permitidas = ['jpg', 'jpeg', 'png', 'webp'];
     if (!in_array($file_ext, $extensiones_permitidas)) {
         throw new Exception('Extensión no permitida (solo JPG, PNG, WEBP).');
     }
 
-    // 2. Validación de Tamaño (2MB)
     if ($file_size > 5 * 1024 * 1024) {
-        throw new Exception('La imagen supera el límite de 2MB.');
+        throw new Exception('La imagen supera el límite permitido.');
     }
 
-    // 3. Definir Rutas
     $ruta_absoluta = __DIR__ . '/../../public/img/' . $carpeta_destino . '/';
     
-    // Crear carpeta si no existe
     if (!is_dir($ruta_absoluta)) {
         mkdir($ruta_absoluta, 0777, true);
     }
 
-    // 4. Limpieza: Borrar foto anterior si no es la default
     if ($foto_actual !== 'default.png' && !empty($foto_actual)) {
         $ruta_vieja = $ruta_absoluta . $foto_actual;
         if (file_exists($ruta_vieja)) {
@@ -196,9 +219,8 @@ function subirImagen ($archivo, $prefijo, $cedula, $carpeta_destino, $foto_actua
         }
     }
 
-    // 5. Generar nuevo nombre y mover
     $nombre = $prefijo . "_" . $cedula . "_" . time() . "." . $file_ext;
-    $ruta_final = $ruta_absoluta . $nombre;
+    $ruta_final = $ruta_absolute . $nombre;
 
     if (move_uploaded_file($file_tmp, $ruta_final)) {
         return $nombre;
@@ -207,13 +229,14 @@ function subirImagen ($archivo, $prefijo, $cedula, $carpeta_destino, $foto_actua
     throw new Exception('Error al subir la imagen al servidor.');
 }
 
+/**
+ * Genera logs de errores persistentes en formato de texto plano para auditoría.
+ */
 function logs(string $modulo, string $mensaje, string $origen = ''): void
 {
-    // Ruta: /tu_proyecto/logs/modulo_nombre.log
     $directorio = __DIR__ . '/../../logs/';
     $archivo = $directorio . "log_" . strtolower($modulo) . ".log";
 
-    // Crear carpeta si no existe
     if (!is_dir($directorio)) {
         mkdir($directorio, 0777, true);
     }
@@ -221,6 +244,5 @@ function logs(string $modulo, string $mensaje, string $origen = ''): void
     $fecha = date('Y-m-d H:i:s');
     $log = "[$fecha] [$origen] ERROR: $mensaje" . PHP_EOL;
 
-    // Escribir al final del archivo (FILE_APPEND)
     file_put_contents($archivo, $log, FILE_APPEND);
 }

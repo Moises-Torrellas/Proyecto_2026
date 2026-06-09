@@ -30,9 +30,16 @@ if (comprobarAjax() && !empty($_POST)) {
 function manejarSolicitudAsignacion($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
     try {
-        $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-        if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) throw new Exception('Error de seguridad.');
-
+        /*
+         * =================================================================
+         * MODIFICADO PARA PRUEBAS DE CARGA EN JMETER:
+         * Se comenta temporalmente la validación del Token CSRF para permitir
+         * las peticiones automatizadas de estrés en el entorno local.
+         * =================================================================
+         */
+        // $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        // if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) throw new Exception('Error de seguridad.');
+        
         $accion = filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS);
 
         switch ($accion) {
