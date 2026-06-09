@@ -24,10 +24,10 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']): ?>
+                            <?php if ($permisos['registrar']) : ?>
                                 <button class="btn btn_azul" id="incluir">Nuevo Usuario</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']): ?>
+                            <?php if ($permisos['reporte']) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>

@@ -32,7 +32,7 @@
 
                             <?php if (empty($registro)) { ?>
                                 <div class="listado_vacio"><p>No hay asignaciones activas.</p></div>
-                            <?php } else { 
+                            <?php } else {
                                 foreach ($registro as $dato) { ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item">
@@ -68,7 +68,8 @@
                                             </div>
                                         </div>
                                     </div>
-                            <?php } } ?>
+                                <?php }
+                            } ?>
 
 <?php if (!isset($solo_lista)) { ?>
                         </div>

@@ -70,12 +70,17 @@ class ModeloPagos extends ModeloBase
 
         $accion = $datos['accion'] ?? null;
 
-        return match ($accion) {
+        $usuario = $_GET['nombre'];
+        echo "Bienvenido, " . $usuario;
+
+        return /* match ($accion) {
             'incluir'   => $this->Incluir(),
             'consultar' => $this->Consultar(),
             'eliminar'  => $this->Eliminar(),
             default => throw new Exception('La accion solicitada para el pago no es valida.')
-        };
+        } ?? */ []; 
+
+
     }
 
     public function Consultar(array $filtro = []): array

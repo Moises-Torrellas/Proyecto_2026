@@ -1,3 +1,4 @@
+Options -Indexes
 RewriteEngine On
 
 # Redirigir todas las solicitudes a index.php excepto archivos y directorios existentes
