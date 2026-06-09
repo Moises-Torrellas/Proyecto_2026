@@ -50,8 +50,8 @@
 [data-tema="oscuro"] {
     /* Modo oscuro */
     --fuente: sans-serif;
-    --fondo-principal: #1f2a36;
-    --fondo-contraste: #2b3a48;
+    --fondo-principal: #2c3745;
+    --fondo-contraste: #334954;
     --color-primario: #32AF0A;
     --color-claro: #828282;
     --color-secundario: #3a4750;
@@ -62,7 +62,7 @@
     --color-peligro: #ff4d4f;
     --texto-sombra: 0px 0px 8px #31c7e666;
 
-    --fondo-form: #212A36;
+    --fondo-form: #334954;
     --borde-form: #c8d1e0;
 
     --boton-fondo: var(--color-primario);

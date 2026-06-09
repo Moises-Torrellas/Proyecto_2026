@@ -14,8 +14,10 @@ class ModeloPagos extends ModeloBase
     private $monto;
     private $tasa;
     private $fecha;
+    private $fecha_f;
     private $referencia;
     private $estatus;
+    private $anulados;
 
     private $objCuentas;
     //private $objMetodos;
@@ -62,25 +64,25 @@ class ModeloPagos extends ModeloBase
         $this->id_cuenta  = $datos['cuenta'] ?? null;
         $this->id_metodo  = $datos['metodo'] ?? null;
         $this->id_moneda  = $datos['moneda'] ?? null;
+        $this->anulados   = $datos['anulados'] ?? null;
         $this->monto      = isset($datos['monto']) ? (float) $datos['monto'] : null;
         $this->tasa       = !empty($datos['tasa']) ? (float) $datos['tasa'] : 1;
-        $this->fecha      = !empty($datos['fecha']) ? trim($datos['fecha']) : date('Y-m-d');
+        $this->fecha      = !empty($datos['fecha']) ? trim($datos['fecha']) : null;
+        $this->fecha_f    = !empty($datos['fecha_f']) ? trim($datos['fecha_f']) : null;
         $this->referencia = isset($datos['referencia']) ? trim($datos['referencia']) : null;
         $this->estatus    = $datos['estatus'] ?? 1;
 
         $accion = $datos['accion'] ?? null;
 
-        $usuario = $_GET['nombre'];
-        echo "Bienvenido, " . $usuario;
+        /* $usuario = $_GET['nombre'];
+        echo "Bienvenido, " . $usuario; */
 
-        return /* match ($accion) {
+        return match ($accion) {
             'incluir'   => $this->Incluir(),
-            'consultar' => $this->Consultar(),
             'eliminar'  => $this->Eliminar(),
+            'generar'   => $this->ConsultarReporte(),
             default => throw new Exception('La accion solicitada para el pago no es valida.')
-        } ?? */ []; 
-
-
+        };
     }
 
     public function Consultar(array $filtro = []): array
@@ -91,15 +93,16 @@ class ModeloPagos extends ModeloBase
 
             $sentencia = "SELECT * FROM vista_pagos WHERE 1=1";
 
+            // Conserva el buscador de la tabla principal
             if (!empty($filtro['filtro'])) {
                 $p = "%" . trim($filtro['filtro']) . "%";
                 $sentencia .= " AND (
-                    concepto_pago LIKE :f1 OR 
-                    nombre_atleta LIKE :f2 OR 
-                    nombre_apellido LIKE :f3 OR
-                    referencia LIKE :f4 OR
-                    moneda LIKE :f5
-                )";
+                concepto_pago LIKE :f1 OR 
+                nombre_atleta LIKE :f2 OR 
+                nombre_apellido LIKE :f3 OR
+                referencia LIKE :f4 OR
+                moneda LIKE :f5
+            )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
                 $params[':f3'] = $p;
@@ -107,54 +110,15 @@ class ModeloPagos extends ModeloBase
                 $params[':f5'] = $p;
             }
 
-            // Quitamos el prefijo p. del ORDER BY y usamos el alias fecha_pago
+            // La tabla general de gestión no se limita, muestra todo el historial (activos y anulados)
             $sentencia .= " ORDER BY fecha_pago DESC, id_pago DESC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
             $filas = $stmt->fetchAll();
 
-            // Agrupación de pagos y sus detalles en PHP
-            $pagosAgrupados = [];
-            foreach ($filas as $row) {
-                $id = $row['id_pago'];
-                if (!isset($pagosAgrupados[$id])) {
-                    $pagosAgrupados[$id] = [
-                        'id_pago' => $id,
-                        'fecha_pago' => $row['fecha_pago'],
-                        'monto_pagado' => $row['monto_pagado'],
-                        'monto_vuelto' => $row['monto_vuelto'],
-                        'referencia' => $row['referencia'],
-                        'estatus' => $row['estatus'],
-                        'simbolo' => $row['simbolo'],
-                        'abre' => $row['abre'],
-                        'moneda' => $row['moneda'],
-                        'concepto_pago' => 'Pago Múltiple',
-                        'nombre_metodo_pago' => $row['nombre_metodo_pago'],
-                        'detalles' => []
-                    ];
-                }
-
-                if (count($pagosAgrupados[$id]['detalles']) === 0 && !empty($row['concepto_pago'])) {
-                    $pagosAgrupados[$id]['concepto_pago'] = $row['concepto_pago'];
-                } else if (count($pagosAgrupados[$id]['detalles']) > 0) {
-                    $pagosAgrupados[$id]['concepto_pago'] = 'Pago Múltiple';
-                }
-
-                if (!empty($row['id_detalle_pago'])) {
-                    $pagosAgrupados[$id]['detalles'][] = [
-                        'id_detalle_pago' => $row['id_detalle_pago'],
-                        'atleta' => $row['nombre_atleta'] . ' ' . $row['nombre_apellido'],
-                        'concepto' => $row['concepto_pago'],
-                        'monto' => $row['monto_abonado'],
-                        'tasa' => $row['tasa_cambio'],
-                        'moneda' => $row['simbolo_cuenta'] . ' ' . $row['abre_cuenta'],
-                        'moneda_tasa' => $row['simbolo'] . ' ' . $row['abre']
-                    ];
-                }
-            }
-
-            $datos = array_values($pagosAgrupados);
+            // Procesamos con nuestra función helper
+            $datos = $this->agruparDetallesPagos($filas);
 
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
@@ -163,6 +127,118 @@ class ModeloPagos extends ModeloBase
         } finally {
             $conex = NULL;
         }
+    }
+
+
+    public function ConsultarReporte(array $filtro = []): array
+    {
+        try {
+            $conex = $this->conex();
+            $params = [];
+
+            $sentencia = "SELECT * FROM vista_pagos WHERE 1=1";
+
+            if (!empty($filtro['filtro'])) {
+                $p = "%" . trim($filtro['filtro']) . "%";
+                $sentencia .= " AND (
+                concepto_pago LIKE :f1 OR 
+                nombre_atleta LIKE :f2 OR 
+                nombre_apellido LIKE :f3 OR
+                referencia LIKE :f4 OR
+                moneda LIKE :f5
+            )";
+                $params[':f1'] = $p;
+                $params[':f2'] = $p;
+                $params[':f3'] = $p;
+                $params[':f4'] = $p;
+                $params[':f5'] = $p;
+            }
+
+            if (!empty($this->id_metodo)) {
+                $sentencia .= " AND id_metodos = :metodo";
+                $params[':metodo'] = $this->id_metodo;
+            }
+
+            if (!empty($this->id_moneda)) {
+                $sentencia .= " AND id_moneda = :moneda";
+                $params[':moneda'] = $this->id_moneda;
+            }
+
+            if (!empty($this->fecha) && !empty($this->fecha_f)) {
+                $sentencia .= " AND fecha_pago BETWEEN :fecha_inicio AND :fecha_fin";
+                $params[':fecha_inicio'] = $this->fecha;
+                $params[':fecha_fin'] = $this->fecha_f;
+            } else if (!empty($this->fecha)) {
+                $sentencia .= " AND fecha_pago = :fecha_inicio";
+                $params[':fecha_inicio'] = $this->fecha;
+            } else if (!empty($this->fecha_f)) {
+                $sentencia .= " AND fecha_pago = :fecha_fin";
+                $params[':fecha_fin'] = $this->fecha_f;
+            }
+
+            if (empty($this->anulados)) {
+                $sentencia .= " AND estatus = 1";
+            }
+
+            $sentencia .= " ORDER BY fecha_pago DESC, id_pago DESC";
+
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute($params);
+            $filas = $stmt->fetchAll();
+
+            // Procesamos con nuestra función helper
+            $datos = $this->agruparDetallesPagos($filas);
+
+            return array('accion' => 'consultar', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Pagos', $e->getMessage(), 'Modelo_ConsultarReporte');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
+        }
+    }
+
+    private function agruparDetallesPagos(array $filas): array
+    {
+        $pagosAgrupados = [];
+        foreach ($filas as $row) {
+            $id = $row['id_pago'];
+            if (!isset($pagosAgrupados[$id])) {
+                $pagosAgrupados[$id] = [
+                    'id_pago' => $id,
+                    'fecha_pago' => $row['fecha_pago'],
+                    'monto_pagado' => $row['monto_pagado'],
+                    'monto_vuelto' => $row['monto_vuelto'],
+                    'referencia' => $row['referencia'],
+                    'estatus' => $row['estatus'],
+                    'simbolo' => $row['simbolo'],
+                    'abre' => $row['abre'],
+                    'moneda' => $row['moneda'],
+                    'concepto_pago' => 'Pago Múltiple',
+                    'nombre_metodo_pago' => $row['nombre_metodo_pago'],
+                    'detalles' => []
+                ];
+            }
+
+            if (count($pagosAgrupados[$id]['detalles']) === 0 && !empty($row['concepto_pago'])) {
+                $pagosAgrupados[$id]['concepto_pago'] = $row['concepto_pago'];
+            } else if (count($pagosAgrupados[$id]['detalles']) > 0) {
+                $pagosAgrupados[$id]['concepto_pago'] = 'Pago Múltiple';
+            }
+
+            if (!empty($row['id_detalle_pago'])) {
+                $pagosAgrupados[$id]['detalles'][] = [
+                    'id_detalle_pago' => $row['id_detalle_pago'],
+                    'atleta' => $row['nombre_atleta'] . ' ' . $row['nombre_apellido'],
+                    'concepto' => $row['concepto_pago'],
+                    'monto' => $row['monto_abonado'],
+                    'tasa' => $row['tasa_cambio'],
+                    'moneda' => $row['simbolo_cuenta'] . ' ' . $row['abre_cuenta'],
+                    'moneda_tasa' => $row['simbolo'] . ' ' . $row['abre']
+                ];
+            }
+        }
+        return array_values($pagosAgrupados);
     }
 
     public function obtenerTasaBackend($monedaBase, $monedaPago)

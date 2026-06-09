@@ -38,6 +38,7 @@ $(document).ready(function () {
     Validacion("tasa", /^[0-9.\b]*$/, /^\d+(\.\d{1,4})?$/, "Tasa inválida", "proceso");
     Validacion("referencia", /^[a-zA-Z0-9\-\_\b]*$/, /^[a-zA-Z0-9\-\_]+$/, "Referencia inválida", "proceso");
     Validacion("fecha", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "proceso");
+    Validacion("fecha_f", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "proceso");
 
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
@@ -99,18 +100,25 @@ $(document).ready(function () {
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Pago");
         $("#titulo_modal").text("Registrar Pago");
-
+        $('#cuenta').closest('.colum').show();
+        $('#monto').closest('.colum').show();
+        $('#tasa').closest('.colum').show();
+        $('#referencia').closest('.colum').show();
+        $('#fecha_f').closest('.colum').hide();
+        $('#anulados').closest('.colum').hide();
+        $('#monto_cambio').closest('.colum').show();
         $('#cuenta').val(null).trigger('change');
         $('#metodo').val(null).trigger('change');
         $('#moneda').val(null).trigger('change');
-        $('#referencia').prop('disabled', false).removeClass("campo_deshabilitado");
         
+        $('#referencia').prop('disabled', false).removeClass("campo_deshabilitado");
+
         // Limpieza de mensajes dinámicos de ayuda
         $('#detalles_deuda_ayuda').html('');
         $('#monto_equivalente_ayuda').html('');
         $('#label_tasa').text("Tasa de cambio");
 
-        // Forzar fecha del sistema y bloquear a solo lectura para evitar errores de API histórica
+        // Forzar fecha del sistema
         let hoy = new Date().toISOString().split('T')[0];
         $('#fecha').val(hoy);
         
@@ -123,6 +131,14 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
+
+        $('#cuenta').closest('.colum').hide();
+        $('#monto').closest('.colum').hide();
+        $('#tasa').closest('.colum').hide();
+        $('#referencia').closest('.colum').hide();
+        $('#fecha_f').closest('.colum').show();
+        $('#anulados').closest('.colum').show();
+        $('#monto_cambio').closest('.colum').hide();
         abrirModal();
     });
 
@@ -130,48 +146,40 @@ $(document).ready(function () {
         const pasos = [
             {
                 element: '#busqueda',
-                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar al Atleta que necesites.', position: 'bottom' }
+                popover: { title: 'Barra de Búsqueda', description: 'Aquí puedes filtrar los pagos registrados rápidamente.', position: 'bottom' }
             },
             {
                 element: '#incluir',
-                popover: { title: 'Nuevo Atleta', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevo Atleta', position: 'bottom' }
+                popover: { title: 'Registrar Pago', description: 'Presiona aquí para abrir el formulario de registro de un nuevo pago.', position: 'bottom' }
             },
             {
                 element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
+                popover: { title: 'Generar Reportes', description: 'Permite generar listados detallados de ingresos en formato PDF.', position: 'left' }
             },
             {
                 element: '#resultadoconsulta',
-                popover: { title: 'Atletas Registrados', description: 'Aqui se mostraran todos los Atletas registrados.', position: 'top' }
+                popover: { title: 'Historial de Pagos', description: 'Aquí se muestra la tabla con todos los movimientos financieros.', position: 'top' }
             },
             {
                 element: '#registro',
-                popover: { title: 'Registro de un Atleta', description: 'Aqui se mostrara la informacion de un Atleta si pulsa el registro se desplegara mas informacion.', position: 'bottom' }
+                popover: { title: 'Detalle de Fila', description: 'Haz clic en cualquier registro para expandir los detalles específicos del pago.', position: 'bottom' }
             },
             {
                 element: '#cbt_v',
-                popover: { title: 'Modificar Atletas', description: 'Si pulsa aqui se abrira un modal para modificar el Atleta seleccionado.', position: 'left' }
+                popover: { title: 'Modificar Datos', description: 'Permite editar la información de un cobro seleccionado.', position: 'left' }
             },
             {
                 element: '#cbt_r',
-                popover: { title: 'Eliminar Atleta', description: 'Si pulsa aqui eliminara el Atleta seleccionado.', position: 'left' }
-            },
-            {
-                element: '#cbt_sec',
-                popover: { title: 'Generar Curriculum', description: 'Si pulsa aqui generara un curriculum del Atleta seleccionado.', position: 'left' }
+                popover: { title: 'Anular Transacción', description: 'Si el pago fue erróneo, puedes anularlo especificando un motivo.', position: 'left' }
             },
             {
                 element: '#rowsPerPage',
-                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+                popover: { title: 'Registros por Página', description: 'Ajusta cuántos elementos deseas visualizar a la vez.', position: 'top' }
             },
             {
                 element: '#botonera',
-                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
-            },
-            {
-                element: '#cantidad',
-                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de representantes cargados.', position: 'top' }
-            },
+                popover: { title: 'Paginación', description: 'Navega entre las diferentes páginas del historial.', position: 'top' }
+            }
         ];
 
         const driver = iniciarTourConPasos(pasos);
@@ -195,21 +203,41 @@ $(document).ready(function () {
         if (necesitaReferencia !== undefined && String(necesitaReferencia).trim() === "1") {
             $('#referencia').prop('disabled', false).removeClass("campo_deshabilitado");
         } else {
-            $('#referencia').prop('disabled', true).addClass("campo_deshabilitado");
+            $('#referencia').prop('disabled', true).addClass("campo_deshabilitated");
             $('#referencia').val('');
         }
     });
 
-    // Evento dinámico interactivo al seleccionar una Cuenta por Cobrar
+    // Evento dinámico al seleccionar una Cuenta por Cobrar
     $('#cuenta').on('change', function () {
         let idsCobrar = $(this).val();
         if (!idsCobrar || idsCobrar.length === 0) {
             cuentaSeleccionadaActual = null;
             $('#detalles_deuda_ayuda').html(''); 
+            $('#monto_equivalente_ayuda').html('');
             return;
         }
         
-        cuentaSeleccionadaActual = listadoCuentas.find(c => c.id_cobrar == idsCobrar[0]);
+        // Validación de protección multimoneda en selección múltiple
+        let primeraCuenta = listadoCuentas.find(c => c.id_cobrar == idsCobrar[0]);
+        let monedaIncompatible = false;
+
+        idsCobrar.forEach(id => {
+            let cuenta = listadoCuentas.find(c => c.id_cobrar == id);
+            if (cuenta && cuenta.moneda_abreviatura !== primeraCuenta.moneda_abreviatura) {
+                monedaIncompatible = true;
+            }
+        });
+
+        if (monedaIncompatible) {
+            muestraMensaje("error", 3500, "Monedas Diferentes", "No puedes agrupar deudas con distintas monedas base en un mismo pago.");
+            // Revertimos la última selección inválida
+            idsCobrar.pop();
+            $(this).val(idsCobrar).trigger('change.select2');
+            return;
+        }
+
+        cuentaSeleccionadaActual = primeraCuenta;
         
         let htmlDeudas = '<div class="alerta-info-deuda" style="background-color: #f0f7ff; border-left: 4px solid #007bff; padding: 10px; margin-top: 5px; border-radius: 4px;"><p style="margin: 0; font-size: 13px; color: #333;">⚠️ <strong>Cuentas seleccionadas:</strong></p><ul style="margin: 5px 0 0 20px;">';
         
@@ -223,22 +251,19 @@ $(document).ready(function () {
         });
         htmlDeudas += '</ul></div>';
 
-        // Inyección visual en el modal de los datos de cobro pendientes
         $('#detalles_deuda_ayuda').html(htmlDeudas);
-
         solicitarTasaAPI();
     });
 
-    // Al cambiar la moneda de pago, recalculamos la tasa de cambio de la divisa
+    // Recalcular al cambiar la moneda de pago
     $('#moneda').on('change', function () {
         solicitarTasaAPI();
     });
 
-    // Listener en tiempo real para el cálculo visual de amortización
+    // Listener en tiempo real para amortización y monto al cambio
     $('#monto, #tasa').on('input', function () {
         recalcularAmortizacion();
     });
-
 });
 
 function solicitarTasaAPI() {
@@ -258,7 +283,6 @@ function solicitarTasaAPI() {
     let isoCuenta = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
     let isoPago = monedaPagoObj.abreviatura.toUpperCase();
 
-    // Si es la misma moneda, fijamos la paridad en 1.00 sin consumir recursos externos
     if (isoCuenta === isoPago) {
         $('#tasa').val('1.0000').attr('readonly', true);
         $('#label_tasa').html(`Tasa de cambio <span style="color: #28a745; font-size:12px;">(Misma moneda: 1 ${isoPago} = 1 ${isoCuenta})</span>`);
@@ -266,7 +290,6 @@ function solicitarTasaAPI() {
         return;
     }
 
-    // Feedback visual previo a la carga asíncrona
     $('#label_tasa').html(`Tasa de cambio <span style="color: #007bff; font-size:11px;">(Convirtiendo de ${isoPago} a ${isoCuenta})</span>`);
 
     let datos = new FormData();
@@ -306,8 +329,13 @@ function recalcularAmortizacion() {
     let tasa = parseFloat($('#tasa').val()) || 0;
 
     if (monto > 0 && tasa > 0 && cuentaSeleccionadaActual) {
+        // Cálculo del monto convertido (Ej: 18000 Bs / 40 Tasa = 450 USD)
         let montoAmortizado = monto / tasa;
         
+        // 1. Llenamos AUTOMÁTICAMENTE tu input real del formulario con 2 decimales
+        $('#monto_cambio').val(montoAmortizado.toFixed(2));
+        
+        // 2. Mantenemos el bloque visual de ayuda por si quieres mostrarle el desglose al usuario
         let simDeuda = cuentaSeleccionadaActual.moneda_simbolo;
         let isoDeuda = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
         
@@ -315,14 +343,33 @@ function recalcularAmortizacion() {
         let monedaPagoObj = listadoMonedas.find(m => m.id_moneda == idMonedaPago);
         let isoPago = monedaPagoObj ? monedaPagoObj.abreviatura.toUpperCase() : '';
 
-        // Bloque dinámico explicativo de equivalencias para amortizar montos
+        let idsCobrar = $('#cuenta').val() || [];
+        let deudaTotalPendiente = 0;
+        idsCobrar.forEach(id => {
+            let c = listadoCuentas.find(cuenta => cuenta.id_cobrar == id);
+            if (c) deudaTotalPendiente += parseFloat(c.monto_pendiente) || 0;
+        });
+
+        let saldoRestante = deudaTotalPendiente - montoAmortizado;
+        let desgloseSaldoHtml = "";
+
+        if (saldoRestante > 0) {
+            desgloseSaldoHtml = `<br/>📉 El saldo pendiente total pasará de <strong>${deudaTotalPendiente.toFixed(2)} ${simDeuda}</strong> a <strong style="color: #dc3545;">${saldoRestante.toFixed(2)} ${simDeuda}</strong>.`;
+        } else if (saldoRestante === 0) {
+            desgloseSaldoHtml = `<br/>🎉 ¡La deuda seleccionada quedará <strong>totalmente saldada</strong>!`;
+        } else {
+            desgloseSaldoHtml = `<br/>🪙 Quedará un saldo a favor de <strong style="color: #28a745;">${Math.abs(saldoRestante).toFixed(2)} ${simDeuda}</strong>.`;
+        }
+
         $('#monto_equivalente_ayuda').html(`
-            <div style="background-color: #e2f0d9; border-left: 4px solid #385723; padding: 8px; border-radius: 4px; margin-top: 5px; font-size: 13px;">
-                🟢 Los <strong>${monto.toFixed(2)} ${isoPago}</strong> ingresados equivalen a: 
-                <strong style="font-size: 14px; color: #385723;">${montoAmortizado.toFixed(2)} ${simDeuda} (${isoDeuda})</strong> que se restarán del saldo pendiente.
+            <div style="background-color: #e2f0d9; border-left: 4px solid #385723; padding: 10px; border-radius: 4px; margin-top: 8px; font-size: 13px; color: #222;">
+                🟢 Los <strong>${monto.toFixed(2)} ${isoPago}</strong> ingresados equivalen al cambio a: 
+                <strong style="font-size: 14px; color: #385723;">${montoAmortizado.toFixed(2)} ${simDeuda} (${isoDeuda})</strong>.${desgloseSaldoHtml}
             </div>
         `);
     } else {
+        // Si los campos están vacíos, reseteamos tanto el input como el mensaje de ayuda
+        $('#monto_cambio').val('');
         $('#monto_equivalente_ayuda').html('');
     }
 }
@@ -331,7 +378,6 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
     var select = $('#' + idSelect);
     select.empty();
     
-    // Evitar poner la opción vacía como seleccionable en selects múltiples
     if (!select.prop('multiple')) {
         select.append('<option value="" selected disabled>Seleccione una opción</option>');
     }
@@ -370,7 +416,6 @@ function crearConsulta(htmlRecibido) {
 
 function eliminar(id) {
     confirmarAnulacion('¿Está seguro que quiere anular este pago?', function (motivo) {
-        
         if (motivo !== false) { 
             var datos = new FormData();
             datos.append('accion', 'eliminar');
@@ -470,6 +515,7 @@ function enviaAjax(datos) {
                     $('#monto_equivalente_ayuda').html('');
                     $('#detalles_deuda_ayuda').html('');
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
+                    cerrarModal();
                 } else if (lee.accion == "eliminar") {
                     consultar();
                     muestraMensaje("success", 2000, "Retiro Exitoso", lee.mensaje);
@@ -480,7 +526,19 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
-                } else if (lee.accion == "error") {
+                } else if (lee.accion == "reporte") {
+                    cerrarAlertaEspara();
+                    cerrarModal();
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
+                }  else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }
             } catch (e) {
