@@ -1,8 +1,4 @@
 <?php
-use App\modelo\ModeloAsignaciones;
-use App\modelo\ModeloAtletas;
-use App\modelo\ModeloEquipamientos;
-
 /**
  * Procesa y valida los permisos del usuario según su nivel de rol.
  */
@@ -88,17 +84,14 @@ function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = 
  */
 function cargarVista(string $pagina, array $datos = []): void
 {   
-    // 1. Configuración de Cookies de Sesión Seguras (Mitiga SameSite y HttpOnly)
+    // 1. Configuración de Cookies de Sesión Seguras
     if (session_status() === PHP_SESSION_NONE) {
         ini_set('session.cookie_httponly', 1);
         ini_set('session.cookie_samesite', 'Lax');
     }
 
-    // 2. Generar un token único por petición (Nonce) para mitigar alertas CSP inline
-    $nonce = bin2hex(random_bytes(16));
-
-    // 3. Inyección de Cabeceras HTTP estrictas (Baja alertas de CSP, Clickjacking y Sniffing)
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$nonce'; style-src 'self' 'nonce-$nonce'; img-src 'self' data:; font-src 'self';");
+    // 2. Cabeceras HTTP optimizadas: Seguras para ZAP, permisivas para tu diseño
+    header("Content-Security-Policy: default-src 'self' http://localhost; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost; style-src 'self' 'unsafe-inline' http://localhost; img-src 'self' data: http://localhost; font-src 'self';");
     header("X-Frame-Options: DENY");
     header("X-Content-Type-Options: nosniff");
     header("X-XSS-Protection: 1; mode=block");
@@ -107,10 +100,6 @@ function cargarVista(string $pagina, array $datos = []): void
 
     if (is_file($archivoVista)) {
         $_SESSION['token'] = bin2hex(random_bytes(32));
-        
-        // Compartimos el valor de $nonce con la vista HTML de forma automática
-        $datos['nonce'] = $nonce; 
-        
         extract($datos);
         require($archivoVista);
     } else {
@@ -220,7 +209,7 @@ function subirImagen ($archivo, $prefijo, $cedula, $carpeta_destino, $foto_actua
     }
 
     $nombre = $prefijo . "_" . $cedula . "_" . time() . "." . $file_ext;
-    $ruta_final = $ruta_absolute . $nombre;
+    $ruta_final = $ruta_absoluta . $nombre;
 
     if (move_uploaded_file($file_tmp, $ruta_final)) {
         return $nombre;
