@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
     <?php include('complementos/head.php'); ?>
-    <title>Gestión de Asignaciones</title>
+    <title>Asignaciones</title>
 </head>
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
     <?php include('complementos/loader.php'); ?>
@@ -16,7 +16,7 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina">Equipos Asignados</h2>
+                            <h2 class="titulo_pagina">Asignaciones</h2>
                         </div>
                         <div class="botones">
                             <?php if (!empty($permisos['registrar'])) { ?>

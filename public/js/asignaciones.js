@@ -6,7 +6,7 @@ $(document).ready(function () {
         $("#f")[0].reset();
         $("#id_asignacion").val('');
         $("#titulo_modal").text("Registrar Asignación");
-        $("#btn_guardar").text("Confirmar Préstamo").data("accion", "incluir");
+        $("#btn_guardar").text("Registrar Asignación").data("accion", "incluir");
         $('#fecha_asignacion').val(new Date().toISOString().split('T')[0]);
         abrirModal(); 
     });
