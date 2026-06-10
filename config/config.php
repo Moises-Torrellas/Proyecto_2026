@@ -56,6 +56,7 @@ const DUPLICATE_EMAIL  = "002";
 const INVALID_ID     = "003";
 const DUPLICATE_NAME  = "004";
 const DUPLICATE_PHONE  = "005";
+const DUPLICATE  = "010";
 const ASSOCIATES  = "006";
 const VALIDATION = "007";
 const ALREADY_ANNULLED = "008";

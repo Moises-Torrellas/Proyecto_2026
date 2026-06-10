@@ -687,7 +687,10 @@ option {
 .listado_detalle_contenido {
     padding: 15px;
 }
-
+.titulo_b{
+    color: var(--texto-principal);
+    font-weight: bold;
+}
 
 .detalle_expandido_container {
     padding: 10px;
