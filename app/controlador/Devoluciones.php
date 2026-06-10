@@ -84,7 +84,7 @@ function MultiConsulta(): void {
         $modeloAsignaciones = new ModeloAsignaciones();
         $modeloEstado = new ModeloCalidad(); 
 
-        $respAsignaciones = $modeloAsignaciones->ConsultarAsignaciones(); 
+        $respAsignaciones = $modeloAsignaciones->ConsultarAgrupado(); 
         $respEstado = $modeloEstado->Consultar(); 
 
         echo json_encode([
