@@ -38,7 +38,7 @@
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-<?php } ?>
+                <?php } ?>
 
     <?php if (empty($registro)) { ?>
         <div class="listado_vacio"><p>No hay asignaciones activas.</p></div>
@@ -104,9 +104,8 @@
                     </div>
                 </div>
             </div>
-    <?php } } ?>
-
-<?php if (!isset($solo_lista)) { ?>
+                        <?php } } ?>
+                        <?php if (!isset($solo_lista)) { ?>
                         </div>
                     </div>
                 </div>
