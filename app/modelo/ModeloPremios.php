@@ -197,4 +197,29 @@ class ModeloPremios extends ModeloBase
             $conex = NULL;
         }
     }
+
+    /**
+     * Valida que el tipo del premio coincida con el tipo de palmarés
+     */
+    public function validarTipoPremio(int $id_premio, string $tipoEsperado): void
+    {
+        $conex = null;
+        try {
+            $conex = $this->conex();
+            $stmt = $conex->prepare("SELECT tipo FROM premios WHERE id_premio = :id_premio");
+            $stmt->bindValue(':id_premio', $id_premio, \PDO::PARAM_INT);
+            $stmt->execute();
+            $premio = $stmt->fetch();
+
+            if (!$premio) {
+                throw new Exception(INVALID_ID);
+            }
+
+            if ($premio['tipo'] !== $tipoEsperado) {
+                throw new Exception(VALIDATION);
+            }
+        } finally {
+            $conex = null;
+        }
+    }
 }
