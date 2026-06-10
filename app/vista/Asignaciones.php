@@ -95,18 +95,17 @@
                                         <?php if (!empty($permisos['eliminar'])) { ?>
                                             <button class="btn_t cbt_r" onclick="anular(<?= $asignacion['id_asignacion'] ?>, <?= $asignacion['id_equipamiento'] ?>)" data-tippy-content="Anular">
                                                 <i class="fi fi-sr-trash"></i>
-                                            </button>
-                                        <?php } ?>
+                                                                </button>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </div>
+                                                <?php } ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            <?php } ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-    <?php } } ?>
-
-<?php if (!isset($solo_lista)) { ?>
+                        <?php } } ?>
+                        <?php if (!isset($solo_lista)) { ?>
                         </div>
                     </div>
                 </div>

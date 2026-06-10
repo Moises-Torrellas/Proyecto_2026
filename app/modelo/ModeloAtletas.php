@@ -189,11 +189,11 @@ class ModeloAtletas extends ModeloBase
             if(!$this->ObjCat->verificarCategoria($this->categoria)) {
                 throw new Exception(INVALID_ID);
             }
-            if (!$this->ObjPos->verificarPosicion($this->posicion)) {
+            if (!$this->ObjPos->verificarPosiciones($this->posicion)) {
                 throw new Exception(INVALID_ID . '0');
             }
             if ($this->representante !== null) {
-                if (!$this->ObjRep->verificarRepresentante($this->representante)) {
+                if (!$this->ObjRep->verificarRepresentantes($this->representante)) {
                     throw new Exception(INVALID_ID . '1');
                 }
             }

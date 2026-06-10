@@ -1,11 +1,11 @@
 <?php
-if (isset($solo_lista) && $solo_lista === true):
-    if (empty($registro)): ?>
+if (isset($solo_lista) && $solo_lista === true) :
+    if (empty($registro)) : ?>
         <div class="listado_vacio">
             <p>No se encontraron registros de pagos</p>
         </div>
-        <?php else:
-        foreach ($registro as $dato):
+        <?php else :
+        foreach ($registro as $dato) :
             $fechaPago = date('d/m/Y', strtotime($dato['fecha_pago']));
             $simboloMoneda = htmlspecialchars($dato['simbolo'] . ' ' . $dato['abre']);
             $montoFormateado = number_format($dato['monto_pagado'], 2, ',', '.');
@@ -78,19 +78,18 @@ if (isset($solo_lista) && $solo_lista === true):
                                     <small>Vuelto Generado: <b style="color:#28a745;"><?= number_format($dato['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($dato['abre']) ?></b></small>
                                 </div>
                             </div>
-                            <div class="detalle_fila">
-                                <div class="detalle_card" style="width: 100%;">
-                                    <div class="detalle_card_icon"><i data-lucide="wallet"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Metodo de Pago</label>
-                                        <span>Metodo: <?= htmlspecialchars($dato['nombre_metodo_pago']) ?></span>
-                                    </div>
+                            <div class="detalle_card" style="width: 100%;">
+                                <div class="detalle_card_icon"><i data-lucide="wallet"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Metodo de Pago</label>
+                                    <span>Metodo: <?= htmlspecialchars($dato['nombre_metodo_pago']) ?></span>
                                 </div>
                             </div>
                         </div>
                         <h4>Desglose de Cuentas Abonadas:</h4>
                         <div class="detalle_fila">
-                            <?php if (!empty($dato['detalles'])): foreach ($dato['detalles'] as $det): ?>
+                            <?php if (!empty($dato['detalles'])) :
+                                foreach ($dato['detalles'] as $det) : ?>
                                     <div class="detalle_card">
                                         <div class="detalle_card_icon"><i data-lucide="file-text"></i></div>
                                         <div class="detalle_card_txt">
@@ -101,7 +100,7 @@ if (isset($solo_lista) && $solo_lista === true):
                                         </div>
                                     </div>
                                 <?php endforeach;
-                            else: ?>
+                            else : ?>
                                 <span>No hay cuentas asociadas a este pago.</span>
                             <?php endif; ?>
                         </div>
@@ -148,12 +147,12 @@ endif;
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
                             <?php
-                            if (empty($registro)): ?>
+                            if (empty($registro)) : ?>
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros de pagos</p>
                                 </div>
-                                <?php else:
-                                foreach ($registro as $dato):
+                                <?php else :
+                                foreach ($registro as $dato) :
                                     $fechaPago = date('d/m/Y', strtotime($dato['fecha_pago']));
                                     $simboloMoneda = htmlspecialchars($dato['simbolo'] . ' ' . $dato['abre']);
                                     $montoFormateado = number_format($dato['monto_pagado'], 2, ',', '.');
@@ -236,7 +235,8 @@ endif;
                                                 </div>
                                                 <h4>Desglose de Cuentas Abonadas:</h4>
                                                 <div class="detalle_fila">
-                                                    <?php if (!empty($dato['detalles'])): foreach ($dato['detalles'] as $det): ?>
+                                                    <?php if (!empty($dato['detalles'])) :
+                                                        foreach ($dato['detalles'] as $det) : ?>
                                                             <div class="detalle_card">
                                                                 <div class="detalle_card_icon"><i data-lucide="file-text"></i></div>
                                                                 <div class="detalle_card_txt">
@@ -247,7 +247,7 @@ endif;
                                                                 </div>
                                                             </div>
                                                         <?php endforeach;
-                                                    else: ?>
+                                                    else : ?>
                                                         <span>No hay cuentas asociadas a este pago.</span>
                                                     <?php endif; ?>
                                                 </div>
@@ -317,9 +317,25 @@ endif;
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
+                                <input type="text" class="formulario" id="monto_cambio" readonly>
+                                <label for="monto_cambio" class="titulo_formulario">Monto al Cambio</label>
+                                <span class="mensaje" id="monto_c_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
                                 <input type="date" class="formulario" id="fecha" name="fecha">
                                 <label for="fecha" class="titulo_formulario">Fecha del Pago</label>
                                 <span class="mensaje" id="fecha_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_f" name="fecha_f">
+                                <label for="fecha_f" class="titulo_formulario">Fecha Fin</label>
+                                <span class="mensaje" id="fecha_f_spam"></span>
                             </div>
                         </div>
                         <div class="colum">
@@ -336,6 +352,15 @@ endif;
                                 <input type="text" class="formulario" id="referencia" name="referencia">
                                 <label for="referencia" class="titulo_formulario">Referencia del Pago</label>
                                 <span class="mensaje" id="referencia_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <label for="referencia" class="titulo_formulario">Incluir Pagos Anulados</label>
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="anulados" name="anulados" class="checkbox" value="1">
+                                    <span class="custom-checkbox"></span>
+                                </label>
                             </div>
                         </div>
                     </div>

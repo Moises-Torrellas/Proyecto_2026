@@ -56,10 +56,9 @@ class ModeloInicio extends ModeloBase
             }
 
             // 3. Buscar permisos usando los campos puros de la tabla permisos_usuarios
-            $sqlPermisos = 'SELECT permisos_usuarios.id_modulo, permisos_usuarios.ingresar, permisos_usuarios.registrar, permisos_usuarios.eliminar, permisos_usuarios.modificar, permisos_usuarios.reporte, permisos_usuarios.otros 
-                            FROM `usuarios` 
-                            INNER JOIN permisos_usuarios ON permisos_usuarios.idUsuario = usuarios.idUsuario 
-                            WHERE usuarios.idUsuario = :id;';
+            $sqlPermisos = 'SELECT id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros 
+                FROM permisos_usuarios 
+                WHERE idUsuario = :id;';
                             
             $stmtPermisos = $conex->prepare($sqlPermisos);
             $stmtPermisos->bindParam(':id', $resultado['idUsuario'], \PDO::PARAM_INT);

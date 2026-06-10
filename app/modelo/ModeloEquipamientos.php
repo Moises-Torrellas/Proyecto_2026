@@ -41,12 +41,12 @@ class ModeloEquipamientos extends ModeloBase
                            es.nombre as estado, 
                            es.nivel_estado,
                            e.id_catalogo,
-                           e.id_estados as id_estado
+                           e.id_estados as id_estado,
+                           e.estatus
                     FROM equipamientos e
                     INNER JOIN catalogos c ON e.id_catalogo = c.id_catalogo
                     INNER JOIN categoria_catalogo ce ON c.id_categoria = ce.id_categoria
                     INNER JOIN estado_equipamiento es ON e.id_estados = es.id_estado
-                    WHERE e.estatus = 1
                     ORDER BY e.id_equipamiento DESC";
             
             $stmt = $this->conex()->prepare($sql);
