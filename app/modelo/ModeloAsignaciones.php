@@ -2,14 +2,11 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
-use App\modelo\ModeloEquipamientos;
 use Exception;
 use PDO;
 
 class ModeloAsignaciones extends ModeloBase
 {
-    // Atributos privados encapsulados
     private $id_asignacion;
     private $id_atleta;
     private $id_equipamiento;
@@ -17,6 +14,7 @@ class ModeloAsignaciones extends ModeloBase
     private $estatus;
     private $anulado;
     private $motivo; 
+    private $objEquipamientos;
 
     public function __construct()
     {
@@ -35,10 +33,15 @@ class ModeloAsignaciones extends ModeloBase
         $this->llavePrimaria = 'id_asignacion';
     }
 
+    public function setEquipamientos(ModeloEquipamientos $equipamientos)
+    {
+        $this->objEquipamientos = $equipamientos;
+    }
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {
-            throw new Exception('No se proporcionaron datos para procesar la asignación.');
+            return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
         }
 
         $this->id_asignacion    = $datos['id_asignacion'] ?? null;
@@ -47,20 +50,20 @@ class ModeloAsignaciones extends ModeloBase
         $this->fecha_asignacion = $datos['fecha_asignacion'] ?? null; 
         $this->estatus          = $datos['estatus'] ?? null;
         $this->anulado          = $datos['anulado'] ?? null;
-        $this->motivo           = isset($datos['motivo']) ? trim($datos['motivo']) : '';
+        $this->motivo           = isset($datos['motivo_anulacion']) ? trim($datos['motivo_anulacion']) : (isset($datos['motivo']) ? trim($datos['motivo']) : '');
 
         $accion = $datos['accion'] ?? null;
 
         return match ($accion) {
-            'consultar' => $this->ConsultarAsignaciones(),
+            'consultar' => $this->ConsultarAgrupado(), 
             'incluir'   => $this->IncluirAsignacion(),
             'modificar' => $this->ModificarAsignacion(),
             'anular'    => $this->AnularAsignacion(),
-            default     => throw new Exception('La acción solicitada para la asignación no es válida.')
+            default     => ['accion' => 'error', 'codigo' => defined('_ERR_ACCION_') ? _ERR_ACCION_ : 'ERR_ACCION']
         };
     }
 
-    public function ConsultarAsignaciones(): array
+    public function ConsultarAgrupado(): array
     {
         $conex = null;
         try {
@@ -80,16 +83,37 @@ class ModeloAsignaciones extends ModeloBase
                     INNER JOIN equipamientos e ON a.id_equipamiento = e.id_equipamiento
                     INNER JOIN catalogos c ON e.id_catalogo = c.id_catalogo
                     WHERE a.anulado = 0
-                    ORDER BY a.fecha_asignacion DESC";
+                    ORDER BY at.nombres ASC, a.fecha_asignacion DESC";
             
             $stmt = $conex->prepare($sql);
             $stmt->execute();
             $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            return ['accion' => 'consultar', 'datos' => $datos];
+            $agrupado = [];
+            foreach ($datos as $fila) {
+                $id = $fila['id_atleta'];
+                if (!isset($agrupado[$id])) {
+                    $agrupado[$id] = [
+                        'id_atleta' => $id,
+                        'nombre_completo' => $fila['atleta'],
+                        'doc_identidad' => $fila['doc_identidad'],
+                        'asignaciones' => []
+                    ];
+                }
+                $agrupado[$id]['asignaciones'][] = [
+                    'id_asignacion' => $fila['id_asignacion'],
+                    'id_equipamiento' => $fila['id_equipamiento'],
+                    'articulo' => $fila['articulo'],
+                    'fecha_vista' => $fila['fecha_vista'],
+                    'fecha_real' => $fila['fecha_real'],
+                    'estatus' => $fila['estatus_asignacion']
+                ];
+            }
+
+            return ['accion' => 'consultar', 'datos' => array_values($agrupado)];
         } catch (Exception $e) {
             logs('Asignaciones', $e->getMessage(), 'Modelo_Consultar');
-            return ['accion' => 'error', 'mensaje' => 'Error BD: ' . $e->getMessage()];
+            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
         } finally {
             $conex = null;
         }
@@ -102,23 +126,19 @@ class ModeloAsignaciones extends ModeloBase
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            // 1. Bloqueo transaccional: Verificamos si el equipo físico sigue disponible
             $stmtCheck = $conex->prepare("SELECT estatus FROM equipamientos WHERE id_equipamiento = ? FOR UPDATE");
             $stmtCheck->execute([$this->id_equipamiento]);
             $estadoEquipo = $stmtCheck->fetchColumn();
             
             if ($estadoEquipo != 1) {
-                throw new Exception("El equipo seleccionado ya fue asignado o no está disponible en almacén.");
+                return ['accion' => 'error', 'codigo' => defined('_ERR_ESTATUS_') ? _ERR_ESTATUS_ : 'ERR_ESTATUS'];
             }
 
-            // 2. Inserción del documento legal del préstamo (Estatus 1 = Activa, Anulado = 0)
             $sqlInsert = "INSERT INTO asignaciones (id_atleta, id_equipamiento, fecha_asignacion, estatus, anulado) VALUES (?, ?, ?, 1, 0)";
             $stmtInsert = $conex->prepare($sqlInsert);
             $stmtInsert->execute([$this->id_atleta, $this->id_equipamiento, $this->fecha_asignacion]);
 
-            // 3. SRP: Delegamos la modificación física del equipo a su propio modelo inyectándole la conexión
-            $modeloEquipos = new ModeloEquipamientos();
-            $modeloEquipos->CambiarEstatus($this->id_equipamiento, 2, $conex);
+            $this->objEquipamientos->CambiarEstatus($this->id_equipamiento, 2, $conex);
 
             $conex->commit();
             return ['accion' => 'exito', 'mensaje' => 'Asignación procesada. Equipo descontado del almacén.'];
@@ -127,7 +147,7 @@ class ModeloAsignaciones extends ModeloBase
                 $conex->rollBack();
             }
             logs('Asignaciones', $e->getMessage(), 'Modelo_Incluir');
-            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
         } finally {
             $conex = null;
         }
@@ -140,36 +160,26 @@ class ModeloAsignaciones extends ModeloBase
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            // 1. Rastreamos cuál era el equipo asignado originalmente para devolverlo si es necesario
             $stmtOld = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
             $stmtOld->execute([$this->id_asignacion]);
             $viejoEquipo = $stmtOld->fetchColumn();
 
             if (!$viejoEquipo) {
-                throw new Exception("La asignación original no existe en el sistema.");
+                return ['accion' => 'error', 'codigo' => defined('_ERR_NO_EXISTE_') ? _ERR_NO_EXISTE_ : 'ERR_NO_EXISTE'];
             }
 
-            // 2. Lógica de Intercambio Físico: Si el usuario seleccionó un activo diferente
             if ($viejoEquipo != $this->id_equipamiento) {
-                
-                // Aseguramos que el activo nuevo esté disponible
                 $stmtCheck = $conex->prepare("SELECT estatus FROM equipamientos WHERE id_equipamiento = ? FOR UPDATE");
                 $stmtCheck->execute([$this->id_equipamiento]);
                 
                 if ($stmtCheck->fetchColumn() != 1) {
-                    throw new Exception("El nuevo equipo seleccionado no está disponible en almacén.");
+                    return ['accion' => 'error', 'codigo' => defined('_ERR_ESTATUS_') ? _ERR_ESTATUS_ : 'ERR_ESTATUS'];
                 }
 
-                $modeloEquipos = new ModeloEquipamientos();
-                
-                // Reingresamos la pieza anterior (estatus 1 = Disponible)
-                $modeloEquipos->CambiarEstatus($viejoEquipo, 1, $conex);
-                
-                // Bloqueamos la nueva pieza (estatus 2 = Prestado)
-                $modeloEquipos->CambiarEstatus($this->id_equipamiento, 2, $conex);
+                $this->objEquipamientos->CambiarEstatus($viejoEquipo, 1, $conex);
+                $this->objEquipamientos->CambiarEstatus($this->id_equipamiento, 2, $conex);
             }
 
-            // 3. Actualizamos la cabecera de la asignación
             $sqlUpdate = "UPDATE asignaciones SET id_atleta = ?, id_equipamiento = ?, fecha_asignacion = ? WHERE id_asignacion = ?";
             $stmtUpdate = $conex->prepare($sqlUpdate);
             $stmtUpdate->execute([$this->id_atleta, $this->id_equipamiento, $this->fecha_asignacion, $this->id_asignacion]);
@@ -181,7 +191,7 @@ class ModeloAsignaciones extends ModeloBase
                 $conex->rollBack();
             }
             logs('Asignaciones', $e->getMessage(), 'Modelo_Modificar');
-            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
         } finally {
             $conex = null;
         }
@@ -194,13 +204,11 @@ class ModeloAsignaciones extends ModeloBase
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            // 1. Anulación Lógica: Mantenemos el registro histórico pero lo invalidamos
             $stmtAnular = $conex->prepare("UPDATE asignaciones SET anulado = 1, estatus = 0 WHERE id_asignacion = ?");
             $stmtAnular->execute([$this->id_asignacion]);
 
-            // 2. SRP: Usamos el modelo cruzado para liberar la pieza
-            $modeloEquipos = new ModeloEquipamientos();
-            $modeloEquipos->CambiarEstatus($this->id_equipamiento, 1, $conex);
+            // USAMOS LA DEPENDENCIA INYECTADA
+            $this->objEquipamientos->CambiarEstatus($this->id_equipamiento, 1, $conex);
 
             $conex->commit();
             return ['accion' => 'exito', 'mensaje' => 'Asignación anulada. El equipo regresó al inventario libre.'];
@@ -209,7 +217,7 @@ class ModeloAsignaciones extends ModeloBase
                 $conex->rollBack();
             }
             logs('Asignaciones', $e->getMessage(), 'Modelo_Anular');
-            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
         } finally {
             $conex = null;
         }

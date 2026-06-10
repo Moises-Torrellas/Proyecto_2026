@@ -30,12 +30,10 @@ $(document).ready(function () {
     MultiConsulta();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
 
-    // Validaciones de formato (Usando la función global de tu framework)
     if (typeof Validacion === 'function') {
         Validacion("fecha_asignacion", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "btn_guardar");
     }
 
-    // Configuración de Select2 para que funcione perfectamente dentro del Modal
     $('#id_atleta').select2({
         placeholder: "Seleccione un atleta...",
         allowClear: true,
@@ -48,7 +46,6 @@ $(document).ready(function () {
         dropdownParent: $('.contenedor_modal')
     });
 
-    // Acción principal del botón de guardado (Equivalente al #proceso en pagos)
     $('#btn_guardar').on('click', function () {
         let accion = $(this).data("accion");
         
@@ -57,7 +54,6 @@ $(document).ready(function () {
                 ? '¿Está seguro que quiere registrar esta asignación?' 
                 : '¿Está seguro que quiere modificar esta asignación?';
 
-            // Usamos tu función global confirmar()
             confirmar(textoConfirmacion, function (confirmado) {
                 if (confirmado) {
                     var datos = new FormData($('#f')[0]);
@@ -68,9 +64,9 @@ $(document).ready(function () {
         }
     });
 
-    // Botón para abrir el modal de nueva asignación (Equivalente a #incluir)
+    // Abrir Modal de Nueva Asignación
     $("#btn_nuevo").on("click", function () {
-        limpia(); // Tu función global para limpiar inputs
+        limpia(); 
         $("#f")[0].reset();
         $("#id_asignacion").val('');
         $("#titulo_modal").text("Registrar Asignación");
@@ -86,16 +82,24 @@ $(document).ready(function () {
         abrirModal(); 
     });
 
-    // Tour de Ayuda (Estilo Pagos/Atletas)
+    // Tour Guiado de Ayuda
     $('#ayuda').on('click', function () {
         const pasos = [
             {
+                element: '#busqueda',
+                popover: { title: 'Búsqueda', description: 'Aquí puedes buscar por nombre de atleta o CI.', position: 'bottom' }
+            },
+            {
                 element: '#btn_nuevo',
-                popover: { title: 'Nueva Asignación', description: 'Pulsa aquí para prestar un equipo a un atleta.', position: 'bottom' }
+                popover: { title: 'Nueva Asignación', description: 'Abre el formulario para registrar un nuevo préstamo de equipo.', position: 'bottom' }
+            },
+            {
+                element: '#generar',
+                popover: { title: 'Generar Reporte', description: 'Descarga un archivo PDF con el historial de asignaciones.', position: 'left' }
             },
             {
                 element: '#resultadoconsulta',
-                popover: { title: 'Equipos Asignados', description: 'Aquí verás todo el inventario que actualmente está en uso.', position: 'top' }
+                popover: { title: 'Lista Agrupada', description: 'Haz clic en cualquier atleta para desplegar el detalle de sus equipos asignados.', position: 'top' }
             }
         ];
         if (typeof iniciarTourConPasos === 'function') {
@@ -105,7 +109,6 @@ $(document).ready(function () {
     });
 });
 
-// Función de validación centralizada (Estilo Pagos)
 function validarEnvio(accion) {
     if (accion === "incluir" || accion === "modificar") {
         if ($('#id_atleta').val() == "" || $('#id_atleta').val() == null) {
@@ -120,7 +123,6 @@ function validarEnvio(accion) {
             muestraMensaje("error", 2000, "Validación", "Debe seleccionar la fecha de asignación.");
             return false;
         } else {
-            // Prevenir fechas futuras
             let fechaIngresada = $('#fecha_asignacion').val();
             let hoy = new Date();
             let mes = (hoy.getMonth() + 1).toString().padStart(2, '0');
@@ -136,7 +138,6 @@ function validarEnvio(accion) {
     return true;
 }
 
-// Preparar el modal para edición
 function editar(id_asignacion, id_atleta, id_equipamiento, fecha) {
     limpia();
     $("#f")[0].reset();
@@ -147,7 +148,6 @@ function editar(id_asignacion, id_atleta, id_equipamiento, fecha) {
     $("#fecha_asignacion").val(fecha);
     $("#id_atleta").val(id_atleta).trigger('change');
     
-    // Mantenemos la opción del equipo actual por si no lo quiere cambiar
     if ($(`#id_equipamiento option[value='${id_equipamiento}']`).length === 0) {
         $("#id_equipamiento").append(new Option("Equipo Actual (Mantenido)", id_equipamiento, true, true));
     }
@@ -156,28 +156,15 @@ function editar(id_asignacion, id_atleta, id_equipamiento, fecha) {
     abrirModal();
 }
 
-// Mantenemos el SweetAlert personalizado con los colores que configuramos
 function anular(id_asignacion, id_equipamiento) {
-    Swal.fire({
-        title: 'Anular Asignación',
-        text: "Ingrese el motivo (Mínimo 5 caracteres):",
-        input: 'text',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#39b015',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, anular',
-        cancelButtonText: 'No',
-        inputValidator: (value) => {
-            if (!value || value.trim().length < 5) return '¡El motivo no es válido!';
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            let datos = new FormData();
+    
+    confirmarAnulacion('¿Está seguro que quiere anular esta asignación?', function (motivo) {
+        if (motivo !== false) { 
+            var datos = new FormData();
             datos.append('accion', 'anular');
             datos.append('id_asignacion', id_asignacion);
             datos.append('id_equipamiento', id_equipamiento);
-            datos.append('motivo', result.value);
+            datos.append('motivo_anulacion', motivo); 
             enviaAjax(datos);
         }
     });
@@ -198,7 +185,7 @@ function poblarCombos(atletas, equipos) {
 
     if (equipos && equipos.length > 0) {
         equipos.forEach(e => {
-            comboEquipo.append(`<option value="${e.id_equipamiento}">${e.articulo} (Pza #${e.id_equipamiento})</option>`);
+            comboEquipo.append(`<option value="${e.id_equipamiento}">${e.articulo}</option>`);
         });
     }
 
@@ -206,7 +193,6 @@ function poblarCombos(atletas, equipos) {
     comboEquipo.trigger('change');
 }
 
-// Construcción de la tabla (Estilo Pagos)
 function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
     contenedor.html(htmlRecibido);
@@ -215,8 +201,6 @@ function crearConsulta(htmlRecibido) {
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
     if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
-
-// AJAX (Estilo Pagos con control de errores)
 var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
@@ -232,12 +216,21 @@ function enviaAjax(datos) {
         },
         timeout: 10000,
         success: function (respuesta) {
+            // 1. Verificamos si es un HTML puro para la tabla (sin intentar parsearlo como JSON)
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
                 crearConsulta(respuesta);
                 return;
             }
+            
             try {
-                var lee = JSON.parse(respuesta);
+                var lee;
+                if (typeof respuesta === 'object') {
+                    lee = respuesta;
+                } else {
+                    let textoLimpio = respuesta.substring(respuesta.indexOf('{'));
+                    lee = JSON.parse(textoLimpio); 
+                }
+
                 if (lee.accion == "MultiConsulta") {
                     poblarCombos(lee.atletas, lee.equipos);
                 } else if (lee.accion == "incluir" || lee.accion == "modificar" || lee.accion == "exito") {
@@ -249,8 +242,12 @@ function enviaAjax(datos) {
                     muestraMensaje("error", 2000, "Error", lee.mensaje || lee.codigo);
                 }
             } catch (e) {
-                console.error("Error procesando JSON", e);
-                Swal.fire({ icon: 'error', title: 'Error de Comunicación', text: 'El servidor falló.' });
+                console.error("Error procesando JSON", e, respuesta);
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Error de Comunicación', 
+                    text: 'El servidor respondió de forma inesperada. Revisa la consola.' 
+                });
             }
         },
         error: function (request, status, err) {
