@@ -114,7 +114,7 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_PALMARES_)) : ?>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="trophy"></i> Palmares</a>
+                        <a type="button" href="Palmares" class="opciones"><i class="opciones_i" data-lucide="trophy"></i> Palmares</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_ESTADISTICAS_)) : ?>

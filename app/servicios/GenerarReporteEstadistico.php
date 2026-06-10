@@ -11,6 +11,8 @@ class GenerarReporteEstadistico
     {
         $modulo = preg_replace('/[^a-zA-Z0-9]/', '', $modulo);
         try {
+            ini_set('memory_limit', '512M');
+            set_time_limit(300);
             $options = new Options();
             $options->set('isRemoteEnabled', true); // Permite cargar imágenes
             $options->set('isHtml5ParserEnabled', true);

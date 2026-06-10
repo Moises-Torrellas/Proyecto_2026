@@ -196,7 +196,7 @@ function cargarAtletasAsignadosEquipo(idEquipo, onDone) {
         beforeSend: function (request) {
             request.setRequestHeader("X-CSRF-TOKEN", token);
         },
-        timeout: 10000,
+        timeout: 120000,
         success: function (respuesta) {
             try {
                 var lee = typeof respuesta === 'string' ? JSON.parse(respuesta) : respuesta;
@@ -337,7 +337,7 @@ function enviaAjax(datos) {
         beforeSend: function (request) {
             request.setRequestHeader("X-CSRF-TOKEN", token);
         },
-        timeout: 10000,
+        timeout: 120000,
         success: function (respuesta) {
             // Validar respuestas HTML inesperadas en otras acciones
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
@@ -480,7 +480,7 @@ function cargarAtletasModal(filtro = '') {
         beforeSend: function (request) {
             request.setRequestHeader("X-CSRF-TOKEN", token);
         },
-        timeout: 10000,
+        timeout: 120000,
         success: function (respuesta) {
             try {
                 const lee = typeof respuesta === 'string' ? JSON.parse(respuesta) : respuesta;

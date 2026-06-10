@@ -34,7 +34,9 @@
 .modal_grafico {
     width: 900px;
 }
-
+.modal_grande {
+    width: 700px;
+}
 .cabecera_modal {
     grid-row: 1;
     display: grid;
@@ -244,7 +246,6 @@
     border: 2px solid var(--borde-color);
     border-radius: 10px;
     padding: 10px;
-    max-height: 200px;
     overflow: auto;
 }
 
@@ -316,6 +317,12 @@
 
 .checkbox-container input[type="checkbox"] {
     display: none;
+}
+
+.check_todos_atletas {
+    position: relative;
+    display: inline-block;
+    color: var(--texto-principal);
 }
 
 .custom-checkbox {

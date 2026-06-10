@@ -364,7 +364,7 @@ option {
 
 .icon_input {
     position: absolute;
-    right: 15px;
+    right: 70px;
     top: 14px;
     color: var(--texto-principal);
     transition: color .2s ease-in;
@@ -1335,3 +1335,98 @@ option {
     font-size: 1.5rem !important;
     font-weight: 600;
 }
+/* --- Clases para Vista Dividida (Palmar�s) --- */
+.contenedor-dividido {
+    display: flex;
+    gap: 20px;
+    height: calc(100vh - 220px);
+    margin-top: 15px;
+    width: 100%;
+}
+.panel-mitad {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--fondo-principal);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid var(--borde-color);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.titulo-panel {
+    margin-bottom: 15px;
+    color: var(--texto-principal);
+    border-bottom: 2px solid var(--color-primario);
+    padding-bottom: 8px;
+    font-size: 16px;
+}
+.titulo-panel-secundario {
+    border-color: var(--color-secundario);
+}
+@media (max-width: 900px) {
+    .contenedor-dividido {
+        flex-direction: column;
+        height: auto;
+    }
+    .panel-mitad {
+        min-height: 400px;
+    }
+}
+
+
+
+/* --- Clases para Pesta�as (Tabs) tipo Archivero --- */
+.pestanas-contenedor {
+    width: 100%;
+    margin-top: 15px;
+}
+.pestanas-header {
+    display: flex;
+    gap: 5px;
+    border-bottom: 2px solid var(--borde-color);
+}
+.pestana-btn {
+    background: var(--fondo-principal);
+    border: 2px solid var(--borde-color);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--texto-principal);
+    font-size: 14px;
+    transition: background 0.3s;
+    outline: none;
+    opacity: 0.7;
+}
+.pestana-btn:hover {
+    background: var(--fondo-contraste);
+}
+.pestana-btn.activa {
+    background: var(--fondo-contraste);
+    opacity: 1;
+    position: relative;
+    top: 2px;
+    border-bottom: 2px solid var(--fondo-contraste);
+    color: var(--color-primario);
+}
+.pestanas-body { border-top: 2px solid var(--borde-color); border-bottom: none; border-left: none; border-right: none; border-radius: 0; padding: 15px 0 0 0; height: calc(100vh - 220px); display: flex; flex-direction: column; }
+.pestana-content {
+    display: none;
+    height: 100%;
+    flex-direction: column;
+}
+.pestana-content.activa {
+    display: flex;
+}
+.contenedor_busqueda_wrap {
+    width: 100%;
+    display: flex;
+}
+.contenedor_busqueda {
+    position: relative;
+    max-width: 300px;
+    width: 100%;
+}
+
+

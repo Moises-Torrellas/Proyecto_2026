@@ -77,7 +77,7 @@
 
         table.data-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
             margin-top: 10px;
         }
 
@@ -133,7 +133,7 @@
         /* Estructura para separar los textos informativos a los extremos */
         .footer-meta {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
         }
 
         .footer-meta td {
@@ -228,7 +228,7 @@
                         <tr class="<?= $esAnulado ? 'pago-anulado' : '' ?>">
                             <td colspan="7" class="no-strike" style="background-color: #f8fafc; padding: 5px 15px 10px 30px; border-bottom: 1px solid #e2e8f0;">
                                 <div style="font-size: 11px; margin-bottom: 4px; color: #4a5568; font-weight: bold;">Cuentas Abonadas en esta Transacción:</div>
-                                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <table style="width: 100%; border-collapse: collapse; table-layout: fixed; word-wrap: break-word; font-size: 11px;">
                                     <thead>
                                         <tr style="border-bottom: 1px dashed #cbd5e0;">
                                             <th style="padding: 3px 0; background: transparent; color: #718096; font-size: 10px;">Atleta</th>

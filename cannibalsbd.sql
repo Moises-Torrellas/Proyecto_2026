@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 08-06-2026 a las 19:18:17
+-- Tiempo de generación: 10-06-2026 a las 20:47:05
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -44,7 +44,12 @@ CREATE TABLE `asignaciones` (
 --
 
 INSERT INTO `asignaciones` (`id_asignacion`, `id_atleta`, `id_equipamiento`, `fecha_asignacion`, `estatus`, `anulado`) VALUES
-(1, 13, 1, '2026-06-06', 1, 0);
+(1, 13, 1, '2026-06-06', 0, 1),
+(2, 18, 1, '2026-06-09', 0, 1),
+(3, 13, 2, '2026-06-09', 0, 1),
+(4, 13, 1, '2026-06-09', 0, 1),
+(5, 13, 1, '2026-06-09', 0, 1),
+(6, 13, 1, '2026-06-10', 1, 0);
 
 -- --------------------------------------------------------
 
@@ -78,7 +83,8 @@ INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `te
 (14, 'Mario Mari', 'Bros Bros', '34324324', NULL, NULL, 'H', '2009-05-19', 'atleta_2009-05-19_1779417273.png', 5, 8, 2, 2),
 (15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779417262.png', 6, 4, NULL, 2),
 (16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779417253.png', 5, 3, 6, 2),
-(18, 'Dssdf', 'Sdfsdf', NULL, NULL, NULL, 'H', '2019-06-12', 'atleta_2019-06-12_1780611196.png', 1, 5, 2, 1);
+(18, 'Dssdf', 'Sdfsdf', NULL, NULL, NULL, 'H', '2019-06-12', 'atleta_2019-06-12_1780611196.png', 1, 5, 2, 1),
+(19, 'Julia', 'Perez', '28323232', NULL, NULL, 'M', '2014-06-18', 'atleta_2014-06-18_1781011302.png', 5, 1, 2, 1);
 
 -- --------------------------------------------------------
 
@@ -203,14 +209,14 @@ CREATE TABLE `cuentas_cobrar` (
 --
 
 INSERT INTO `cuentas_cobrar` (`id_cobrar`, `id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `monto_pendiente`, `fecha_emision`, `fecha_vencimiento`, `estatus`, `anulado`) VALUES
-(18, 2, 14, 4, 30.00, 30.00, '2026-06-04', '2026-07-04', 0, 0),
-(19, 7, 14, 5, 15000.00, 15000.00, '2026-06-04', '2026-07-04', 0, 0),
+(18, 2, 14, 4, 30.00, 30.00, '2026-06-04', '2026-07-04', 0, 1),
+(19, 7, 14, 5, 15000.00, 0.00, '2026-06-04', '2026-07-04', 1, 0),
 (20, 2, 15, 4, 30.00, 0.00, '2026-06-04', '2026-07-04', 1, 0),
 (21, 4, 15, 4, 25.00, 0.00, '2026-06-04', '2026-07-04', 1, 0),
 (22, 4, 15, 4, 25.00, 0.00, '2026-06-04', '2026-07-04', 1, 0),
 (23, 4, 15, 4, 25.00, 0.00, '2026-06-04', '2026-07-04', 1, 0),
-(24, 2, 13, 4, 30.00, 30.00, '2026-06-05', '2026-07-05', 0, 0),
-(25, 8, 16, 4, 50.00, 50.00, '2026-06-05', '2026-07-05', 0, 0);
+(24, 2, 13, 4, 30.00, 0.00, '2026-06-05', '2026-07-05', 1, 0),
+(25, 8, 16, 4, 50.00, 0.00, '2026-06-05', '2026-07-05', 1, 0);
 
 -- --------------------------------------------------------
 
@@ -224,6 +230,13 @@ CREATE TABLE `detalles_equipos` (
   `id_equipo` int(11) NOT NULL,
   `id_atleta` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `detalles_equipos`
+--
+
+INSERT INTO `detalles_equipos` (`id_detalle`, `id_equipo`, `id_atleta`) VALUES
+(2, 6, 15);
 
 -- --------------------------------------------------------
 
@@ -252,22 +265,10 @@ INSERT INTO `detalles_pagos` (`id_detalle_pago`, `id_pago`, `id_cobrar`, `monto_
 (20, 20, 22, 25.00, 1.0000),
 (21, 20, 23, 25.00, 1.0000),
 (22, 22, 24, 30.00, 563.2892),
-(36, 47, 24, 30.00, 1.0000);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `detalles_palmares`
---
-
-DROP TABLE IF EXISTS `detalles_palmares`;
-CREATE TABLE `detalles_palmares` (
-  `id_detalle_palmares` int(100) NOT NULL,
-  `id_palmares` int(100) NOT NULL,
-  `id_premio` int(100) NOT NULL,
-  `id_atleta` int(100) DEFAULT NULL,
-  `id_equipo` int(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+(36, 47, 24, 30.00, 1.0000),
+(37, 48, 25, 50.00, 1.0000),
+(38, 49, 19, 15000.00, 0.0018),
+(39, 50, 24, 30.00, 567.6828);
 
 -- --------------------------------------------------------
 
@@ -281,8 +282,15 @@ CREATE TABLE `devoluciones` (
   `id_asignacion` int(100) NOT NULL,
   `id_estado` int(100) NOT NULL,
   `fecha_devolucion` date NOT NULL,
-  `observación` varchar(100) NOT NULL
+  `observacion` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `devoluciones`
+--
+
+INSERT INTO `devoluciones` (`id_devolucion`, `id_asignacion`, `id_estado`, `fecha_devolucion`, `observacion`) VALUES
+(1, 1, 4, '2026-06-08', 'hola');
 
 -- --------------------------------------------------------
 
@@ -303,7 +311,8 @@ CREATE TABLE `equipamientos` (
 --
 
 INSERT INTO `equipamientos` (`id_equipamiento`, `id_catalogo`, `id_estados`, `estatus`) VALUES
-(1, 3, 1, 2);
+(1, 3, 1, 2),
+(2, 4, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -317,6 +326,13 @@ CREATE TABLE `equipos` (
   `id_categoria` int(11) NOT NULL,
   `nombre` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `equipos`
+--
+
+INSERT INTO `equipos` (`id_equipos`, `id_categoria`, `nombre`) VALUES
+(6, 4, 'Senior');
 
 -- --------------------------------------------------------
 
@@ -370,6 +386,45 @@ CREATE TABLE `historial` (
   `id_atleta` int(100) NOT NULL,
   `fecha_emision` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `historial_estadistico`
+--
+
+DROP TABLE IF EXISTS `historial_estadistico`;
+CREATE TABLE `historial_estadistico` (
+  `id_his_est` int(10) NOT NULL,
+  `id_estadistica` int(10) NOT NULL,
+  `id_historial` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `historial_p_grp`
+--
+
+DROP TABLE IF EXISTS `historial_p_grp`;
+CREATE TABLE `historial_p_grp` (
+  `id_his_grp` int(10) NOT NULL,
+  `id_historial` int(10) NOT NULL,
+  `id_p_grp` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `historial_p_ind`
+--
+
+DROP TABLE IF EXISTS `historial_p_ind`;
+CREATE TABLE `historial_p_ind` (
+  `id_his_ind` int(10) NOT NULL,
+  `id_historial` int(10) NOT NULL,
+  `id_p_ind` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 -- --------------------------------------------------------
 
@@ -444,7 +499,10 @@ INSERT INTO `pagos` (`id_pago`, `id_metodo`, `id_moneda`, `monto_pago`, `monto_v
 (19, 2, 4, 60.00, 3.23, '2026-06-04', '545454', 2),
 (20, 1, 4, 105.00, 0.00, '2026-06-04', '', 1),
 (22, 1, 5, 17000.00, 101.32, '2026-06-05', '', 2),
-(47, 1, 4, 30.00, 0.00, '2026-06-07', '', 2);
+(47, 1, 4, 30.00, 0.00, '2026-06-07', '', 2),
+(48, 2, 4, 50.00, 0.00, '2026-06-09', '4567', 1),
+(49, 1, 4, 35.00, 8.57, '2026-06-09', '', 1),
+(50, 1, 5, 18000.00, 969.52, '2026-06-09', '', 1);
 
 -- --------------------------------------------------------
 
@@ -457,6 +515,34 @@ CREATE TABLE `palmares` (
   `id_palmares` int(100) NOT NULL,
   `id_torneo` int(100) NOT NULL,
   `fecha_registro` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `palmares_grupal`
+--
+
+DROP TABLE IF EXISTS `palmares_grupal`;
+CREATE TABLE `palmares_grupal` (
+  `id_grupal` int(10) NOT NULL,
+  `id_palmares` int(10) NOT NULL,
+  `id_premio` int(10) NOT NULL,
+  `id_equipo` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `palmares_individual`
+--
+
+DROP TABLE IF EXISTS `palmares_individual`;
+CREATE TABLE `palmares_individual` (
+  `id_individual` int(100) NOT NULL,
+  `id_palmares` int(100) NOT NULL,
+  `id_premio` int(100) NOT NULL,
+  `id_atleta` int(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
 
 -- --------------------------------------------------------
@@ -494,7 +580,8 @@ INSERT INTO `posiciones` (`id_posicion`, `nombre`, `abreviatura`, `descripcion`)
 (1, 'Delantero', 'DC', ''),
 (5, 'Defensa', 'DF', ''),
 (6, 'Portero', 'PR', ''),
-(8, 'Medio', 'MD', '');
+(8, 'Medio', 'MD', ''),
+(9, 'Atacante', 'AT', '');
 
 -- --------------------------------------------------------
 
@@ -539,7 +626,8 @@ CREATE TABLE `representantes` (
 
 INSERT INTO `representantes` (`id_representante`, `nombre`, `apellido`, `cedula`, `nacionalidad`, `direccion`, `telefono`) VALUES
 (2, 'Moises', 'Martinez', '12345678', 'V', 'Barquisimeto', '3333-3333333'),
-(6, 'Maria', 'Martinez', '25065254', 'V', 'Barquisimeto', '2342-3423423');
+(6, 'Maria', 'Martinez', '25065254', 'V', 'Barquisimeto', '2342-3423423'),
+(7, 'Jose', 'Martinez', '34342342', 'V', 'Barquisimeto', '5645-6456567');
 
 -- --------------------------------------------------------
 
@@ -633,11 +721,14 @@ CREATE TABLE `vista_cuentas_cobrar` (
 DROP VIEW IF EXISTS `vista_pagos`;
 CREATE TABLE `vista_pagos` (
 `id_pago` int(100)
+,`fecha_pago_completa` date
 ,`fecha_pago` date
 ,`monto_pagado` decimal(10,2)
 ,`monto_vuelto` decimal(10,2)
 ,`referencia` varchar(40)
 ,`estatus` tinyint(1)
+,`id_metodos` int(11)
+,`id_moneda` int(11)
 ,`nombre_metodo_pago` varchar(30)
 ,`simbolo` varchar(3)
 ,`abre` varchar(4)
@@ -680,7 +771,7 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_cuentas_cobrar`  AS 
 DROP TABLE IF EXISTS `vista_pagos`;
 
 DROP VIEW IF EXISTS `vista_pagos`;
-CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_pagos`  AS SELECT `p`.`id_pago` AS `id_pago`, `p`.`fecha` AS `fecha_pago`, `p`.`monto_pago` AS `monto_pagado`, `p`.`monto_vuelto` AS `monto_vuelto`, `p`.`referencia` AS `referencia`, `p`.`estatus` AS `estatus`, `mp`.`nombre` AS `nombre_metodo_pago`, `m`.`simbolo` AS `simbolo`, `m`.`abreviatura` AS `abre`, `m`.`nombre` AS `moneda`, `dp`.`id_detalle_pago` AS `id_detalle_pago`, `dp`.`monto_abonado` AS `monto_abonado`, `dp`.`tasa_cambio` AS `tasa_cambio`, `con`.`nombre` AS `concepto_pago`, `atl`.`nombres` AS `nombre_atleta`, `atl`.`apellidos` AS `nombre_apellido`, `m_cuenta`.`simbolo` AS `simbolo_cuenta`, `m_cuenta`.`abreviatura` AS `abre_cuenta` FROM (((((((`pagos` `p` join `monedas` `m` on(`p`.`id_moneda` = `m`.`id_moneda`)) join `metodos_pago` `mp` on(`p`.`id_metodo` = `mp`.`id_metodos`)) left join `detalles_pagos` `dp` on(`p`.`id_pago` = `dp`.`id_pago`)) left join `cuentas_cobrar` `cc` on(`dp`.`id_cobrar` = `cc`.`id_cobrar`)) left join `conceptos` `con` on(`cc`.`id_concepto` = `con`.`id_conceptos`)) left join `atletas` `atl` on(`cc`.`id_atleta` = `atl`.`id_atleta`)) left join `monedas` `m_cuenta` on(`cc`.`id_moneda` = `m_cuenta`.`id_moneda`)) ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_pagos`  AS SELECT `p`.`id_pago` AS `id_pago`, `p`.`fecha` AS `fecha_pago_completa`, cast(`p`.`fecha` as date) AS `fecha_pago`, `p`.`monto_pago` AS `monto_pagado`, `p`.`monto_vuelto` AS `monto_vuelto`, `p`.`referencia` AS `referencia`, `p`.`estatus` AS `estatus`, `p`.`id_metodo` AS `id_metodos`, `p`.`id_moneda` AS `id_moneda`, `mp`.`nombre` AS `nombre_metodo_pago`, `m`.`simbolo` AS `simbolo`, `m`.`abreviatura` AS `abre`, `m`.`nombre` AS `moneda`, `dp`.`id_detalle_pago` AS `id_detalle_pago`, `dp`.`monto_abonado` AS `monto_abonado`, `dp`.`tasa_cambio` AS `tasa_cambio`, `con`.`nombre` AS `concepto_pago`, `atl`.`nombres` AS `nombre_atleta`, `atl`.`apellidos` AS `nombre_apellido`, `m_cuenta`.`simbolo` AS `simbolo_cuenta`, `m_cuenta`.`abreviatura` AS `abre_cuenta` FROM (((((((`pagos` `p` join `monedas` `m` on(`p`.`id_moneda` = `m`.`id_moneda`)) join `metodos_pago` `mp` on(`p`.`id_metodo` = `mp`.`id_metodos`)) left join `detalles_pagos` `dp` on(`p`.`id_pago` = `dp`.`id_pago`)) left join `cuentas_cobrar` `cc` on(`dp`.`id_cobrar` = `cc`.`id_cobrar`)) left join `conceptos` `con` on(`cc`.`id_concepto` = `con`.`id_conceptos`)) left join `atletas` `atl` on(`cc`.`id_atleta` = `atl`.`id_atleta`)) left join `monedas` `m_cuenta` on(`cc`.`id_moneda` = `m_cuenta`.`id_moneda`)) ;
 
 --
 -- Índices para tablas volcadas
@@ -766,16 +857,6 @@ ALTER TABLE `detalles_pagos`
   ADD KEY `id_cobrar` (`id_cobrar`);
 
 --
--- Indices de la tabla `detalles_palmares`
---
-ALTER TABLE `detalles_palmares`
-  ADD PRIMARY KEY (`id_detalle_palmares`),
-  ADD KEY `id_palmares` (`id_palmares`,`id_premio`,`id_atleta`,`id_equipo`),
-  ADD KEY `id_premio` (`id_premio`),
-  ADD KEY `id_atleta` (`id_atleta`),
-  ADD KEY `id_equipo` (`id_equipo`);
-
---
 -- Indices de la tabla `devoluciones`
 --
 ALTER TABLE `devoluciones`
@@ -824,6 +905,30 @@ ALTER TABLE `historial`
   ADD KEY `id_atleta_3` (`id_atleta`);
 
 --
+-- Indices de la tabla `historial_estadistico`
+--
+ALTER TABLE `historial_estadistico`
+  ADD PRIMARY KEY (`id_his_est`),
+  ADD KEY `id_estadistica` (`id_estadistica`,`id_historial`),
+  ADD KEY `id_historial` (`id_historial`);
+
+--
+-- Indices de la tabla `historial_p_grp`
+--
+ALTER TABLE `historial_p_grp`
+  ADD PRIMARY KEY (`id_his_grp`),
+  ADD KEY `id_historial` (`id_historial`,`id_p_grp`),
+  ADD KEY `id_p_grp` (`id_p_grp`);
+
+--
+-- Indices de la tabla `historial_p_ind`
+--
+ALTER TABLE `historial_p_ind`
+  ADD PRIMARY KEY (`id_his_ind`),
+  ADD KEY `id_historial` (`id_historial`,`id_p_ind`),
+  ADD KEY `id_p_ind` (`id_p_ind`);
+
+--
 -- Indices de la tabla `metodos_pago`
 --
 ALTER TABLE `metodos_pago`
@@ -854,6 +959,24 @@ ALTER TABLE `palmares`
   ADD PRIMARY KEY (`id_palmares`),
   ADD UNIQUE KEY `id_torneo` (`id_torneo`),
   ADD KEY `id_torneo_2` (`id_torneo`);
+
+--
+-- Indices de la tabla `palmares_grupal`
+--
+ALTER TABLE `palmares_grupal`
+  ADD PRIMARY KEY (`id_grupal`),
+  ADD KEY `id_palmares` (`id_palmares`,`id_premio`,`id_equipo`),
+  ADD KEY `id_equipo` (`id_equipo`),
+  ADD KEY `id_premio` (`id_premio`);
+
+--
+-- Indices de la tabla `palmares_individual`
+--
+ALTER TABLE `palmares_individual`
+  ADD PRIMARY KEY (`id_individual`),
+  ADD KEY `id_palmares` (`id_palmares`,`id_premio`,`id_atleta`),
+  ADD KEY `id_premio` (`id_premio`),
+  ADD KEY `id_atleta` (`id_atleta`);
 
 --
 -- Indices de la tabla `participaciones`
@@ -900,13 +1023,13 @@ ALTER TABLE `torneos`
 -- AUTO_INCREMENT de la tabla `asignaciones`
 --
 ALTER TABLE `asignaciones`
-  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `atletas`
 --
 ALTER TABLE `atletas`
-  MODIFY `id_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT de la tabla `catalogos`
@@ -942,37 +1065,31 @@ ALTER TABLE `cuentas_cobrar`
 -- AUTO_INCREMENT de la tabla `detalles_equipos`
 --
 ALTER TABLE `detalles_equipos`
-  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_pagos`
 --
 ALTER TABLE `detalles_pagos`
-  MODIFY `id_detalle_pago` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
-
---
--- AUTO_INCREMENT de la tabla `detalles_palmares`
---
-ALTER TABLE `detalles_palmares`
-  MODIFY `id_detalle_palmares` int(100) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_detalle_pago` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT de la tabla `devoluciones`
 --
 ALTER TABLE `devoluciones`
-  MODIFY `id_devolucion` int(100) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_devolucion` int(100) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `equipamientos`
 --
 ALTER TABLE `equipamientos`
-  MODIFY `id_equipamiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_equipamiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `equipos`
 --
 ALTER TABLE `equipos`
-  MODIFY `id_equipos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_equipos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `estadisticas`
@@ -993,6 +1110,24 @@ ALTER TABLE `historial`
   MODIFY `id_historial` int(100) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `historial_estadistico`
+--
+ALTER TABLE `historial_estadistico`
+  MODIFY `id_his_est` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `historial_p_grp`
+--
+ALTER TABLE `historial_p_grp`
+  MODIFY `id_his_grp` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `historial_p_ind`
+--
+ALTER TABLE `historial_p_ind`
+  MODIFY `id_his_ind` int(10) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `metodos_pago`
 --
 ALTER TABLE `metodos_pago`
@@ -1008,13 +1143,25 @@ ALTER TABLE `monedas`
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `id_pago` int(100) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id_pago` int(100) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT de la tabla `palmares`
 --
 ALTER TABLE `palmares`
   MODIFY `id_palmares` int(100) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `palmares_grupal`
+--
+ALTER TABLE `palmares_grupal`
+  MODIFY `id_grupal` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `palmares_individual`
+--
+ALTER TABLE `palmares_individual`
+  MODIFY `id_individual` int(100) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `participaciones`
@@ -1026,7 +1173,7 @@ ALTER TABLE `participaciones`
 -- AUTO_INCREMENT de la tabla `posiciones`
 --
 ALTER TABLE `posiciones`
-  MODIFY `id_posicion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id_posicion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `premios`
@@ -1038,7 +1185,7 @@ ALTER TABLE `premios`
 -- AUTO_INCREMENT de la tabla `representantes`
 --
 ALTER TABLE `representantes`
-  MODIFY `id_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `torneos`
@@ -1095,15 +1242,6 @@ ALTER TABLE `detalles_pagos`
   ADD CONSTRAINT `detalles_pagos_ibfk_2` FOREIGN KEY (`id_cobrar`) REFERENCES `cuentas_cobrar` (`id_cobrar`);
 
 --
--- Filtros para la tabla `detalles_palmares`
---
-ALTER TABLE `detalles_palmares`
-  ADD CONSTRAINT `detalles_palmares_ibfk_1` FOREIGN KEY (`id_premio`) REFERENCES `premios` (`id_premio`),
-  ADD CONSTRAINT `detalles_palmares_ibfk_2` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`),
-  ADD CONSTRAINT `detalles_palmares_ibfk_3` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipos`),
-  ADD CONSTRAINT `detalles_palmares_ibfk_4` FOREIGN KEY (`id_palmares`) REFERENCES `palmares` (`id_palmares`);
-
---
 -- Filtros para la tabla `devoluciones`
 --
 ALTER TABLE `devoluciones`
@@ -1137,6 +1275,27 @@ ALTER TABLE `historial`
   ADD CONSTRAINT `historial_ibfk_1` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`);
 
 --
+-- Filtros para la tabla `historial_estadistico`
+--
+ALTER TABLE `historial_estadistico`
+  ADD CONSTRAINT `historial_estadistico_ibfk_1` FOREIGN KEY (`id_historial`) REFERENCES `historial` (`id_historial`),
+  ADD CONSTRAINT `historial_estadistico_ibfk_2` FOREIGN KEY (`id_estadistica`) REFERENCES `estadisticas` (`id_estadisticas`);
+
+--
+-- Filtros para la tabla `historial_p_grp`
+--
+ALTER TABLE `historial_p_grp`
+  ADD CONSTRAINT `historial_p_grp_ibfk_1` FOREIGN KEY (`id_historial`) REFERENCES `historial` (`id_historial`),
+  ADD CONSTRAINT `historial_p_grp_ibfk_2` FOREIGN KEY (`id_p_grp`) REFERENCES `palmares_grupal` (`id_grupal`);
+
+--
+-- Filtros para la tabla `historial_p_ind`
+--
+ALTER TABLE `historial_p_ind`
+  ADD CONSTRAINT `historial_p_ind_ibfk_1` FOREIGN KEY (`id_historial`) REFERENCES `historial` (`id_historial`),
+  ADD CONSTRAINT `historial_p_ind_ibfk_2` FOREIGN KEY (`id_p_ind`) REFERENCES `palmares_individual` (`id_individual`);
+
+--
 -- Filtros para la tabla `pagos`
 --
 ALTER TABLE `pagos`
@@ -1148,6 +1307,22 @@ ALTER TABLE `pagos`
 --
 ALTER TABLE `palmares`
   ADD CONSTRAINT `palmares_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`);
+
+--
+-- Filtros para la tabla `palmares_grupal`
+--
+ALTER TABLE `palmares_grupal`
+  ADD CONSTRAINT `palmares_grupal_ibfk_1` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipos`),
+  ADD CONSTRAINT `palmares_grupal_ibfk_2` FOREIGN KEY (`id_premio`) REFERENCES `premios` (`id_premio`),
+  ADD CONSTRAINT `palmares_grupal_ibfk_3` FOREIGN KEY (`id_palmares`) REFERENCES `palmares` (`id_palmares`);
+
+--
+-- Filtros para la tabla `palmares_individual`
+--
+ALTER TABLE `palmares_individual`
+  ADD CONSTRAINT `palmares_individual_ibfk_1` FOREIGN KEY (`id_atleta`) REFERENCES `atletas` (`id_atleta`),
+  ADD CONSTRAINT `palmares_individual_ibfk_2` FOREIGN KEY (`id_premio`) REFERENCES `premios` (`id_premio`),
+  ADD CONSTRAINT `palmares_individual_ibfk_3` FOREIGN KEY (`id_palmares`) REFERENCES `palmares` (`id_palmares`);
 
 --
 -- Filtros para la tabla `participaciones`
