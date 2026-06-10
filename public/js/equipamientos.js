@@ -1,26 +1,52 @@
-$(document).ready(function () {
-    consultar();
-    cargarCombos();
+let timerBusqueda;
 
-    // Abrir modal para nuevo
+$(document).ready(function () {
+    cargarCombos();
+    $('#busqueda').off('keyup').on('keyup', function () {
+        clearTimeout(timerBusqueda);
+        let val = $(this).val();
+        timerBusqueda = setTimeout(() => {
+            consultar();
+        }, 500);
+    });
+
     $("#btn_nuevo").on("click", function () {
+        limpia();
         $("#f")[0].reset();
         $("#id_equipamiento").val('');
         $("#titulo_modal").text("Registrar Nueva Pieza");
-        $("#btn_guardar").attr("data-accion", "incluir");
+        $("#btn_guardar").text("Guardar").attr("data-accion", "incluir");
         abrirModal(); 
     });
 
-    // Guardar o Modificar
     $('#btn_guardar').on('click', function () {
-        if ($('#id_catalogo').val() === "" || $('#id_estado').val() === "") {
-            muestraMensaje("error", 2000, "Campos Vacíos", "Debe seleccionar un artículo y su estado.");
+        if ($('#id_catalogo').val() === null || $('#id_estado').val() === null) {
+            muestraMensaje("error", 2000, "Validación", "Seleccione artículo y estado.");
             return false;
         }
 
         let datos = new FormData($('#f')[0]);
-        datos.append('accion', $(this).attr('data-accion'));
-        enviaAjax(datos);
+        let accion = $(this).attr('data-accion');
+        datos.append('accion', accion);
+        
+        let textoConfirmacion = accion === "incluir" ? '¿Registrar equipo?' : '¿Guardar cambios?';
+        confirmar(textoConfirmacion, function(confirma) {
+            if (confirma) enviaAjax(datos);
+        });
+    });
+
+    $('#generar').on('click', function () {
+        window.open('?url=Reportes/Equipamientos', '_blank'); // Ajusta ruta
+    });
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            { element: '#busqueda', popover: { title: 'Búsqueda', description: 'Filtra el inventario.' } },
+            { element: '#btn_nuevo', popover: { title: 'Registrar', description: 'Añade una nueva pieza física.' } },
+            { element: '#generar', popover: { title: 'Reporte', description: 'Descarga PDF del inventario.' } },
+            { element: '#resultadoconsulta', popover: { title: 'Inventario', description: 'Haz clic en un artículo para ver las piezas individuales.' } }
+        ];
+        if (typeof iniciarTourConPasos === 'function') iniciarTourConPasos(pasos).start();
     });
 });
 
@@ -37,19 +63,20 @@ function cargarCombos() {
 }
 
 function editar(id, catalogo, estado) {
+    limpia();
     $("#f")[0].reset();
-    $("#titulo_modal").text("Modificar Inventario");
-    $("#btn_guardar").attr("data-accion", "modificar");
+    $("#titulo_modal").text("Modificar Pieza");
+    $("#btn_guardar").text("Modificar").attr("data-accion", "modificar");
     
     $("#id_equipamiento").val(id);
-    $("#id_catalogo").val(catalogo);
-    $("#id_estado").val(estado);
+    $("#id_catalogo").val(catalogo).trigger('change');
+    $("#id_estado").val(estado).trigger('change');
     
     abrirModal();
 }
 
 function eliminar(id) {
-    confirmar(`¿Eliminar la pieza ID ${id} del inventario?`, function (confirmado) {
+    confirmar(`¿Desea eliminar esta pieza del sistema?`, function (confirmado) {
         if (confirmado) {
             let datos = new FormData();
             datos.append('accion', 'eliminar');
@@ -59,65 +86,10 @@ function eliminar(id) {
     });
 }
 
-function crearConsulta(datos) {
-    const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
-
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No hay equipamientos en el inventario.</p></div>');
-    } else {
-        datos.forEach(dato => {
-            // Color según el estado (Excelente verde, Malo rojo, etc)
-            let colorEstado = dato.nivel_estado == 1 ? '#28a745' : (dato.nivel_estado == 2 ? '#ffc107' : '#dc3545');
-            let colorEstatus = dato.estatus == 1 ? 'estatus_v' : 'estatus_a' ;
-            let estatus = dato.estatus == 1 ? 'Disponible' : 'En Uso' ;
-            let talla = dato.talla ? ` - Talla: ${dato.talla}` : '';
-
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo" style="width: 10%;">
-                                <small>ID</small>
-                                <span style="font-weight: bold; color: var(--texto-principal);">#${dato.id_equipamiento}</span>
-                            </div>
-                            <div class="listado_dato_grupo" style="width: 40%;">
-                                <small>Artículo (Catálogo)</small>
-                                <span style="font-weight: bold;">${dato.articulo}${talla}</span>
-                            </div>
-                            <div class="listado_dato_grupo" style="width: 25%;">
-                                <small>Categoría</small>
-                                <span>${dato.categoria}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Condición Físico</small>
-                                <span style="color: ${colorEstado}; font-weight:bold;">${dato.estado}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Estatus</small>
-                                <span class="${colorEstatus}">${estatus}</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <div style="display:flex; gap:5px;">
-                                <button class="btn_t cbt_v" onclick="editar(${dato.id_equipamiento}, ${dato.id_catalogo || 0}, ${dato.id_estado || 0})" title="Modificar"><i class="fi fi-sr-edit"></i></button>
-                                <button class="btn_t cbt_r" onclick="eliminar(${dato.id_equipamiento})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-}
-
 function poblarCombos(catalogos, estados) {
     let comboCat = $("#id_catalogo");
     let comboEst = $("#id_estado");
     
-    // Limpiamos (dejando la opción por defecto)
     comboCat.find('option:not(:first)').remove();
     comboEst.find('option:not(:first)').remove();
 
@@ -127,14 +99,18 @@ function poblarCombos(catalogos, estados) {
     });
 
     estados.forEach(e => {
-        // AQUÍ ESTABA EL ERROR: Decía c.id_estado en lugar de e.id_estado
         comboEst.append(`<option value="${e.id_estado}">${e.nombre}</option>`);
     });
 }
 
+function crearConsulta(htmlRecibido) {
+    $('#resultadoconsulta').html(htmlRecibido);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
+}
+
 function enviaAjax(datos) {
     var token = $('meta[name="csrf-token"]').attr('content');
-
     $.ajax({
         async: true,
         url: "", 
@@ -143,29 +119,26 @@ function enviaAjax(datos) {
         data: datos,
         processData: false,
         cache: false,
-        beforeSend: function (request) {
-            request.setRequestHeader("X-CSRF-TOKEN", token);
-        },
+        beforeSend: function (req) { req.setRequestHeader("X-CSRF-TOKEN", token); },
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
-                var lee = JSON.parse(respuesta);
-                
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } 
-                else if (lee.accion == "cargar_combos") {
-                    poblarCombos(lee.catalogos, lee.estados);
-                }
-                else if (lee.accion == "exito") {
+                var lee;
+                if (typeof respuesta === 'object') lee = respuesta;
+                else lee = JSON.parse(respuesta.substring(respuesta.indexOf('{')));
+
+                if (lee.accion == "cargar_combos") poblarCombos(lee.catalogos, lee.estados);
+                else if (lee.accion == "exito" || lee.accion == "eliminar") {
                     cerrarModal(); 
                     consultar();
-                    muestraMensaje("success", 3000, "Operación Exitosa", lee.mensaje);
+                    muestraMensaje("success", 3000, "Éxito", lee.mensaje);
                 } 
-                else if (lee.accion == "error") {
-                    muestraMensaje("error", 4000, "Alerta del Sistema", lee.mensaje);
-                }
+                else if (lee.accion == "error") muestraMensaje("error", 4000, "Error", lee.mensaje);
             } catch (e) {
-                console.error("Error JSON:", respuesta);
+                console.error(e);
             }
         }
     });

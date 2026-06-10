@@ -18,7 +18,11 @@ $objModelo = new ModeloEquipamientos();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudEquipamiento($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    cargarVista($pagina);
+    registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Equipamientos');
+    $respuesta = $objModelo->ProcesarDatos(['accion' => 'consultar']);
+    $registro = $respuesta['datos'] ?? [];
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
 
 function manejarSolicitudEquipamiento($obj, $id_modulo, $bitacoraObj, array $permisos): void
@@ -33,46 +37,38 @@ function manejarSolicitudEquipamiento($obj, $id_modulo, $bitacoraObj, array $per
 
         switch ($accion) {
             case 'consultar':
-                echo json_encode($obj->ProcesarDatos(['accion' => 'consultar']));
+                $respuesta = $obj->ProcesarDatos(['accion' => 'consultar']);
+                $registro = $respuesta['datos'] ?? [];
+                $solo_lista = true;
+                include(__DIR__ . '/../vista/Equipamientos.php');
                 break;
             case 'cargar_combos':
                 echo json_encode($obj->ProcesarDatos(['accion' => 'cargar_combos']));
                 break;
             case 'incluir':
-                // ¡AQUÍ ESTÁ EL CAMBIO! De 'incluir' a 'registrar'
-                if (empty($permisos['registrar'])) throw new Exception('No tienes permisos para registrar inventario.');
-                
+                if (empty($permisos['registrar'])) throw new Exception('Sin permisos.');
                 if (!is_numeric($_POST['id_catalogo']) || !is_numeric($_POST['id_estado'])) throw new Exception('Datos inválidos.');
-                $datos = [
-                    'accion' => 'incluir',
-                    'id_catalogo' => $_POST['id_catalogo'],
-                    'id_estado' => $_POST['id_estado']
-                ];
-                $resultado = $obj->ProcesarDatos($datos);
-                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Registró una nueva pieza de equipamiento.");
+                
+                $resultado = $obj->ProcesarDatos(['accion' => 'incluir', 'id_catalogo' => $_POST['id_catalogo'], 'id_estado' => $_POST['id_estado']]);
+                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Registró equipo.");
+                else $resultado['mensaje'] = traducirErrores($resultado['codigo']);
                 echo json_encode($resultado);
                 break;
             case 'modificar':
-                if (empty($permisos['modificar'])) throw new Exception('No tienes permisos para modificar.');
+                if (empty($permisos['modificar'])) throw new Exception('Sin permisos.');
                 if (!is_numeric($_POST['id_equipamiento'])) throw new Exception('ID Inválido.');
                 
-                $datos = [
-                    'accion' => 'modificar',
-                    'id_equipamiento' => $_POST['id_equipamiento'],
-                    'id_catalogo' => $_POST['id_catalogo'],
-                    'id_estado' => $_POST['id_estado']
-                ];
-                $resultado = $obj->ProcesarDatos($datos);
-                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Modificó el equipo ID: " . $_POST['id_equipamiento']);
+                $resultado = $obj->ProcesarDatos(['accion' => 'modificar', 'id_equipamiento' => $_POST['id_equipamiento'], 'id_catalogo' => $_POST['id_catalogo'], 'id_estado' => $_POST['id_estado']]);
+                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Modificó equipo ID: " . $_POST['id_equipamiento']);
+                else $resultado['mensaje'] = traducirErrores($resultado['codigo']);
                 echo json_encode($resultado);
                 break;
             case 'eliminar':
-                if (empty($permisos['eliminar'])) throw new Exception('No tienes permisos para eliminar.');
-                $resultado = $obj->ProcesarDatos(['accion' => 'eliminar', 'id_equipamiento' => $_POST['id_equipamiento']]);
-                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el equipo ID: " . $_POST['id_equipamiento']);
+                if (empty($permisos['eliminar'])) throw new Exception('Sin permisos.');
                 
-                // Si el modelo devolvió un mensaje de error personalizado (ej. llave foránea), lo mapeamos
-                if ($resultado['accion'] === 'error') $resultado['mensaje'] = $resultado['codigo'];
+                $resultado = $obj->ProcesarDatos(['accion' => 'eliminar', 'id_equipamiento' => $_POST['id_equipamiento']]);
+                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Eliminó equipo ID: " . $_POST['id_equipamiento']);
+                else $resultado['mensaje'] = traducirErrores($resultado['codigo']);
                 echo json_encode($resultado);
                 break;
             default:
@@ -81,4 +77,12 @@ function manejarSolicitudEquipamiento($obj, $id_modulo, $bitacoraObj, array $per
     } catch (Exception $e) {
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
+}
+
+function traducirErrores($codigo) {
+    return match($codigo) {
+        defined('_ERR_USO_') ? _ERR_USO_ : 'ERR_USO' => 'No se puede eliminar: El equipo tiene historial activo.',
+        defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD' => 'Error de comunicación con la base de datos.',
+        default => 'Ocurrió un error inesperado.'
+    };
 }
