@@ -38,7 +38,7 @@
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-<?php } ?>
+                <?php } ?>
 
     <?php if (empty($registro)) { ?>
         <div class="listado_vacio"><p>No hay asignaciones activas.</p></div>
@@ -112,7 +112,6 @@
             </div>
         </div>
     </section>
-
     <section class="contenedor_modal" id="contenedor_modal">
         <div class="modal modal_mediano ocultar" id="modal">
             <div class="cabecera_modal">
