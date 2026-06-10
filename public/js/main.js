@@ -863,3 +863,30 @@ function ModeloBancario (selector) {
         }
     });
 }
+
+function mostrarAlertaTipoPalmares(titulo, texto, callback) {
+    Swal.fire({
+        title: titulo,
+        text: texto,
+        icon: 'question',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fi fi-sr-user"></i> Individual',
+        confirmButtonColor: '#3085d6',
+        denyButtonText: '<i class="fi fi-sr-users"></i> Grupal',
+        denyButtonColor: '#28a745',
+        cancelButtonText: 'Cancelar',
+        customClass: {
+            popup: 'mi-popup',
+            title: 'mi-titulo',
+            content: 'mi-contenido'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            callback('individual');
+        } else if (result.isDenied) {
+            callback('grupal');
+        }
+    });
+}
+

@@ -165,7 +165,7 @@ function enviaAjax(datos) {
         processData: false,
         cache: false,
         beforeSend: function (request) { request.setRequestHeader("X-CSRF-TOKEN", token); },
-        timeout: 10000,
+        timeout: 120000,
         success: function (respuesta) {
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
                 $('#resultadoconsulta').html(respuesta);
