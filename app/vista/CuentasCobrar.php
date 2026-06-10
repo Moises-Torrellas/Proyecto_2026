@@ -1,88 +1,148 @@
-<?php if (isset($solo_lista) && $solo_lista === true):
-    if (empty($registro)): ?>
+<?php if (isset($solo_lista) && $solo_lista === true) :
+    if (empty($registro)) : ?>
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-        <?php else:
-        foreach ($registro as $dato):
+    <?php else :
+            $atletaActual = null;
+            $deudasAtleta = [];
 
-            $fechaCorta = explode(' ', $dato['fecha_emision'])[0];
-            $esAnulado = ((int)$dato['anulado']) === 1;
-            $estiloGris = $esAnulado ? 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"' : '';
-            if ($esAnulado) {
-                $estatusHTML = '<span class="estatus_r" style="color: #6c757d; border-color: #6c757d;">Anulado</span>';
-            } else {
-                $estatusHTML = ((int)$dato['estatus'] === 1)
-                    ? '<span class="estatus_v">Pagado</span>'
-                    : '<span class="estatus_a">Pendiente</span>';
-            }
+        // Obtenemos el total de registros para controlar el cierre del último elemento
+            $totalRegistros = count($registro);
 
-            // Lógica de renderizado de los Botones de Acción con Validación de Permisos
-            if ($esAnulado || (int)$dato['estatus'] === 1 || (int)$dato['monto_pendiente'] < (int)$dato['monto_total']) {
-                $botonesAccion = '';
-            } else {
-                $botonesAccion = '';
+        // BUCLE ÚNICO TOTALMENTE LINEAL O(N) - Sin sub-bucles ocultos
+        foreach ($registro as $index => $dato) :
+            $idAtleta = $dato['id_atleta'];
+
+            // 1. DETECTAR CAMBIO DE ATLETA (O PRIMER REGISTRO)
+            if ($idAtleta !== $atletaActual) :
+                // Si ya veníamos procesando un atleta anterior, cerramos sus contenedores pendientes antes de abrir el nuevo
+                if ($atletaActual !== null) : ?>
+                    </div>
+                    </div>
+                    </div>
+                    </div> <?php
+                        $deudasAtleta = []; // Resetear deudas acumuladas para el nuevo atleta
+                endif;
+
+                    $atletaActual = $idAtleta;
+
+                    // OPTIMIZACIÓN MÁXIMA DE RENDIMIENTO:
+                    // En lugar de un bucle 'while' que repita lecturas, usamos PHP puro para agrupar
+                    // velozmente los totales precalculados por SQL de las deudas del atleta actual.
+                    $idxAux = $index;
+                while (isset($registro[$idxAux]) && $registro[$idxAux]['id_atleta'] == $idAtleta) {
+                    $sym = $registro[$idxAux]['moneda_simbolo'];
+                    $montoDeuda = (float)$registro[$idxAux]['deuda_moneda_atleta'];
+                    if ($montoDeuda > 0) {
+                        $deudasAtleta[$sym] = $sym . ' ' . number_format($montoDeuda, 2);
+                    }
+                    $idxAux++;
+                }
+
+                    $esMoroso = !empty($deudasAtleta);
+                    $deudaTotalTexto = $esMoroso ? implode(" + ", $deudasAtleta) : "0.00 (Sin deudas)";
+                    $claseEstadoGeneral = $esMoroso ? 'estado_peligro' : 'estado_exito';
+                ?>
+                <div class="listado_contenedor_grupal">
+
+                    <div class="listado_item" onclick="toggleDetalles(this)">
+                        <div class="listado_col_principal">
+                            <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>
+                            <div class="listado_info_base">
+                                <span class="listado_titulo"><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
+                            </div>
+                        </div>
+
+                        <div class="listado_col_datos">
+                            <div class="listado_dato_grupo">
+                                <small>Situación</small>
+                                <span class="<?= $esMoroso ? 'estatus_a' : 'estatus_v' ?>">
+                                <?= $esMoroso ? 'Moroso' : 'Solvente' ?>
+                                </span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Cuentas</small>
+                                <span><?= $dato['total_facturas_atleta'] ?> Registro(s)</span>
+                            </div>
+                        </div>
+
+                        <div class="listado_col_acciones">
+                            <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                        </div>
+                    </div>
+
+                    <div class="listado_detalle_oculto">
+                        <div class="detalle_expandido_container" style="padding: 15px;">
+
+                            <div class="tarjeta_resumen <?= $claseEstadoGeneral ?>">
+                                <div class="tarjeta_icono"><i data-lucide="calculator"></i></div>
+                                <div class="tarjeta_texto">
+                                    <label>Estado de Cuenta General</label>
+                                    <span class="texto_resaltado">Deuda Total: <?= htmlspecialchars($deudaTotalTexto) ?></span>
+                                </div>
+                            </div>
+
+                            <hr class="separador_seccion">
+
+                            <div class="lista_sub_items">
+            <?php endif; // Fin del bloque de inicialización de la cabecera del Atleta
+
+                    // 2. RENDERIZAR LAS FACTURAS DIRECTAMENTE (Se ejecuta de forma lineal)
+                    $anulado = ((int)$dato['anulado']) === 1;
+                    $pagado = ((int)$dato['estatus'] === 1);
+
+                    $claseFila = $anulado ? 'fila_anulada' : '';
+
+                    // CORREGIDO: Uso estricto de tus clases nativas de estado para cada fila
+                    $claseEstatus = $anulado ? 'estatus_r' : ($pagado ? 'estatus_v' : 'estatus_a');
+                    $textoEstatus = $anulado ? 'Anulado' : ($pagado ? 'Pagado' : 'Pendiente');
+
+                    $botonesAccion = '';
+            if (!$anulado && !$pagado) {
                 if ($permisos['modificar']) {
-                    $botonesAccion .= '<button id="cbt_v" class="btn_t cbt_v" onclick="buscar(' . $dato['id_cobrar'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
+                    $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_cobrar'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                 }
                 if ($permisos['eliminar']) {
-                    $botonesAccion .= '<button id="cbt_r" class="btn_t cbt_r" onclick="anular(' . $dato['id_cobrar'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
+                    $botonesAccion .= '<button class="btn_t cbt_r" onclick="anular(' . $dato['id_cobrar'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
                 }
             }
-        ?>
-            <div id="registro" class="listado_contenedor_grupal" <?= $estiloGris ?>>
-                <div class="listado_item" onclick="toggleDetalles(this)">
-                    <div class="listado_col_principal">
-                        <div class="listado_avatar_null"><i class="icon_con" data-lucide="receipt"></i></div>
-                        <div class="listado_info_base">
-                            <span class="listado_titulo"><?= htmlspecialchars($dato['concepto_nombre']) ?></span>
-                        </div>
-                    </div>
-
-                    <div class="listado_col_datos">
-                        <div class="listado_dato_grupo">
-                            <small>Fecha de Emision</small>
-                            <span><?= htmlspecialchars($fechaCorta) ?></span>
-                        </div>
-                        <div class="listado_dato_grupo">
-                            <small>Monto</small>
-                            <span class="listado_resaltado"><?= htmlspecialchars($dato['moneda_simbolo'] . ' ' . $dato['monto_total']) ?></span>
-                        </div>
-                        <div class="listado_dato_grupo">
-                            <small>Monto Pendiente</small>
-                            <span><?= htmlspecialchars($dato['moneda_simbolo'] . ' ' . $dato['monto_pendiente']) ?></span>
-                        </div>
-                        <div class="listado_dato_grupo">
-                            <small>Estatus</small>
-                            <?= $estatusHTML ?>
-                        </div>
-                    </div>
-
-                    <div class="listado_col_acciones">
-                        <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                            <?= $botonesAccion ?>
-                        </div>
-                        <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
-                    </div>
-                </div>
-
-                <div class="listado_detalle_oculto">
-                    <div class="detalle_expandido_container">
-                        <div class="detalle_fila">
-                            <div class="detalle_card">
-                                <div class="detalle_card_icon"><i data-lucide="circle-star"></i></div>
-                                <div class="detalle_card_txt">
-                                    <label>Atleta</label>
-                                    <span><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
+            ?>
+                            <div class="sub_item_fila <?= $claseFila ?>">
+                                <div class="sub_item_info">
+                                    <span class="sub_item_titulo"><?= htmlspecialchars($dato['concepto_nombre']) ?></span>
+                                    <div class="sub_item_fechas">
+                                        <span>Emi: <?= explode(' ', $dato['fecha_emision'])[0] ?></span>
+                                        <span>Venc: <?= explode(' ', $dato['fecha_vencimiento'])[0] ?></span>
+                                    </div>
                                 </div>
+
+                                <div class="sub_item_centro">
+                                    <span class="<?= $claseEstatus ?>"><?= $textoEstatus ?></span>
+                                </div>
+
+                                <div class="sub_item_montos">
+                                    <span>Total: <strong><?= $dato['moneda_simbolo'] . ' ' . $dato['monto_total'] ?></strong></span>
+                                    <span class="<?= ((float)$dato['monto_pendiente'] > 0 && !$anulado) ? 'texto_alerta' : '' ?>">
+                                        Pendiente: <strong><?= $dato['moneda_simbolo'] . ' ' . $dato['monto_pendiente'] ?></strong>
+                                    </span>
+                                </div>
+
+                                <div class="sub_item_acciones">
+                                <?= $botonesAccion ?>
+                                </div>
+                            </div>
+
+                        <?php if ($index === $totalRegistros - 1) : ?>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                </div> 
+                        <?php endif; ?>
+
         <?php endforeach; ?>
     <?php endif;
-    exit(); ?>
+        exit(); ?>
 <?php endif; ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -110,104 +170,164 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']): ?>
+                            <?php if ($permisos['registrar']) : ?>
                                 <button class="btn btn_azul" id="incluir">Nuevo Cargo</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']): ?>
+                            <?php if ($permisos['reporte']) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-                            <?php if (empty($registro)): ?>
+                            <?php if (empty($registro)) : ?>
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                                <?php else:
-                                foreach ($registro as $dato):
+                            <?php else :
+                                    $atletaActual = null;
+                                    $deudasAtleta = [];
 
-                                    $fechaCorta = explode(' ', $dato['fecha_emision'])[0];
-                                    $esAnulado = ((int)$dato['anulado']) === 1;
-                                    $estiloGris = $esAnulado ? 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"' : '';
-                                    if ($esAnulado) {
-                                        $estatusHTML = '<span class="estatus_r" style="color: #6c757d; border-color: #6c757d;">Anulado</span>';
-                                    } else {
-                                        $estatusHTML = ((int)$dato['estatus'] === 1)
-                                            ? '<span class="estatus_v">Pagado</span>'
-                                            : '<span class="estatus_a">Pendiente</span>';
-                                    }
-                                    // Lógica de renderizado de los Botones de Acción con Validación de Permisos
-                                    if ($esAnulado || (int)$dato['estatus'] === 1 || (int)$dato['monto_pendiente'] < (int)$dato['monto_total']) {
-                                        $botonesAccion = '';
-                                        
-                                    } else {
-                                        $botonesAccion = '';
-                                        if ($permisos['modificar']) {
-                                            $botonesAccion .= '<button id="cbt_v" class="btn_t cbt_v" onclick="buscar(' . $dato['id_cobrar'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
-                                        }
-                                        if ($permisos['eliminar']) {
-                                            $botonesAccion .= '<button id="cbt_r" class="btn_t cbt_r" onclick="anular(' . $dato['id_cobrar'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
-                                        }
-                                    }
-                                ?>
-                                    <div id="registro" class="listado_contenedor_grupal" <?= $estiloGris ?>>
-                                        <div class="listado_item" onclick="toggleDetalles(this)">
-                                            <div class="listado_col_principal">
-                                                <div class="listado_avatar_null"><i class="icon_con" data-lucide="receipt"></i></div>
-                                                <div class="listado_info_base">
-                                                    <span class="listado_titulo"><?= htmlspecialchars($dato['concepto_nombre']) ?></span>
-                                                </div>
-                                            </div>
+                                // Obtenemos el total de registros para controlar el cierre del último elemento
+                                    $totalRegistros = count($registro);
 
-                                            <div class="listado_col_datos">
-                                                <div class="listado_dato_grupo">
-                                                    <small>Fecha de Emision</small>
-                                                    <span><?= htmlspecialchars($fechaCorta) ?></span>
-                                                </div>
-                                                <div class="listado_dato_grupo">
-                                                    <small>Monto</small>
-                                                    <span class="listado_resaltado"><?= htmlspecialchars($dato['moneda_simbolo'] . ' ' . $dato['monto_total']) ?></span>
-                                                </div>
-                                                <div class="listado_dato_grupo">
-                                                    <small>Monto Pendiente</small>
-                                                    <span><?= htmlspecialchars($dato['moneda_simbolo'] . ' ' . $dato['monto_pendiente']) ?></span>
-                                                </div>
-                                                <div class="listado_dato_grupo">
-                                                    <small>Estatus</small>
-                                                    <?= $estatusHTML ?>
-                                                </div>
-                                            </div>
+                                // BUCLE ÚNICO TOTALMENTE LINEAL O(N) - Sin sub-bucles ocultos
+                                foreach ($registro as $index => $dato) :
+                                        $idAtleta = $dato['id_atleta'];
 
-                                            <div class="listado_col_acciones">
-                                                <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                    <?= $botonesAccion ?>
-                                                </div>
-                                                <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
-                                            </div>
-                                        </div>
-
-                                        <div class="listado_detalle_oculto">
-                                            <div class="detalle_expandido_container">
-                                                <div class="detalle_fila">
-                                                    <div class="detalle_card">
-                                                        <div class="detalle_card_icon"><i data-lucide="circle-star"></i></div>
-                                                        <div class="detalle_card_txt">
-                                                            <label>Atleta</label>
-                                                            <span><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                                        // 1. DETECTAR CAMBIO DE ATLETA (O PRIMER REGISTRO)
+                                    if ($idAtleta !== $atletaActual) :
+                                        // Si ya veníamos procesando un atleta anterior, cerramos sus contenedores pendientes antes de abrir el nuevo
+                                        if ($atletaActual !== null) : ?>
                         </div>
                     </div>
-                    <?php include('complementos/botonera.php'); ?>
+                </div>
+            </div> <?php
+                                        $deudasAtleta = []; // Resetear deudas acumuladas para el nuevo atleta
+                                        endif;
+
+                                        $atletaActual = $idAtleta;
+
+                                        // OPTIMIZACIÓN MÁXIMA DE RENDIMIENTO:
+                                        // En lugar de un bucle 'while' que repita lecturas, usamos PHP puro para agrupar
+                                        // velozmente los totales precalculados por SQL de las deudas del atleta actual.
+                                        $idxAux = $index;
+                                        while (isset($registro[$idxAux]) && $registro[$idxAux]['id_atleta'] == $idAtleta) {
+                                            $sym = $registro[$idxAux]['moneda_simbolo'];
+                                            $montoDeuda = (float)$registro[$idxAux]['deuda_moneda_atleta'];
+                                            if ($montoDeuda > 0) {
+                                                $deudasAtleta[$sym] = $sym . ' ' . number_format($montoDeuda, 2);
+                                            }
+                                            $idxAux++;
+                                        }
+
+                                        $esMoroso = !empty($deudasAtleta);
+                                        $deudaTotalTexto = $esMoroso ? implode(" + ", $deudasAtleta) : "0.00 (Sin deudas)";
+                                        $claseEstadoGeneral = $esMoroso ? 'estado_peligro' : 'estado_exito';
+                                        ?>
+        <div class="listado_contenedor_grupal">
+
+            <div class="listado_item" onclick="toggleDetalles(this)">
+                <div class="listado_col_principal">
+                    <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>
+                    <div class="listado_info_base">
+                        <span class="listado_titulo"><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
+                    </div>
+                </div>
+
+                <div class="listado_col_datos">
+                    <div class="listado_dato_grupo">
+                        <small>Situación</small>
+                        <span class="<?= $esMoroso ? 'estatus_a' : 'estatus_v' ?>">
+                                        <?= $esMoroso ? 'Moroso' : 'Solvente' ?>
+                        </span>
+                    </div>
+                    <div class="listado_dato_grupo">
+                        <small>Cuentas</small>
+                        <span><?= $dato['total_facturas_atleta'] ?> Registro(s)</span>
+                    </div>
+                </div>
+
+                <div class="listado_col_acciones">
+                    <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                 </div>
             </div>
+
+            <div class="listado_detalle_oculto">
+                <div class="detalle_expandido_container" style="padding: 15px;">
+
+                    <div class="tarjeta_resumen <?= $claseEstadoGeneral ?>">
+                        <div class="tarjeta_icono"><i data-lucide="calculator"></i></div>
+                        <div class="tarjeta_texto">
+                            <label>Estado de Cuenta General</label>
+                            <span class="texto_resaltado">Deuda Total: <?= htmlspecialchars($deudaTotalTexto) ?></span>
+                        </div>
+                    </div>
+
+                    <hr class="separador_seccion">
+
+                    <div class="lista_sub_items">
+                                    <?php endif; // Fin del bloque de inicialización de la cabecera del Atleta
+
+                                        // 2. RENDERIZAR LAS FACTURAS DIRECTAMENTE (Se ejecuta de forma lineal)
+                                        $anulado = ((int)$dato['anulado']) === 1;
+                                        $pagado = ((int)$dato['estatus'] === 1);
+
+                                        $claseFila = $anulado ? 'fila_anulada' : '';
+
+                                        // CORREGIDO: Uso estricto de tus clases nativas de estado para cada fila
+                                        $claseEstatus = $anulado ? 'estatus_r' : ($pagado ? 'estatus_v' : 'estatus_a');
+                                        $textoEstatus = $anulado ? 'Anulado' : ($pagado ? 'Pagado' : 'Pendiente');
+
+                                        $botonesAccion = '';
+                                    if (!$anulado && !$pagado) {
+                                        if ($permisos['modificar']) {
+                                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_cobrar'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
+                                        }
+                                        if ($permisos['eliminar']) {
+                                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="anular(' . $dato['id_cobrar'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
+                                        }
+                                    }
+                                    ?>
+                    <div class="sub_item_fila <?= $claseFila ?>">
+                        <div class="sub_item_info">
+                            <span class="sub_item_titulo"><?= htmlspecialchars($dato['concepto_nombre']) ?></span>
+                            <div class="sub_item_fechas">
+                                <span>Emi: <?= explode(' ', $dato['fecha_emision'])[0] ?></span>
+                                <span>Venc: <?= explode(' ', $dato['fecha_vencimiento'])[0] ?></span>
+                            </div>
+                        </div>
+
+                        <div class="sub_item_centro">
+                            <span class="<?= $claseEstatus ?>"><?= $textoEstatus ?></span>
+                        </div>
+
+                        <div class="sub_item_montos">
+                            <span>Total: <strong><?= $dato['moneda_simbolo'] . ' ' . $dato['monto_total'] ?></strong></span>
+                            <span class="<?= ((float)$dato['monto_pendiente'] > 0 && !$anulado) ? 'texto_alerta' : '' ?>">
+                                Pendiente: <strong><?= $dato['moneda_simbolo'] . ' ' . $dato['monto_pendiente'] ?></strong>
+                            </span>
+                        </div>
+
+                        <div class="sub_item_acciones">
+                                        <?= $botonesAccion ?>
+                        </div>
+                    </div>
+
+                                        <?php if ($index === $totalRegistros - 1) : ?>
+                    </div>
+                </div>
+            </div>
+        </div> 
+                                        <?php endif; ?>
+
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+        </div>
+        </div>
+        <?php include('complementos/botonera.php'); ?>
+        </div>
+        </div>
         </div>
     </section>
 

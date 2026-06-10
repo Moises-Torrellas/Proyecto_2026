@@ -191,7 +191,8 @@
             </thead>
             <tbody>
                 <?php $id = 0;
-                foreach ($datos as $r): $id++; ?>
+                foreach ($datos as $r) :
+                    $id++; ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido']) ?></td>

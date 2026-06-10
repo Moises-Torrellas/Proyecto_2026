@@ -11,7 +11,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_EQUIPOS_;
 
 // 3. Procesar permisos
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloEquipos';
@@ -24,11 +24,24 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloEquipos();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudEquipos($objModelo, $id_modulo, $bitacora, $permisos);
+    manejarSolicitudEquipos($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
+    registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
     $registro = $respuesta['datos'] ?? [];
+
+    // Cargar atletas asignados por cada equipo para que funcione el detalle_expandido_container
+    foreach ($registro as &$equipo) {
+        $idEquipo = isset($equipo['id_equipos']) ? (int)$equipo['id_equipos'] : 0;
+        if ($idEquipo > 0) {
+            $respAtletas = $objModelo->ConsultarAtletasAsignadosEquipo($idEquipo);
+            $equipo['atletas'] = ($respAtletas['datos'] ?? []);
+        } else {
+            $equipo['atletas'] = [];
+        }
+    }
+    unset($equipo);
+
     $variables = ['registro' => $registro, 'permisos' => $permisos];
     cargarVista($pagina, $variables);
 }
@@ -38,7 +51,10 @@ if (comprobarAjax() && !empty($_POST)) {
  */
 function manejarSolicitudEquipos($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
+    // IMPORTANTE: Las funciones helper se declaran abajo en el archivo,
+    // pero PHP las detecta en tiempo de compilación, por lo que aquí solo llamamos.
     try {
+
         $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
             throw new Exception('Error de seguridad: Token inválido o expirado.');
@@ -51,10 +67,19 @@ function manejarSolicitudEquipos($obj, $id_modulo, $bitacoraObj, array $permisos
                 if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar equipos.');
                 consultar($obj, $permisos);
                 break;
+            case 'consultarAtletasModal':
+                if (!$permisos['ingresar'] && !$permisos['modificar']) throw new Exception('No tienes permisos para consultar atletas.');
+                consultarAtletasModal($obj);
+                break;
+            case 'consultarAtletasAsignadosEquipo':
+                consultarAtletasAsignadosEquipo($obj);
+                break;
+
             case 'MultiConsulta':
                 if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar equipos.');
                 MultiConsulta();
                 break;
+
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar equipos.');
                 buscar($obj);
@@ -110,6 +135,45 @@ function MultiConsulta(): void
     }
 }
 
+function consultarAtletasModal($obj): void
+{
+    try {
+        $filtro['filtro'] = $_POST['filtro'] ?? '';
+        $respuesta = $obj->ConsultarAtletasParaAsignacion($filtro);
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($respuesta);
+        exit();
+    } catch (Exception $e) {
+        logs('Equipos', $e->getMessage(), 'Controlador_ConsultarAtletasModal');
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+        exit();
+    }
+}
+
+function consultarAtletasAsignadosEquipo($obj): void
+{
+    try {
+        $idEquipo = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($idEquipo <= 0) {
+            throw new Exception('id_equipos inválido.');
+        }
+
+        $respuesta = $obj->ConsultarAtletasAsignadosEquipo($idEquipo);
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($respuesta);
+        exit();
+    } catch (Exception $e) {
+        logs('Equipos', $e->getMessage(), 'Controlador_ConsultarAtletasAsignadosEquipo');
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+        exit();
+    }
+}
+
+
 /**
  * --- LÓGICA DE ACCIONES ---
  */
@@ -118,13 +182,27 @@ function consultar($obj, $permisos): void
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
     $registro = $respuesta['datos'] ?? [];
-    $solo_lista = true;
 
+    // Cargar atletas asignados por cada equipo para que funcione el detalle_expandido_container
+    // (detalle_expandido_container muestra $dato['atletas']).
+    foreach ($registro as &$equipo) {
+        $idEquipo = isset($equipo['id_equipos']) ? (int)$equipo['id_equipos'] : 0;
+        if ($idEquipo > 0) {
+            $respAtletas = $obj->ConsultarAtletasAsignadosEquipo($idEquipo);
+            $equipo['atletas'] = ($respAtletas['datos'] ?? []);
+        } else {
+            $equipo['atletas'] = [];
+        }
+    }
+    unset($equipo);
+
+    $solo_lista = true;
     include(__DIR__ . '/../vista/Equipos.php');
 }
 
 function buscar($obj): void
 {
+
     try {
         $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
         validar_datos($validaciones);
@@ -144,13 +222,9 @@ function buscar($obj): void
 
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
-    // --- BORRA ESTO DESPUÉS DE PROBAR ---
-    if (empty($_POST['categoria'])) {
-        echo json_encode(['accion' => 'error', 'mensaje' => 'DEBUG: $_POST["categoria"] está vacío. Recibí: ' . json_encode($_POST)]);
-        exit();
-    }
-    // -------------------------------------
 
+
+    $idEquipoCreado = null;
     try {
         $validaciones = [
             'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
@@ -168,25 +242,70 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró al Equipo: " . $_POST['nombre']);
+            $idEquipoCreado = $resultado['id_equipos'] ?? null;
+
+            // Guardar detalles_equipo
+            // Validación requerida: obligatoriamente debe existir al menos 1 atleta asignado
+            $atletas = $_POST['atletas'] ?? [];
+            if (!is_array($atletas)) {
+                $atletas = [$atletas];
+            }
+
+            // Nota: en el flujo actual el JS envía atletas[]; si no hay ninguno,
+            // $atletas llega vacío y no se debe permitir el registro del equipo.
+            if (count($atletas) < 1) {
+                throw new Exception('Para registrar un equipo debe asignar al menos 1 atleta.');
+            }
+
+            $obj->GuardarDetallesEquipo($idEquipoCreado, $atletas);
+
+
+
+            try {
+                registrarBitacora($bitacoraObj, $id_modulo, "Registró al Equipo: " . $_POST['nombre']);
+            } catch (Exception $e) {
+                // no afecta el flujo principal
+            }
             $resultado = ['accion' => 'incluir', 'mensaje' => 'Equipo registrado exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un equipo registrado con ese nombre.',
                 INVALID_ID => 'La categoría ingresada no existe en los registros del club.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default => 'Ocurrió un error inesperado en el registro.'
             };
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Equipos', $e->getMessage(), 'Controlador_Incluir');
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+
+        // Rollback físico: si ya se insertó el equipo y falló la validación de atletas, lo eliminamos
+        if ($idEquipoCreado !== null) {
+            try {
+                $datosRollback = [
+                    'id' => $idEquipoCreado,
+                    'accion' => 'eliminar'
+                ];
+                $obj->procesarDatos($datosRollback);
+            } catch (Exception $rollbackEx) {
+                // si rollback falla, igual devolvemos el error original
+            }
+        }
+
+        $msg = $e->getMessage();
+        if (stripos($msg, 'Solo se pueden asignar atletas de la misma categoría del equipo') !== false) {
+            $msg = 'No se puede asignar atletas de una categoría distinta a la del equipo.';
+        }
+        echo json_encode(['accion' => 'error', 'mensaje' => $msg]);
     }
 }
 
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
+
         $validaciones = [
             'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
             'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
@@ -206,11 +325,28 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Modificó al equipo: " . $_POST['nombre']);
+
+            // Guardar detalles_equipo
+            $idEquipo = $_POST['id'] ?? null;
+            $atletas = $_POST['atletas'] ?? [];
+            if (!is_array($atletas)) {
+                $atletas = [$atletas];
+            }
+
+            // Validación requerida: obligatoriamente debe existir al menos 1 atleta asignado
+            if (empty($atletas) || count($atletas) < 1) {
+                throw new Exception('Para modificar un equipo debe asignar al menos 1 atleta.');
+            }
+
+            $obj->GuardarDetallesEquipo($idEquipo, $atletas);
+
+
             $resultado = ['accion' => 'modificar', 'mensaje' => 'Equipo modificado exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un Equipo registrado con este nombre.',
                 INVALID_ID => 'La categoría ingresada no existe en los registros del club.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default => 'Ocurrió un error inesperado en la modificación.'
             };
         }
@@ -218,7 +354,11 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Equipos', $e->getMessage(), 'Controlador_Modificar');
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+        $msg = $e->getMessage();
+        if (stripos($msg, 'Solo se pueden asignar atletas de la misma categoría del equipo') !== false) {
+            $msg = 'No se puede asignar atletas de una categoría distinta a la del equipo.';
+        }
+        echo json_encode(['accion' => 'error', 'mensaje' => $msg]);
     }
 }
 
@@ -241,6 +381,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El equipo no existe.',
                 ASSOCIATES => 'El equipo tiene palmarés asociados.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default => 'Ocurrió un error inesperado en la eliminación.'
             };
         }

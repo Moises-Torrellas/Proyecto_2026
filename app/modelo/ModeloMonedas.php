@@ -83,13 +83,14 @@ class ModeloMonedas extends ModeloBase
         }
     }
 
-    function Buscar(): array
+    function Buscar(int $id = null): array
     {
         try {
             $conex = $this->conex();
             $sentencia = "SELECT * FROM monedas WHERE id_moneda = :id";
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            if($id===null) $id = $this->id;
+            $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             return array('accion' => 'buscar', 'datos' => $datos);

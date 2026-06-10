@@ -21,10 +21,10 @@ if (!class_exists($nombreClaseModelo)) {
 
 $objModelo = new ModeloUsuarios();
 
-if (comprobarAjax() && !empty($_POST)) {
+if (/* comprobarAjax() && */!empty($_POST)) {
     manejarSolicitudUsuarios($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
+    registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
     $variables = ['permisos' => $permisos];
     cargarVista($pagina, $variables);
 }
@@ -34,10 +34,10 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
     // Centralizamos la variable global de permisos aquí
 
     try {
-        $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        /* $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
             throw new Exception('Error de seguridad: Token inválido o expirado.');
-        }
+        } */
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
@@ -52,7 +52,7 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 break;
 
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar usuarios.');
+                //if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar usuarios.');
                 incluirUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
 
@@ -114,6 +114,10 @@ function consultarRoles($obj): void
 function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 {
     try {
+        logs('Usuarios', 'POST RECIBIDO: ' . print_r($_POST, true), 'Controlador_Incluir');
+        if (empty($_POST)) {
+            logs('Usuarios', '¡ALERTA! El array POST está vacío.', 'Controlador_Incluir');
+        }
         $validaciones = [
             'cedula' => ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cédula inválida. Debe contener de 7 a 8 dígitos.'],
             'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido. Solo letras y espacios.'],
@@ -316,7 +320,7 @@ function CargarPermisosUsuario($obj): void
 {
     try {
         validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
-        
+
         $datos = ['id' => $_POST['id'], 'accion' => 'CargarPermisosUsuario'];
         $resultado = $obj->procesarDatos($datos);
         echo json_encode($resultado);

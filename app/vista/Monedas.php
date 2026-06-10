@@ -1,15 +1,15 @@
 <?php
 
-if (isset($solo_lista) && $solo_lista === true):
-    if (empty($registro)): ?>
+if (isset($solo_lista) && $solo_lista === true) :
+    if (empty($registro)) : ?>
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-        <?php else:
-        foreach ($registro as $dato):
+    <?php else :
+        foreach ($registro as $dato) :
             $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
             $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
-        ?>
+            ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item">
                     <div class="listado_col_datos">
@@ -28,21 +28,22 @@ if (isset($solo_lista) && $solo_lista === true):
                     </div>
                     <div class="listado_col_acciones">
                         <div style="display:flex; gap:5px;">
-                            <?php if ($permisos['modificar']): ?>
+                        <?php if ($permisos['modificar']) : ?>
                                 <button class="btn_t cbt_v" onclick="buscar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                            <?php endif; ?>
-                            <?php if ($permisos['eliminar']): ?>
+                        <?php endif; ?>
+                        <?php if ($permisos['eliminar']) : ?>
                                 <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                            <?php endif; ?>
-                            <?php if ($permisos['otros']): ?>
+                        <?php endif; ?>
+                        <?php if ($permisos['otros']) : ?>
                                 <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_moneda'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
-                            <?php endif; ?>
+                        <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
         <?php endforeach; ?>
-    <?php endif; exit(); ?>
+    <?php endif;
+    exit(); ?>
 <?php endif; ?>
 
 <!DOCTYPE html>
@@ -71,10 +72,10 @@ if (isset($solo_lista) && $solo_lista === true):
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']): ?>
+                            <?php if ($permisos['registrar']) : ?>
                                 <button class="btn btn_azul" id="incluir">Nueva Moneda</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']): ?>
+                            <?php if ($permisos['reporte']) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -82,15 +83,15 @@ if (isset($solo_lista) && $solo_lista === true):
 
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-                            <?php if (empty($registro)): ?>
+                            <?php if (empty($registro)) : ?>
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                                <?php else:
-                                foreach ($registro as $dato):
+                            <?php else :
+                                foreach ($registro as $dato) :
                                     $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
                                     $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
-                                ?>
+                                    ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item">
                                             <div class="listado_col_datos">
@@ -109,21 +110,20 @@ if (isset($solo_lista) && $solo_lista === true):
                                             </div>
                                             <div class="listado_col_acciones">
                                                 <div style="display:flex; gap:5px;">
-                                                    <?php if ($permisos['modificar']): ?>
+                                                <?php if ($permisos['modificar']) : ?>
                                                         <button class="btn_t cbt_v" onclick="buscar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                                    <?php endif; ?>
-                                                    <?php if ($permisos['eliminar']): ?>
+                                                <?php endif; ?>
+                                                <?php if ($permisos['eliminar']) : ?>
                                                         <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                     <?php endif; ?>
-                                                    
                                                     <?php if ($permisos['otros']): ?>
                                                         <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_moneda'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
-                                                    <?php endif; ?>
+                                                <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                            <?php
+                                    <?php
                                 endforeach;
                             endif; ?>
                         </div>

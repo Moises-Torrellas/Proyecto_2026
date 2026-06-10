@@ -2,12 +2,10 @@
 
 namespace App\modelo;
 
-use App\modelo\Conexion;
 use Exception;
 
-class ModeloInicio extends Conexion
+class ModeloInicio extends ModeloBase
 {
-    private $conexion = null;
     private string $cedula = '';
     private string $clave = '';
 
@@ -28,19 +26,19 @@ class ModeloInicio extends Conexion
     private function IniciarSesion(): array
     {
         try {
-            $this->conexion = self::conexSG();
+            $conex = $this->conexSG();
 
             // 1. Consultar los datos básicos del usuario y su rol
             $sql = 'SELECT usuarios.idUsuario, usuarios.nombreUsuario, usuarios.apellidoUsuario, usuarios.foto, usuarios.contraseña, usuarios.bloqueo,
-                           roles.nombre_rol, roles.id_rol, roles.nivel_rol  
+                        roles.nombre_rol, roles.id_rol, roles.nivel_rol  
                     FROM `usuarios` 
                     INNER JOIN roles ON roles.id_rol = usuarios.id_rol 
                     WHERE cedulaUsuario = :cedula AND usuarios.estatus != 0;';
                     
-            $stmt = $this->conexion->prepare($sql);
+            $stmt = $conex->prepare($sql);
             $stmt->bindParam(':cedula', $this->cedula, \PDO::PARAM_STR);
             $stmt->execute();
-            $resultado = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $resultado = $stmt->fetch();
 
             // Validar si el usuario existe
             if (!$resultado) {
@@ -58,15 +56,14 @@ class ModeloInicio extends Conexion
             }
 
             // 3. Buscar permisos usando los campos puros de la tabla permisos_usuarios
-            $sqlPermisos = 'SELECT permisos_usuarios.id_modulo, permisos_usuarios.ingresar, permisos_usuarios.registrar, permisos_usuarios.eliminar, permisos_usuarios.modificar, permisos_usuarios.reporte, permisos_usuarios.otros 
-                            FROM `usuarios` 
-                            INNER JOIN permisos_usuarios ON permisos_usuarios.idUsuario = usuarios.idUsuario 
-                            WHERE usuarios.idUsuario = :id;';
+            $sqlPermisos = 'SELECT id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros 
+                FROM permisos_usuarios 
+                WHERE idUsuario = :id;';
                             
-            $stmtPermisos = $this->conexion->prepare($sqlPermisos);
+            $stmtPermisos = $conex->prepare($sqlPermisos);
             $stmtPermisos->bindParam(':id', $resultado['idUsuario'], \PDO::PARAM_INT);
             $stmtPermisos->execute();
-            $permisos = $stmtPermisos->fetchAll(\PDO::FETCH_ASSOC);
+            $permisos = $stmtPermisos->fetchAll();
             
             // 4. Retornar login exitoso con la data estructurada
             return [
@@ -75,14 +72,14 @@ class ModeloInicio extends Conexion
                 'datos' => $resultado, 
                 'permisos' => $permisos, 
                 'mensaje' => 'BIENVENIDO', 
-                'url' => _URL_ . 'Principal'
+                'url' => 'Principal'
             ];
 
         } catch (Exception $e) {
-            error_log("Error en IniciarSesion: " . $e->getMessage());
-            return ['accion' => 'error', 'mensaje' => 'Error interno: ' . $e->getMessage()];
+            logs('Inicio', $e->getMessage(), 'Modelo_Inicio');
+            return ['accion' => 'error', 'mensaje' =>  $e->getMessage()];
         } finally {
-            $this->conexion = null;
+            $conex = null;
         }
     }
 }

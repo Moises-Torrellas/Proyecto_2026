@@ -50,8 +50,8 @@
 [data-tema="oscuro"] {
     /* Modo oscuro */
     --fuente: sans-serif;
-    --fondo-principal: #1f2a36;
-    --fondo-contraste: #2b3a48;
+    --fondo-principal: #2c3745;
+    --fondo-contraste: #334954;
     --color-primario: #32AF0A;
     --color-claro: #828282;
     --color-secundario: #3a4750;
@@ -62,7 +62,7 @@
     --color-peligro: #ff4d4f;
     --texto-sombra: 0px 0px 8px #31c7e666;
 
-    --fondo-form: #212A36;
+    --fondo-form: #334954;
     --borde-form: #c8d1e0;
 
     --boton-fondo: var(--color-primario);
@@ -840,6 +840,37 @@ option {
     padding: 5px;
     border-radius: 5px;
 }
+
+
+.tarjeta_resumen { width: 100%; border: 1px solid; border-radius: 8px; padding: 12px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; }
+.estado_peligro { border-color: #dc2626; background-color: var(--fondo-contraste); color: #dc2626; }
+.estado_exito { border-color: var(--color-primario); background-color: var(--fondo-contraste); color: var(--color-primario); }
+.tarjeta_icono { font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
+.tarjeta_texto { display: flex; flex-direction: column; }
+.tarjeta_texto label { font-size: 0.75rem; text-transform: uppercase; font-weight: bold; opacity: 0.8; margin-bottom: 2px;}
+
+/* Separador de Secciones */
+.separador_seccion { border: 0; border-top: 1px dashed var(--borde-color, #ccc); margin: 15px 0; }
+
+/* Filas Internas (Sub-ítems listados dentro de un detalle oculto) */
+.lista_sub_items { display: flex; flex-direction: column; gap: 10px; }
+.sub_item_fila { display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid var(--borde-color, #eaeaea); border-radius: 8px; background: var(--fondo-principal, #fff); }
+.sub_item_fila.fila_anulada { filter: grayscale(1); opacity: 0.6; background-color: #f9f9f9; }
+
+/* Columnas del Sub-ítem */
+.sub_item_info { flex: 2; display: flex; flex-direction: column; gap: 4px; }
+.sub_item_titulo { font-weight: 700; color: var(--texto-principal, #333); font-size: 0.9rem; }
+.sub_item_fechas { display: flex; gap: 10px; font-size: 0.75rem; color: #777; }
+
+.sub_item_centro { flex: 1; text-align: center; }
+
+.sub_item_montos { flex: 1.5; display: flex; flex-direction: column; text-align: right; font-size: 0.85rem; color: #555; gap: 2px; }
+
+.sub_item_acciones { flex: 0.5; display: flex; justify-content: flex-end; gap: 5px; }
+
+/* Utilitarios de Texto Adicionales */
+.texto_resaltado { font-weight: 800; font-size: 0.95rem; }
+.texto_alerta { color: #dc2626; font-weight: 700; }
 
 .contenedor_botonera {
     grid-row: 3;

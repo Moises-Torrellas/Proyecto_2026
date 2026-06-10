@@ -500,6 +500,57 @@ function confirmar(titulo, callback) {
     });
 }
 
+function confirmarAnulacion(titulo, callback) {
+    
+    const regexMotivo = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-]+$/;
+
+    Swal.fire({
+        icon: "warning",
+        title: titulo,
+        input: "text",
+        inputPlaceholder: "Escribe el motivo de la anulación aquí...",
+        showCancelButton: true,
+        confirmButtonText: "SI, ANULAR",
+        confirmButtonColor: "#00a200",
+        cancelButtonText: "NO",
+        cancelButtonColor: "#d30000",
+        customClass: {
+            popup: "mi-popup",
+            title: "mi-titulo",
+            content: "mi-contenido"
+        },
+        // Doble validación: existencia y formato seguro
+        inputValidator: (value) => {
+            let textoLimpio = value ? value.trim() : "";
+
+            // 1. Validar que no esté vacío
+            if (textoLimpio === "") {
+                return "¡Es obligatorio ingresar un motivo para la anulación!";
+            }
+            
+            // 2. Validar que cumpla con la longitud mínima (ej. 10 caracteres para que sea un motivo real)
+            if (textoLimpio.length < 5) {
+                return "Por favor, escribe un motivo más detallado (mínimo 10 caracteres).";
+            }
+
+            // 3. Validar con la Expresión Regular
+            if (!regexMotivo.test(textoLimpio)) {
+                return "El motivo contiene caracteres no permitidos. Evita usar símbolos como <, >, $, %, etc.";
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Pasamos el texto ya validado y limpio al callback para el AJAX
+            callback(result.value.trim());
+        } else {
+            callback(false);
+        }
+    }).catch((e) => {
+        alert("Error en confirmación: " + e.name);
+        callback(false);
+    });
+}
+
 function abrirAlertaEspara(titulo, texto) {
     Swal.fire({
         title: titulo,
@@ -555,6 +606,7 @@ function limpia() {
 
 function limpia_Tablas() {
     $('#tabla_permisos').find('tr').remove();
+    $('#tabla_Atletas_Seleccionados').find('tr').remove();
 }
 
 function eliminaLinea(boton) {
@@ -579,16 +631,20 @@ function iniciarTourConPasos(pasos) {
 }
 
 function toggleDetalles(elemento) {
+    // 1. Identificamos el contenedor padre y el panel específico que el usuario clickeó
     const contenedorActual = $(elemento).closest('.listado_contenedor_grupal');
     const panelActual = contenedorActual.find('.listado_detalle_oculto');
 
-    // 1. Buscamos todos los demás contenedores que estén expandidos y los cerramos
-    $('.listado_contenedor_grupal.expandido').not(contenedorActual).each(function () {
-        $(this).removeClass('expandido');
-        $(this).find('.listado_detalle_oculto').slideUp(300);
+    // 2. Buscamos TODOS los paneles ocultos, EXCEPTO el que acabamos de clickear
+    $('.listado_detalle_oculto').not(panelActual).each(function() {
+        // Validamos la realidad visual: ¿Está abierto en la pantalla?
+        if ($(this).is(':visible')) {
+            $(this).slideUp(300); // Lo cerramos suavemente
+            $(this).closest('.listado_contenedor_grupal').removeClass('expandido'); // Limpiamos la clase por si acaso
+        }
     });
 
-    // 2. Toggle del registro actual (lo que ya tenías)
+    // 3. Alternamos el estado del registro actual
     contenedorActual.toggleClass('expandido');
     panelActual.slideToggle(300);
 }

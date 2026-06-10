@@ -11,6 +11,190 @@ class ModeloEquipos extends ModeloBase
     private $nombre;
     private $categoria;
 
+    /**
+     * Lista atletas para el modal de asignación de equipos.
+     * Devuelve campos para UI:
+     *  - id (id_atleta)
+     *  - doc_i (doc_identidad)
+     *  - nombre (nombres + apellidos)
+     *  - categoria (nombre de categorias)
+     *  - posicion (nombre de posiciones)
+     */
+    public function ConsultarAtletasParaAsignacion(array $filtro = []): array
+    {
+        try {
+            $conex = $this->conex();
+            $params = [];
+
+            $sentencia = "SELECT a.id_atleta,
+                                 a.doc_identidad,
+                                 a.nombres,
+                                 a.apellidos,
+                                 c.nombre AS nombre_categoria,
+                                 p.nombre AS nombre_posicion
+                          FROM atletas a
+                          INNER JOIN categorias c ON c.id_categorias = a.id_categoria
+                          INNER JOIN posiciones p ON p.id_posicion = a.id_posicion
+                          WHERE 1=1";
+
+            if (!empty($filtro['filtro'])) {
+                $p = '%' . trim($filtro['filtro']) . '%';
+                $sentencia .= " AND (a.doc_identidad LIKE :f1 OR a.nombres LIKE :f2 OR a.apellidos LIKE :f3)";
+                $params[':f1'] = $p;
+                $params[':f2'] = $p;
+                $params[':f3'] = $p;
+            }
+
+            $sentencia .= " ORDER BY a.estatus = 1 DESC, a.apellidos ASC, a.nombres ASC";
+
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute($params);
+            $datos = $stmt->fetchAll();
+
+            // Normalizamos para que el JS sea consistente
+            $normalizados = array_map(function ($row) {
+                return [
+                    'id' => (int)($row['id_atleta'] ?? 0),
+                    'doc_i' => $row['doc_identidad'] ?? '',
+                    'nombre' => trim(($row['nombres'] ?? '') . ' ' . ($row['apellidos'] ?? '')),
+                    'categoria' => $row['nombre_categoria'] ?? '',
+                    'posicion' => $row['nombre_posicion'] ?? ''
+                ];
+            }, $datos);
+
+            return ['accion' => 'consultarAtletasModal', 'datos' => $normalizados];
+        } catch (Exception $e) {
+            logs('Equipos', $e->getMessage(), 'Modelo_ConsultarAtletasParaAsignacion');
+            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Consulta los atletas asignados a un equipo.
+
+     * Retorna campos consistentes para el JS del modal:
+     *  - id, doc_i, nombre, categoria, posicion
+     */
+    public function ConsultarAtletasAsignadosEquipo(int $idEquipo): array
+
+    {
+        try {
+            $conex = $this->conex();
+            $sentencia = "SELECT a.id_atleta,
+                                 a.doc_identidad,
+                                 a.nombres,
+                                 a.apellidos,
+                                 c.nombre AS nombre_categoria,
+                                 p.nombre AS nombre_posicion
+                          FROM detalles_equipos de
+                          INNER JOIN atletas a ON a.id_atleta = de.id_atleta
+                          INNER JOIN categorias c ON c.id_categorias = a.id_categoria
+                          INNER JOIN posiciones p ON p.id_posicion = a.id_posicion
+                          WHERE de.id_equipo = :idEquipo";
+
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindValue(':idEquipo', $idEquipo, \PDO::PARAM_INT);
+            $stmt->execute();
+            $datos = $stmt->fetchAll();
+
+            $normalizados = array_map(function ($row) {
+                return [
+                    'id' => (int)($row['id_atleta'] ?? 0),
+                    'doc_i' => $row['doc_identidad'] ?? '',
+                    'nombre' => trim(($row['nombres'] ?? '') . ' ' . ($row['apellidos'] ?? '')),
+                    'categoria' => $row['nombre_categoria'] ?? '',
+                    'posicion' => $row['nombre_posicion'] ?? ''
+                ];
+            }, $datos);
+
+            return ['accion' => 'consultarAtletasAsignadosEquipo', 'datos' => $normalizados];
+        } catch (Exception $e) {
+            logs('Equipos', $e->getMessage(), 'Modelo_ConsultarAtletasAsignadosEquipo');
+            return ['accion' => 'error', 'mensaje' => $e->getMessage(), 'datos' => []];
+        } finally {
+            $conex = null;
+        }
+    }
+
+    
+    public function GuardarDetallesEquipo($idEquipo, array $idsAtleta): void
+    {
+
+
+        $conex = null;
+
+        try {
+            $idEquipo = (int)$idEquipo;
+            if ($idEquipo <= 0) {
+                throw new Exception('id_equipos inválido.');
+            }
+
+            $idsAtleta = array_values(array_filter(array_map('intval', $idsAtleta)));
+            if (empty($idsAtleta)) {
+                return;
+            }
+
+            $conex = $this->conex();
+            $conex->beginTransaction();
+
+            // 1) Obtener categoría del equipo
+            $stmtEq = $conex->prepare('SELECT id_categoria FROM equipos WHERE id_equipos = :id_equipo');
+            $stmtEq->bindValue(':id_equipo', $idEquipo, \PDO::PARAM_INT);
+            $stmtEq->execute();
+            $catEquipo = $stmtEq->fetchColumn();
+
+            if ($catEquipo === false || $catEquipo === null) {
+                throw new Exception('No se pudo obtener la categoría del equipo.');
+            }
+            $catEquipo = (int)$catEquipo;
+
+            // 2) Validar que TODOS los atletas pertenezcan a la misma categoría del equipo
+            $placeholders = implode(',', array_fill(0, count($idsAtleta), '?'));
+            $sqlValid = "SELECT id_atleta FROM atletas WHERE id_atleta IN ($placeholders) AND id_categoria <> ?";
+            $stmtValid = $conex->prepare($sqlValid);
+
+            // bind: ids atletas primero
+            $i = 1;
+            foreach ($idsAtleta as $idA) {
+                $stmtValid->bindValue($i, (int)$idA, \PDO::PARAM_INT);
+                $i++;
+            }
+            // y al final: categoría del equipo
+            $stmtValid->bindValue($i, $catEquipo, \PDO::PARAM_INT);
+
+            $stmtValid->execute();
+            $idsNoValidos = $stmtValid->fetchAll(\PDO::FETCH_COLUMN, 0);
+
+            if (!empty($idsNoValidos)) {
+                throw new Exception('Solo se pueden asignar atletas de la misma categoría del equipo.');
+            }
+
+            // 3) Guardar (si todo está OK)
+            $stmtDel = $conex->prepare('DELETE FROM detalles_equipos WHERE id_equipo = :id_equipo');
+            $stmtDel->bindValue(':id_equipo', $idEquipo, \PDO::PARAM_INT);
+            $stmtDel->execute();
+
+            $stmtIns = $conex->prepare('INSERT INTO detalles_equipos (id_equipo, id_atleta) VALUES (:id_equipo, :id_atleta)');
+
+            foreach ($idsAtleta as $idAtleta) {
+                $stmtIns->bindValue(':id_equipo', $idEquipo, \PDO::PARAM_INT);
+                $stmtIns->bindValue(':id_atleta', $idAtleta, \PDO::PARAM_INT);
+                $stmtIns->execute();
+            }
+
+            $conex->commit();
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            throw $e;
+        } finally {
+            $conex = null;
+        }
+    }
+
+
+
 
 
     public function __construct()
@@ -138,8 +322,10 @@ class ModeloEquipos extends ModeloBase
 
             $stmt->execute();
 
+            $idEquipo = (int)$conex->lastInsertId();
+
             $conex->commit();
-            return array('accion' => 'exito');
+            return array('accion' => 'exito', 'id_equipos' => $idEquipo);
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();

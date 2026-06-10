@@ -121,6 +121,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $validaciones = [
             'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
             'monto' => ['regla' => '/^[0-9]+(.[0-9]{1,2})?$/', 'mensaje' => 'Monto inválido.'],
+            'regla' => ['regla' => '/^[LMAU]$/', 'mensaje' => 'Frecuencia inválido.']
         ];
 
         validar_datos($validaciones);
@@ -128,6 +129,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $datos = [
             'nombre'     => $_POST['nombre'],
             'monto'   => $_POST['monto'],
+            'regla'   => $_POST['regla']
         ];
         $datos['accion'] = 'incluir';
 
@@ -142,6 +144,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un concepto de pago con ese nombre.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en el registro.'
             };
 
@@ -160,6 +163,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
             'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
             'monto' => ['regla' => '/^[0-9]+(.[0-9]{1,2})?$/', 'mensaje' => 'Monto inválido.'],
+            'regla' => ['regla' => '/^[LMAU]$/', 'mensaje' => 'Frecuencia inválido.']
         ];
 
         validar_datos($validaciones);
@@ -168,6 +172,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'id' => $_POST['id'],
             'nombre' => $_POST['nombre'],
             'monto'     => $_POST['monto'],
+            'regla'   => $_POST['regla']
         ];
         $datos['accion'] = 'modificar';
 
@@ -182,6 +187,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un concepto de pago con ese nombre.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
 
@@ -215,6 +221,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El concepto de pago no existe.',
                 ASSOCIATES  => 'El concepto de pago tiene atletas asociados.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la eliminacion.'
             };
         }

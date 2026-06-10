@@ -136,6 +136,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
                 DUPLICATE_NAME => 'Ya existe una moneda registrada con este nombre.',
                 VALIDATION . '1'  => 'Ya existe una moneda registrada con esta abreviatura.',
                 VALIDATION . '2'  => 'Ya existe una moneda registrada con este símbolo.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
         }
@@ -177,6 +178,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
                 VALIDATION . '1'  => 'Ya existe una moneda registrada con esta abreviatura.',
                 VALIDATION . '2'  => 'Ya existe una moneda registrada con este símbolo.',
                 INVALID_ID => 'la Moneda que intenta modificar ya no existe.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
         }
@@ -210,6 +212,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
                 ASSOCIATES => 'No se puede eliminar la moneda porque esta asociado a pagos.',
                 INVALID_ID => 'La moneda no existe.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
         }
@@ -247,6 +250,7 @@ function bloquear($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 ASSOCIATES => 'El Super Usuario no puede ser bloqueado.',
                 INVALID_ID => 'El usuario que intenta modificar ya no existe.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default    => 'No se pudo completar la operación de bloqueo.'
             };
         }

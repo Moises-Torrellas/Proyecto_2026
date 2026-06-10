@@ -31,9 +31,9 @@
                 </div>
             </div>
             <div class="info_usuario" id="info_usuario">
-                <?php if (isset($_SESSION['foto']) && $_SESSION['foto'] !== 'default.png' && $_SESSION['foto'] !== ''): ?>
+                <?php if (isset($_SESSION['foto']) && $_SESSION['foto'] !== 'default.png' && $_SESSION['foto'] !== '') : ?>
                     <img src="img/usuarios/<?php echo $_SESSION['foto']; ?>" alt="Perfil" class="img_usuario foto_perfil_navbar">
-                <?php else: ?>
+                <?php else : ?>
                     <i data-lucide="circle-user" class="img_usuario"></i>
                 <?php endif; ?>
                 <div class="contenedor_nombre">
@@ -51,8 +51,8 @@
                 <ul class="nav_contenedor_superior">
                     <li class="nav_opciones nav_opciones_superior">
                         <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="user-cog"></i> Mi Perfil</a>
-                        <a type="button" href="#" id="modo_oscuro" class="opciones"><i class="opciones_i" data-lucide="<?php echo _TEMA_ === 'oscuro' ? 'sun' : 'moon' ?>"></i> Modo Oscuro</a>
-                        <a type="button" href="#" id="salir" class="opciones"><i class="opciones_i" data-lucide="log-out"></i> Cerrar Sesión</a>
+                        <a type="button" style="cursor: pointer;" id="modo_oscuro" class="opciones"><i class="opciones_i" data-lucide="<?php echo _TEMA_ === 'oscuro' ? 'sun' : 'moon' ?>"></i> Modo Oscuro</a>
+                        <a type="button" style="cursor: pointer;" id="salir" class="opciones"><i class="opciones_i" data-lucide="log-out"></i> Cerrar Sesión</a>
                     </li>
                 </ul>
             </div>

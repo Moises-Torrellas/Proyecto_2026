@@ -2,8 +2,6 @@
 // app/controlador/Inicio.php
 
 use App\modelo\ModeloInicio;
-use App\modelo\ModeloNotificaciones;
-use App\servicios\verificarEvento;
 
 // 1. Cargamos las funciones base
 require_once(__DIR__ . "/Base.php");
@@ -25,11 +23,11 @@ if (!class_exists($nombreClaseModelo)) {
 
 $objModelo = new ModeloInicio();
 
-if (!empty($_POST)) {
+if (/* comprobarAjax() &&  */!empty($_POST)) {
     manejarSolicitudInicio($objModelo, $id_modulo, $bitacora ?? null);
 } else {
     if (isset($_SESSION['id'])) {
-        header("Location:" . _URL_ . "Principal");
+        header("Location:" . "Principal");
         exit();
     }
     cargarVista($pagina);
@@ -42,11 +40,11 @@ function manejarSolicitudInicio($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         // Validar Token CSRF (Descomentar si reactivas la seguridad en producción)
-       /*  $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        /* $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
             throw new Exception('Error de seguridad: Token inválido o expirado.');
-        } 
-         */
+        } */
+
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
@@ -58,9 +56,6 @@ function manejarSolicitudInicio($obj, $id_modulo, $bitacoraObj): void
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
         exit();
@@ -80,21 +75,16 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         'clave'  => $_POST['contraseña']
     ];
 
-    // 2. Consultar la lógica del negocio en el modelo
     $respuesta = $obj->ProcesarDatos($datos);
 
-    // 3. Evaluar el resultado del Modelo
     if (isset($respuesta['resultado']) && $respuesta['resultado'] == 1) {
 
-        // Poblar las variables globales de sesión
         $_SESSION['id']        = $respuesta['datos']['idUsuario'];
         $_SESSION['rol']       = $respuesta['datos']['nombre_rol'];
         $_SESSION['nombre']    = $respuesta['datos']['nombreUsuario'];
         $_SESSION['apellido']  = $respuesta['datos']['apellidoUsuario'];
         $_SESSION['nivel_rol'] = $respuesta['datos']['nivel_rol'];
         $_SESSION['foto']      = $respuesta['datos']['foto'];
-
-        // Mapeo estructurado de permisos desde la BD
         $permisosIndexados = [];
         if (isset($respuesta['permisos']) && is_array($respuesta['permisos'])) {
             foreach ($respuesta['permisos'] as $p) {
@@ -109,54 +99,33 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
             }
         }
         $_SESSION['permisos'] = $permisosIndexados;
-
-        // Registrar acción en el historial del sistema
         registrarBitacora($bitacoraObj, $id_modulo, 'Inicio de sesión exitoso');
 
-        // Integración segura del verificador en segundo plano (Lazy Cron)
-        ob_start(); 
-        try {
-            if (class_exists('App\modelo\ModeloNotificaciones')) {
-                $notificacion = new ModeloNotificaciones();
-
-                if (!$notificacion->verificarChequeoDeHoy()) {
-                    if (class_exists('App\servicios\verificarEvento')) {
-                        $verificador = new verificarEvento();
-                        $verificador->procesar(); 
-                    }
-                }
-            }
-        } catch (\Throwable $cronException) {
-            if (function_exists('logs')) {
-                logs('Notificaciones_Cron', $cronException->getMessage(), 'Fallo_Chequeo_Login');
-            }
-        }
-        ob_end_clean(); 
-
-        // Estructura ideal de éxito esperada por tu manejador AJAX
         $respuestaFinal = [
             'accion'    => 'inicio',
             'resultado' => 1,
             'mensaje'   => '¡Autenticación exitosa!',
-            'url'       => _URL_ . 'Principal'
+            'url'       => 'Principal'
         ];
-
     } else {
-        // Estructura en caso de falla de credenciales (Mapea resultado 2 o 3 para las clases de CSS)
-        $respuestaFinal = [
-            'accion'    => 'inicio',
-            'resultado' => isset($respuesta['resultado']) ? $respuesta['resultado'] : 3,
-            'mensaje'   => isset($respuesta['mensaje']) ? $respuesta['mensaje'] : 'La cédula o contraseña no coinciden.'
-        ];
+        if ($respuesta['accion'] == 'error') {
+            $respuestaFinal = [
+                'accion' => 'error',
+                'resultado' => 500,
+                'mensaje' => 'Error: Servidor de base de datos no disponible.'
+            ];
+        } else {
+            $respuestaFinal = [
+                'accion'    => 'inicio',
+                'resultado' => isset($respuesta['resultado']) ? $respuesta['resultado'] : 3,
+                'mensaje'   => isset($respuesta['mensaje']) ? $respuesta['mensaje'] : 'La cédula o contraseña no coinciden.'
+            ];
+        }
     }
 
-    // 4. Limpieza del canal de salida y entrega del JSON estructurado
-    while (ob_get_level() > 0) {
-        ob_end_clean();
-    }
-    
-    header('Content-Type: application/json; charset=utf-8');
+    header('Content-Type: application/json; charset=utf-8'); 
     echo json_encode($respuestaFinal);
+
     exit();
 }
 

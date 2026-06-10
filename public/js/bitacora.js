@@ -113,10 +113,6 @@ function crearConsulta(datos) {
                     <div class="listado_item" onclick="toggleDetalles(this)">
                         <div class="listado_col_datos">
                             <div class="listado_dato_grupo">
-                                <small>Codigo</small>
-                                <span>${dato.id_bitacora}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
                                 <small>Usuario</small>
                                 <span>${dato.nombreUsuario} ${dato.apellidoUsuario}</span>
                             </div>

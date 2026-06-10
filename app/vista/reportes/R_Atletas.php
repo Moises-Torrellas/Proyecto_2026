@@ -205,13 +205,14 @@
             <tbody>
                 <?php $id = 0;
                 $anioActual = date('Y');
-                foreach ($datos as $r): $id++;
+                foreach ($datos as $r) :
+                    $id++;
                     $anioNacimiento = date('Y', strtotime($r['fecha_nac']));
                     $edadCalendario = $anioActual - $anioNacimiento;
                     $genero = ($r['genero'] === 'H') ? 'Hombre' : 'Mujer';
                     $estatus = ((int)$r['estatus'] === 1) ? 'Activo' : 'Retirado';
                     $representante = ($r['nombre_rep'] === null ) ? 'N/A' : $r['nombre_rep'] . ' ' . $r['apellido_rep'];
-                ?>
+                    ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['nombres'] . ' ' . $r['apellidos']) ?></td>
