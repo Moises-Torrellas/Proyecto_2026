@@ -40,6 +40,7 @@ class ModeloConceptos extends ModeloBase
         $this->regla = $datos['regla'] ?? null;
         //ejecutamos la accion enviada por el controlador
         $accion = $datos['accion'] ?? null;
+        
         return match ($accion) {
             'incluir'   => $this->Incluir(),
             'eliminar'  => $this->Eliminar(),

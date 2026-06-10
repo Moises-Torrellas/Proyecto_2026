@@ -190,7 +190,9 @@
             </thead>
             <tbody>
                 <?php $id = 0;
-                foreach ($datos as $r): $id++; $descripcion = ($r['descripcion'] == null) ? 'Sin Descripción' : $r['descripcion']; ?>
+                foreach ($datos as $r) :
+                    $id++;
+                    $descripcion = ($r['descripcion'] == null) ? 'Sin Descripción' : $r['descripcion']; ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['nombre']) ?></td>

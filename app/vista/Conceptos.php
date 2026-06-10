@@ -1,10 +1,10 @@
-<?php if (isset($solo_lista) && $solo_lista === true):
-    if (empty($registro)): ?>
+<?php if (isset($solo_lista) && $solo_lista === true) :
+    if (empty($registro)) : ?>
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-        <?php else:
-        foreach ($registro as $dato):
+    <?php else :
+        foreach ($registro as $dato) :
             $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
             $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
             $regla = match ($dato['regla']) {
@@ -13,7 +13,7 @@
                 'A' => 'Anual',
                 'U' => 'Unico'
             };
-        ?>
+            ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
                     <div class="listado_col_datos">
@@ -33,15 +33,15 @@
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                            <?php if ($permisos['modificar']): ?>
+                        <?php if ($permisos['modificar']) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_conceptos'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                            <?php endif; ?>
-                            <?php if ($permisos['eliminar']): ?>
+                        <?php endif; ?>
+                        <?php if ($permisos['eliminar']) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_conceptos'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                            <?php endif; ?>
-                            <?php if ($permisos['otros']): ?>
+                        <?php endif; ?>
+                        <?php if ($permisos['otros']) : ?>
                                 <button class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['id_conceptos'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
-                            <?php endif; ?>
+                        <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -83,12 +83,12 @@
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-                            <?php if (empty($registro)): ?>
+                            <?php if (empty($registro)) : ?>
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                                <?php else:
-                                foreach ($registro as $dato):
+                            <?php else :
+                                foreach ($registro as $dato) :
                                     $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
                                     $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
                                     $regla = match ($dato['regla']) {
@@ -97,7 +97,7 @@
                                         'A' => 'Anual',
                                         'U' => 'Unico'
                                     };
-                                ?>
+                                    ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
                                             <div class="listado_col_datos">
@@ -117,15 +117,15 @@
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                    <?php if ($permisos['modificar']): ?>
+                                                <?php if ($permisos['modificar']) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_conceptos'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                                    <?php endif; ?>
-                                                    <?php if ($permisos['eliminar']): ?>
+                                                <?php endif; ?>
+                                                <?php if ($permisos['eliminar']) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_conceptos'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                                    <?php endif; ?>
-                                                    <?php if ($permisos['otros']): ?>
+                                                <?php endif; ?>
+                                                <?php if ($permisos['otros']) : ?>
                                                         <button class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['id_conceptos'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
-                                                    <?php endif; ?>
+                                                <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
