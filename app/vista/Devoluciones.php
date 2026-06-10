@@ -19,13 +19,13 @@
                             <h2 class="titulo_pagina">Devoluciones</h2>
                         </div>
                         <div class="botones">
-                            <?php if(!empty($permisos['registrar'])): ?>
+                            <?php if (!empty($permisos['registrar'])) : ?>
                                 <button class="btn btn_azul" id="btn_nuevo">
                                     <i class="fi fi-sr-add-document"></i> Nueva Devolución
                                 </button>
                             <?php endif; ?>
                             
-                            <?php if (!empty($permisos['reporte'])): ?>
+                            <?php if (!empty($permisos['reporte'])) : ?>
                                 <button class="btn btn_verde" id="generar">
                                     <i class="fi fi-sr-document"></i> Generar Reporte
                                 </button>
@@ -38,7 +38,7 @@
 
                             <?php if (empty($registro)) { ?>
                                 <div class="listado_vacio"><p>No hay devoluciones activas.</p></div>
-                            <?php } else { 
+                            <?php } else {
                                 foreach ($registro as $dato) { ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item">
@@ -70,7 +70,8 @@
                                             </div>
                                         </div>
                                     </div>
-                            <?php } } ?>
+                                <?php }
+                            } ?>
 
                             <?php if (!isset($solo_lista)) { ?>
                         </div>
@@ -138,4 +139,4 @@
     <script src="js/devoluciones.js"></script>
 </body>
 </html>
-<?php } ?>
+                            <?php } ?>

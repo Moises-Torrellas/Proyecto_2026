@@ -94,7 +94,7 @@
     </section>
     <script src="js/main.js"></script>
     <script src="js/principal.js"></script>
-    <?php if (isset($_SESSION['alerta'])): ?>
+    <?php if (isset($_SESSION['alerta'])) : ?>
         <div id="alerta-backend"
             data-icono="<?= $_SESSION['alerta']['icono'] ?>"
             data-titulo="<?= $_SESSION['alerta']['titulo'] ?>"

@@ -64,10 +64,4 @@ const DB_CONNECTION    = "500";
 
 
 const EXCHANGE_RATE_API_KEY = 'eb4ded73b72a7239fcce3154' ;
-if (session_status() === PHP_SESSION_NONE) {
-    // Configuramos la sesión antes de iniciarla
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.use_only_cookies', 1);
-    session_name('SISTEMA_CBS_SESSION');
-    session_start();
-}
+

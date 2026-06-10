@@ -1,10 +1,10 @@
-<?php if (isset($solo_lista) && $solo_lista === true):
-    if (empty($registro)): ?>
+<?php if (isset($solo_lista) && $solo_lista === true) :
+    if (empty($registro)) : ?>
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-        <?php else:
-        foreach ($registro as $dato): ?>
+    <?php else :
+        foreach ($registro as $dato) : ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item">
                     <div class="listado_col_datos">
@@ -24,12 +24,12 @@
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                            <?php if ($permisos['modificar']): ?>
+                                <?php if ($permisos['modificar']) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_categorias'] ?>)" title="Modificar" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                            <?php endif; ?>
-                            <?php if ($permisos['eliminar']): ?>
+                                <?php endif; ?>
+                                <?php if ($permisos['eliminar']) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_categorias'] ?>)" title="Eliminar" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                            <?php endif; ?>
+                                <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -70,12 +70,12 @@
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-                            <?php if (empty($registro)): ?>
+                            <?php if (empty($registro)) : ?>
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                                <?php else:
-                                foreach ($registro as $dato): ?>
+                            <?php else :
+                                foreach ($registro as $dato) : ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item">
                                             <div class="listado_col_datos">
@@ -95,12 +95,12 @@
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                    <?php if ($permisos['modificar']): ?>
+                                                        <?php if ($permisos['modificar']) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_categorias'] ?>)" title="Modificar" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                                    <?php endif; ?>
-                                                    <?php if ($permisos['eliminar']): ?>
+                                                        <?php endif; ?>
+                                                        <?php if ($permisos['eliminar']) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_categorias'] ?>)" title="Eliminar" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                                    <?php endif; ?>
+                                                        <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>

@@ -179,12 +179,12 @@
                 </tr>
             </thead>
             <tbody>
-                <?php 
+                <?php
                 $id = 0;
-                foreach ($datos as $r): 
-                    $id++; 
+                foreach ($datos as $r) :
+                    $id++;
                     $observacion = !empty(trim($r['observacion'])) ? htmlspecialchars($r['observacion']) : 'Sin observaciones';
-                ?>
+                    ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= $r['fecha_devolucion'] ?></td>

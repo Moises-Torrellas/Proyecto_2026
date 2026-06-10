@@ -69,6 +69,8 @@ function crearConsulta(datos) {
         datos.forEach(dato => {
             // Color según el estado (Excelente verde, Malo rojo, etc)
             let colorEstado = dato.nivel_estado == 1 ? '#28a745' : (dato.nivel_estado == 2 ? '#ffc107' : '#dc3545');
+            let colorEstatus = dato.estatus == 1 ? 'estatus_v' : 'estatus_a' ;
+            let estatus = dato.estatus == 1 ? 'Disponible' : 'En Uso' ;
             let talla = dato.talla ? ` - Talla: ${dato.talla}` : '';
 
             let registro = `
@@ -90,6 +92,10 @@ function crearConsulta(datos) {
                             <div class="listado_dato_grupo">
                                 <small>Condición Físico</small>
                                 <span style="color: ${colorEstado}; font-weight:bold;">${dato.estado}</span>
+                            </div>
+                            <div class="listado_dato_grupo">
+                                <small>Estatus</small>
+                                <span class="${colorEstatus}">${estatus}</span>
                             </div>
                         </div>
 

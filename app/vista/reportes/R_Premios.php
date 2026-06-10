@@ -184,13 +184,13 @@
                 </tr>
             </thead>
             <tbody>
-                <?php 
+                <?php
                 $id = 0;
-                foreach ($datos as $r): 
-                    $id++; 
+                foreach ($datos as $r) :
+                    $id++;
                     // Convertimos la letra I o G en texto legible para el PDF
                     $txtTipo = (strtoupper($r['tipo']) === 'I') ? 'Individual' : 'Grupal';
-                ?>
+                    ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['nombre']) ?></td>
