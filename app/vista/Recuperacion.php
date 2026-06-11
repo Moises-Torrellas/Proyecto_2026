@@ -69,7 +69,7 @@
                                     <input type="password" class="formulario" id="contraseña" name="contraseña">
                                     <label for="contraseña" class="titulo_formulario">Contraseña</label>
                                     <span class="mensaje" id="spam_contraseña"></span>
-                                    <i class="fi fi-sr-eye icon_input ojo"></i>
+                                    <i class="fi fi-sr-eye icon_input_ojo ojo"></i>
                                 </div>
                             </div>
                         </div>
@@ -79,7 +79,7 @@
                                     <input type="password" class="formulario" id="contraseña_r" name="contraseña_r">
                                     <label for="contraseña_r" class="titulo_formulario">Repetir Contraseña</label>
                                     <span class="mensaje" id="spam_contraseña_r"></span>
-                                    <i class="fi fi-sr-eye icon_input ojo"></i>
+                                    <i class="fi fi-sr-eye icon_input_ojo ojo"></i>
                                 </div>
                             </div>
                         </div>
