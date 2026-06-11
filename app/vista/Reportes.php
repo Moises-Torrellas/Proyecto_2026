@@ -51,32 +51,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="cards cards-reportes">
-                            <div class="card card-reportes" style="border-bottom-color: #007bff;">
-                                <h3>Estadisticas</h3>
-                                <div class="info_card">
-                                    <button class="btn btn_azul">Nuevo Reporte</button>
-                                </div>
-                            </div>
-                            <div class="card card-reportes" style="border-bottom-color: #FF4040;">
-                                <h3>Premios</h3>
-                                <div class="info_card">
-                                    <button class="btn btn_azul">Nuevo Reporte</button>
-                                </div>
-                            </div>
-                            <div class="card card-reportes" style="border-bottom-color: #28a745;">
-                                <h3>Desgaste De Equipamientos</h3>
-                                <div class="info_card">
-                                    <button class="btn btn_azul">Nuevo Reporte</button>
-                                </div>
-                            </div>
-                            <div class="card card-reportes" style="border-bottom-color: #ffc107;">
-                                <h3>Asignaciones</h3>
-                                <div class="info_card">
-                                    <button class="btn btn_azul">Nuevo Reporte</button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

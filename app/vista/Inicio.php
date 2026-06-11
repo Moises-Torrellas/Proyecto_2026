@@ -36,7 +36,7 @@
                                 <input type="password" class="formulario" id="contraseña" name="contraseña">
                                 <label for="contraseña" class="titulo_formulario">Contraseña</label>
                                 <span class="mensaje" id="spam_contraseña"></span>
-                                <i class="fi fi-sr-eye ojo icon_input" id="ojo"></i>
+                                <i class="fi fi-sr-eye ojo icon_input_ojo" id="ojo"></i>
                             </div>
                         </div>
                     </div>

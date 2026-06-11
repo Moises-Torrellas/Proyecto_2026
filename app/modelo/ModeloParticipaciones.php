@@ -24,12 +24,6 @@ class ModeloParticipaciones extends ModeloBase
         return [];
     }
     
-    /**
-     * Valida que el atleta haya participado en el torneo (a través de algún equipo)
-     * @param int $id_torneo
-     * @param int $id_atleta
-     * @return bool
-     */
     public function validarParticipacionIndividual(int $id_torneo, int $id_atleta): bool
     {
         $conex = null;

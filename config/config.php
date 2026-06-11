@@ -18,7 +18,7 @@ setlocale(LC_CTYPE, 'es_ES.UTF-8');
 
 define('_TEMA_', $_COOKIE['tema_preferido'] ?? 'claro');
 
-/*Requisitos no Funcionales*/
+
 const _MD_USUARIOS_ = 1;
 const _MD_ROLES_    = 2;
 const _MD_BITACORA_ = 3;
@@ -49,6 +49,7 @@ const _MD_CALIDAD_ = 104;
 const _MD_PARTICIPACIONES_ = 105;
 const _MD_RESPALDO_ = 106;
 const _MD_REPORTES_ = 107;
+const _MD_HISTORIAL_ = 108;
 
 /* CODIGOS DE ERROR */
 const DUPLICATE_CEDULA = "001";

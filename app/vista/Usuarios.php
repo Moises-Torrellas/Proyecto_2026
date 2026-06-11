@@ -97,7 +97,7 @@
                                 <input type="password" class="formulario" id="contraseña" name="contraseña">
                                 <label for="contraseña" class="titulo_formulario">Contraseña</label>
                                 <span class="mensaje" id="contraseña_spam"></span>
-                                <i class="fi fi-sr-eye ojo icon_input"></i>
+                                <i class="fi fi-sr-eye ojo icon_input_ojo"></i>
                             </div>
                         </div>
                         <div class="colum">

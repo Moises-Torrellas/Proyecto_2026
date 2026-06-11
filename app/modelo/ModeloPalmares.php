@@ -32,17 +32,17 @@ class ModeloPalmares extends ModeloBase
         $this->llavePrimaria = 'id_palmares';
     }
 
-    public function setModeloParticipaciones($modelo): void
+    public function setModeloParticipaciones(ModeloParticipaciones $modelo): void
     {
         $this->modeloParticipaciones = $modelo;
     }
 
-    public function setModeloHistorial($modelo): void
+    public function setModeloHistorial(ModeloHistorial $modelo): void
     {
         $this->modeloHistorial = $modelo;
     }
 
-    public function setModeloPremios($modelo): void
+    public function setModeloPremios(ModeloPremios $modelo): void
     {
         $this->modeloPremios = $modelo;
     }

@@ -38,10 +38,6 @@ class ModeloHistorial extends ModeloBase
         }
     }
 
-    /**
-     * Verifica si un palmarés grupal forma parte de un historial.
-     * Retorna true si está en el historial (y por ende bloqueado), false si no.
-     */
     public function verificarHistorialGrupal(int $id_grupal): bool
     {
         $conex = null;

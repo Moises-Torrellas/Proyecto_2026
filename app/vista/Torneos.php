@@ -61,7 +61,7 @@
                                 <select name="estatus" id="estatus" class="formulario select">
                                     <option value="" disabled selected>Seleccione...</option>
                                     <option value="1">Activo</option>
-                                    <option value="0">Inactivo / Finalizado</option>
+                                    <option value="2">Finalizado</option>
                                 </select>
                                 <label for="estatus" class="titulo_formulario">Estatus</label>
                                 <span class="mensaje" id="estatus_spam"></span>

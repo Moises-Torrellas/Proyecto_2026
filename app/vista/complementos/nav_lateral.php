@@ -114,11 +114,14 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_PALMARES_)) : ?>
-                        <a type="button" href="Palmares" class="opciones"><i class="opciones_i" data-lucide="trophy"></i> Palmares</a>
+                        <a type="button" href="Palmares" class="opciones"><i class="opciones_i" data-lucide="trophy"></i> Palmarés</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_ESTADISTICAS_)) : ?>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="chart-area"></i> Estadisticas</a>
+                        <a type="button" href="Estadisticas" class="opciones"><i class="opciones_i" data-lucide="chart-area"></i> Estadisticas</a>
+                    <?php endif; ?>
+                    <?php if ($puedeVer(_MD_HISTORIAL_)) : ?>
+                        <a type="button" href="Historial" class="opciones"><i class="opciones_i" data-lucide="book-user"></i> Historial Deportivo</a>
                     <?php endif; ?>
                 </li>
             <?php endif; ?>
