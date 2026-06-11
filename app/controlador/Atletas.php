@@ -4,10 +4,11 @@ use App\modelo\ModeloAtletas;
 use App\modelo\ModeloRepresentantes;
 use App\modelo\ModeloPosiciones;
 use App\modelo\ModeloCategorias;
+use App\modelo\ModeloHistorial;
 
+use APP\servicios\GenerarCurriculum;
 use App\servicios\GenerarReporte;
 
-//Cargamos las funciones base del controlador
 require_once __DIR__ . '/Base.php';
 
 //Configuración del id del modulo
@@ -254,7 +255,6 @@ if (comprobarAjax() && !empty($_POST)) {
                         INVALID_ID . '1'   => 'El representante ingresado no existe en los registros del club.',
                         DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                         default          => 'Ocurrió un error inesperado en el registro.'
-                        
                     };
                 }
                 echo json_encode($resultado);
@@ -338,6 +338,38 @@ if (comprobarAjax() && !empty($_POST)) {
                 }
                 echo json_encode($pdf);
 
+                break;
+            case 'generarCurriculum':
+                if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar un curriculum de Atletas.');
+
+                $validacionesCV = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'El ID del atleta es inválido.']];
+                validar_datos($validacionesCV);
+                $id_atleta = (int)$_POST['id'];
+
+                $modeloHistorial = new ModeloHistorial();
+                $datosCurriculum = $modeloHistorial->consultarCurriculum($id_atleta);
+
+                if (empty($datosCurriculum) || empty($datosCurriculum['atleta'])) {
+                    echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontró información para generar el currículum de este atleta.']);
+                    exit();
+                }
+
+                $nombreVista = 'Curriculum';
+                $nombres = $datosCurriculum['atleta']['nombres'];
+                $apellidos = $datosCurriculum['atleta']['apellidos'];
+                $docIdentidad = $datosCurriculum['atleta']['doc_identidad'];
+                $nombreArchivoRaw = $nombres . '_' . $apellidos . '_' . $docIdentidad;
+                $nombreArchivo = str_replace(' ', '_', $nombreArchivoRaw);
+
+                $pdf = \App\servicios\GenerarCurriculum::GenerarCu($nombreVista, $datosCurriculum, $nombreArchivo);
+
+                if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+
+                    $atletaNombre = $datosCurriculum['atleta']['nombres'] . " " . $datosCurriculum['atleta']['apellidos'];
+                    registrarBitacora($bitacora, $id_modulo, "Generó currículum deportivo del atleta: " . $atletaNombre);
+                }
+
+                echo json_encode($pdf);
                 break;
             default:
                 throw new Exception('Acción no permitida.');

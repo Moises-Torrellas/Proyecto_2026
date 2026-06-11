@@ -373,7 +373,17 @@ function eliminar(id) {
         }
     });
 }
-
+function GenerarCurriculum(id) {
+    confirmar('Si Confirma se generará el Curriculum del Atleta con sus premios y estadisticas actual', function (confirmado) {
+        if (confirmado) {
+            var datos = new FormData();
+            datos.append('accion', 'generarCurriculum');
+            datos.append('id', id);
+            enviaAjax(datos);
+            abrirAlertaEspara('Generando Curriculum', 'Espere un momento');
+        }
+    });
+}
 function modificar(datos) {
     limpia();
     $("#proceso").data("accion", "modificar");
