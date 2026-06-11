@@ -76,7 +76,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 </button>
                         <?php endif; ?>
                         <?php if ($permisos['reporte']) : ?>
-                                <button id="cbt_sec" class="btn_t cbt_sec" onclick="" data-tippy-content="Generar Currículum">
+                                <button id="cbt_sec" class="btn_t cbt_sec" onclick="GenerarCurriculum(<?= $dato['id_atleta'] ?>)" data-tippy-content="Generar Currículum">
                                     <i class="fi fi-sr-clipboard-user"></i>
                                 </button>
                         <?php endif; ?>
@@ -270,7 +270,7 @@ endif;
                                                         </button>
                                                     <?php endif; ?>
                                                     <?php if ($permisos['reporte']) : ?>
-                                                        <button id="cbt_sec" class="btn_t cbt_sec" onclick="" data-tippy-content="Generar Currículum">
+                                                        <button id="cbt_sec" class="btn_t cbt_sec" onclick="GenerarCurriculum(<?= $dato['id_atleta'] ?>)" data-tippy-content="Generar Currículum">
                                                             <i class="fi fi-sr-clipboard-user"></i>
                                                         </button>
                                                     <?php endif; ?>
