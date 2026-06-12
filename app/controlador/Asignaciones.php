@@ -14,13 +14,13 @@ if (!class_exists($nombreClaseModelo)) {
     exit();
 }
 
-$objModelo = new ModeloAsignaciones();
+$objAsignaciones = new ModeloAsignaciones();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudAsignacion($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitudAsignacion($objAsignaciones, $id_modulo, $bitacora ?? null, $permisos);
 } else {
     registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Asignaciones');
-    $respuesta = $objModelo->ConsultarAgrupado(); 
+    $respuesta = $objAsignaciones->ConsultarAsignaciones(); 
     $registro = $respuesta['datos'] ?? [];
     
     $variables = ['registro' => $registro, 'permisos' => $permisos];
@@ -66,7 +66,7 @@ function manejarSolicitudAsignacion($obj, $id_modulo, $bitacoraObj, array $permi
 }
 
 function consultar($obj, $permisos): void {
-    $respuesta = $obj->ConsultarAgrupado();
+    $respuesta = $obj->ConsultarAsignaciones();
     $registro = $respuesta['datos'] ?? []; 
     $solo_lista = true;
     include (__DIR__.'/../vista/Asignaciones.php');
@@ -86,7 +86,7 @@ function MultiConsulta(): void {
             'equipos' => $respEquip['datos'] ?? []
         ]);
     } catch (Exception $e) {
-        echo json_encode(['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD']);
+        echo json_encode(['accion' => 'error', 'codigo' => DB_CONNECTION]);
     }
 }
 
@@ -107,12 +107,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void {
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Asignó el equipo ID: " . $datos['id_equipamiento']);
-            $resultado = array('accion' => 'incluir', 'mensaje' => 'Asignación procesada exitosamente.');
+            $resultado = array('accion' => 'exito', 'mensaje' => 'Asignación procesada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                defined('_ERR_ESTATUS_') ? _ERR_ESTATUS_ : 'ERR_ESTATUS' => 'El equipo seleccionado ya no está disponible.',
-                defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD' => 'Ocurrió un error al conectarse con la base de datos.',
-                default => 'Ocurrió un error inesperado al procesar la asignación.'
+                VALIDATION    => 'El equipo seleccionado ya no está disponible.',
+                DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
+                default       => 'Ocurrió un error inesperado al procesar la asignación.'
             };
         }
         echo json_encode($resultado);
@@ -140,13 +140,13 @@ function modificar($obj, $id_modulo, $bitacoraObj): void {
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Modificó asignación ID: " . $datos['id_asignacion']);
-            $resultado = array('accion' => 'modificar', 'mensaje' => 'Asignación modificada exitosamente.');
+            $resultado = array('accion' => 'exito', 'mensaje' => 'Asignación modificada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                defined('_ERR_NO_EXISTE_') ? _ERR_NO_EXISTE_ : 'ERR_NO_EXISTE' => 'La asignación original no fue encontrada.',
-                defined('_ERR_ESTATUS_') ? _ERR_ESTATUS_ : 'ERR_ESTATUS' => 'El nuevo equipo seleccionado no está disponible.',
-                defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD' => 'Ocurrió un error al conectarse con la base de datos.',
-                default => 'Ocurrió un error inesperado al modificar.'
+                INVALID_ID    => 'La asignación original no fue encontrada.',
+                VALIDATION    => 'El nuevo equipo seleccionado no está disponible.',
+                DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
+                default       => 'Ocurrió un error inesperado al modificar.'
             };
         }
         echo json_encode($resultado);
@@ -172,11 +172,11 @@ function anular($obj, $id_modulo, $bitacoraObj): void {
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Anuló asignación ID: " . $datos['id_asignacion']);
-            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Asignación anulada exitosamente.'); // Se mantiene "eliminar" para que tu JS dispare la notificación verde.
+            $resultado = array('accion' => 'exito', 'mensaje' => 'Asignación anulada exitosamente.'); 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD' => 'Ocurrió un error al conectarse con la base de datos.',
-                default => 'Ocurrió un error inesperado al anular la asignación.'
+                DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
+                default       => 'Ocurrió un error inesperado al anular la asignación.'
             };
         }
         echo json_encode($resultado);

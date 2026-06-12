@@ -1,6 +1,5 @@
 let timerBusqueda;
 
-// Escuchador para la barra de búsqueda en tiempo real
 $('#busqueda').off('keyup').on('keyup', busqueda);
 
 function MultiConsulta() {
@@ -21,15 +20,15 @@ function busqueda() {
         let valorBusqueda = $('#busqueda').val();
         let datos = new FormData();
         datos.append('accion', 'consultar');
-        datos.append('filtro', valorBusqueda);
+        datos.append('filtro', valorBusqueda); 
         enviaAjax(datos);
     }, 500);
 }
 
 $(document).ready(function () {
+    inicializarPaginador(); 
     MultiConsulta();
-    if (typeof inicializarPaginador === 'function') inicializarPaginador();
-
+    
     if (typeof Validacion === 'function') {
         Validacion("fecha_asignacion", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "btn_guardar");
     }
@@ -64,7 +63,6 @@ $(document).ready(function () {
         }
     });
 
-    // Abrir Modal de Nueva Asignación
     $("#btn_nuevo").on("click", function () {
         limpia(); 
         $("#f")[0].reset();
@@ -72,7 +70,6 @@ $(document).ready(function () {
         $("#titulo_modal").text("Registrar Asignación");
         $("#btn_guardar").text("Registrar Asignación").data("accion", "incluir");
         
-        // Forzar fecha del sistema
         let hoy = new Date().toISOString().split('T')[0];
         $('#fecha_asignacion').val(hoy);
         
@@ -82,29 +79,19 @@ $(document).ready(function () {
         abrirModal(); 
     });
 
-    // Tour Guiado de Ayuda
+    $('#generar').on('click', function () {
+        window.open('?url=Reportes/Asignaciones', '_blank'); 
+    });
+
     $('#ayuda').on('click', function () {
         const pasos = [
-            {
-                element: '#busqueda',
-                popover: { title: 'Búsqueda', description: 'Aquí puedes buscar por nombre de atleta o CI.', position: 'bottom' }
-            },
-            {
-                element: '#btn_nuevo',
-                popover: { title: 'Nueva Asignación', description: 'Abre el formulario para registrar un nuevo préstamo de equipo.', position: 'bottom' }
-            },
-            {
-                element: '#generar',
-                popover: { title: 'Generar Reporte', description: 'Descarga un archivo PDF con el historial de asignaciones.', position: 'left' }
-            },
-            {
-                element: '#resultadoconsulta',
-                popover: { title: 'Lista Agrupada', description: 'Haz clic en cualquier atleta para desplegar el detalle de sus equipos asignados.', position: 'top' }
-            }
+            { element: '#busqueda', popover: { title: 'Búsqueda', description: 'Aquí puedes buscar por nombre de atleta o CI.', position: 'bottom' } },
+            { element: '#btn_nuevo', popover: { title: 'Nueva Asignación', description: 'Registra un préstamo de equipo.', position: 'bottom' } },
+            { element: '#generar', popover: { title: 'Generar Reporte', description: 'Descarga un archivo PDF de las asignaciones.', position: 'left' } },
+            { element: '#resultadoconsulta', popover: { title: 'Lista Agrupada', description: 'Haz clic en cualquier atleta para ver sus detalles.', position: 'top' } }
         ];
         if (typeof iniciarTourConPasos === 'function') {
-            const driver = iniciarTourConPasos(pasos);
-            driver.start();
+            iniciarTourConPasos(pasos).start();
         }
     });
 });
@@ -122,17 +109,6 @@ function validarEnvio(accion) {
         if ($('#fecha_asignacion').val() == "") {
             muestraMensaje("error", 2000, "Validación", "Debe seleccionar la fecha de asignación.");
             return false;
-        } else {
-            let fechaIngresada = $('#fecha_asignacion').val();
-            let hoy = new Date();
-            let mes = (hoy.getMonth() + 1).toString().padStart(2, '0');
-            let dia = hoy.getDate().toString().padStart(2, '0');
-            let fechaActualStr = hoy.getFullYear() + '-' + mes + '-' + dia;
-            
-            if (fechaIngresada > fechaActualStr) {
-                muestraMensaje("error", 2000, "Error", "La fecha de asignación no puede ser futura.");
-                return false;
-            }
         }
     }
     return true;
@@ -157,9 +133,12 @@ function editar(id_asignacion, id_atleta, id_equipamiento, fecha) {
 }
 
 function anular(id_asignacion, id_equipamiento) {
-    
     confirmarAnulacion('¿Está seguro que quiere anular esta asignación?', function (motivo) {
         if (motivo !== false) { 
+            if (motivo.trim().length < 5) {
+                muestraMensaje("error", 3000, "Validación", "El motivo debe tener al menos 5 letras.");
+                return;
+            }
             var datos = new FormData();
             datos.append('accion', 'anular');
             datos.append('id_asignacion', id_asignacion);
@@ -198,9 +177,10 @@ function crearConsulta(htmlRecibido) {
     contenedor.html(htmlRecibido);
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
-    if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador(); // Ejecuta tu paginador del sistema nativamente
     if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
+
 var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
@@ -216,20 +196,13 @@ function enviaAjax(datos) {
         },
         timeout: 120000,
         success: function (respuesta) {
-            // 1. Verificamos si es un HTML puro para la tabla (sin intentar parsearlo como JSON)
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
                 crearConsulta(respuesta);
                 return;
             }
             
             try {
-                var lee;
-                if (typeof respuesta === 'object') {
-                    lee = respuesta;
-                } else {
-                    let textoLimpio = respuesta.substring(respuesta.indexOf('{'));
-                    lee = JSON.parse(textoLimpio); 
-                }
+                var lee = typeof respuesta === 'object' ? respuesta : JSON.parse(respuesta.substring(respuesta.indexOf('{')));
 
                 if (lee.accion == "MultiConsulta") {
                     poblarCombos(lee.atletas, lee.equipos);
@@ -239,23 +212,26 @@ function enviaAjax(datos) {
                     cerrarModal();
                     muestraMensaje("success", 2000, "Operación Exitosa", lee.mensaje);
                 } else if (lee.accion == "error") {
-                    muestraMensaje("error", 2000, "Error", lee.mensaje || lee.codigo);
+                    muestraMensaje("error", 3000, "Error", lee.mensaje || lee.codigo);
                 }
             } catch (e) {
                 console.error("Error procesando JSON", e, respuesta);
-                Swal.fire({ 
-                    icon: 'error', 
-                    title: 'Error de Comunicación', 
-                    text: 'El servidor respondió de forma inesperada. Revisa la consola.' 
-                });
             }
         },
         error: function (request, status, err) {
-            if (status == "timeout") {
-                muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
-            } else {
-                muestraMensaje("error", 2000, "Error", "ERROR: " + err);
-            }
+            muestraMensaje("error", 2000, "Error", "ERROR: " + err);
         }
     });
+}
+
+function toggleDetalles(elemento) {
+    $(elemento).next('.listado_detalle_oculto').slideToggle();
+    $(elemento).find('.icono_flecha_detalle').toggleClass('rotar_flecha');
+}
+
+function limpia() {
+    if($('#f')[0]) $('#f')[0].reset();
+    $('.select2').val(null).trigger('change');
+    $("#btn_guardar").data("accion", "incluir");
+    $("#btn_guardar").text("Confirmar Préstamo");
 }
