@@ -18,7 +18,7 @@
             background-color: #ffffff;
         }
 
-        /* 2. Header: Ocupará el 100% real de la hoja sin dejar bordes blancos */
+        /* 2. Header */
         .header {
             position: fixed;
             top: -130px; 
@@ -92,7 +92,6 @@
             padding: 10px;
             border-bottom: 1px solid #e2e8f0;
             font-size: 12px;
-            /* Evita que textos largos rompan la tabla */
             word-wrap: break-word; 
             max-width: 200px; 
         }
@@ -153,17 +152,17 @@
     <div class="header">
         <h1>REPORTE DE DEVOLUCIONES</h1>
         <p>Sistema de Gestión Administrativo - Cannibals Lara</p>
-        <img src="<?= $logo ?>" class="logo-mascota" alt="Logo">
+        <img src="<?= $logo ?? '' ?>" class="logo-mascota" alt="Logo">
     </div>
 
     <div class="content">
         <div class="info-grid">
-            <div class="info-item"><strong>FECHA DE EMISIÓN</strong><br><?= $fecha_reporte ?></div>
-            <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?></div>
+            <div class="info-item"><strong>FECHA DE EMISIÓN</strong><br><?= $fecha_reporte ?? date('d/m/Y') ?></div>
+            <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?? 'Administrador' ?></div>
         </div>
         
         <div class="resumen-ejecutivo">
-            <strong>Resumen Ejecutivo:</strong> El presente documento detalla el historial de devoluciones de equipamiento deportivo registrado en el sistema. Esta información permite realizar un control riguroso sobre el estado, la calidad y las condiciones en las que los atletas reintegran el material asignado al inventario de la academia.
+            <strong>Resumen Ejecutivo:</strong> El presente documento detalla el historial de devoluciones de equipamiento deportivo registrado en el sistema. Esta información permite realizar un control riguroso sobre el estado, la calidad y las condiciones en las que se reintegra el material al inventario de la academia.
         </div>
 
         <div class="section-title">Listado de Devoluciones</div>
@@ -181,28 +180,38 @@
             <tbody>
                 <?php 
                 $id = 0;
-                foreach ($datos as $r): 
-                    $id++; 
-                    $observacion = !empty(trim($r['observacion'])) ? htmlspecialchars($r['observacion']) : 'Sin observaciones';
+                if (!empty($datos)) {
+                    foreach ($datos as $r): 
+                        $id++; 
+                        $observacion = !empty(trim($r['observacion'])) ? htmlspecialchars($r['observacion']) : 'Sin observaciones';
+                        
+                        // AQUI ESTÁ LA CORRECCIÓN: Usamos las variables exactas que manda el modelo
+                        $articulo = htmlspecialchars($r['articulo_nombre']);
+                        $calidad = htmlspecialchars($r['calidad']);
                 ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
-                        <td class="data-cell"><?= $r['fecha_devolucion'] ?></td>
+                        <td class="data-cell"><?= $r['fecha_vista'] ?></td>
                         <td class="data-cell">
-                            <strong><?= htmlspecialchars($r['asignaciones']) ?></strong><br>
+                            <strong><?= $articulo ?></strong><br>
                             <span style="font-size: 10px; color: #718096;">ID Asig: #<?= $r['id_asignacion'] ?></span>
                         </td>
-                        <td class="data-cell"><?= htmlspecialchars($r['articulo']) ?></td>
+                        <td class="data-cell"><?= $calidad ?></td>
                         <td class="data-cell"><?= $observacion ?></td>
                     </tr>
-                <?php endforeach; ?>
+                <?php 
+                    endforeach; 
+                } else {
+                    echo '<tr><td colspan="5" class="data-cell" style="text-align:center; padding: 20px;">No se encontraron devoluciones registradas.</td></tr>';
+                }
+                ?>
             </tbody>
         </table>
     </div>
 
     <div class="footer">
         <div class="footer-logo-container">
-            <img src="<?= $logo_footer ?>" alt="Cannibals">
+            <img src="<?= $logo_footer ?? '' ?>" alt="Cannibals">
         </div>
 
         <table class="footer-meta">

@@ -13,87 +13,87 @@ class ModeloDevoluciones extends ModeloBase
     private $id_estado;
     private $fecha_devolucion;
     private $observacion;
-    private $motivo; 
 
     public function __construct()
     {
         parent::__construct();
-    
         $this->campoWhitelist = [
             'id_devolucion'    => 'id_devolucion',
             'id_asignacion'    => 'id_asignacion',
             'id_estado'        => 'id_estado',
             'fecha_devolucion' => 'fecha_devolucion',
-            'observacion'      => 'observacion',
-            'motivo'           => 'motivo'
+            'observacion'      => 'observacion'
         ];
-        
         $this->llavePrimaria = 'id_devolucion';
     }
 
     public function ProcesarDatos(array $datos): array
     {
-        if (empty($datos)) {
-            throw new Exception('No se proporcionaron datos para procesar la devolución.');
-        }
+        if (empty($datos)) return ['accion' => 'error', 'codigo' => VALIDATION];
 
         $this->id_devolucion    = $datos['id_devolucion'] ?? null;
         $this->id_asignacion    = $datos['id_asignacion'] ?? null;
         $this->id_estado        = $datos['id_estado'] ?? null;
         $this->fecha_devolucion = $datos['fecha_devolucion'] ?? null; 
         $this->observacion      = isset($datos['observacion']) ? trim($datos['observacion']) : '';
-        $this->motivo           = isset($datos['motivo']) ? trim($datos['motivo']) : '';
 
-        $accion = $datos['accion'] ?? null;
-
-        return match ($accion) {
+        return match ($datos['accion'] ?? null) {
             'consultar' => $this->ConsultarDevoluciones(),
+            'generar'   => $this->ConsultarDevoluciones($datos),
             'incluir'   => $this->IncluirDevolucion(),
             'modificar' => $this->ModificarDevolucion(),
-            'anular'    => $this->AnularDevolucion(),
-            'generar'   => $this->ConsultarDevoluciones($datos), 
-            default     => throw new Exception('La acción solicitada para la devolución no es válida.')
+            'anular'    => $this->AnularDevolucion($datos['motivo_anulacion'] ?? 'Sin motivo'),
+            default     => ['accion' => 'error', 'codigo' => VALIDATION]
         };
     }
 
-    public function ConsultarDevoluciones(array $filtro = []): array
+    public function ConsultarDevoluciones(array $filtros = []): array
     {
         $conex = null;
         try {
             $conex = $this->conex();
-            $params = [];
             
-            // Agregamos WHERE 1=1 para concatenar filtros dinámicos fácilmente
-            $sql = "SELECT d.id_devolucion, 
-                           DATE_FORMAT(d.fecha_devolucion, '%d/%m/%Y') as fecha_vista,
-                           d.fecha_devolucion,
-                           d.id_asignacion,
-                           d.id_estado,
-                           d.observacion, 
-                           CONCAT(IFNULL(at.nombres, ''), ' ', IFNULL(at.apellidos, '')) as asignaciones,
-                           IFNULL(ee.nombre, 'Sin especificar') as articulo
+            $sql = "SELECT 
+                        d.id_devolucion, 
+                        DATE_FORMAT(d.fecha_devolucion, '%Y-%m-%d') as fecha_vista,
+                        d.fecha_devolucion,
+                        d.id_asignacion,
+                        d.id_estado,
+                        d.observacion, 
+                        ee.nombre as calidad,
+                        at.id_atleta,
+                        at.nombres as atleta_nombre,
+                        at.apellidos as atleta_apellido,
+                        cat.nombre as articulo_nombre,
+                        (SELECT COUNT(*) 
+                         FROM devoluciones d2 
+                         INNER JOIN asignaciones a2 ON d2.id_asignacion = a2.id_asignacion 
+                         WHERE a2.id_atleta = at.id_atleta) as total_devoluciones_atleta
                     FROM devoluciones d
-                    LEFT JOIN asignaciones a ON d.id_asignacion = a.id_asignacion
-                    LEFT JOIN atletas at ON a.id_atleta = at.id_atleta
-                    LEFT JOIN estado_equipamiento ee ON d.id_estado = ee.id_estado
-                    WHERE 1=1"; 
+                    INNER JOIN asignaciones asig ON d.id_asignacion = asig.id_asignacion
+                    INNER JOIN atletas at ON asig.id_atleta = at.id_atleta
+                    INNER JOIN estado_equipamiento ee ON d.id_estado = ee.id_estado
+                    INNER JOIN equipamientos eq ON asig.id_equipamiento = eq.id_equipamiento
+                    INNER JOIN catalogos cat ON eq.id_catalogo = cat.id_catalogo
+                    WHERE 1=1 "; 
             
-            // Filtros opcionales para el reporte
-            if (!empty($filtro['fecha_devolucion'])) {
-                $sql .= " AND DATE(d.fecha_devolucion) = :fecha_devolucion";
-                $params[':fecha_devolucion'] = $filtro['fecha_devolucion'];
+            $params = [];
+
+            if (!empty($filtros['id_asignacion'])) {
+                $sql .= " AND d.id_asignacion = ? ";
+                $params[] = $filtros['id_asignacion'];
             }
-            if (!empty($filtro['id_asignacion'])) {
-                $sql .= " AND d.id_asignacion = :id_asignacion";
-                $params[':id_asignacion'] = $filtro['id_asignacion'];
+            if (!empty($filtros['id_estado'])) {
+                $sql .= " AND d.id_estado = ? ";
+                $params[] = $filtros['id_estado'];
             }
-            if (!empty($filtro['id_estado'])) {
-                $sql .= " AND d.id_estado = :id_estado";
-                $params[':id_estado'] = $filtro['id_estado'];
+            if (!empty($filtros['fecha_devolucion'])) {
+                $sql .= " AND d.fecha_devolucion = ? ";
+                $params[] = $filtros['fecha_devolucion'];
             }
 
-            $sql .= " ORDER BY d.fecha_devolucion DESC";
-            
+            $sql .= " ORDER BY at.id_atleta ASC, d.fecha_devolucion DESC";
+
             $stmt = $conex->prepare($sql);
             $stmt->execute($params);
             $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -101,7 +101,7 @@ class ModeloDevoluciones extends ModeloBase
             return ['accion' => 'consultar', 'datos' => $datos];
         } catch (Exception $e) {
             logs('Devoluciones', $e->getMessage(), 'Modelo_Consultar');
-            return ['accion' => 'error', 'mensaje' => 'Error BD: ' . $e->getMessage()];
+            return ['accion' => 'error', 'codigo' => DB_CONNECTION];
         } finally {
             $conex = null;
         }
@@ -112,20 +112,37 @@ class ModeloDevoluciones extends ModeloBase
         $conex = null;
         try {
             $conex = $this->conex();
+            // INICIA TRANSACCIÓN
             $conex->beginTransaction();
 
+            // 1. Registra la devolución
             $sqlInsert = "INSERT INTO devoluciones (id_asignacion, id_estado, fecha_devolucion, observacion) VALUES (?, ?, ?, ?)";
             $stmtInsert = $conex->prepare($sqlInsert);
             $stmtInsert->execute([$this->id_asignacion, $this->id_estado, $this->fecha_devolucion, $this->observacion]);
 
-            $conex->commit();
-            return ['accion' => 'exito', 'mensaje' => 'Devolución procesada correctamente.'];
-        } catch (Exception $e) {
-            if ($conex && $conex->inTransaction()) {
-                $conex->rollBack();
+            // 2. Busca el equipo vinculado a la asignación
+            $stmtEq = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ?");
+            $stmtEq->execute([$this->id_asignacion]);
+            $idEquipamiento = $stmtEq->fetchColumn();
+
+            if ($idEquipamiento) {
+                // 3. Cierra la asignación marcándola como devuelta (Ej: estatus 2)
+                $stmtAsig = $conex->prepare("UPDATE asignaciones SET estatus = 2 WHERE id_asignacion = ?");
+                $stmtAsig->execute([$this->id_asignacion]);
+
+                // 4. Libera el equipo (Ej: estatus 1) y actualiza su condición física (id_estados)
+                $stmtEqUpd = $conex->prepare("UPDATE equipamientos SET estatus = 1, id_estados = ? WHERE id_equipamiento = ?");
+                $stmtEqUpd->execute([$this->id_estado, $idEquipamiento]);
             }
+
+            // APLICA TODOS LOS CAMBIOS DE GOLPE
+            $conex->commit();
+            return ['accion' => 'exito'];
+        } catch (Exception $e) {
+            // SI HAY ERROR, DESHACE TODO
+            if ($conex && $conex->inTransaction()) $conex->rollBack();
             logs('Devoluciones', $e->getMessage(), 'Modelo_Incluir');
-            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+            return ['accion' => 'error', 'codigo' => DB_CONNECTION];
         } finally {
             $conex = null;
         }
@@ -142,38 +159,66 @@ class ModeloDevoluciones extends ModeloBase
             $stmtUpdate = $conex->prepare($sqlUpdate);
             $stmtUpdate->execute([$this->id_asignacion, $this->id_estado, $this->fecha_devolucion, $this->observacion, $this->id_devolucion]);
 
-            $conex->commit();
-            return ['accion' => 'exito', 'mensaje' => 'Modificación de devolución exitosa.'];
-        } catch (Exception $e) {
-            if ($conex && $conex->inTransaction()) {
-                $conex->rollBack();
+            $stmtEq = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ?");
+            $stmtEq->execute([$this->id_asignacion]);
+            $idEquipamiento = $stmtEq->fetchColumn();
+
+            if ($idEquipamiento) {
+                // ACTUALIZA LA NUEVA CALIDAD AL EQUIPO POR SI SE EQUIVOCARON AL REGISTRAR
+                $stmtEqUpd = $conex->prepare("UPDATE equipamientos SET id_estados = ? WHERE id_equipamiento = ?");
+                $stmtEqUpd->execute([$this->id_estado, $idEquipamiento]);
             }
+
+            $conex->commit();
+            return ['accion' => 'exito'];
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) $conex->rollBack();
             logs('Devoluciones', $e->getMessage(), 'Modelo_Modificar');
-            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+            return ['accion' => 'error', 'codigo' => DB_CONNECTION];
         } finally {
             $conex = null;
         }
     }
 
-    private function AnularDevolucion(): array
+    private function AnularDevolucion($motivo): array
     {
         $conex = null;
         try {
             $conex = $this->conex();
+            // INICIA TRANSACCIÓN INVERSA PARA ANULAR
             $conex->beginTransaction();
 
-            // Borrado físico real en la tabla
+            $stmtAsigOriginal = $conex->prepare("SELECT id_asignacion FROM devoluciones WHERE id_devolucion = ?");
+            $stmtAsigOriginal->execute([$this->id_devolucion]);
+            $idAsigGuardada = $stmtAsigOriginal->fetchColumn();
+
+            $idEquipamiento = null;
+            if ($idAsigGuardada) {
+                $stmtEq = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ?");
+                $stmtEq->execute([$idAsigGuardada]);
+                $idEquipamiento = $stmtEq->fetchColumn();
+            }
+
+            // BORRA LA DEVOLUCIÓN
             $stmtAnular = $conex->prepare("DELETE FROM devoluciones WHERE id_devolucion = ?");
             $stmtAnular->execute([$this->id_devolucion]);
 
-            $conex->commit();
-            return ['accion' => 'exito', 'mensaje' => 'Devolución eliminada correctamente.'];
-        } catch (Exception $e) {
-            if ($conex && $conex->inTransaction()) {
-                $conex->rollBack();
+            if ($idAsigGuardada && $idEquipamiento) {
+                // ABRE LA ASIGNACIÓN NUEVAMENTE (estatus 1)
+                $stmtRevAsig = $conex->prepare("UPDATE asignaciones SET estatus = 1 WHERE id_asignacion = ?");
+                $stmtRevAsig->execute([$idAsigGuardada]);
+
+                // BLOQUEA EL EQUIPO NUEVAMENTE COMO ASIGNADO (estatus 2)
+                $stmtRevEq = $conex->prepare("UPDATE equipamientos SET estatus = 2 WHERE id_equipamiento = ?");
+                $stmtRevEq->execute([$idEquipamiento]);
             }
+
+            $conex->commit();
+            return ['accion' => 'exito', 'motivo' => $motivo];
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) $conex->rollBack();
             logs('Devoluciones', $e->getMessage(), 'Modelo_Anular');
-            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+            return ['accion' => 'error', 'codigo' => DB_CONNECTION];
         } finally {
             $conex = null;
         }

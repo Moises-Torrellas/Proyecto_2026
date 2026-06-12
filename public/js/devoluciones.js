@@ -2,11 +2,18 @@ $(document).ready(function () {
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
     MultiConsulta();
 
+    $("#ayuda").on("click", function() {
+        if(typeof iniciarAyuda === 'function') {
+            iniciarAyuda('devoluciones'); 
+        }
+    });
+
+    // Acción para Nueva Devolución
     $("#btn_nuevo").on("click", function () {
         $("#f")[0].reset();
         $("#id_devolucion").val('');
         $("#titulo_modal").text("Registrar Devolución");
-        $("#btn_guardar").text("Confirmar Devolución").data("accion", "incluir");
+        $("#btn_guardar").text("Confirmar").attr("data-accion", "incluir");
         $('#fecha_devolucion').val(new Date().toISOString().split('T')[0]);
         
         $('#id_asignacion').closest('.colum').show();
@@ -20,22 +27,18 @@ $(document).ready(function () {
         abrirModal(); 
     });
 
-    // Evento para abrir el modal en modo reporte
+    // Acción para Generar Reporte (Abre el modal permitiendo usar filtros)
     $("#generar").on("click", function () {
         $("#f")[0].reset();
-        $("#titulo_modal").text("Generar Reporte");
-        $("#btn_guardar").text("Generar Reporte").data("accion", "generar");
-        
-        // Mostramos todos los campos para que sirvan de filtros
+        $("#id_devolucion").val('');
+        $("#titulo_modal").text("Filtros del Reporte");
+        $("#btn_guardar").text("Generar PDF").attr("data-accion", "generar");
+
         $('#id_asignacion').closest('.colum').show();
         $('#id_estado').closest('.colum').show();
         $('#fecha_devolucion').closest('.colum').show();
+        $('#observacion').closest('.colum').hide(); // Observación no filtra
         
-        // La observación normalmente no se usa para filtrar reportes, 
-        // pero la mostramos para mantener el diseño del formulario completo
-        $('#observacion').closest('.colum').show();
-
-        // Reseteamos los selectores
         $('#id_asignacion').val("").trigger('change');
         $('#id_estado').val("").trigger('change');
         $('#fecha_devolucion').val('');
@@ -43,36 +46,70 @@ $(document).ready(function () {
         abrirModal();
     });
 
+    // Acción del botón Confirmar dentro del modal
     $('#btn_guardar').on('click', function () {
-        let accion = $(this).data("accion");
+        let accion = $(this).attr("data-accion");
         
+        // Validación estricta SOLO si vas a registrar o editar
         if (accion === "incluir" || accion === "modificar") {
-            if ($('#id_asignacion').val() === "" || $('#id_estado').val() === "") {
-                muestraMensaje("error", 2000, "Validación", "Debe seleccionar una asignación y un estado.");
+            if ($('#id_asignacion').val() === "" || $('#id_estado').val() === "" || $('#fecha_devolucion').val() === "") {
+                muestraMensaje("error", 2000, "Validación", "Complete los campos obligatorios.");
                 return false;
             }
-            let datos = new FormData($('#f')[0]);
-            datos.append('accion', accion);
-            enviaAjax(datos);
-            
-        } else if (accion === "generar") {
-            if (typeof confirmar === 'function') {
-                confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                    if (confirmado) {
-                        if (typeof abrirAlertaEspara === 'function') abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
-                        var datos = new FormData($('#f')[0]);
-                        datos.append('accion', 'generar');
-                        enviaAjax(datos);
-                    }
-                });
-            } else {
-                var datos = new FormData($('#f')[0]);
-                datos.append('accion', 'generar');
-                enviaAjax(datos);
-            }
         }
+        // Si la acción es "generar" pasará de largo y permitirá enviar filtros en blanco
+        
+        let datos = new FormData($('#f')[0]);
+        datos.append('accion', accion);
+        enviaAjax(datos);
     });
 });
+
+function enviaAjax(datos) {
+    $.ajax({
+        async: true,
+        url: "",
+        type: "POST",
+        contentType: false,
+        data: datos,
+        processData: false,
+        cache: false,
+        beforeSend: function (request) { request.setRequestHeader("X-CSRF-TOKEN", $('meta[name="csrf-token"]').attr('content')); },
+        timeout: 10000,
+        success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                $('#resultadoconsulta').html(respuesta);
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                if (typeof inicializarPaginador === 'function') inicializarPaginador();
+                return;
+            }
+            try {
+                var lee = JSON.parse(respuesta);
+                if (lee.accion == "MultiConsulta") {
+                    poblarCombos(lee.asignaciones, lee.estados);
+                } else if (lee.accion == "exito") {
+                    consultar();
+                    MultiConsulta();
+                    cerrarModal();
+                    muestraMensaje("success", 2000, "Operación Exitosa", "Procesado correctamente.");
+                } else if (lee.accion == "reporte") {
+                    cerrarModal();
+                    muestraMensaje("success", 1000, "Éxito", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        window.open(lee.archivo, '_blank');
+                    }, 1000);
+                } else if (lee.accion == "error") {
+                    muestraMensaje("error", 2500, "Alerta", lee.mensaje || "Código de error: " + lee.codigo);
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Respuesta inválida del servidor.' });
+            }
+        },
+        error: function (request, status, err) {
+            muestraMensaje("error", 2000, "Error de Red", "Falló la comunicación con el servidor.");
+        }
+    });
+}
 
 function consultar() {
     let datos = new FormData();
@@ -89,12 +126,11 @@ function MultiConsulta() {
 function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
     $("#f")[0].reset();
     $("#titulo_modal").text("Modificar Devolución");
-    $("#btn_guardar").text("Guardar Cambios").data("accion", "modificar");
-    
+    $("#btn_guardar").text("Guardar Cambios").attr("data-accion", "modificar");
+
     $('#id_asignacion').closest('.colum').show();
     $('#id_estado').closest('.colum').show();
     $('#observacion').closest('.colum').show();
-    $('#fecha_devolucion').closest('.colum').show();
 
     $("#id_devolucion").val(id_devolucion);
     $("#fecha_devolucion").val(fecha);
@@ -106,26 +142,30 @@ function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
     abrirModal();
 }
 
-function anular(id_devolucion) {
+function confirmarAnulacion(id_devolucion) {
     Swal.fire({
-        title: 'Anular Devolución',
-        text: "Ingrese el motivo (Mínimo 5 caracteres):",
-        input: 'text',
+        title: '¿Estás seguro?',
+        text: "Se anulará la devolución y el equipo volverá a estar asignado. Indique el motivo:",
         icon: 'warning',
+        input: 'textarea',
+        inputPlaceholder: 'Escriba el motivo...',
         showCancelButton: true,
-        confirmButtonColor: '#39b015',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, anular',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, Anular',
         cancelButtonText: 'Cancelar',
-        inputValidator: (value) => {
-            if (!value || value.trim().length < 5) return '¡El motivo no es válido!';
+        preConfirm: (motivo) => {
+            if (!motivo || motivo.trim() === '') {
+                Swal.showValidationMessage('Debe ingresar un motivo para anular');
+            }
+            return motivo;
         }
     }).then((result) => {
         if (result.isConfirmed) {
             let datos = new FormData();
             datos.append('accion', 'anular');
             datos.append('id_devolucion', id_devolucion);
-            datos.append('motivo', result.value);
+            datos.append('motivo_anulacion', result.value); 
             enviaAjax(datos);
         }
     });
@@ -140,7 +180,19 @@ function poblarCombos(asignaciones, estados) {
 
     if (asignaciones && asignaciones.length > 0) {
         asignaciones.forEach(a => {
-            comboAsignacion.append(`<option value="${a.id_asignacion}">${a.atleta} - ${a.articulo}</option>`);
+            let nomAtleta = '';
+            if(a.nombres) nomAtleta = a.nombres + ' ' + (a.apellidos || '');
+            else if(a.atleta) nomAtleta = a.atleta;
+            
+            let nomArticulo = a.articulo_nombre || a.catalogo || a.articulo || '';
+            
+            // Genera el texto limpio para el desplegable: Ej: "Casco (Jose Perez)"
+            let textoVisible = 'Equipo sin especificar';
+            if(nomArticulo !== '' || nomAtleta !== '') {
+                textoVisible = `${nomArticulo} (${nomAtleta})`;
+            }
+
+            comboAsignacion.append(`<option value="${a.id_asignacion}">${textoVisible}</option>`);
         });
     }
 
@@ -152,61 +204,4 @@ function poblarCombos(asignaciones, estados) {
 
     comboAsignacion.trigger('change');
     comboEstado.trigger('change');
-}
-
-var token = $('meta[name="csrf-token"]').attr('content');
-function enviaAjax(datos) {
-    $.ajax({
-        async: true,
-        url: "",
-        type: "POST",
-        contentType: false,
-        data: datos,
-        processData: false,
-        cache: false,
-        beforeSend: function (request) { request.setRequestHeader("X-CSRF-TOKEN", token); },
-        timeout: 10000,
-        success: function (respuesta) {
-            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
-                $('#resultadoconsulta').html(respuesta);
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-                if (typeof inicializarPaginador === 'function') inicializarPaginador();
-                return;
-            }
-            try {
-                var lee = JSON.parse(respuesta);
-                if (lee.accion == "MultiConsulta") {
-                    poblarCombos(lee.asignaciones, lee.estados);
-                } else if (lee.accion == "incluir" || lee.accion == "modificar" || lee.accion == "exito") {
-                    consultar();
-                    MultiConsulta();
-                    cerrarModal();
-                    muestraMensaje("success", 2000, "Operación Exitosa", lee.mensaje);
-                } else if (lee.accion == "reporte") {
-                    if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
-                    cerrarModal();
-                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
-                    
-                    setTimeout(function () {
-                        const enlaceFantasma = document.createElement('a');
-                        enlaceFantasma.href = lee.archivo; 
-                        enlaceFantasma.target = '_blank';
-                        document.body.appendChild(enlaceFantasma);
-                        enlaceFantasma.click();
-                        document.body.removeChild(enlaceFantasma);
-                    }, 1000);
-                } else if (lee.accion == "error") {
-                    if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
-                    muestraMensaje("error", 2000, "Error", lee.mensaje || lee.codigo);
-                }
-            } catch (e) {
-                if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
-                Swal.fire({ icon: 'error', title: 'Error de Comunicación', text: 'El servidor falló.' });
-            }
-        },
-        error: function (request, status, err) {
-            if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
-            muestraMensaje("error", 2000, "Error", "ERROR: " + err);
-        }
-    });
 }
