@@ -16,7 +16,6 @@ class ModeloDevoluciones extends ModeloBase
     private $fecha_devolucion;
     private $observacion;
 
-    // Herramientas inyectadas
     private $objAsignaciones;
     private $objEquipamientos;
 
@@ -33,7 +32,6 @@ class ModeloDevoluciones extends ModeloBase
         $this->llavePrimaria = 'id_devolucion';
     }
 
-    // SETTERS PARA LA INYECCIÓN DE DEPENDENCIAS
     public function setAsignaciones(ModeloAsignaciones $asig) { 
         $this->objAsignaciones = $asig; 
     }
@@ -84,6 +82,7 @@ class ModeloDevoluciones extends ModeloBase
             $params = [];
             if (!empty($filtros['id_asignacion'])) { $sql .= " AND d.id_asignacion = ? "; $params[] = $filtros['id_asignacion']; }
             if (!empty($filtros['id_estado'])) { $sql .= " AND d.id_estado = ? "; $params[] = $filtros['id_estado']; }
+            if (!empty($filtros['fecha_devolucion'])) { $sql .= " AND d.fecha_devolucion = ? "; $params[] = $filtros['fecha_devolucion']; }
             
             $sql .= " ORDER BY at.id_atleta ASC, d.fecha_devolucion DESC";
 
@@ -101,11 +100,8 @@ class ModeloDevoluciones extends ModeloBase
         try {
             $conex = $this->conex();
             
-            // INICIAMOS LA TRANSACCIÓN UNIFICADA
             $conex->beginTransaction();
 
-            // 1. Buscamos el equipo y validamos que la asignación esté activa
-            // Usamos FOR UPDATE para bloquear la fila y evitar que dos personas la devuelvan al mismo tiempo
             $stmtAsig = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? AND anulado = 0 AND estatus = 1 FOR UPDATE");
             $stmtAsig->execute([$this->id_asignacion]);
             $idEquipamiento = $stmtAsig->fetchColumn();
@@ -114,27 +110,22 @@ class ModeloDevoluciones extends ModeloBase
                 throw new Exception("La asignación no es válida o ya fue devuelta.");
             }
 
-            // 2. ACTUALIZAMOS ASIGNACIONES: Usando la inyección si existe, o un plan B directo
             if ($this->objAsignaciones) {
                 $this->objAsignaciones->CambiarEstatusAsignacion($this->id_asignacion, 2, $conex);
             } else {
                 $conex->prepare("UPDATE asignaciones SET estatus = 2 WHERE id_asignacion = ?")->execute([$this->id_asignacion]);
             }
 
-            // 3. ACTUALIZAMOS EQUIPAMIENTO: Lo liberamos (estatus 1) y registramos su desgaste (id_estados)
             $stmtEqUpd = $conex->prepare("UPDATE equipamientos SET estatus = 1, id_estados = ? WHERE id_equipamiento = ?");
             $stmtEqUpd->execute([$this->id_estado, $idEquipamiento]);
 
-            // 4. REGISTRAMOS LA DEVOLUCIÓN:
             $stmtInsert = $conex->prepare("INSERT INTO devoluciones (id_asignacion, id_estado, fecha_devolucion, observacion) VALUES (?, ?, ?, ?)");
             $stmtInsert->execute([$this->id_asignacion, $this->id_estado, $this->fecha_devolucion, $this->observacion]);
 
-            // SI TODO SALIÓ BIEN, GUARDAMOS
             $conex->commit();
             return ['accion' => 'exito', 'mensaje' => 'Devolución procesada y equipo liberado.'];
 
         } catch (Exception $e) {
-            // SI FALLA, REVERTIMOS TODO
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
             }
@@ -151,7 +142,6 @@ class ModeloDevoluciones extends ModeloBase
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            // Recuperamos datos históricos
             $stmtAsig = $conex->prepare("SELECT id_asignacion FROM devoluciones WHERE id_devolucion = ? FOR UPDATE");
             $stmtAsig->execute([$this->id_devolucion]);
             $idAsig = $stmtAsig->fetchColumn();
@@ -162,17 +152,14 @@ class ModeloDevoluciones extends ModeloBase
 
             if (!$idAsig || !$idEq) throw new Exception("Registro no encontrado.");
 
-            // 1. Borramos la devolución
             $conex->prepare("DELETE FROM devoluciones WHERE id_devolucion = ?")->execute([$this->id_devolucion]);
 
-            // 2. Revertimos Asignación (Vuelve a Activa = 1)
             if ($this->objAsignaciones) {
                 $this->objAsignaciones->CambiarEstatusAsignacion($idAsig, 1, $conex);
             } else {
                 $conex->prepare("UPDATE asignaciones SET estatus = 1 WHERE id_asignacion = ?")->execute([$idAsig]);
             }
 
-            // 3. Revertimos Equipo (Vuelve a Ocupado = 2)
             $conex->prepare("UPDATE equipamientos SET estatus = 2 WHERE id_equipamiento = ?")->execute([$idEq]);
 
             $conex->commit();

@@ -172,7 +172,7 @@
                 <tr>
                     <th style="width: 5%;">#</th>
                     <th style="width: 15%;">Fecha</th>
-                    <th style="width: 35%;">Asignación</th>
+                    <th style="width: 35%;">Asignación y Atleta</th>
                     <th style="width: 20%;">Calidad</th>
                     <th style="width: 25%;">Observación</th>
                 </tr>
@@ -185,8 +185,9 @@
                         $id++; 
                         $observacion = !empty(trim($r['observacion'])) ? htmlspecialchars($r['observacion']) : 'Sin observaciones';
                         
-                        // AQUI ESTÁ LA CORRECCIÓN: Usamos las variables exactas que manda el modelo
+                        // Variables exactas del modelo, añadiendo el atleta
                         $articulo = htmlspecialchars($r['articulo_nombre']);
+                        $atleta = htmlspecialchars($r['atleta_nombre'] . ' ' . $r['atleta_apellido']);
                         $calidad = htmlspecialchars($r['calidad']);
                 ?>
                     <tr>
@@ -194,9 +195,11 @@
                         <td class="data-cell"><?= $r['fecha_vista'] ?></td>
                         <td class="data-cell">
                             <strong><?= $articulo ?></strong><br>
-                            <span style="font-size: 10px; color: #718096;">ID Asig: #<?= $r['id_asignacion'] ?></span>
+                            <span style="font-size: 11px; color: #4a5568;"><?= $atleta ?></span>
                         </td>
-                        <td class="data-cell"><?= $calidad ?></td>
+                        <td class="data-cell">
+                            <strong style="color: #2b6cb0;"><?= $calidad ?></strong>
+                        </td>
                         <td class="data-cell"><?= $observacion ?></td>
                     </tr>
                 <?php 

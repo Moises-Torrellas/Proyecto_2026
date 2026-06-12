@@ -21,13 +21,23 @@ $(document).ready(function () {
         $('#observacion').closest('.colum').show();
         $('#fecha_devolucion').closest('.colum').show();
 
+        // Ocultamos las asignaciones que ya fueron devueltas (estatus = 2)
+        $("#id_asignacion option").each(function() {
+            let estatus = $(this).attr("data-estatus");
+            if (estatus == "2") {
+                $(this).prop("disabled", true).hide();
+            } else {
+                $(this).prop("disabled", false).show();
+            }
+        });
+
         $('#id_asignacion').val("").trigger('change');
         $('#id_estado').val("").trigger('change');
 
         abrirModal(); 
     });
 
-    // Acción para Generar Reporte (Abre el modal permitiendo usar filtros)
+    // Acción para Generar Reporte
     $("#generar").on("click", function () {
         $("#f")[0].reset();
         $("#id_devolucion").val('');
@@ -39,6 +49,11 @@ $(document).ready(function () {
         $('#fecha_devolucion').closest('.colum').show();
         $('#observacion').closest('.colum').hide(); // Observación no filtra
         
+        // Mostramos absolutamente todas las asignaciones para poder auditarlas
+        $("#id_asignacion option").each(function() {
+            $(this).prop("disabled", false).show();
+        });
+
         $('#id_asignacion').val("").trigger('change');
         $('#id_estado').val("").trigger('change');
         $('#fecha_devolucion').val('');
@@ -46,31 +61,22 @@ $(document).ready(function () {
         abrirModal();
     });
 
-    // Acción del botón Confirmar dentro del modal
+    // Acción del botón Confirmar
     $('#btn_guardar').on('click', function () {
-    let accion = $(this).attr("data-accion");
-    
-    // Validación estricta SOLO si vas a registrar o editar
-    if (accion === "incluir" || accion === "modificar") {
-        if ($('#id_asignacion').val() === "" || $('#id_estado').val() === "" || $('#fecha_devolucion').val() === "") {
-            muestraMensaje("error", 2000, "Validación", "Complete los campos obligatorios.");
-            return false;
+        let accion = $(this).attr("data-accion");
+        
+        if (accion === "incluir" || accion === "modificar") {
+            if ($('#id_asignacion').val() === "" || $('#id_estado').val() === "" || $('#fecha_devolucion').val() === "") {
+                muestraMensaje("error", 2000, "Validación", "Complete los campos obligatorios.");
+                return false;
+            }
         }
-    }
-    
-    // --- AGREGA ESTA LÍNEA PARA VER SI LOS DATOS SALEN BIEN ---
-    // Esto te dirá en la consola si el JS está capturando los datos correctamente
-    console.log("Acción enviada:", accion);
-    
-    let datos = new FormData($('#f')[0]);
-    datos.append('accion', accion);
-    
-    // --- OPCIONAL: DEPURACIÓN ---
-    // Si la transacción falla, descomenta la siguiente línea para ver qué datos lleva el paquete
-    // for (var pair of datos.entries()) { console.log(pair[0]+ ': ' + pair[1]); }
-    
-    enviaAjax(datos);
-});
+        
+        let datos = new FormData($('#f')[0]);
+        datos.append('accion', accion);
+        
+        enviaAjax(datos);
+    });
 });
 
 function enviaAjax(datos) {
@@ -144,6 +150,11 @@ function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
     $("#fecha_devolucion").val(fecha);
     $("#observacion").val(observacion);
     
+    // Mostramos todas las opciones al editar para no romper Select2
+    $("#id_asignacion option").each(function() {
+        $(this).prop("disabled", false).show();
+    });
+    
     $("#id_asignacion").val(id_asignacion).trigger('change');
     $("#id_estado").val(id_estado).trigger('change');
     
@@ -188,19 +199,11 @@ function poblarCombos(asignaciones, estados) {
 
     if (asignaciones && asignaciones.length > 0) {
         asignaciones.forEach(a => {
-            let nomAtleta = '';
-            if(a.nombres) nomAtleta = a.nombres + ' ' + (a.apellidos || '');
-            else if(a.atleta) nomAtleta = a.atleta;
+            let nomAtleta = a.atleta || '';
+            let nomArticulo = a.articulo || '';
+            let textoVisible = `${nomArticulo} (${nomAtleta})`;
             
-            let nomArticulo = a.articulo_nombre || a.catalogo || a.articulo || '';
-            
-            // Genera el texto limpio para el desplegable: Ej: "Casco (Jose Perez)"
-            let textoVisible = 'Equipo sin especificar';
-            if(nomArticulo !== '' || nomAtleta !== '') {
-                textoVisible = `${nomArticulo} (${nomAtleta})`;
-            }
-
-            comboAsignacion.append(`<option value="${a.id_asignacion}">${textoVisible}</option>`);
+            comboAsignacion.append(`<option value="${a.id_asignacion}" data-estatus="${a.estatus_asignacion}">${textoVisible}</option>`);
         });
     }
 

@@ -17,8 +17,6 @@ if (!class_exists($nombreClaseModelo)) {
 }
 
 $objModelo = new ModeloDevoluciones();
-
-// Inyección de dependencias
 $objModelo->setAsignaciones(new ModeloAsignaciones());
 $objModelo->setEquipamientos(new ModeloEquipamientos());
 
@@ -99,12 +97,26 @@ function MultiConsulta(): void {
         $modeloAsignaciones = new ModeloAsignaciones();
         $modeloEstado = new ModeloCalidad(); 
 
-        $respAsignaciones = $modeloAsignaciones->ConsultarAsignaciones(); 
+        $conex = $modeloAsignaciones->conex();
+        $sql = "SELECT a.id_asignacion, a.estatus as estatus_asignacion,
+                       CONCAT(at.nombres, ' ', at.apellidos) as atleta,
+                       c.nombre as articulo
+                FROM asignaciones a
+                INNER JOIN atletas at ON a.id_atleta = at.id_atleta
+                INNER JOIN equipamientos e ON a.id_equipamiento = e.id_equipamiento
+                INNER JOIN catalogos c ON e.id_catalogo = c.id_catalogo
+                WHERE a.anulado = 0
+                ORDER BY a.fecha_asignacion DESC";
+        
+        $stmt = $conex->prepare($sql);
+        $stmt->execute();
+        $asignaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         $respEstado = $modeloEstado->Consultar(); 
 
         echo json_encode([
             'accion'       => 'MultiConsulta',
-            'asignaciones' => $respAsignaciones['datos'] ?? [],
+            'asignaciones' => $asignaciones,
             'estados'      => $respEstado['datos'] ?? []
         ]);
     } catch (Exception $e) {
@@ -114,7 +126,6 @@ function MultiConsulta(): void {
 
 function procesarFormulario($obj, $accion, $id_modulo, $bitacoraObj): void {
     try {
-        // 1. Limpiamos y preparamos los datos
         $datos = [
             'accion'           => $accion, 
             'id_devolucion'    => filter_var($_POST['id_devolucion'] ?? null, FILTER_SANITIZE_NUMBER_INT),
@@ -124,15 +135,12 @@ function procesarFormulario($obj, $accion, $id_modulo, $bitacoraObj): void {
             'observacion'      => filter_var($_POST['observacion'] ?? '', FILTER_SANITIZE_SPECIAL_CHARS)
         ];
         
-        // 2. Validación extra en el backend
         if (empty($datos['id_asignacion']) || empty($datos['id_estado']) || empty($datos['fecha_devolucion'])) {
             throw new Exception("Faltan campos obligatorios por completar.");
         }
 
-        // 3. Enviamos al Modelo
         $resultado = $obj->ProcesarDatos($datos);
         
-        // 4. Respuesta al JS
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, ($accion === 'incluir' ? "Registró" : "Modificó") . " devolución ID Asig: " . $datos['id_asignacion']);
             echo json_encode(['accion' => 'exito', 'mensaje' => $resultado['mensaje'] ?? 'Operación realizada correctamente.']);
@@ -146,7 +154,6 @@ function procesarFormulario($obj, $accion, $id_modulo, $bitacoraObj): void {
 
 function anular($obj, $id_modulo, $bitacoraObj): void {
     try {
-        // 1. Capturamos los datos
         $datos = [
             'accion' => 'anular', 
             'id_devolucion' => filter_var($_POST['id_devolucion'] ?? '', FILTER_SANITIZE_NUMBER_INT),
@@ -157,10 +164,8 @@ function anular($obj, $id_modulo, $bitacoraObj): void {
             throw new Exception("ID de devolución no válido.");
         }
         
-        // 2. Ejecutamos
         $resultado = $obj->ProcesarDatos($datos);
         
-        // 3. Respuesta
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Anuló devolución ID: " . $datos['id_devolucion']);
             echo json_encode(['accion' => 'exito', 'mensaje' => $resultado['mensaje'] ?? 'Anulación exitosa.']);
