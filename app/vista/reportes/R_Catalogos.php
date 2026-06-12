@@ -76,7 +76,7 @@
 
         table.data-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
             margin-top: 10px;
         }
 
@@ -132,7 +132,7 @@
         /* Estructura para separar los textos informativos a los extremos */
         .footer-meta {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
         }
 
         .footer-meta td {
@@ -187,11 +187,11 @@
                 </tr>
             </thead>
             <tbody>
-                <?php 
+                <?php
                 $contador = 0;
-                foreach ($datos as $item): 
-                    $contador++; 
-                ?>
+                foreach ($datos as $item) :
+                    $contador++;
+                    ?>
                     <tr>
                         <td class="data-cell"><?= $contador ?></td>
                         <td class="data-cell" style="font-weight: bold;"><?= htmlspecialchars($item['nombre']) ?></td>

@@ -18,7 +18,7 @@ setlocale(LC_CTYPE, 'es_ES.UTF-8');
 
 define('_TEMA_', $_COOKIE['tema_preferido'] ?? 'claro');
 
-/*Requisitos no Funcionales*/
+
 const _MD_USUARIOS_ = 1;
 const _MD_ROLES_    = 2;
 const _MD_BITACORA_ = 3;
@@ -49,6 +49,7 @@ const _MD_CALIDAD_ = 104;
 const _MD_PARTICIPACIONES_ = 105;
 const _MD_RESPALDO_ = 106;
 const _MD_REPORTES_ = 107;
+const _MD_HISTORIAL_ = 108;
 
 /* CODIGOS DE ERROR */
 const DUPLICATE_CEDULA = "001";
@@ -56,16 +57,13 @@ const DUPLICATE_EMAIL  = "002";
 const INVALID_ID     = "003";
 const DUPLICATE_NAME  = "004";
 const DUPLICATE_PHONE  = "005";
+const DUPLICATE  = "010";
 const ASSOCIATES  = "006";
 const VALIDATION = "007";
+const ALREADY_ANNULLED = "008";
+const EMPTY_SELECTION  = "009";
 const DB_CONNECTION    = "500";
 
 
 const EXCHANGE_RATE_API_KEY = 'eb4ded73b72a7239fcce3154' ;
-if (session_status() === PHP_SESSION_NONE) {
-    // Configuramos la sesión antes de iniciarla
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.use_only_cookies', 1);
-    session_name('SISTEMA_CBS_SESSION');
-    session_start();
-}
+

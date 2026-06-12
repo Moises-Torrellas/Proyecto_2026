@@ -144,6 +144,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un concepto de pago con ese nombre.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en el registro.'
             };
 
@@ -186,6 +187,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un concepto de pago con ese nombre.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
 
@@ -219,6 +221,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El concepto de pago no existe.',
                 ASSOCIATES  => 'El concepto de pago tiene atletas asociados.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la eliminacion.'
             };
         }

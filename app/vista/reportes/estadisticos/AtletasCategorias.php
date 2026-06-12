@@ -76,7 +76,7 @@
 
         table.data-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
             margin-top: 10px;
         }
 
@@ -137,7 +137,7 @@
         /* Estructura para separar los textos informativos a los extremos */
         .footer-meta {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
         }
 
         .footer-meta td {
@@ -194,7 +194,8 @@
             </thead>
             <tbody>
                 <?php $id = 0;
-                foreach ($datos as $r): $id++; ?>
+                foreach ($datos as $r) :
+                    $id++; ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['categoria']) ?></td>

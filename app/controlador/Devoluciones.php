@@ -112,6 +112,7 @@ function MultiConsulta(): void {
         $stmt->execute();
         $asignaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        $respAsignaciones = $modeloAsignaciones->ConsultarAgrupado(); 
         $respEstado = $modeloEstado->Consultar(); 
 
         echo json_encode([

@@ -218,7 +218,7 @@ function enviaAjax(datos) {
         beforeSend: function (request) {
             request.setRequestHeader("X-CSRF-TOKEN", token);
         },
-        timeout: 10000,
+        timeout: 120000,
         success: function (respuesta) {
             // 1. COMPROBACIÓN CRÍTICA: ¿Es HTML? (Se evalúa ANTES de parsear JSON)
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {

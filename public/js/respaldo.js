@@ -48,7 +48,7 @@ function crearConsulta(datos) {
     contenedor.empty();
 
     if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No hay respaldos almacenados en el servidor.</p></div>');
+        contenedor.append('<div class="listado_vacio"><p>No hay respaldos almacenados.</p></div>');
     } else {
         datos.forEach(dato => {
             let registro = `
@@ -65,7 +65,7 @@ function crearConsulta(datos) {
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>Creado por</small>
-                                <span style="font-weight: bold; color: #000308; font-size: 15px; letter-spacing: 0.5px;">${dato.creador}</span>
+                                <span>${dato.creador}</span>
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>Peso</small>

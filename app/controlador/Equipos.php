@@ -273,6 +273,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un equipo registrado con ese nombre.',
                 INVALID_ID => 'La categoría ingresada no existe en los registros del club.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default => 'Ocurrió un error inesperado en el registro.'
             };
         }
@@ -345,6 +346,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un Equipo registrado con este nombre.',
                 INVALID_ID => 'La categoría ingresada no existe en los registros del club.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default => 'Ocurrió un error inesperado en la modificación.'
             };
         }
@@ -379,6 +381,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El equipo no existe.',
                 ASSOCIATES => 'El equipo tiene palmarés asociados.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default => 'Ocurrió un error inesperado en la eliminación.'
             };
         }

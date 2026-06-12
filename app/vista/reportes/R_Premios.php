@@ -76,7 +76,7 @@
 
         table.data-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
             margin-top: 10px;
         }
 
@@ -132,7 +132,7 @@
         /* Estructura para separar los textos informativos a los extremos */
         .footer-meta {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
         }
 
         .footer-meta td {
@@ -184,13 +184,13 @@
                 </tr>
             </thead>
             <tbody>
-                <?php 
+                <?php
                 $id = 0;
-                foreach ($datos as $r): 
-                    $id++; 
+                foreach ($datos as $r) :
+                    $id++;
                     // Convertimos la letra I o G en texto legible para el PDF
                     $txtTipo = (strtoupper($r['tipo']) === 'I') ? 'Individual' : 'Grupal';
-                ?>
+                    ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['nombre']) ?></td>

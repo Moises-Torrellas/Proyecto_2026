@@ -169,8 +169,8 @@ function crearConsulta(datos) {
         datos.forEach(dato => {
             // Etiqueta visual para el estatus
             let badgeEstatus = dato.estatus == 1 
-                ? '<span style="background-color: #00cc00; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">Activo</span>'
-                : '<span style="background-color: #6c757d; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">Finalizado</span>';
+                ? '<span class="estatus_v">Activo</span>'
+                : '<span class="estatus_r">Finalizado</span>';
 
             let registro = `
                 <div class="listado_contenedor_grupal">
@@ -194,7 +194,7 @@ function crearConsulta(datos) {
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>Estatus</small>
-                                <span>${badgeEstatus}</span>
+                                ${badgeEstatus}
                             </div>
                         </div>
 
@@ -241,7 +241,7 @@ function enviaAjax(datos) {
         beforeSend: function (request) {
             request.setRequestHeader("X-CSRF-TOKEN", token);
         },
-        timeout: 10000,
+        timeout: 120000,
         success: function (respuesta) {
             try {
                 var lee = JSON.parse(respuesta);

@@ -5,6 +5,8 @@ use App\modelo\ModeloCuentasCobrar;
 use App\modelo\ModeloMonedas;
 use App\modelo\ModeloMetodosPago;
 
+use App\servicios\GenerarReporte;
+
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
@@ -21,6 +23,8 @@ if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
     exit();
 }
+
+
 
 $objModelo = new ModeloPagos();
 
@@ -41,7 +45,8 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
             throw new Exception('Error de seguridad: Token inválido o expirado.');
         }
-
+        /* $usuario = $_GET['nombre'];
+        echo "Bienvenido, " . $usuario; */
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
         // Seguridad centralizada
@@ -64,6 +69,9 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
             case 'consultarTasa':
                 consultarTasa($obj);
                 break;
+            case 'generar':
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -83,9 +91,8 @@ function consultarTasa($obj): void
         $moneda_pago = isset($_POST['moneda_pago']) ? strtoupper(trim($_POST['moneda_pago'])) : 'VES';
 
         $tasa = $obj->obtenerTasaBackend($moneda_base, $moneda_pago);
-        
-        echo json_encode(['accion' => 'consultarTasa', 'exito' => true, 'tasa' => $tasa]);
 
+        echo json_encode(['accion' => 'consultarTasa', 'exito' => true, 'tasa' => $tasa]);
     } catch (Exception $e) {
         logs('Pagos', $e->getMessage(), 'Controlador_consultarTasa');
         echo json_encode(['accion' => 'consultarTasa', 'exito' => false, 'mensaje' => $e->getMessage()]);
@@ -96,14 +103,15 @@ function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    
-    $registro = $respuesta['datos'] ?? []; 
+
+    $registro = $respuesta['datos'] ?? [];
     $solo_lista = true;
 
-    include (__DIR__.'/../vista/Pagos.php');
+
+    include(__DIR__ . '/../vista/Pagos.php');
 }
 
-function MultiConsulta() : void 
+function MultiConsulta(): void
 {
     try {
         // 1. Instanciar los modelos
@@ -112,19 +120,19 @@ function MultiConsulta() : void
         $modeloMP      = new ModeloMetodosPago();
 
         $respCuentas = $modeloCuentas->Consultar();
-        $cuentasFiltradas = array_filter($respCuentas['datos'] ?? [], function($item) {
+        $cuentasFiltradas = array_filter($respCuentas['datos'] ?? [], function ($item) {
             return (int)$item['anulado'] === 0 && floatval($item['monto_pendiente']) > 0 && (int)$item['estatus'] === 0;
         });
 
         // 3. Obtener y filtrar Monedas (Solo estatus 1)
         $respMonedas = $modeloMonedas->Consultar();
-        $monedasFiltradas = array_filter($respMonedas['datos'] ?? [], function($item) {
+        $monedasFiltradas = array_filter($respMonedas['datos'] ?? [], function ($item) {
             return isset($item['estatus']) && (int)$item['estatus'] === 1;
         });
 
         // 4. Obtener y filtrar Métodos de Pago (Solo estatus 1)
         $respMP = $modeloMP->Consultar();
-        $metodosFiltrados = array_filter($respMP['datos'] ?? [], function($item) {
+        $metodosFiltrados = array_filter($respMP['datos'] ?? [], function ($item) {
             return isset($item['estatus']) && (int)$item['estatus'] === 1;
         });
         echo json_encode([
@@ -133,11 +141,10 @@ function MultiConsulta() : void
             'monedas' => array_values($monedasFiltradas),
             'metodos' => array_values($metodosFiltrados)
         ]);
-
     } catch (Exception $e) {
         logs('Pagos', $e->getMessage(), 'Controlador_MultiConsulta');
         echo json_encode([
-            'accion' => 'error', 
+            'accion' => 'error',
             'mensaje' => 'Error en la carga masiva de datos: ' . $e->getMessage()
         ]);
     }
@@ -171,7 +178,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             $validaciones['referencia'] = ['regla' => '/^[a-zA-Z0-9\-\_]+$/', 'mensaje' => 'Referencia inválida. Solo alfanuméricos y guiones.'];
             $datos['referencia'] = trim($_POST['referencia']);
         }
-        
+
         if (!empty($_POST['fecha'])) {
             $validaciones['fecha'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
         }
@@ -186,18 +193,27 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             }
         }
 
+        $obj->setCuentas(new ModeloCuentasCobrar());
+        //$obj->setMetodos(new ModeloMetodosPago());
+        $obj->setMonedas(new ModeloMonedas());
+
         $datos['accion'] = 'incluir';
         $resultado = $obj->ProcesarDatos($datos);
-        
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             $cuentas_str = is_array($datos['cuenta']) ? implode(', ', $datos['cuenta']) : $datos['cuenta'];
             registrarBitacora($bitacoraObj, $id_modulo, "Registro de Pago a las cuentas por cobrar: " . $cuentas_str);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Pago registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID       => 'La cuenta por cobrar o el método/moneda seleccionados no existen.',
-                default          => $resultado['codigo']
+                INVALID_ID         => 'El método de pago seleccionado no existe.',
+                INVALID_ID . '0'   => 'La moneda seleccionada no es válida.',
+                EMPTY_SELECTION    => 'Debe seleccionar al menos una cuenta por cobrar.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
+                default            => 'Ocurrió un error inesperado en el registro del pago.'
             };
+
+            //$resultado['mensaje'] = 'Ocurrio un error en el registro del pago: ' . $resultado['mensaje'];
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
@@ -209,31 +225,89 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id de pago inválido.'],
-                        'motivo_anulacion' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/', 'mensaje' => 'Motivo de anulación inválido.']];
+        $validaciones = [
+            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id de pago inválido.'],
+            'motivo_anulacion' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/', 'mensaje' => 'Motivo de anulación inválido.']
+        ];
         $_POST['id'] = trim($_POST['id']);
         validar_datos($validaciones);
-        
+
         $datos = [
             'id' => $_POST['id'],
             'accion' => 'eliminar'
         ];
 
+        $obj->setCuentas(new ModeloCuentasCobrar());
+
         $resultado = $obj->ProcesarDatos($datos);
-        
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Anulación del Pago: " . $datos['id'].' Motivo: '.$_POST['motivo_anulacion']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Anulación del Pago: " . $datos['id'] . ' Motivo: ' . $_POST['motivo_anulacion']);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Pago anulado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID       => 'El pago no existe.',
-                default          => 'Ocurrió un error inesperado en la anulación del pago.'
+                INVALID_ID         => 'El pago no existe.',
+                ALREADY_ANNULLED   => 'El pago ya se encuentra anulado.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
+                default            => 'Ocurrió un error inesperado en la anulación del pago.'
             };
+            //$resultado['mensaje'] = 'Ocurrio un error en el registro del pago: ' . $resultado['mensaje'];
         }
         echo json_encode($resultado);
-
     } catch (Exception $e) {
         logs('Pagos', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validacionesReporte = [];
+        $datosFiltro = ['accion' => 'generar'];
+
+        $datosFiltro['anulados'] = isset($_POST['anulados']) ? 1 : 0;
+        if (!empty($_POST['metodo'])) {
+            $validacionesReporte['metodo'] = ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Método de pago inválido.'];
+            $datosFiltro['metodo'] = $_POST['metodo'];
+        }
+        if (!empty($_POST['moneda'])) {
+            $validacionesReporte['moneda'] = ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Moneda inválida.'];
+            $datosFiltro['moneda'] = $_POST['moneda'];
+        }
+        if (!empty($_POST['fecha'])) {
+            $validacionesReporte['fecha'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
+            $datosFiltro['fecha'] = $_POST['fecha'];
+        }
+        if (!empty($_POST['fecha_f'])) {
+            $validacionesReporte['fecha_f'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
+            $datosFiltro['fecha_f'] = $_POST['fecha_f'];
+        }
+
+        validar_datos($validacionesReporte);
+
+        $respuesta = $obj->procesarDatos($datosFiltro);
+
+        // NUEVO: Validar si el modelo retornó un error estructurado
+        if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+            echo json_encode(['accion' => 'error', 'mensaje' => $respuesta['mensaje']]);
+            exit();
+        }
+
+        $datos = $respuesta['datos'] ?? [];
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron pagos para hacer el reporte.']);
+            exit();
+        }
+        $nombreVista = 'R_Pagos';
+        $objG = new GenerarReporte();
+        $pdf = $objG->generarPDF($nombreVista, $datos, 'Pagos');
+        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Pagos.");
+        }
+        echo json_encode($pdf);
+    } catch (Exception $e) {
+        logs('Pagos', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

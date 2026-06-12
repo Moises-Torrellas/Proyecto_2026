@@ -9,7 +9,7 @@ function manejarRuta($pagina): void
 
         // Registramos (Asegúrate que la constante _MD_Cerrar_ esté en tu config)
         if (isset($_SESSION['id'])) {
-            $bitacora->RegistrarAccion(_MD_CERRAR_, "Cierre de sesión.", $_SESSION['id']);
+           // $bitacora->RegistrarAccion(_MD_CERRAR_, "Cierre de sesión.", $_SESSION['id']);
         }
         // Limpiamos la sesión de forma segura
         $_SESSION = [];
@@ -63,6 +63,9 @@ function manejarRuta($pagina): void
         'Equipos'=>'Equipos',
         'Asignaciones' => 'Asignaciones',
         'Equipamientos'=>'Equipamientos',
+        'Palmares'=>'Palmares',
+        'Estadisticas'=>'Estadisticas',
+        'Historial'=>'Historial',
     ];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {

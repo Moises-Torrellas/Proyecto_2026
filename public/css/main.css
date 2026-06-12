@@ -50,8 +50,8 @@
 [data-tema="oscuro"] {
     /* Modo oscuro */
     --fuente: sans-serif;
-    --fondo-principal: #1f2a36;
-    --fondo-contraste: #2b3a48;
+    --fondo-principal: #2c3745;
+    --fondo-contraste: #334954;
     --color-primario: #32AF0A;
     --color-claro: #828282;
     --color-secundario: #3a4750;
@@ -62,7 +62,7 @@
     --color-peligro: #ff4d4f;
     --texto-sombra: 0px 0px 8px #31c7e666;
 
-    --fondo-form: #212A36;
+    --fondo-form: #334954;
     --borde-form: #c8d1e0;
 
     --boton-fondo: var(--color-primario);
@@ -364,7 +364,15 @@ option {
 
 .icon_input {
     position: absolute;
-    right: 15px;
+    right: 70px;
+    top: 14px;
+    color: var(--texto-principal);
+    transition: color .2s ease-in;
+}
+
+.icon_input_ojo {
+    position: absolute;
+    right: 18px;
     top: 14px;
     color: var(--texto-principal);
     transition: color .2s ease-in;
@@ -688,6 +696,133 @@ option {
     padding: 15px;
 }
 
+/* Contenedor principal de la fila del torneo */
+.sub_item_fila_estadistica {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #fcfcfc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+/* Columna izquierda: Nombre del torneo y fecha */
+.sub_item_info_torneo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.torneo_titulo_resaltado {
+    font-weight: 700;
+    font-size: 15px;
+    color: #1e293b;
+}
+
+.torneo_fecha_sub {
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* Columna central: Bloque vertical de métricas */
+.sub_item_bloque_metricas {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Alinea los textos a la derecha dentro del bloque */
+    gap: 6px;
+    margin-right: 30px;
+    min-width: 150px;
+}
+
+/* Cada renglón de métrica individual */
+.metrica_linea {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.metrica_linea strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+/* Columna derecha: Botones de acción */
+.sub_item_acciones_estadistica {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Contenedor principal de la fila del torneo */
+.sub_item_fila_estadistica {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: var(--fondo-contraste);
+    border: 1px solid var(--color-primario);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    gap: 20px;
+}
+
+/* Columna izquierda: Torneo y fecha */
+.sub_item_info_torneo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 150px; /* Espacio reservado para que el texto no pise las estadísticas */
+}
+
+.torneo_titulo_resaltado {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--texto-principal);
+}
+
+.torneo_fecha_sub {
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* CLASE CLAVE: Distribución totalmente horizontal en fila */
+.sub_item_bloque_metricas_horizontal {
+    display: flex;
+    flex-direction: row;       /* Asegura que vayan una al lado de la otra */
+    flex: 1;                   /* Toma todo el espacio disponible del centro */
+    justify-content: space-evenly; /* Las separa con distancias idénticas */
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;           /* Previene que colapsen si la pantalla se achica mucho */
+}
+
+/* Cada métrica individual */
+.metrica_item {
+    font-size: 14px;
+    color: #64748b;
+    white-space: nowrap;       /* Evita saltos de línea internos en "Goles Contra:" */
+}
+
+.metrica_item strong {
+    color: var(--texto-principal);
+    font-weight: 700;
+}
+
+/* Columna derecha: Botones de acción */
+.sub_item_acciones_estadistica {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 100px;
+}
+
+.titulo_b{
+    color: var(--texto-principal);
+    font-weight: bold;
+}
 
 .detalle_expandido_container {
     padding: 10px;
@@ -1335,3 +1470,98 @@ option {
     font-size: 1.5rem !important;
     font-weight: 600;
 }
+/* --- Clases para Vista Dividida (Palmar�s) --- */
+.contenedor-dividido {
+    display: flex;
+    gap: 20px;
+    height: calc(100vh - 220px);
+    margin-top: 15px;
+    width: 100%;
+}
+.panel-mitad {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--fondo-principal);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid var(--borde-color);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.titulo-panel {
+    margin-bottom: 15px;
+    color: var(--texto-principal);
+    border-bottom: 2px solid var(--color-primario);
+    padding-bottom: 8px;
+    font-size: 16px;
+}
+.titulo-panel-secundario {
+    border-color: var(--color-secundario);
+}
+@media (max-width: 900px) {
+    .contenedor-dividido {
+        flex-direction: column;
+        height: auto;
+    }
+    .panel-mitad {
+        min-height: 400px;
+    }
+}
+
+
+
+/* --- Clases para Pesta�as (Tabs) tipo Archivero --- */
+.pestanas-contenedor {
+    width: 100%;
+    margin-top: 15px;
+}
+.pestanas-header {
+    display: flex;
+    gap: 5px;
+    border-bottom: 2px solid var(--borde-color);
+}
+.pestana-btn {
+    background: var(--fondo-principal);
+    border: 2px solid var(--borde-color);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--texto-principal);
+    font-size: 14px;
+    transition: background 0.3s;
+    outline: none;
+    opacity: 0.7;
+}
+.pestana-btn:hover {
+    background: var(--fondo-contraste);
+}
+.pestana-btn.activa {
+    background: var(--fondo-contraste);
+    opacity: 1;
+    position: relative;
+    top: 2px;
+    border-bottom: 2px solid var(--fondo-contraste);
+    color: var(--color-primario);
+}
+.pestanas-body { border-top: 2px solid var(--borde-color); border-bottom: none; border-left: none; border-right: none; border-radius: 0; padding: 15px 0 0 0; height: calc(100vh - 220px); display: flex; flex-direction: column; }
+.pestana-content {
+    display: none;
+    height: 100%;
+    flex-direction: column;
+}
+.pestana-content.activa {
+    display: flex;
+}
+.contenedor_busqueda_wrap {
+    width: 100%;
+    display: flex;
+}
+.contenedor_busqueda {
+    position: relative;
+    max-width: 300px;
+    width: 100%;
+}
+
+

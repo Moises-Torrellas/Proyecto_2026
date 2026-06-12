@@ -24,10 +24,10 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']): ?>
+                            <?php if ($permisos['registrar']) : ?>
                                 <button class="btn btn_azul" id="incluir">Nuevo Usuario</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']): ?>
+                            <?php if ($permisos['reporte']) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -97,7 +97,7 @@
                                 <input type="password" class="formulario" id="contraseña" name="contraseña">
                                 <label for="contraseña" class="titulo_formulario">Contraseña</label>
                                 <span class="mensaje" id="contraseña_spam"></span>
-                                <i class="fi fi-sr-eye ojo icon_input"></i>
+                                <i class="fi fi-sr-eye ojo icon_input_ojo"></i>
                             </div>
                         </div>
                         <div class="colum">

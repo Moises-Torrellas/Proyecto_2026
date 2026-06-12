@@ -4,7 +4,6 @@ namespace App\modelo;
 
 use App\interface\InterBitacora;
 use Exception;
-use PDOException;
 
 class ModeloBitacora extends ModeloBase implements InterBitacora
 {
@@ -31,7 +30,7 @@ class ModeloBitacora extends ModeloBase implements InterBitacora
 
             $conex->commit();
 
-        }catch(PDOException $e){
+        }catch(Exception $e){
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
             }

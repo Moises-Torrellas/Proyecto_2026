@@ -4,6 +4,7 @@
 --
 -- Servidor: 127.0.0.1
 -- Tiempo de generación: 10-06-2026 a las 21:37:43
+-- Tiempo de generación: 11-06-2026 a las 19:23:01
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -49,7 +50,8 @@ INSERT INTO `asignaciones` (`id_asignacion`, `id_atleta`, `id_equipamiento`, `fe
 (3, 13, 2, '2026-06-09', 0, 1),
 (4, 13, 1, '2026-06-09', 0, 1),
 (5, 13, 1, '2026-06-09', 0, 1),
-(6, 13, 1, '2026-06-10', 1, 0);
+(6, 13, 1, '2026-06-10', 0, 1),
+(7, 15, 1, '2026-06-10', 1, 0);
 
 -- --------------------------------------------------------
 
@@ -236,7 +238,7 @@ CREATE TABLE `detalles_equipos` (
 --
 
 INSERT INTO `detalles_equipos` (`id_detalle`, `id_equipo`, `id_atleta`) VALUES
-(2, 6, 15);
+(3, 6, 15);
 
 -- --------------------------------------------------------
 
@@ -349,6 +351,7 @@ CREATE TABLE `estadisticas` (
   `asistencias` int(10) NOT NULL,
   `penalizaciones` int(10) NOT NULL,
   `goles_contra` int(10) NOT NULL,
+  `partidos_jugados` int(3) NOT NULL,
   `average` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
@@ -517,6 +520,55 @@ CREATE TABLE `palmares` (
   `fecha_registro` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `palmares`
+--
+
+INSERT INTO `palmares` (`id_palmares`, `id_torneo`, `fecha_registro`) VALUES
+(3, 2, '2026-06-10');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `palmares_grupal`
+--
+
+DROP TABLE IF EXISTS `palmares_grupal`;
+CREATE TABLE `palmares_grupal` (
+  `id_grupal` int(10) NOT NULL,
+  `id_palmares` int(10) NOT NULL,
+  `id_premio` int(10) NOT NULL,
+  `id_equipo` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `palmares_grupal`
+--
+
+INSERT INTO `palmares_grupal` (`id_grupal`, `id_palmares`, `id_premio`, `id_equipo`) VALUES
+(2, 3, 2, 6);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `palmares_individual`
+--
+
+DROP TABLE IF EXISTS `palmares_individual`;
+CREATE TABLE `palmares_individual` (
+  `id_individual` int(100) NOT NULL,
+  `id_palmares` int(100) NOT NULL,
+  `id_premio` int(100) NOT NULL,
+  `id_atleta` int(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `palmares_individual`
+--
+
+INSERT INTO `palmares_individual` (`id_individual`, `id_palmares`, `id_premio`, `id_atleta`) VALUES
+(4, 3, 1, 15);
+
 -- --------------------------------------------------------
 
 --
@@ -557,6 +609,13 @@ CREATE TABLE `participaciones` (
   `id_torneo` int(11) NOT NULL,
   `id_equipo` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `participaciones`
+--
+
+INSERT INTO `participaciones` (`id_participacion`, `id_torneo`, `id_equipo`) VALUES
+(2, 2, 6);
 
 -- --------------------------------------------------------
 
@@ -601,7 +660,8 @@ CREATE TABLE `premios` (
 --
 
 INSERT INTO `premios` (`id_premio`, `tipo`, `nombre`) VALUES
-(1, 'I', 'Maximo Goleador');
+(1, 'I', 'Maximo Goleador'),
+(2, 'G', 'Primer Lugar');
 
 -- --------------------------------------------------------
 
@@ -1065,7 +1125,7 @@ ALTER TABLE `cuentas_cobrar`
 -- AUTO_INCREMENT de la tabla `detalles_equipos`
 --
 ALTER TABLE `detalles_equipos`
-  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_pagos`
@@ -1095,7 +1155,7 @@ ALTER TABLE `equipos`
 -- AUTO_INCREMENT de la tabla `estadisticas`
 --
 ALTER TABLE `estadisticas`
-  MODIFY `id_estadisticas` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_estadisticas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `estado_equipamiento`
@@ -1149,7 +1209,19 @@ ALTER TABLE `pagos`
 -- AUTO_INCREMENT de la tabla `palmares`
 --
 ALTER TABLE `palmares`
-  MODIFY `id_palmares` int(100) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_palmares` int(100) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT de la tabla `palmares_grupal`
+--
+ALTER TABLE `palmares_grupal`
+  MODIFY `id_grupal` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `palmares_individual`
+--
+ALTER TABLE `palmares_individual`
+  MODIFY `id_individual` int(100) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `palmares_grupal`
@@ -1167,7 +1239,7 @@ ALTER TABLE `palmares_individual`
 -- AUTO_INCREMENT de la tabla `participaciones`
 --
 ALTER TABLE `participaciones`
-  MODIFY `id_participacion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_participacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `posiciones`
@@ -1179,7 +1251,7 @@ ALTER TABLE `posiciones`
 -- AUTO_INCREMENT de la tabla `premios`
 --
 ALTER TABLE `premios`
-  MODIFY `id_premio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_premio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `representantes`

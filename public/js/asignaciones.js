@@ -1,33 +1,6 @@
-$(document).ready(function () {
-    if (typeof inicializarPaginador === 'function') inicializarPaginador();
-    MultiConsulta();
+let timerBusqueda;
 
-    $("#btn_nuevo").on("click", function () {
-        $("#f")[0].reset();
-        $("#id_asignacion").val('');
-        $("#titulo_modal").text("Registrar Asignación");
-        $("#btn_guardar").text("Confirmar Préstamo").data("accion", "incluir");
-        $('#fecha_asignacion').val(new Date().toISOString().split('T')[0]);
-        abrirModal(); 
-    });
-
-    $('#btn_guardar').on('click', function () {
-        if ($('#id_atleta').val() === "" || $('#id_equipamiento').val() === "") {
-            muestraMensaje("error", 2000, "Validación", "Debe seleccionar un atleta y una pieza.");
-            return false;
-        }
-        let accion = $(this).data("accion");
-        let datos = new FormData($('#f')[0]);
-        datos.append('accion', accion);
-        enviaAjax(datos);
-    });
-});
-
-function consultar() {
-    let datos = new FormData();
-    datos.append('accion', 'consultar');
-    enviaAjax(datos);
-}
+$('#busqueda').off('keyup').on('keyup', busqueda);
 
 function MultiConsulta() {
     let datos = new FormData();
@@ -35,10 +8,118 @@ function MultiConsulta() {
     enviaAjax(datos);
 }
 
+function consultar() {
+    let datos = new FormData();
+    datos.append('accion', 'consultar');
+    enviaAjax(datos);
+}
+
+function busqueda() {
+    clearTimeout(timerBusqueda);
+    timerBusqueda = setTimeout(function () {
+        let valorBusqueda = $('#busqueda').val();
+        let datos = new FormData();
+        datos.append('accion', 'consultar');
+        datos.append('filtro', valorBusqueda); 
+        enviaAjax(datos);
+    }, 500);
+}
+
+$(document).ready(function () {
+    inicializarPaginador(); 
+    MultiConsulta();
+    
+    if (typeof Validacion === 'function') {
+        Validacion("fecha_asignacion", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "btn_guardar");
+    }
+
+    $('#id_atleta').select2({
+        placeholder: "Seleccione un atleta...",
+        allowClear: true,
+        dropdownParent: $('.contenedor_modal')
+    });
+    
+    $('#id_equipamiento').select2({
+        placeholder: "Seleccione una pieza...",
+        allowClear: true,
+        dropdownParent: $('.contenedor_modal')
+    });
+
+    $('#btn_guardar').on('click', function () {
+        let accion = $(this).data("accion");
+        
+        if (validarEnvio(accion)) {
+            let textoConfirmacion = accion === "incluir" 
+                ? '¿Está seguro que quiere registrar esta asignación?' 
+                : '¿Está seguro que quiere modificar esta asignación?';
+
+            confirmar(textoConfirmacion, function (confirmado) {
+                if (confirmado) {
+                    var datos = new FormData($('#f')[0]);
+                    datos.append('accion', accion);
+                    enviaAjax(datos);
+                }
+            });
+        }
+    });
+
+    $("#btn_nuevo").on("click", function () {
+        limpia(); 
+        $("#f")[0].reset();
+        $("#id_asignacion").val('');
+        $("#titulo_modal").text("Registrar Asignación");
+        $("#btn_guardar").text("Registrar Asignación").data("accion", "incluir");
+        
+        let hoy = new Date().toISOString().split('T')[0];
+        $('#fecha_asignacion').val(hoy);
+        
+        $('#id_atleta').val(null).trigger('change');
+        $('#id_equipamiento').val(null).trigger('change');
+        
+        abrirModal(); 
+    });
+
+    $('#generar').on('click', function () {
+        window.open('?url=Reportes/Asignaciones', '_blank'); 
+    });
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            { element: '#busqueda', popover: { title: 'Búsqueda', description: 'Aquí puedes buscar por nombre de atleta o CI.', position: 'bottom' } },
+            { element: '#btn_nuevo', popover: { title: 'Nueva Asignación', description: 'Registra un préstamo de equipo.', position: 'bottom' } },
+            { element: '#generar', popover: { title: 'Generar Reporte', description: 'Descarga un archivo PDF de las asignaciones.', position: 'left' } },
+            { element: '#resultadoconsulta', popover: { title: 'Lista Agrupada', description: 'Haz clic en cualquier atleta para ver sus detalles.', position: 'top' } }
+        ];
+        if (typeof iniciarTourConPasos === 'function') {
+            iniciarTourConPasos(pasos).start();
+        }
+    });
+});
+
+function validarEnvio(accion) {
+    if (accion === "incluir" || accion === "modificar") {
+        if ($('#id_atleta').val() == "" || $('#id_atleta').val() == null) {
+            muestraMensaje("error", 2000, "Validación", "Debe seleccionar un atleta.");
+            return false;
+        }
+        if ($('#id_equipamiento').val() == "" || $('#id_equipamiento').val() == null) {
+            muestraMensaje("error", 2000, "Validación", "Debe seleccionar una pieza de equipamiento.");
+            return false;
+        }
+        if ($('#fecha_asignacion').val() == "") {
+            muestraMensaje("error", 2000, "Validación", "Debe seleccionar la fecha de asignación.");
+            return false;
+        }
+    }
+    return true;
+}
+
 function editar(id_asignacion, id_atleta, id_equipamiento, fecha) {
+    limpia();
     $("#f")[0].reset();
     $("#titulo_modal").text("Modificar Asignación");
     $("#btn_guardar").text("Guardar Cambios").data("accion", "modificar");
+    
     $("#id_asignacion").val(id_asignacion);
     $("#fecha_asignacion").val(fecha);
     $("#id_atleta").val(id_atleta).trigger('change');
@@ -47,30 +128,22 @@ function editar(id_asignacion, id_atleta, id_equipamiento, fecha) {
         $("#id_equipamiento").append(new Option("Equipo Actual (Mantenido)", id_equipamiento, true, true));
     }
     $("#id_equipamiento").val(id_equipamiento).trigger('change');
+    
     abrirModal();
 }
 
 function anular(id_asignacion, id_equipamiento) {
-    Swal.fire({
-        title: 'Anular Asignación',
-        text: "Ingrese el motivo (Mínimo 5 caracteres):",
-        input: 'text',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#39b015',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, anular',
-        cancelButtonText: 'Cancelar',
-        inputValidator: (value) => {
-            if (!value || value.trim().length < 5) return '¡El motivo no es válido!';
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            let datos = new FormData();
+    confirmarAnulacion('¿Está seguro que quiere anular esta asignación?', function (motivo) {
+        if (motivo !== false) { 
+            if (motivo.trim().length < 5) {
+                muestraMensaje("error", 3000, "Validación", "El motivo debe tener al menos 5 letras.");
+                return;
+            }
+            var datos = new FormData();
             datos.append('accion', 'anular');
             datos.append('id_asignacion', id_asignacion);
             datos.append('id_equipamiento', id_equipamiento);
-            datos.append('motivo', result.value);
+            datos.append('motivo_anulacion', motivo); 
             enviaAjax(datos);
         }
     });
@@ -91,12 +164,21 @@ function poblarCombos(atletas, equipos) {
 
     if (equipos && equipos.length > 0) {
         equipos.forEach(e => {
-            comboEquipo.append(`<option value="${e.id_equipamiento}">${e.articulo} (Pza #${e.id_equipamiento})</option>`);
+            comboEquipo.append(`<option value="${e.id_equipamiento}">${e.articulo}</option>`);
         });
     }
 
     comboAtleta.trigger('change');
     comboEquipo.trigger('change');
+}
+
+function crearConsulta(htmlRecibido) {
+    const contenedor = $('#resultadoconsulta');
+    contenedor.html(htmlRecibido);
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador(); // Ejecuta tu paginador del sistema nativamente
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -109,15 +191,19 @@ function enviaAjax(datos) {
         data: datos,
         processData: false,
         cache: false,
-        beforeSend: function (request) { request.setRequestHeader("X-CSRF-TOKEN", token); },
-        timeout: 10000,
+        beforeSend: function (request) { 
+            request.setRequestHeader("X-CSRF-TOKEN", token); 
+        },
+        timeout: 120000,
         success: function (respuesta) {
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
-                $('#resultadoconsulta').html(respuesta);
+                crearConsulta(respuesta);
                 return;
             }
+            
             try {
-                var lee = JSON.parse(respuesta);
+                var lee = typeof respuesta === 'object' ? respuesta : JSON.parse(respuesta.substring(respuesta.indexOf('{')));
+
                 if (lee.accion == "MultiConsulta") {
                     poblarCombos(lee.atletas, lee.equipos);
                 } else if (lee.accion == "incluir" || lee.accion == "modificar" || lee.accion == "exito") {
@@ -126,14 +212,26 @@ function enviaAjax(datos) {
                     cerrarModal();
                     muestraMensaje("success", 2000, "Operación Exitosa", lee.mensaje);
                 } else if (lee.accion == "error") {
-                    muestraMensaje("error", 2000, "Error", lee.mensaje || lee.codigo);
+                    muestraMensaje("error", 3000, "Error", lee.mensaje || lee.codigo);
                 }
             } catch (e) {
-                Swal.fire({ icon: 'error', title: 'Error de Comunicación', text: 'El servidor falló.' });
+                console.error("Error procesando JSON", e, respuesta);
             }
         },
         error: function (request, status, err) {
             muestraMensaje("error", 2000, "Error", "ERROR: " + err);
         }
     });
+}
+
+function toggleDetalles(elemento) {
+    $(elemento).next('.listado_detalle_oculto').slideToggle();
+    $(elemento).find('.icono_flecha_detalle').toggleClass('rotar_flecha');
+}
+
+function limpia() {
+    if($('#f')[0]) $('#f')[0].reset();
+    $('.select2').val(null).trigger('change');
+    $("#btn_guardar").data("accion", "incluir");
+    $("#btn_guardar").text("Confirmar Préstamo");
 }

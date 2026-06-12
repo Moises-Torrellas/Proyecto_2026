@@ -29,20 +29,20 @@ class ModeloCategorias extends ModeloBase
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
-        
+
         $this->id = $datos['id'] ?? null;
         $this->nombre = mb_strtoupper(trim($datos['nombre'] ?? ''), "UTF-8");
         $this->edad_min = $datos['edad_minima'] ?? null;
         $this->edad_max = $datos['edad_maxima'] ?? null;
-        
+
         $accion = $datos['accion'] ?? null;
-        
+
         return match ($accion) {
             'incluir'   => $this->Incluir(),
             'eliminar'  => $this->Eliminar(),
             'buscar'    => $this->Buscar(),
             'modificar' => $this->Modificar(),
-            'consultar' => $this->Consultar(), 
+            'consultar' => $this->Consultar(),
             default => throw new Exception('La acción no es válida')
         };
     }
@@ -81,7 +81,7 @@ class ModeloCategorias extends ModeloBase
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Categorias', $e->getMessage(), 'Modelo_Consultar');
-            return array('accion' => 'error'); 
+            return array('accion' => 'error');
         } finally {
             $conex = NULL;
         }
@@ -91,7 +91,7 @@ class ModeloCategorias extends ModeloBase
     {
         try {
             $conex = $this->conex();
-            
+
             if ($this->verificarExistencia('nombre', $this->nombre, 'categorias', NULL)) {
                 throw new Exception('Ya existe una categoría registrada con este nombre.');
             }
@@ -110,27 +110,27 @@ class ModeloCategorias extends ModeloBase
         } finally {
             $conex = NULL;
         }
-    }                                                   
+    }
 
     private function Modificar(): array
     {
         $conex = NULL;
         try {
             $conex = $this->conex(); // <-- CORRECCIÓN 1: Se inicializa la conexión
-            
+
             // <-- CORRECCIÓN 2: Se cambia 'representantes' por 'categorias'
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'categorias', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'categorias', NULL)) {
                     throw new Exception('Ya existe otra categoría registrada con este nombre.');
                 }
             }
-            
+
             $sentencia = "UPDATE categorias SET 
             nombre = :nombre, 
             edad_min = :edad_min, 
             edad_max = :edad_max 
             WHERE id_categorias = :id_categorias";
-            
+
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':edad_min', $this->edad_min);
@@ -156,7 +156,7 @@ class ModeloCategorias extends ModeloBase
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
             $datos = $stmt->fetchAll();
-            
+
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Categorias', $e->getMessage(), 'Modelo');
@@ -174,7 +174,7 @@ class ModeloCategorias extends ModeloBase
             if (!$this->verificarExistencia('id', $this->id, 'categorias', NULL)) {
                 throw new Exception('La categoría no existe.');
             }
-            
+
             if ($this->verificarExistencia('id', $this->id, 'atletas', NULL)) {
                 throw new Exception('No se puede eliminar: la categoría tiene atletas asociados.');
             }
@@ -183,7 +183,7 @@ class ModeloCategorias extends ModeloBase
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
-            
+
             return array('accion' => 'eliminar', 'mensaje' => 'Categoría eliminada exitosamente.');
         } catch (Exception $e) {
             logs('Categorias', $e->getMessage(), 'Modelo_Eliminar');
@@ -191,5 +191,10 @@ class ModeloCategorias extends ModeloBase
         } finally {
             $conex = NULL;
         }
-    }   
+    }
+
+    public function verificarCategoria(int $id): bool
+    {
+        return $this->verificarExistencia('id', $id, 'categorias', NULL);
+    }
 }

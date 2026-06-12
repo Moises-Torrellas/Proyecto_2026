@@ -21,7 +21,10 @@ class ModeloAtletas extends ModeloBase
     private $estatus;
     private $edad;
     private $foto;
-
+    
+    private $ObjCat;
+    private $ObjRep;
+    private $ObjPos;
 
 
     public function __construct()
@@ -38,14 +41,28 @@ class ModeloAtletas extends ModeloBase
         $this->llavePrimaria = 'id_atleta';
     }
 
+
+    public function setModeloCategorias(ModeloCategorias $modeloCat) 
+    {
+        $this->ObjCat = $modeloCat;
+    }
+
+    public function setModeloPosiciones(ModeloPosiciones $modeloPos) 
+    {
+        $this->ObjPos = $modeloPos;
+    }
+
+    public function setModeloRepresentantes(ModeloRepresentantes $modeloRep) 
+    {
+        $this->ObjRep = $modeloRep;
+    }
+
     public function ProcesarDatos(array $datos): array
     {
-        // 1. Verificación de integridad inicial
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar el registro del atleta.');
         }
 
-        // 2. Asignación y saneamiento de atributos básicos
         $this->id            = $datos['id'] ?? null;
         $this->fecha_nac     = $datos['fecha_nac'] ?? '';
         $this->genero        = $datos['genero'] ?? '';
@@ -53,19 +70,16 @@ class ModeloAtletas extends ModeloBase
         $this->posicion      = $datos['posicion'] ?? null;
         $this->estatus      = $datos['estatus'] ?? null;
         $this->edad      = $datos['edad'] ?? null;
-        // Atributos con formato de Título (Standard de tu proyecto)
+
         $this->nombre   = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->apellido = mb_convert_case(trim($datos['apellido'] ?? ''), MB_CASE_TITLE, "UTF-8");
 
-        // 3. Mapeo de campos condicionales (enviados según la lógica del controlador)
         $this->representante = $datos['representante'] ?? null;
         $this->doc_identidad = isset($datos['doc_identidad']) ? trim($datos['doc_identidad']) : null;
         $this->telefono = isset($datos['telefono']) ? trim($datos['telefono']) : null;
         $this->direccion     = isset($datos['direccion']) ?
             mb_convert_case(trim($datos['direccion']), MB_CASE_TITLE, "UTF-8") : null;
 
-        // 4. Gestión de la Foto
-        // Como envías $datos['foto'] = [$foto_nombre], extraemos el string
         if (isset($datos['foto']) && is_array($datos['foto'])) {
             $this->foto = $datos['foto'][0];
         } else {
@@ -114,14 +128,12 @@ class ModeloAtletas extends ModeloBase
                 $params[':f4'] = $p;
                 $params[':f5'] = $p;
                 $params[':f6'] = $p;
-                $params[':f7'] = $p; // Parámetro para el género
-                $params[':f8'] = $p; // Parámetro para el estatus
+                $params[':f7'] = $p;
+                $params[':f8'] = $p; 
             }
 
             // 3. FILTROS ESPECÍFICOS
             if (!empty($this->doc_identidad)) {
-                // El formato final será: __25%
-                // Esto obliga a ignorar 2 caracteres (el prefijo 'V-') y buscar que empiece por '25'
                 $sentencia .= " AND doc_identidad LIKE :doc_i";
                 $params[':doc_i'] = "__" . trim($this->doc_identidad) . "%";
             }
@@ -174,14 +186,14 @@ class ModeloAtletas extends ModeloBase
     {
         $conex = null;
         try {
-            if (!$this->verificarExistencia('categoria', $this->categoria, 'categorias', NULL)) {
+            if(!$this->ObjCat->verificarCategoria($this->categoria)) {
                 throw new Exception(INVALID_ID);
             }
-            if (!$this->verificarExistencia('posicion', $this->posicion, 'posiciones', NULL)) {
+            if (!$this->ObjPos->verificarPosiciones($this->posicion)) {
                 throw new Exception(INVALID_ID . '0');
             }
             if ($this->representante !== null) {
-                if (!$this->verificarExistencia('representante', $this->representante, 'representantes', NULL)) {
+                if (!$this->ObjRep->verificarRepresentantes($this->representante)) {
                     throw new Exception(INVALID_ID . '1');
                 }
             }
@@ -200,12 +212,9 @@ class ModeloAtletas extends ModeloBase
                 }
             }
 
-            // 2. Definición de partes de la consulta
             $columnas = [];
             $marcadores = [];
 
-            // --- DATOS OBLIGATORIOS ---
-            // Estos siempre se incluyen según la lógica de tu controlador
             $columnas[] = "nombres";
             $marcadores[] = ":nombre";
             $columnas[] = "apellidos";
@@ -221,8 +230,7 @@ class ModeloAtletas extends ModeloBase
             $columnas[] = "foto";
             $marcadores[] = ":foto";
 
-            // --- DATOS OPCIONALES ---
-            // Se agregan a la consulta solo si no son nulos
+
             if ($this->doc_identidad !== null) {
                 $columnas[] = "doc_identidad";
                 $marcadores[] = ":doc_identidad";
@@ -240,14 +248,12 @@ class ModeloAtletas extends ModeloBase
                 $marcadores[] = ":id_representante";
             }
 
-            // 3. Preparación de la sentencia SQL
+
             $sql = "INSERT INTO atletas (" . implode(", ", $columnas) . ") 
                 VALUES (" . implode(", ", $marcadores) . ")";
 
             $stmt = $conex->prepare($sql);
 
-            // 4. Vinculación de valores con bindValue (Evita Inyección SQL)
-            // Vinculación de obligatorios
             $stmt->bindValue(':nombre', $this->nombre);
             $stmt->bindValue(':apellido', $this->apellido);
             $stmt->bindValue(':fecha_nac', $this->fecha_nac);
@@ -256,7 +262,6 @@ class ModeloAtletas extends ModeloBase
             $stmt->bindValue(':genero', $this->genero);
             $stmt->bindValue(':foto', $this->foto);
 
-            // Vinculación de opcionales (con la misma lógica de existencia)
             if ($this->doc_identidad !== null) {
                 $stmt->bindValue(':doc_identidad', $this->doc_identidad);
             }

@@ -76,7 +76,7 @@
 
         table.data-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
             margin-top: 10px;
         }
 
@@ -132,7 +132,7 @@
 
         .footer-meta {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
         }
 
         .footer-meta td {
@@ -178,7 +178,7 @@
                 </tr>
             </thead>
             <tbody>
-                <?php 
+                <?php
                 $id = 0;
                 if (!empty($datos)) {
                     foreach ($datos as $r): 
@@ -190,6 +190,10 @@
                         $atleta = htmlspecialchars($r['atleta_nombre'] . ' ' . $r['atleta_apellido']);
                         $calidad = htmlspecialchars($r['calidad']);
                 ?>
+                foreach ($datos as $r) :
+                    $id++;
+                    $observacion = !empty(trim($r['observacion'])) ? htmlspecialchars($r['observacion']) : 'Sin observaciones';
+                    ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= $r['fecha_vista'] ?></td>
