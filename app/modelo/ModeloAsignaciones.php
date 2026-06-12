@@ -83,6 +83,8 @@ class ModeloAsignaciones extends ModeloBase
                     INNER JOIN atletas at ON a.id_atleta = at.id_atleta
                     INNER JOIN equipamientos e ON a.id_equipamiento = e.id_equipamiento
                     INNER JOIN catalogos c ON e.id_catalogo = c.id_catalogo
+                    WHERE a.anulado = 0 AND a.estatus = 1 /* <--- ESTA LÍNEA ES LA MAGIA */
+                    ORDER BY a.fecha_asignacion DESC";
                     ORDER BY at.nombres ASC, a.fecha_asignacion DESC";
             
             $stmt = $conex->prepare($sql);
@@ -228,6 +230,19 @@ class ModeloAsignaciones extends ModeloBase
     public function CambiarEstatusAsignacion($id_asignacion, $nuevo_estatus, $conex = null): bool
     {
         $c = $conex ?? $this->conex();
+
+        try {
+            $sql = "UPDATE asignaciones SET estatus = :estatus WHERE id_asignacion = :id";
+            $stmt = $c->prepare($sql);
+            $stmt->execute([
+                ':estatus' => $nuevo_estatus,
+                ':id'      => $id_asignacion
+            ]);
+
+            return true;
+        } catch (Exception $e) {
+            logs('Asignaciones', $e->getMessage(), 'Modelo_CambiarEstatusAsignacion');
+            throw new Exception("Error al actualizar el estatus de la asignación.");
         try {
             $sql = "UPDATE asignaciones SET estatus = :estatus WHERE id_asignacion = :id";
             $stmt = $c->prepare($sql);

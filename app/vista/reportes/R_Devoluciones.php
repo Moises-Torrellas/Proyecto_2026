@@ -18,7 +18,7 @@
             background-color: #ffffff;
         }
 
-        /* 2. Header: Ocupará el 100% real de la hoja sin dejar bordes blancos */
+        /* 2. Header */
         .header {
             position: fixed;
             top: -130px; 
@@ -92,7 +92,6 @@
             padding: 10px;
             border-bottom: 1px solid #e2e8f0;
             font-size: 12px;
-            /* Evita que textos largos rompan la tabla */
             word-wrap: break-word; 
             max-width: 200px; 
         }
@@ -153,17 +152,17 @@
     <div class="header">
         <h1>REPORTE DE DEVOLUCIONES</h1>
         <p>Sistema de Gestión Administrativo - Cannibals Lara</p>
-        <img src="<?= $logo ?>" class="logo-mascota" alt="Logo">
+        <img src="<?= $logo ?? '' ?>" class="logo-mascota" alt="Logo">
     </div>
 
     <div class="content">
         <div class="info-grid">
-            <div class="info-item"><strong>FECHA DE EMISIÓN</strong><br><?= $fecha_reporte ?></div>
-            <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?></div>
+            <div class="info-item"><strong>FECHA DE EMISIÓN</strong><br><?= $fecha_reporte ?? date('d/m/Y') ?></div>
+            <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?? 'Administrador' ?></div>
         </div>
         
         <div class="resumen-ejecutivo">
-            <strong>Resumen Ejecutivo:</strong> El presente documento detalla el historial de devoluciones de equipamiento deportivo registrado en el sistema. Esta información permite realizar un control riguroso sobre el estado, la calidad y las condiciones en las que los atletas reintegran el material asignado al inventario de la academia.
+            <strong>Resumen Ejecutivo:</strong> El presente documento detalla el historial de devoluciones de equipamiento deportivo registrado en el sistema. Esta información permite realizar un control riguroso sobre el estado, la calidad y las condiciones en las que se reintegra el material al inventario de la academia.
         </div>
 
         <div class="section-title">Listado de Devoluciones</div>
@@ -173,7 +172,7 @@
                 <tr>
                     <th style="width: 5%;">#</th>
                     <th style="width: 15%;">Fecha</th>
-                    <th style="width: 35%;">Asignación</th>
+                    <th style="width: 35%;">Asignación y Atleta</th>
                     <th style="width: 20%;">Calidad</th>
                     <th style="width: 25%;">Observación</th>
                 </tr>
@@ -181,28 +180,45 @@
             <tbody>
                 <?php
                 $id = 0;
+                if (!empty($datos)) {
+                    foreach ($datos as $r): 
+                        $id++; 
+                        $observacion = !empty(trim($r['observacion'])) ? htmlspecialchars($r['observacion']) : 'Sin observaciones';
+                        
+                        // Variables exactas del modelo, añadiendo el atleta
+                        $articulo = htmlspecialchars($r['articulo_nombre']);
+                        $atleta = htmlspecialchars($r['atleta_nombre'] . ' ' . $r['atleta_apellido']);
+                        $calidad = htmlspecialchars($r['calidad']);
+                ?>
                 foreach ($datos as $r) :
                     $id++;
                     $observacion = !empty(trim($r['observacion'])) ? htmlspecialchars($r['observacion']) : 'Sin observaciones';
                     ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
-                        <td class="data-cell"><?= $r['fecha_devolucion'] ?></td>
+                        <td class="data-cell"><?= $r['fecha_vista'] ?></td>
                         <td class="data-cell">
-                            <strong><?= htmlspecialchars($r['asignaciones']) ?></strong><br>
-                            <span style="font-size: 10px; color: #718096;">ID Asig: #<?= $r['id_asignacion'] ?></span>
+                            <strong><?= $articulo ?></strong><br>
+                            <span style="font-size: 11px; color: #4a5568;"><?= $atleta ?></span>
                         </td>
-                        <td class="data-cell"><?= htmlspecialchars($r['articulo']) ?></td>
+                        <td class="data-cell">
+                            <strong style="color: #2b6cb0;"><?= $calidad ?></strong>
+                        </td>
                         <td class="data-cell"><?= $observacion ?></td>
                     </tr>
-                <?php endforeach; ?>
+                <?php 
+                    endforeach; 
+                } else {
+                    echo '<tr><td colspan="5" class="data-cell" style="text-align:center; padding: 20px;">No se encontraron devoluciones registradas.</td></tr>';
+                }
+                ?>
             </tbody>
         </table>
     </div>
 
     <div class="footer">
         <div class="footer-logo-container">
-            <img src="<?= $logo_footer ?>" alt="Cannibals">
+            <img src="<?= $logo_footer ?? '' ?>" alt="Cannibals">
         </div>
 
         <table class="footer-meta">

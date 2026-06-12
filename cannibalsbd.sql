@@ -3,6 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
+-- Tiempo de generación: 10-06-2026 a las 21:37:43
 -- Tiempo de generación: 11-06-2026 a las 19:23:01
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
@@ -82,7 +83,7 @@ CREATE TABLE `atletas` (
 INSERT INTO `atletas` (`id_atleta`, `nombres`, `apellidos`, `doc_identidad`, `telefono`, `direccion`, `genero`, `fecha_nac`, `foto`, `id_posicion`, `id_categoria`, `id_representante`, `estatus`) VALUES
 (13, 'Jose Jose', 'Perez Perez', '32323232', NULL, NULL, 'H', '2008-05-18', 'atleta_2012-05-18_1779417290.png', 5, 8, 2, 1),
 (14, 'Mario Mari', 'Bros Bros', '34324324', NULL, NULL, 'H', '2009-05-19', 'atleta_2009-05-19_1779417273.png', 5, 8, 2, 2),
-(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779417262.png', 6, 4, NULL, 1),
+(15, 'Moises Jesus', 'Torrellas Colmenarez', '29506932', '0412-0565231', 'El Tocuyo', 'H', '2002-07-25', 'atleta_2002-07-25_1779417262.png', 6, 4, NULL, 2),
 (16, 'Maria Jose', 'Perez Yepez', NULL, NULL, NULL, 'M', '2021-07-08', 'atleta_2021-07-08_1779417253.png', 5, 3, 6, 2),
 (18, 'Dssdf', 'Sdfsdf', NULL, NULL, NULL, 'H', '2019-06-12', 'atleta_2019-06-12_1780611196.png', 1, 5, 2, 1),
 (19, 'Julia', 'Perez', '28323232', NULL, NULL, 'M', '2014-06-18', 'atleta_2014-06-18_1781011302.png', 5, 1, 2, 1);
@@ -571,6 +572,34 @@ INSERT INTO `palmares_individual` (`id_individual`, `id_palmares`, `id_premio`, 
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `palmares_grupal`
+--
+
+DROP TABLE IF EXISTS `palmares_grupal`;
+CREATE TABLE `palmares_grupal` (
+  `id_grupal` int(10) NOT NULL,
+  `id_palmares` int(10) NOT NULL,
+  `id_premio` int(10) NOT NULL,
+  `id_equipo` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `palmares_individual`
+--
+
+DROP TABLE IF EXISTS `palmares_individual`;
+CREATE TABLE `palmares_individual` (
+  `id_individual` int(100) NOT NULL,
+  `id_palmares` int(100) NOT NULL,
+  `id_premio` int(100) NOT NULL,
+  `id_atleta` int(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `participaciones`
 --
 
@@ -1054,7 +1083,7 @@ ALTER TABLE `torneos`
 -- AUTO_INCREMENT de la tabla `asignaciones`
 --
 ALTER TABLE `asignaciones`
-  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `atletas`
@@ -1193,6 +1222,18 @@ ALTER TABLE `palmares_grupal`
 --
 ALTER TABLE `palmares_individual`
   MODIFY `id_individual` int(100) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de la tabla `palmares_grupal`
+--
+ALTER TABLE `palmares_grupal`
+  MODIFY `id_grupal` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `palmares_individual`
+--
+ALTER TABLE `palmares_individual`
+  MODIFY `id_individual` int(100) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `participaciones`
