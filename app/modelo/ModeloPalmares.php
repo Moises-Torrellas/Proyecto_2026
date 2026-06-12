@@ -70,10 +70,6 @@ class ModeloPalmares extends ModeloBase
             default => throw new Exception('La acción solicitada para el palmarés no es válida.')
         };
     }
-
-    /**
-     * Consulta individual agrupada por atleta
-     */
     public function ConsultarIndividual(array $filtro = []): array
     {
         try {
@@ -298,16 +294,11 @@ class ModeloPalmares extends ModeloBase
 
             $conex = $this->conex();
             $conex->beginTransaction();
-
-            // 1. Verificar existencia del torneo
-            $stmtTorneo = $conex->prepare("SELECT COUNT(*) FROM torneos WHERE id_torneo = :id");
-            $stmtTorneo->bindValue(':id', $this->id_torneo, PDO::PARAM_INT);
-            $stmtTorneo->execute();
-            if ((int)$stmtTorneo->fetchColumn() === 0) {
+            
+            if (!$this->verificarExistencia('id_torneo', $this->id_torneo, 'torneos', null)) {
                 throw new Exception(INVALID_ID);
             }
 
-            // 2. Verificar existencia y validar tipo de premio
             if (!$this->verificarExistencia('id_premio', $this->id_premio, 'premios', null)) {
                 throw new Exception(INVALID_ID);
             }

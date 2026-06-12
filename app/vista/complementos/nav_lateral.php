@@ -102,7 +102,7 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_PARTICIPACIONES_)) : ?>
-                        <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="shield-check"></i> Participaciones</a>
+                        <a type="button" href="Participaciones" class="opciones"><i class="opciones_i" data-lucide="shield-check"></i> Participaciones</a>
                     <?php endif; ?>
                 </li>
             <?php endif; ?>

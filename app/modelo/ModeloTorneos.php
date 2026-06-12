@@ -77,7 +77,6 @@ class ModeloTorneos extends ModeloBase
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Torneos', $e->getMessage(), 'Modelo_Consultar');
-            // Como en Representantes, en consultar el error va sin mensaje
             return array('accion' => 'error'); 
         } finally {
             $conex = NULL;

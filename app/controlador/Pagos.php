@@ -26,13 +26,13 @@ if (!class_exists($nombreClaseModelo)) {
 
 
 
-$objModelo = new ModeloPagos();
+$objPago = new ModeloPagos();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitud($objPago, $id_modulo, $bitacora ?? null, $permisos);
 } else {
     registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
-    $respuesta = $objModelo->Consultar();
+    $respuesta = $objPago->Consultar();
     $registro = $respuesta['datos'] ?? [];
     $variables = ['registro' => $registro, 'permisos' => $permisos];
     cargarVista($pagina, $variables);
@@ -90,7 +90,7 @@ function consultarTasa($obj): void
         $moneda_base = isset($_POST['moneda_base']) ? strtoupper(trim($_POST['moneda_base'])) : 'USD';
         $moneda_pago = isset($_POST['moneda_pago']) ? strtoupper(trim($_POST['moneda_pago'])) : 'VES';
 
-        $tasa = $obj->obtenerTasaBackend($moneda_base, $moneda_pago);
+        $tasa = $obj->obtenerTasa($moneda_base, $moneda_pago);
 
         echo json_encode(['accion' => 'consultarTasa', 'exito' => true, 'tasa' => $tasa]);
     } catch (Exception $e) {

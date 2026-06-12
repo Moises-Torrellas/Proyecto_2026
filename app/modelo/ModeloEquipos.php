@@ -11,15 +11,6 @@ class ModeloEquipos extends ModeloBase
     private $nombre;
     private $categoria;
 
-    /**
-     * Lista atletas para el modal de asignación de equipos.
-     * Devuelve campos para UI:
-     *  - id (id_atleta)
-     *  - doc_i (doc_identidad)
-     *  - nombre (nombres + apellidos)
-     *  - categoria (nombre de categorias)
-     *  - posicion (nombre de posiciones)
-     */
     public function ConsultarAtletasParaAsignacion(array $filtro = []): array
     {
         try {

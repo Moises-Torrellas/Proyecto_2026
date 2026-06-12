@@ -44,10 +44,6 @@ class ModeloPagos extends ModeloBase
     {
         $this->objCuentas = $cuentas;
     }
-    /* public function setMetodos(ModeloMetodosPago $metodos)
-    {
-        $this->objMetodos = $metodos;
-    } */
     public function setMonedas(ModeloMonedas $monedas)
     {
         $this->objMonedas = $monedas;
@@ -241,7 +237,7 @@ class ModeloPagos extends ModeloBase
         return array_values($pagosAgrupados);
     }
 
-    public function obtenerTasaBackend($monedaBase, $monedaPago)
+    public function obtenerTasa($monedaBase, $monedaPago)
     {
         if (($monedaBase === 'USD' && $monedaPago === 'USDT') || ($monedaBase === 'USDT' && $monedaPago === 'USD')) {
             return 1.0000;
@@ -290,9 +286,9 @@ class ModeloPagos extends ModeloBase
             }
 
             $monedaPago = $this->objMonedas->Buscar($this->id_moneda);
-            $monedaPagoObj = $monedaPago['datos'];
-            if (!$monedaPagoObj) throw new Exception(INVALID_ID . '0');
-            $isoPago = mb_strtoupper($monedaPagoObj[0]['abreviatura']);
+            $monedaPagoData = $monedaPago['datos'];
+            if (!$monedaPagoData) throw new Exception(INVALID_ID . '0');
+            $isoPago = mb_strtoupper($monedaPagoData[0]['abreviatura']);
 
             $columnas = ["id_metodo", "id_moneda", "monto_pago", "fecha", "estatus"];
             $marcadores = [":id_metodo", ":id_moneda", ":monto_pago", ":fecha", "1"];
@@ -334,12 +330,12 @@ class ModeloPagos extends ModeloBase
 
                 $resultadoMoneda = $this->objMonedas->Buscar((int)$cuentaData[0]['id_moneda']);
 
-                $monedaData = $resultadoMoneda['datos'][0];
+                $monedaCuentaData = $resultadoMoneda['datos'][0];
 
-                $isoCuenta = mb_strtoupper($monedaData['abreviatura']);
+                $isoCuenta = mb_strtoupper($monedaCuentaData['abreviatura']);
                 $monto_pendiente = floatval($cuentaData[0]['monto_pendiente']);
 
-                $tasa_cambio = $this->obtenerTasaBackend($isoCuenta, $isoPago);
+                $tasa_cambio = $this->obtenerTasa($isoCuenta, $isoPago);
                 $deuda_en_moneda_pago = $monto_pendiente * $tasa_cambio;
 
                 if ($vuelto >= $deuda_en_moneda_pago) {
