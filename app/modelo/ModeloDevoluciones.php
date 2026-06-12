@@ -52,6 +52,7 @@ class ModeloDevoluciones extends ModeloBase
             'consultar' => $this->ConsultarDevoluciones($datos),
             'generar'   => $this->ConsultarDevoluciones($datos),
             'incluir'   => $this->IncluirDevolucion(),
+            'modificar' => $this->ModificarDevolucion(),
             'anular'    => $this->AnularDevolucion($datos['motivo_anulacion'] ?? 'Sin motivo'),
             default     => ['accion' => 'error', 'codigo' => 'Acción no válida']
         };
@@ -94,21 +95,47 @@ class ModeloDevoluciones extends ModeloBase
         }
     }
 
+    // ====================================================================
+    // MÉTODOS DE VALIDACIÓN LÓGICA (Requisito Académico - Prog. Defensiva)
+    // ====================================================================
+
+    private function VerificarExistenciaAsignacion($id_asignacion, $conex): bool
+    {
+        // Verifica si la asignación existe, no está anulada y sigue prestada (estatus 1)
+        $stmt = $conex->prepare("SELECT 1 FROM asignaciones WHERE id_asignacion = ? AND anulado = 0 AND estatus = 1");
+        $stmt->execute([$id_asignacion]);
+        return $stmt->fetchColumn() !== false; 
+    }
+
+    private function VerificarExistenciaDevolucion($id_devolucion, $conex): bool
+    {
+        // Verifica si la devolución realmente existe en la base de datos antes de modificarla o anularla
+        $stmt = $conex->prepare("SELECT 1 FROM devoluciones WHERE id_devolucion = ?");
+        $stmt->execute([$id_devolucion]);
+        return $stmt->fetchColumn() !== false; 
+    }
+
+    // ====================================================================
+    // OPERACIONES CRUD CON VALIDACIONES INTEGRADAS
+    // ====================================================================
+
     private function IncluirDevolucion(): array
     {
         $conex = null;
         try {
             $conex = $this->conex();
             
+            // 1. VALIDACIÓN LÓGICA: Verificar Existencia
+            if (!$this->VerificarExistenciaAsignacion($this->id_asignacion, $conex)) {
+                throw new Exception("La asignación no existe, no es válida o ya fue devuelta.");
+            }
+
+            // 2. TRANSACCIÓN
             $conex->beginTransaction();
 
-            $stmtAsig = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? AND anulado = 0 AND estatus = 1 FOR UPDATE");
+            $stmtAsig = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
             $stmtAsig->execute([$this->id_asignacion]);
             $idEquipamiento = $stmtAsig->fetchColumn();
-
-            if (!$idEquipamiento) {
-                throw new Exception("La asignación no es válida o ya fue devuelta.");
-            }
 
             if ($this->objAsignaciones) {
                 $this->objAsignaciones->CambiarEstatusAsignacion($this->id_asignacion, 2, $conex);
@@ -135,11 +162,59 @@ class ModeloDevoluciones extends ModeloBase
         }
     }
 
+    private function ModificarDevolucion(): array
+    {
+        $conex = null;
+        try {
+            $conex = $this->conex();
+
+            // 1. VALIDACIÓN LÓGICA: Verificar Existencia
+            if (!$this->VerificarExistenciaDevolucion($this->id_devolucion, $conex)) {
+                throw new Exception("El registro de devolución que intenta modificar no existe.");
+            }
+
+            // 2. TRANSACCIÓN
+            $conex->beginTransaction();
+
+            // Identificar qué equipo físico está asociado a esta devolución
+            $stmtEq = $conex->prepare("SELECT a.id_equipamiento, d.id_estado FROM devoluciones d INNER JOIN asignaciones a ON d.id_asignacion = a.id_asignacion WHERE d.id_devolucion = ? FOR UPDATE");
+            $stmtEq->execute([$this->id_devolucion]);
+            $datosViejos = $stmtEq->fetch(PDO::FETCH_ASSOC);
+
+            // Modificamos el histórico de la devolución
+            $stmtUpdate = $conex->prepare("UPDATE devoluciones SET fecha_devolucion = ?, id_estado = ?, observacion = ? WHERE id_devolucion = ?");
+            $stmtUpdate->execute([$this->fecha_devolucion, $this->id_estado, $this->observacion, $this->id_devolucion]);
+
+            // Si cambiaron la "Calidad" (ej. de Bueno a Roto), actualizamos el equipo físico
+            if ($datosViejos && $datosViejos['id_estado'] != $this->id_estado) {
+                $stmtEqUpd = $conex->prepare("UPDATE equipamientos SET id_estados = ? WHERE id_equipamiento = ?");
+                $stmtEqUpd->execute([$this->id_estado, $datosViejos['id_equipamiento']]);
+            }
+
+            $conex->commit();
+            return ['accion' => 'exito', 'mensaje' => 'Modificación exitosa.'];
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
+        } finally {
+            $conex = null;
+        }
+    }
+
     private function AnularDevolucion($motivo): array
     {
         $conex = null;
         try {
             $conex = $this->conex();
+            
+            // 1. VALIDACIÓN LÓGICA: Verificar Existencia
+            if (!$this->VerificarExistenciaDevolucion($this->id_devolucion, $conex)) {
+                throw new Exception("El registro que intenta anular ya no existe en el sistema.");
+            }
+
+            // 2. TRANSACCIÓN
             $conex->beginTransaction();
 
             $stmtAsig = $conex->prepare("SELECT id_asignacion FROM devoluciones WHERE id_devolucion = ? FOR UPDATE");
@@ -149,8 +224,6 @@ class ModeloDevoluciones extends ModeloBase
             $stmtEq = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
             $stmtEq->execute([$idAsig]);
             $idEq = $stmtEq->fetchColumn();
-
-            if (!$idAsig || !$idEq) throw new Exception("Registro no encontrado.");
 
             $conex->prepare("DELETE FROM devoluciones WHERE id_devolucion = ?")->execute([$this->id_devolucion]);
 
