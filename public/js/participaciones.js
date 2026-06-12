@@ -24,45 +24,14 @@ function MultiConsulta() {
 }
 
 $(document).ready(function () {
-    MultiConsulta();
-    const $inputs = $('#goles, #asistencias, #penalizaciones, #goles_c, #partido, #average');
-
-    // 1. Establecer el valor inicial en 0 si están vacíos al cargar
-    $inputs.each(function () {
-        if ($(this).val() === "") {
-            $(this).val("0");
-        }
-    });
-
-    // 2. Al hacer clic o seleccionar el input (focus)
-    $inputs.on('focus', function () {
-        if ($(this).val() === "0") {
-            $(this).val("");
-        }
-    });
-
-    // 3. Al salir del input (blur)
-    $inputs.on('blur', function () {
-        // Usamos $.trim() para ignorar si el usuario solo dejó espacios en blanco
-        if ($.trim($(this).val()) === "") {
-            $(this).val("0");
-        }
-    });
-
     inicializarPaginador();
-
-    Validacion("goles", /^[0-9]*$/, /^[0-9]{1,3}$/, "Ingrese una cantidad válida (0-999)", "proceso");
-    Validacion("asistencias", /^[0-9]*$/, /^[0-9]{1,3}$/, "Ingrese una cantidad válida (0-999)", "proceso");
-    Validacion("penalizaciones", /^[0-9]*$/, /^[0-9]{1,3}$/, "Ingrese una cantidad válida (0-999)", "proceso");
-    Validacion("goles_c", /^[0-9]*$/, /^[0-9]{1,3}$/, "Ingrese una cantidad válida (0-999)", "proceso");
-    Validacion("partido", /^[0-9]*$/, /^[0-9]{1,3}$/, "Debe ser al menos 1 partido", "proceso");
-    Validacion("average", /^[0-9]*\.?[0-9]{0,2}$/, /^[0-9]+(\.[0-9]{1,2})?$/, "Formato decimal inválido (ej: 1.50)", "proceso");
+    MultiConsulta();
 
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere registrar estas Estadisticas?', function (confirmado) {
+                confirmar('¿Está seguro que quiere registrar esta participacion?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
@@ -73,7 +42,7 @@ $(document).ready(function () {
         }
         else if (accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar estas Estadisticas?', function (confirmado) {
+                confirmar('¿Está seguro que quiere modificar esta participacion?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
@@ -93,12 +62,13 @@ $(document).ready(function () {
             });
         }
     });
+
     $('#torneo').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
         dropdownParent: $('.contenedor_modal'),
     });
-    $('#atleta').select2({
+    $('#equipo').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
         dropdownParent: $('.contenedor_modal'),
@@ -106,10 +76,12 @@ $(document).ready(function () {
 
     $("#incluir").on("click", function () {
         limpia();
-        $('#goles, #asistencias, #penalizaciones, #goles_c, #partido, #average').val("0");
+
         $("#proceso").data("accion", "incluir");
-        $("#proceso").text("Registrar Estadisticas");
-        $("#titulo_modal").text("Registrar Estadisticas");
+        $("#proceso").text("Registrar Participacion");
+        $("#titulo_modal").text("Registrar Participacion");
+        $('#torneo').trigger('change');
+        $('#equipo').trigger('change');
         abrirModal();
     });
 
@@ -119,6 +91,8 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
+        $('#torneo').trigger('change');
+        $('#equipo').trigger('change');
         abrirModal();
     });
 
@@ -126,11 +100,11 @@ $(document).ready(function () {
         const pasos = [
             {
                 element: '#busqueda',
-                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar las estadisticas de los atletas que necesites.', position: 'bottom' }
+                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar al representante que necesites.', position: 'bottom' }
             },
             {
                 element: '#incluir',
-                popover: { title: 'Nuevas Estadisticas', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevas Estadisticas', position: 'bottom' }
+                popover: { title: 'Nueva Participacion', description: 'Si pulsa aqui se abrira un modal para ingresar una nueva participacion', position: 'bottom' }
             },
             {
                 element: '#generar',
@@ -138,7 +112,15 @@ $(document).ready(function () {
             },
             {
                 element: '#resultadoconsulta',
-                popover: { title: 'Estadisticas Registrados', description: 'Aqui se mostraran todos las estadisticas agrupadas por atletas.', position: 'top' }
+                popover: { title: 'Posiciones Registradas', description: 'Aqui se mostraran todos las posiciones registradas.', position: 'top' }
+            },
+            {
+                element: '#cbt_v',
+                popover: { title: 'Modificar Participacion', description: 'Si pulsa aqui se abrira un modal para modificar la participacion seleccionada.', position: 'left' }
+            },
+            {
+                element: '#cbt_r',
+                popover: { title: 'Eliminar Participacion', description: 'Si pulsa aqui eliminara la participacion seleccionada.', position: 'left' }
             },
             {
                 element: '#rowsPerPage',
@@ -147,6 +129,10 @@ $(document).ready(function () {
             {
                 element: '#botonera',
                 popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de posiciones cargados.', position: 'top' }
             },
         ];
 
@@ -162,32 +148,12 @@ function validarEnvio(proceso) {
         muestraMensaje("error", 2000, "Error", "Debe seleccionar un torneo");
         return false;
     }
-    if ($('#atleta').val() === null || $('#atleta').val() === "") {
-        muestraMensaje("error", 2000, "Error", "Debe seleccionar un atleta");
-        return false;
-    }
-    if (validarkeyup(/^[0-9]{1,3}$/, $('#goles'), $("#goles_spam"), "Cantidad no válida (0-999)", true)) {
-        muestraMensaje("error", 2000, "Error", "Campo 'Goles' inválido");
-        return false;
-    }
-    if (validarkeyup(/^[0-9]{1,3}$/, $('#asistencias'), $("#asistencias_spam"), "Cantidad no válida (0-999)", true)) {
-        muestraMensaje("error", 2000, "Error", "Campo 'Asistencias' inválido");
-        return false;
-    }
-    if (validarkeyup(/^[0-9]{1,3}$/, $('#penalizaciones'), $("#penalizaciones_spam"), "Cantidad no válida (0-999)", true)) {
-        muestraMensaje("error", 2000, "Error", "Campo 'Penalizaciones' inválido");
-        return false;
-    }
-    if (validarkeyup(/^[0-9]{1,3}$/, $('#goles_c'), $("#goles_c_spam"), "Cantidad no válida (0-999)", true)) {
-        muestraMensaje("error", 2000, "Error", "Campo 'Goles en contra' inválido");
-        return false;
-    }
-    if (validarkeyup(/^[1-9]{1}[0-9]{0,2}$/, $('#partido'), $("#partido_spam"), "Debe ser al menos 1 partido", true)) {
-        muestraMensaje("error", 2000, "Error", "Campo 'Partidos Jugados' inválido");
+    if ($('#equipo').val() === null || $('#atleta').val() === "") {
+        muestraMensaje("error", 2000, "Error", "Debe seleccionar un equipo");
         return false;
     }
 
-    return true; // Si todo es correcto
+    return true;
 }
 
 function buscar(id) {
@@ -197,7 +163,7 @@ function buscar(id) {
     enviaAjax(datos);
 }
 function eliminar(id) {
-    confirmar('¿Está seguro que quiere eliminar estas Estadisticas?', function (confirmado) {
+    confirmar('¿Está seguro que quiere eliminar esta participacion?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
@@ -224,54 +190,21 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
 
     datos.forEach(dato => {
         let textoMostrar = "";
-        let atributosExtra = ""; // Variable para guardar los límites de edad
+        let atributosExtra = "";
 
         if (idSelect === 'torneo' && campo1 && campo2) {
             textoMostrar = `${escapeHTML(dato[campo1])} - ${escapeHTML(dato[campo2])}`;
         }
-        else if (idSelect === 'atleta' && campo1 && campo2 && campo3) {
-            textoMostrar = `${escapeHTML(dato[campo1])} ${escapeHTML(dato[campo2])} - ${escapeHTML(dato[campo3])}`;
+        else if (idSelect === 'equipo' || idSelect === 'palmares_equipo') {
+            textoMostrar = `${escapeHTML(dato[campo1])} - ${escapeHTML(dato[campo2])}`;
         }
         else {
             textoMostrar = escapeHTML(String(dato[campo1]));
         }
 
-        // Se agregan los atributosExtra a la etiqueta <option>
         var linea = `<option value="${dato[campoId]}" ${atributosExtra}>${textoMostrar}</option>`;
         select.append(linea);
     });
-}
-
-function modificar(datos) {
-    // 1. Configurar la acción del botón de procesamiento y los títulos del modal
-    $("#proceso").data("accion", "modificar");
-    $("#proceso").text("Modificar Estadística");
-    $("#titulo_modal").text("Modificar Estadística");
-
-    // 2. Asegurar la visibilidad de todas las columnas del formulario
-    $('#torneo').closest('.colum').show();
-    $('#atleta').closest('.colum').show();
-    $('#goles').closest('.colum').show();
-    $('#asistencias').closest('.colum').show();
-    $('#penalizaciones').closest('.colum').show();
-    $('#goles_c').closest('.colum').show();
-    $('#partido').closest('.colum').show();
-    $('#average').closest('.colum').show();
-
-    // 3. Asignar los valores devueltos por el método Buscar() a cada input/select
-    $('#id').val(datos[0].id_estadisticas);
-    $('#torneo').val(datos[0].id_torneo);
-    $('#atleta').val(datos[0].id_atleta);
-    $('#goles').val(datos[0].goles);
-    $('#asistencias').val(datos[0].asistencias);
-    $('#penalizaciones').val(datos[0].penalizaciones);
-    $('#goles_c').val(datos[0].goles_contra);      // Mapea con 'goles_contra' del SELECT
-    $('#partido').val(datos[0].partidos_jugados);   // Mapea con 'partidos_jugados' del SELECT
-    $('#average').val(datos[0].average);
-
-    $('#torneo').trigger('change');
-    $('#atleta').trigger('change');
-    abrirModal();
 }
 
 function escapeHTML(texto) {
@@ -283,6 +216,15 @@ function escapeHTML(texto) {
         "'": '&#039;'
     };
     return texto.replace(/[&<>"']/g, m => caracteres[m]);
+}
+
+function modificar(datos) {
+    $("#proceso").data("accion", "modificar");
+    $("#proceso").text("Modificar Estadística");
+    $("#titulo_modal").text("Modificar Participacion");
+    $('#torneo').val(datos[0].id_torneo).trigger('change');
+    $('#equipo').val(datos[0].id_equipos).trigger('change');
+    abrirModal();
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -307,8 +249,8 @@ function enviaAjax(datos) {
             try {
                 var lee = JSON.parse(respuesta);
                 if (lee.accion == "MultiConsulta") {
-                    construirSelect('torneo', lee.torneos, 'id_torneo', 'nombre', 'fecha_inicio');
-                    construirSelect('atleta', lee.atletas, 'id_atleta', 'nombres', 'apellidos', 'doc_identidad');
+                    construirSelect('torneo', lee.torneo, 'id_torneo', 'nombre', 'fecha_inicio');
+                    construirSelect('equipo', lee.equipo, 'id_equipos', 'nombre', 'categoria');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
@@ -325,13 +267,9 @@ function enviaAjax(datos) {
                     modificar(lee.datos);
                 }
                 else if (lee.accion == "reporte") {
-                    // 1. Cerramos la alerta de espera de inmediato
                     cerrarAlertaEspara();
-
-                    // 2. Cerramos el modal del formulario
                     cerrarModal();
 
-                    // 3. Mostramos el mensaje de éxito (dura 2000ms en pantalla)
                     muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
                     setTimeout(function () {
                         const enlaceFantasma = document.createElement('a');

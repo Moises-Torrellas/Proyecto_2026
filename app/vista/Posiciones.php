@@ -44,7 +44,7 @@ if (isset($solo_lista) && $solo_lista === true) :
 
 <head>
     <?php include('complementos/head.php'); ?>
-    <title>Representantes</title>
+    <title>Posiciones</title>
 </head>
 
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">

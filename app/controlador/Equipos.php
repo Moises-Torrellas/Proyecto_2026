@@ -51,8 +51,6 @@ if (comprobarAjax() && !empty($_POST)) {
  */
 function manejarSolicitudEquipos($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
-    // IMPORTANTE: Las funciones helper se declaran abajo en el archivo,
-    // pero PHP las detecta en tiempo de compilación, por lo que aquí solo llamamos.
     try {
 
         $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';

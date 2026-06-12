@@ -17,8 +17,6 @@ class ModeloEstadisticas extends ModeloBase
     private $partidos;
     private $average;
 
-    private $ModeloTorneo;
-    private $ModeloAtleta;
     private $ModeloHistorial;
     private $ModeloParticipaciones;
 
