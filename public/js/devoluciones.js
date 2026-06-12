@@ -48,21 +48,29 @@ $(document).ready(function () {
 
     // Acción del botón Confirmar dentro del modal
     $('#btn_guardar').on('click', function () {
-        let accion = $(this).attr("data-accion");
-        
-        // Validación estricta SOLO si vas a registrar o editar
-        if (accion === "incluir" || accion === "modificar") {
-            if ($('#id_asignacion').val() === "" || $('#id_estado').val() === "" || $('#fecha_devolucion').val() === "") {
-                muestraMensaje("error", 2000, "Validación", "Complete los campos obligatorios.");
-                return false;
-            }
+    let accion = $(this).attr("data-accion");
+    
+    // Validación estricta SOLO si vas a registrar o editar
+    if (accion === "incluir" || accion === "modificar") {
+        if ($('#id_asignacion').val() === "" || $('#id_estado').val() === "" || $('#fecha_devolucion').val() === "") {
+            muestraMensaje("error", 2000, "Validación", "Complete los campos obligatorios.");
+            return false;
         }
-        // Si la acción es "generar" pasará de largo y permitirá enviar filtros en blanco
-        
-        let datos = new FormData($('#f')[0]);
-        datos.append('accion', accion);
-        enviaAjax(datos);
-    });
+    }
+    
+    // --- AGREGA ESTA LÍNEA PARA VER SI LOS DATOS SALEN BIEN ---
+    // Esto te dirá en la consola si el JS está capturando los datos correctamente
+    console.log("Acción enviada:", accion);
+    
+    let datos = new FormData($('#f')[0]);
+    datos.append('accion', accion);
+    
+    // --- OPCIONAL: DEPURACIÓN ---
+    // Si la transacción falla, descomenta la siguiente línea para ver qué datos lleva el paquete
+    // for (var pair of datos.entries()) { console.log(pair[0]+ ': ' + pair[1]); }
+    
+    enviaAjax(datos);
+});
 });
 
 function enviaAjax(datos) {
@@ -145,7 +153,7 @@ function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
 function confirmarAnulacion(id_devolucion) {
     Swal.fire({
         title: '¿Estás seguro?',
-        text: "Se anulará la devolución y el equipo volverá a estar asignado. Indique el motivo:",
+        text: "Se anulará la devolución y la asignacion volverá a estar asignado. Indique el motivo:",
         icon: 'warning',
         input: 'textarea',
         inputPlaceholder: 'Escriba el motivo...',

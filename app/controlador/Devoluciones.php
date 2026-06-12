@@ -2,6 +2,7 @@
 
 use App\modelo\ModeloDevoluciones;
 use App\modelo\ModeloAsignaciones;
+use App\modelo\ModeloEquipamientos;
 use App\modelo\ModeloCalidad; 
 
 require_once __DIR__ . '/Base.php';
@@ -16,17 +17,26 @@ if (!class_exists($nombreClaseModelo)) {
 }
 
 $objModelo = new ModeloDevoluciones();
+
+// Inyección de dependencias
+$objModelo->setAsignaciones(new ModeloAsignaciones());
+$objModelo->setEquipamientos(new ModeloEquipamientos());
+
 $pagina = 'Devoluciones';
 
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudDevolucion($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Devoluciones');
-    $respuesta = $objModelo->ConsultarDevoluciones();
-    $registro = $respuesta['datos'] ?? [];
-    
-    $variables = ['registro' => $registro, 'permisos' => $permisos];
-    cargarVista($pagina, $variables);
+    try {
+        registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Devoluciones');
+        $respuesta = $objModelo->ConsultarDevoluciones();
+        $registro = $respuesta['datos'] ?? [];
+        
+        $variables = ['registro' => $registro, 'permisos' => $permisos];
+        cargarVista($pagina, $variables);
+    } catch (Exception $e) {
+        die("Error al cargar el módulo: " . $e->getMessage());
+    }
 }
 
 function manejarSolicitudDevolucion($obj, $id_modulo, $bitacoraObj, array $permisos): void
@@ -73,11 +83,15 @@ function manejarSolicitudDevolucion($obj, $id_modulo, $bitacoraObj, array $permi
 }
 
 function consultar($obj, $permisos): void {
-    $respuesta = $obj->ConsultarDevoluciones();
-    $registro = $respuesta['datos'] ?? [];
-    
-    $solo_lista = true;
-    include (__DIR__.'/../vista/Devoluciones.php'); 
+    try {
+        $respuesta = $obj->ConsultarDevoluciones();
+        $registro = $respuesta['datos'] ?? [];
+        
+        $solo_lista = true;
+        include (__DIR__.'/../vista/Devoluciones.php'); 
+    } catch (Exception $e) {
+        echo "<div class='error'>Error al consultar los registros: " . $e->getMessage() . "</div>";
+    }
 }
 
 function MultiConsulta(): void {
@@ -94,70 +108,98 @@ function MultiConsulta(): void {
             'estados'      => $respEstado['datos'] ?? []
         ]);
     } catch (Exception $e) {
-        echo json_encode(['accion' => 'error', 'codigo' => DB_CONNECTION]);
+        echo json_encode(['accion' => 'error', 'codigo' => DB_CONNECTION, 'mensaje' => $e->getMessage()]);
     }
 }
 
 function procesarFormulario($obj, $accion, $id_modulo, $bitacoraObj): void {
-    $datos = [
-        'accion' => $accion, 
-        'id_devolucion' => $_POST['id_devolucion'] ?? null,
-        'id_asignacion' => filter_var($_POST['id_asignacion'], FILTER_SANITIZE_NUMBER_INT), 
-        'id_estado' => filter_var($_POST['id_estado'], FILTER_SANITIZE_NUMBER_INT), 
-        'fecha_devolucion' => filter_var($_POST['fecha_devolucion'], FILTER_SANITIZE_SPECIAL_CHARS),
-        'observacion' => filter_var($_POST['observacion'] ?? '', FILTER_SANITIZE_SPECIAL_CHARS)
-    ];
-    
-    $resultado = $obj->ProcesarDatos($datos);
-    if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-        $mensajeBitacora = ($accion === 'incluir') ? "Registró" : "Modificó";
-        registrarBitacora($bitacoraObj, $id_modulo, "$mensajeBitacora devolución de asignación ID: " . $datos['id_asignacion']);
-        echo json_encode(['accion' => 'exito']);
-    } else {
-        echo json_encode(['accion' => 'error', 'codigo' => $resultado['codigo'], 'mensaje' => decodificarError($resultado['codigo'])]);
+    try {
+        // 1. Limpiamos y preparamos los datos
+        $datos = [
+            'accion'           => $accion, 
+            'id_devolucion'    => filter_var($_POST['id_devolucion'] ?? null, FILTER_SANITIZE_NUMBER_INT),
+            'id_asignacion'    => filter_var($_POST['id_asignacion'] ?? '', FILTER_SANITIZE_NUMBER_INT), 
+            'id_estado'        => filter_var($_POST['id_estado'] ?? '', FILTER_SANITIZE_NUMBER_INT), 
+            'fecha_devolucion' => filter_var($_POST['fecha_devolucion'] ?? '', FILTER_SANITIZE_SPECIAL_CHARS),
+            'observacion'      => filter_var($_POST['observacion'] ?? '', FILTER_SANITIZE_SPECIAL_CHARS)
+        ];
+        
+        // 2. Validación extra en el backend
+        if (empty($datos['id_asignacion']) || empty($datos['id_estado']) || empty($datos['fecha_devolucion'])) {
+            throw new Exception("Faltan campos obligatorios por completar.");
+        }
+
+        // 3. Enviamos al Modelo
+        $resultado = $obj->ProcesarDatos($datos);
+        
+        // 4. Respuesta al JS
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, ($accion === 'incluir' ? "Registró" : "Modificó") . " devolución ID Asig: " . $datos['id_asignacion']);
+            echo json_encode(['accion' => 'exito', 'mensaje' => $resultado['mensaje'] ?? 'Operación realizada correctamente.']);
+        } else {
+            throw new Exception($resultado['mensaje'] ?? 'Error desconocido al procesar la solicitud.');
+        }
+    } catch (Exception $e) {
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
 
 function anular($obj, $id_modulo, $bitacoraObj): void {
-    $datos = [
-        'accion' => 'anular', 
-        'id_devolucion' => filter_var($_POST['id_devolucion'], FILTER_SANITIZE_NUMBER_INT),
-        'motivo_anulacion' => filter_var($_POST['motivo_anulacion'] ?? 'Anulación directa', FILTER_SANITIZE_SPECIAL_CHARS)
-    ];
-    
-    $resultado = $obj->ProcesarDatos($datos);
-    if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-        registrarBitacora($bitacoraObj, $id_modulo, "Anuló devolución ID: " . $datos['id_devolucion'] . " | Motivo: " . $datos['motivo_anulacion']);
-        echo json_encode(['accion' => 'exito']);
-    } else {
-        echo json_encode(['accion' => 'error', 'codigo' => $resultado['codigo']]);
+    try {
+        // 1. Capturamos los datos
+        $datos = [
+            'accion' => 'anular', 
+            'id_devolucion' => filter_var($_POST['id_devolucion'] ?? '', FILTER_SANITIZE_NUMBER_INT),
+            'motivo_anulacion' => filter_var($_POST['motivo_anulacion'] ?? 'Sin motivo', FILTER_SANITIZE_SPECIAL_CHARS)
+        ];
+
+        if (empty($datos['id_devolucion'])) {
+            throw new Exception("ID de devolución no válido.");
+        }
+        
+        // 2. Ejecutamos
+        $resultado = $obj->ProcesarDatos($datos);
+        
+        // 3. Respuesta
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Anuló devolución ID: " . $datos['id_devolucion']);
+            echo json_encode(['accion' => 'exito', 'mensaje' => $resultado['mensaje'] ?? 'Anulación exitosa.']);
+        } else {
+            throw new Exception($resultado['mensaje'] ?? 'No se pudo anular el registro.');
+        }
+    } catch (Exception $e) {
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
 
 function generarReporte($obj, $id_modulo, $bitacoraObj): void {
-    // Tomar los filtros provenientes del Modal (si los dejaron en blanco, será null)
-    $datosFiltro = [
-        'accion' => 'generar',
-        'id_asignacion' => !empty($_POST['id_asignacion']) ? $_POST['id_asignacion'] : null,
-        'id_estado' => !empty($_POST['id_estado']) ? $_POST['id_estado'] : null,
-        'fecha_devolucion' => !empty($_POST['fecha_devolucion']) ? $_POST['fecha_devolucion'] : null,
-    ];
+    try {
+        $datosFiltro = [
+            'accion' => 'generar',
+            'id_asignacion' => !empty($_POST['id_asignacion']) ? filter_var($_POST['id_asignacion'], FILTER_SANITIZE_NUMBER_INT) : null,
+            'id_estado' => !empty($_POST['id_estado']) ? filter_var($_POST['id_estado'], FILTER_SANITIZE_NUMBER_INT) : null,
+            'fecha_devolucion' => !empty($_POST['fecha_devolucion']) ? filter_var($_POST['fecha_devolucion'], FILTER_SANITIZE_SPECIAL_CHARS) : null,
+        ];
 
-    $respuesta = $obj->ProcesarDatos($datosFiltro);
-    $datos = $respuesta['datos'] ?? [];
-    
-    if (empty($datos)) {
-        echo json_encode(['accion' => 'error', 'codigo' => VALIDATION, 'mensaje' => 'No hay registros con los filtros seleccionados.']);
-        exit();
+        $respuesta = $obj->ProcesarDatos($datosFiltro);
+        $datos = $respuesta['datos'] ?? [];
+        
+        if (empty($datos)) {
+            throw new Exception('No hay registros con los filtros seleccionados.');
+        }
+        
+        $objG = new \App\servicios\GenerarReporte();
+        $pdf = $objG->generarPDF('R_Devoluciones', $datos, 'Devoluciones');
+        
+        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte filtrado de devoluciones.");
+            echo json_encode($pdf);
+        } else {
+            throw new Exception("Error al generar el documento PDF.");
+        }
+    } catch (Exception $e) {
+        echo json_encode(['accion' => 'error', 'codigo' => VALIDATION, 'mensaje' => $e->getMessage()]);
     }
-    
-    $objG = new \App\servicios\GenerarReporte();
-    $pdf = $objG->generarPDF('R_Devoluciones', $datos, 'Devoluciones');
-    
-    if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-        registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte filtrado de devoluciones.");
-    }
-    echo json_encode($pdf);
 }
 
 function decodificarError($codigo) {
