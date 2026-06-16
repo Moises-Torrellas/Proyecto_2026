@@ -189,6 +189,7 @@
     </section>
     <script src="js/main.js"></script>
     <script src="js/Concepto.js"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>

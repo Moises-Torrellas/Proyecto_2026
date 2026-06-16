@@ -2,11 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
-use SensitiveParameter;
 
-class ModeloCategoriaEquipamiento extends ModeloBase
+class ModeloCategoriaEquipamiento extends Conexion
 {
     private $id;
     private $nombre;
@@ -27,6 +25,7 @@ class ModeloCategoriaEquipamiento extends ModeloBase
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
+        $this->ValidarExpresiones($datos);
         $this->id = $datos['id'] ?? null;
         $this->nombre = mb_strtoupper(trim($datos['nombre'] ?? ''), "UTF-8");
         $this->descripcion = $datos['descripcion'] ?? null;
@@ -177,5 +176,18 @@ private function Eliminar(): array
         } finally {
             $conex = NULL;
         }
-    }   
+    }
+    
+    private function ValidarExpresiones(array $datos): void
+    {
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+            throw new Exception('Id inválido.');
+        }
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-Z0-9\-\s]{2,30}$/', $datos['nombre'])) {
+            throw new Exception('Nombre de categoría equipamiento inválido.');
+        }
+        if (!empty($datos['descripcion']) && !preg_match('/^[a-zA-Z0-9\-\s]{2,30}$/', $datos['descripcion'])) {
+            throw new Exception('Descripcion inválida.');
+        }
+    }
 } 

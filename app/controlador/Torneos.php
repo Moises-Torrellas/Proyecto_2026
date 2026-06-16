@@ -90,8 +90,7 @@ function consultar($obj): void
 function buscar($obj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],
@@ -109,19 +108,7 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'nombre'       => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\-\s]{2,30}$/u', 'mensaje' => 'Nombre de torneo inválido.'],
-            'fecha_inicio' => ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Fecha de inicio inválida.'],
-            'fecha_fin'    => ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Fecha de fin inválida.'],
-            'ubicacion'    => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,#-]{5,150}$/u', 'mensaje' => 'Ubicación inválida.'],
-            'estatus'      => ['regla' => '/^[0-9]$/', 'mensaje' => 'Estatus inválido.']
-        ];
-
-        validar_datos($validaciones);
-
-        if (strtotime($_POST['fecha_inicio']) > strtotime($_POST['fecha_fin'])) {
-            throw new Exception('La fecha de inicio no puede ser mayor que la fecha de fin.');
-        }
+        validar_requeridos(['nombre', 'fecha_inicio', 'fecha_fin', 'ubicacion', 'estatus']);
 
         $datos = [
             'nombre'       => $_POST['nombre'],
@@ -155,20 +142,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'id'           => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre'       => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\-\s]{2,30}$/u', 'mensaje' => 'Nombre de torneo inválido.'],
-            'fecha_inicio' => ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Fecha de inicio inválida.'],
-            'fecha_fin'    => ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Fecha de fin inválida.'],
-            'ubicacion'    => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,#-]{5,150}$/u', 'mensaje' => 'Ubicación inválida.'],
-            'estatus'      => ['regla' => '/^[0-9]$/', 'mensaje' => 'Estatus inválido.']
-        ];
-
-        validar_datos($validaciones);
-
-        if (strtotime($_POST['fecha_inicio']) > strtotime($_POST['fecha_fin'])) {
-            throw new Exception('La fecha de inicio no puede ser mayor que la fecha de fin.');
-        }
+        validar_requeridos(['id', 'nombre', 'fecha_inicio', 'fecha_fin', 'ubicacion', 'estatus']);
 
         $datos = [
             'id'           => $_POST['id'],
@@ -202,8 +176,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],

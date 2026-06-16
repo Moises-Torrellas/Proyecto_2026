@@ -2,13 +2,10 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
-use App\modelo\ModeloAsignaciones;
-use App\modelo\ModeloEquipamientos;
 use Exception;
 use PDO;
 
-class ModeloDevoluciones extends ModeloBase
+class ModeloDevoluciones extends Conexion
 {
     private $id_devolucion;
     private $id_asignacion;
@@ -114,10 +111,6 @@ class ModeloDevoluciones extends ModeloBase
         $stmt->execute([$id_devolucion]);
         return $stmt->fetchColumn() !== false; 
     }
-
-    // ====================================================================
-    // OPERACIONES CRUD CON VALIDACIONES INTEGRADAS
-    // ====================================================================
 
     private function IncluirDevolucion(): array
     {

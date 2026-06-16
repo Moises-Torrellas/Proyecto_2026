@@ -48,7 +48,7 @@
 
                     <div class="listado_item" onclick="toggleDetalles(this)">
                         <div class="listado_col_principal">
-                            <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>
+                            <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-star"></i></div>
                             <div class="listado_info_base">
                                 <span class="listado_titulo"><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
                             </div>
@@ -229,7 +229,7 @@
 
             <div class="listado_item" onclick="toggleDetalles(this)">
                 <div class="listado_col_principal">
-                    <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>
+                    <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-star"></i></div>
                     <div class="listado_info_base">
                         <span class="listado_titulo"><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
                     </div>
@@ -428,6 +428,7 @@
     </section>
     <script src="js/main.js"></script>
     <script src="js/cuentas_cobrar.js?v=<?= time(); ?>"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>

@@ -25,7 +25,7 @@ function consultarRoles() {
 }
 
 $(document).ready(function () {
-    consultar();
+    inicializarPaginador();
     consultarRoles();
 
     $("#cedula").on("input", function () {
@@ -158,17 +158,17 @@ $(document).ready(function () {
     });
 
     // Auto-check logic
-    $('#tabla_permisos').on('change', '.checkbox', function() {
+    $('#tabla_permisos').on('change', '.checkbox', function () {
         var id = $(this).attr('id');
         var partes = id.split('_');
         if (partes.length >= 3) {
             var accion = partes[1];
             var idModulo = partes[2];
-            
+
             if (accion !== 'ingresar' && $(this).is(':checked')) {
                 $('#check_ingresar_' + idModulo).prop('checked', true);
             }
-            
+
             if (accion === 'ingresar' && !$(this).is(':checked')) {
                 $('#check_registrar_' + idModulo).prop('checked', false);
                 $('#check_modificar_' + idModulo).prop('checked', false);
@@ -386,7 +386,7 @@ function mostrarPermisosUsuario(datos) {
     $("#proceso").data("accion", "permisos_usuario");
     $("#proceso").text("Guardar Permisos");
     $("#titulo_modal").text("Permisos del Usuario");
-    
+
     $('#contraseña').closest('.colum').hide();
     $('#telefono').closest('.colum').hide();
     $('#correo').closest('.colum').hide();
@@ -415,81 +415,17 @@ function CargarPermisos(idUsuario) {
     enviaAjax(datos);
 }
 
-const icon = 'fi-sr-lock';
-function crearConsulta(datos) {
+
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
-    } else {
-        datos.forEach(dato => {
-            let icon = dato.bloqueo == 1 ? 'fi-sr-unlock' : 'fi-sr-lock';
-            let color = dato.bloqueo == 1 ? 'cbt_g' : 'cbt_a';
+    // Inyectamos directamente el bloque HTML estructurado que procesó el servidor
+    contenedor.html(htmlRecibido);
 
-            let fotoHTML = dato.foto == 'default.png'
-                ? `<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>` 
-                : `<img src="img/usuarios/${dato.foto}" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">`;
-
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_principal">
-                            ${fotoHTML}
-                            <div class="listado_info_base">
-                                <span class="listado_titulo">${escapeHTML(dato.nombreUsuario)} ${escapeHTML(dato.apellidoUsuario)}</span>
-                                <span class="listado_subtitulo">${dato.correo}</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Cédula</small>
-                                <span>${dato.cedulaUsuario}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Telefono</small>
-                                <span>${escapeHTML(dato.telefonoUsuario)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Rol</small>
-                                <span class="listado_resaltado">${escapeHTML(dato.nombre_rol)}</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button class="btn_t cbt_m" onclick="CargarPermisos(${dato.idUsuario})"><i class="fi fi-sr-user-permissions"></i></button>
-                                <button class="btn_t cbt_v" onclick="buscar(${dato.idUsuario})"><i class="fi fi-sr-pencil"></i></button>
-                                <button class="btn_t cbt_r" onclick="eliminar(${dato.idUsuario})"><i class="fi fi-sr-trash-xmark"></i></button>
-                                <button class="btn_t ${color}" onclick="bloquear(${dato.idUsuario}, ${dato.bloqueo}, this)"><i class="fi ${icon}"></i></button>
-                            </div>
-                            <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
-                        </div>
-                    </div>
-
-                    <div class="listado_detalle_oculto">
-                        <div class="listado_detalle_contenido">
-                            <div class="detalle_grid">
-                                <div class="detalle_info">
-                                    <strong><i data-lucide="calendar"></i> Registro</strong>
-                                    <span>${dato.fecha_registro || 'N/A'}</span>
-                                </div>
-                                <div class="detalle_info">
-                                    <strong><i data-lucide="info"></i> Información Extra</strong>
-                                    <span>Detalles adicionales del usuario aquí...</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-
+    // Reactivamos las librerías visuales y los comportamientos estéticos
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function CargarRegistros() {
@@ -536,6 +472,10 @@ function enviaAjax(datos) {
         },
         timeout: 120000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
                 if (lee.accion == "consultar") {

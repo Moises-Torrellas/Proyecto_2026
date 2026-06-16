@@ -5,7 +5,7 @@ namespace App\modelo;
 use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloMetodosPago extends ModeloBase
+class ModeloMetodosPago extends Conexion
 {
     private $id;
     private $nombre;

@@ -4,7 +4,7 @@ namespace App\modelo;
 
 use Exception;
 
-class ModeloInicio extends ModeloBase
+class ModeloInicio extends Conexion
 {
     private string $cedula = '';
     private string $clave = '';
@@ -34,7 +34,7 @@ class ModeloInicio extends ModeloBase
                     FROM `usuarios` 
                     INNER JOIN roles ON roles.id_rol = usuarios.id_rol 
                     WHERE cedulaUsuario = :cedula AND usuarios.estatus != 0;';
-                    
+
             $stmt = $conex->prepare($sql);
             $stmt->bindParam(':cedula', $this->cedula, \PDO::PARAM_STR);
             $stmt->execute();
@@ -55,26 +55,25 @@ class ModeloInicio extends ModeloBase
                 return ['accion' => 'inicio', 'resultado' => 0, 'mensaje' => 'La contraseña es incorrecta'];
             }
 
-            // 3. Buscar permisos usando los campos puros de la tabla permisos_usuarios
             $sqlPermisos = 'SELECT id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros 
                 FROM permisos_usuarios 
                 WHERE idUsuario = :id;';
-                            
+
             $stmtPermisos = $conex->prepare($sqlPermisos);
             $stmtPermisos->bindParam(':id', $resultado['idUsuario'], \PDO::PARAM_INT);
             $stmtPermisos->execute();
             $permisos = $stmtPermisos->fetchAll();
-            
-            // 4. Retornar login exitoso con la data estructurada
+
+            $modeloUsuarios = new ModeloUsuarios();
+            $modeloUsuarios->registrarUltimoIngreso((int)$resultado['idUsuario']);
             return [
-                'accion' => 'inicio', 
-                'resultado' => 1, 
-                'datos' => $resultado, 
-                'permisos' => $permisos, 
-                'mensaje' => 'BIENVENIDO', 
+                'accion' => 'inicio',
+                'resultado' => 1,
+                'datos' => $resultado,
+                'permisos' => $permisos,
+                'mensaje' => 'BIENVENIDO',
                 'url' => 'Principal'
             ];
-
         } catch (Exception $e) {
             logs('Inicio', $e->getMessage(), 'Modelo_Inicio');
             return ['accion' => 'error', 'mensaje' =>  $e->getMessage()];

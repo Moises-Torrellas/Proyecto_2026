@@ -26,8 +26,14 @@ if (comprobarAjax() && !empty($_POST)) {
 } else {
     registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
+
+    $error_bd = '';
+    if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        $error_bd = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : '';
+    }
+
     $registro = $respuesta['datos'] ?? [];
-    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
     cargarVista($pagina, $variables);
 }
 // Funcion para manejar las peticiones recibe como parametros el objeto del modelo, el id del modulo, la bitacora y el array de permisos
@@ -92,8 +98,7 @@ function consultar($obj, $permisos): void
 function buscar($obj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],
@@ -111,17 +116,11 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'abreviatura' => ['regla' => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida.'],
-            'descripcion' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', 'mensaje' => 'Descripcion inválida.']
-        ];
-
-        if (empty($_POST['descripcion'])) {
-            unset($validaciones['descripcion']);
+        $requeridos = ['nombre', 'abreviatura'];
+        if (!empty($_POST['descripcion'])) {
+            $requeridos[] = 'descripcion';
         }
-
-        validar_datos($validaciones);
+        validar_requeridos($requeridos);
 
         $datos = [
             'nombre'     => $_POST['nombre'],
@@ -146,8 +145,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],
@@ -168,18 +166,11 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'abreviatura' => ['regla' => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida.'],
-            'descripcion' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', 'mensaje' => 'Descripcion inválida.'],
-        ];
-
-        if (empty($_POST['descripcion'])) {
-            unset($validaciones['descripcion']);
+        $requeridos = ['id', 'nombre', 'abreviatura'];
+        if (!empty($_POST['descripcion'])) {
+            $requeridos[] = 'descripcion';
         }
-
-        validar_datos($validaciones);
+        validar_requeridos($requeridos);
 
         $datos = [
             'id' => $_POST['id'],

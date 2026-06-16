@@ -2,10 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloPremios extends ModeloBase
+class ModeloPremios extends Conexion
 {
     private $id;
     private $nombre;
@@ -30,8 +29,7 @@ class ModeloPremios extends ModeloBase
         }
 
         $this->id = $datos['id'] ?? null;
-        
-        // CORRECCIÓN: Forzar mayúsculas ('I' o 'G') para coincidir con el ENUM de la base de datos
+
         $this->tipo = isset($datos['tipo']) ? strtoupper(trim($datos['tipo'])) : null;
         
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
@@ -197,10 +195,6 @@ class ModeloPremios extends ModeloBase
             $conex = NULL;
         }
     }
-
-    /**
-     * Valida que el tipo del premio coincida con el tipo de palmarés
-     */
     public function validarTipoPremio(int $id_premio, string $tipoEsperado): void
     {
         $conex = null;

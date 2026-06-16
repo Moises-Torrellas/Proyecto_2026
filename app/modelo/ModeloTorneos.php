@@ -2,10 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloTorneos extends ModeloBase
+class ModeloTorneos extends Conexion
 {
     private $id;
     private $nombre;
@@ -29,6 +28,8 @@ class ModeloTorneos extends ModeloBase
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
+        
+        $this->ValidarExpresiones($datos);
         
         $this->id = $datos['id'] ?? null;
         $this->nombre = mb_strtoupper(trim($datos['nombre'] ?? ''), "UTF-8");
@@ -195,4 +196,29 @@ class ModeloTorneos extends ModeloBase
             $conex = NULL;
         }
     }   
+
+    private function ValidarExpresiones(array $datos): void
+    {
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+            throw new Exception('Id inválido.');
+        }
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\-\s]{2,30}$/u', $datos['nombre'])) {
+            throw new Exception('Nombre de torneo inválido.');
+        }
+        if (!empty($datos['fecha_inicio']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $datos['fecha_inicio'])) {
+            throw new Exception('Fecha de inicio inválida.');
+        }
+        if (!empty($datos['fecha_fin']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $datos['fecha_fin'])) {
+            throw new Exception('Fecha de fin inválida.');
+        }
+        if (!empty($datos['ubicacion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,#-]{5,150}$/u', $datos['ubicacion'])) {
+            throw new Exception('Ubicación inválida.');
+        }
+        if (!empty($datos['estatus']) && !preg_match('/^[0-9]$/', $datos['estatus'])) {
+            throw new Exception('Estatus inválido.');
+        }
+        if (!empty($datos['fecha_inicio']) && !empty($datos['fecha_fin']) && strtotime($datos['fecha_inicio']) > strtotime($datos['fecha_fin'])) {
+            throw new Exception('La fecha de inicio no puede ser mayor que la fecha de fin.');
+        }
+    }
 }

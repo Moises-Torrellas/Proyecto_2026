@@ -109,6 +109,7 @@
     
     <script src="js/main.js"></script>
     <script src="js/torneos.js"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>

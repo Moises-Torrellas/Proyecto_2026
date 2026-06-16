@@ -2,16 +2,15 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloCuentasCobrar extends ModeloBase
+class ModeloCuentasCobrar extends Conexion
 {
     private $id;
     private $id_concepto;
     private $id_atleta;
-    private $id_moneda; // NUEVO: Para la base de datos
-    private $monto;     // CAMBIO: Se ajusta al nombre del diagrama
+    private $id_moneda;
+    private $monto;
     private $fecha_emision;
     private $fecha_vencimiento;
     private $estatus;

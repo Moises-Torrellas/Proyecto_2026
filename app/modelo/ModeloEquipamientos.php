@@ -2,11 +2,10 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 use PDO;
 
-class ModeloEquipamientos extends ModeloBase
+class ModeloEquipamientos extends Conexion
 {
     public function __construct()
     {
@@ -24,7 +23,7 @@ class ModeloEquipamientos extends ModeloBase
         $accion = $datos['accion'] ?? null;
 
         return match ($accion) {
-            'consultar'     => $this->ConsultarAgrupado(), // Usamos la consulta agrupada
+            'consultar'     => $this->ConsultarAgrupado(), 
             'cargar_combos' => $this->CargarCombos(),
             'incluir'       => $this->IncluirEquipamiento($datos),
             'modificar'     => $this->ModificarEquipamiento($datos),

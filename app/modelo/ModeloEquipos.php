@@ -2,10 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloEquipos extends ModeloBase
+class ModeloEquipos extends Conexion
 {
     private $id;
     private $nombre;
@@ -60,12 +59,6 @@ class ModeloEquipos extends ModeloBase
         }
     }
 
-    /**
-     * Consulta los atletas asignados a un equipo.
-
-     * Retorna campos consistentes para el JS del modal:
-     *  - id, doc_i, nombre, categoria, posicion
-     */
     public function ConsultarAtletasAsignadosEquipo(int $idEquipo): array
 
     {
@@ -206,6 +199,8 @@ class ModeloEquipos extends ModeloBase
             throw new Exception('No se proporcionaron datos para procesar el registro del equipo.');
         }
 
+        $this->ValidarExpresiones($datos);
+
         // 2. Asignación y saneamiento de atributos básicos
         $this->id            = $datos['id'] ?? null;
         $this->categoria  = $datos['categoria'] ?? null;
@@ -286,28 +281,19 @@ class ModeloEquipos extends ModeloBase
                 }
             }
 
-            // 2. Definición de partes de la consulta
             $columnas = [];
             $marcadores = [];
 
-            // --- DATOS OBLIGATORIOS ---
-            // Estos siempre se incluyen según la lógica de tu controlador
             $columnas[] = "nombre";
             $marcadores[] = ":nombre";
             $columnas[] = "id_categoria";
             $marcadores[] = ":id_categoria";
 
-            // --- DATOS OPCIONALES ---
-            // Se agregan a la consulta solo si no son nulos
-
-            // 3. Preparación de la sentencia SQL
             $sql = "INSERT INTO equipos (" . implode(", ", $columnas) . ") 
                 VALUES (" . implode(", ", $marcadores) . ")";
 
             $stmt = $conex->prepare($sql);
 
-            // 4. Vinculación de valores con bindValue (Evita Inyección SQL)
-            // Vinculación de obligatorios
             $stmt->bindValue(':nombre', $this->nombre);
             $stmt->bindValue(':id_categoria', $this->categoria, \PDO::PARAM_INT);
 
@@ -393,7 +379,7 @@ class ModeloEquipos extends ModeloBase
     }
 
 
-     private function Eliminar(): array
+    private function Eliminar(): array
     {
         try {
             $conex = $this->conex();
@@ -418,6 +404,19 @@ class ModeloEquipos extends ModeloBase
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
+        }
+    }
+
+    private function ValidarExpresiones(array $datos): void
+    {
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+            throw new Exception('Id inválido.');
+        }
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]{3,30}$/', $datos['nombre'])) {
+            throw new Exception('Nombre inválido.');
+        }
+        if (!empty($datos['categoria']) && !preg_match('/^[0-9]+$/', $datos['categoria'])) {
+            throw new Exception('Categoría inválida.');
         }
     }
 }

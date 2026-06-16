@@ -29,14 +29,16 @@ if (comprobarAjax() && !empty($_POST)) {
 } else {
     registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Catálogo');
     $respuesta = $objModelo->Consultar();
+    
+    $error_bd = '';
+    if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        $error_bd = 'Error al conectar con la base de datos.';
+    }
+
     $registro = $respuesta['datos'] ?? [];
-    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
     cargarVista($pagina, $variables);
 }
-
-/**
- * --- FUNCIONES DEL CONTROLADOR ---
- */
 
 function manejarSolicitudCatalogo($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
@@ -123,8 +125,7 @@ function MultiConsulta(): void
 function buscar($obj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],
@@ -139,20 +140,8 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'nombre'       => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-\.]{3,50}$/', 'mensaje' => 'Nombre inválido.'],
-            'id_categoria' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Categoría inválida.'],
-            'stock_minimo' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Stock mínimo debe ser un número entero.']
-        ];
-
-        if (!empty($_POST['id_posicion'])) {
-            $validaciones['id_posicion'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Posición inválida.'];
-        }
-        if (!empty($_POST['talla'])) {
-            $validaciones['talla'] = ['regla' => '/^[a-zA-Z0-9\s\-\/]{1,10}$/', 'mensaje' => 'Talla inválida.'];
-        }
-
-        validar_datos($validaciones);
+        $requeridos = ['nombre', 'id_categoria', 'stock_minimo'];
+        validar_requeridos($requeridos);
 
         $datos = [
             'nombre'       => $_POST['nombre'],
@@ -180,21 +169,8 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'id'           => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre'       => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-\.]{3,50}$/', 'mensaje' => 'Nombre inválido.'],
-            'id_categoria' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Categoría inválida.'],
-            'stock_minimo' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Stock mínimo debe ser numérico.']
-        ];
-
-        if (!empty($_POST['id_posicion'])) {
-            $validaciones['id_posicion'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Posición inválida.'];
-        }
-        if (!empty($_POST['talla'])) {
-            $validaciones['talla'] = ['regla' => '/^[a-zA-Z0-9\s\-\/]{1,10}$/', 'mensaje' => 'Talla inválida.'];
-        }
-
-        validar_datos($validaciones);
+        $requeridos = ['id', 'nombre', 'id_categoria', 'stock_minimo'];
+        validar_requeridos($requeridos);
 
         $datos = [
             'id'           => $_POST['id'],
@@ -224,8 +200,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],

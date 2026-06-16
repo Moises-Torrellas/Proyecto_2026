@@ -87,8 +87,7 @@ function consultar($obj): void
 function buscar($obj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],
@@ -106,23 +105,11 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'nombre'   => ['regla' => '/^[a-zA-Z0-9\-\s]{2,30}$/', 'mensaje' => 'Nombre de categoría equipamiento inválido.'],
-            // Permite de 1 a 2 dígitos (Ej: 5, 12, 99)
-            'descripcion' => ['regla' => '/^[0-9]{1,2}$/', 'mensaje' => 'Descripción inválida.'],
-           // 'edad_max' => ['regla' => '/^[0-9]{1,2}$/', 'mensaje' => 'Edad máxima inválida. Debe ser un número.']
-        ];
+        validar_requeridos(['nombre', 'descripcion']);
 
-       /* validar_datos($validaciones);
-        //Validacion logica adicional: la edad minima no puede ser mayor a la edad máxima
-        if ((int)$_POST['edad_min'] > (int)$_POST['edad_max']) {
-            throw new Exception('La edad mínima no puede ser mayor que la edad máxima.');
-        }*/
-
-         $datos = [
+        $datos = [
             'nombre'     => $_POST['nombre'],
-            'descripcion' => $_POST['descripcion'],
-           // 'edad_maxima' => $_POST['edad_max']
+            'descripcion' => $_POST['descripcion']
         ];  
         $datos['accion'] = 'incluir';
 
@@ -142,17 +129,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre'   => ['regla' => '/^[a-zA-Z0-9\-\s]{2,30}$/', 'mensaje' => 'Nombre de categoría equipamiento inválido.'],
-            'descripcion' => ['regla' => '/^[a-zA-Z0-9\-\s]{2,30}$/', 'mensaje' => 'Descripcion inválida.'],
-                 ];
-
-        validar_datos($validaciones);
-
-     /*   if ((int)$_POST['edad_min'] > (int)$_POST['edad_max']) {
-            throw new Exception('La edad mínima no puede ser mayor que la edad máxima.');
-        }*/
+        validar_requeridos(['id', 'nombre', 'descripcion']);
 
         $datos = [
             'id' => $_POST['id'],
@@ -176,8 +153,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],

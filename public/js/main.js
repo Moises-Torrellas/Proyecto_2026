@@ -89,7 +89,7 @@ $(document).ready(function () {
 
     tippy('[data-tippy-content]', { theme: 'light' });
 
-    $('#btn_hamburguesa').on('click', function(e) {
+    $('#btn_hamburguesa').on('click', function (e) {
         e.stopPropagation();
         $('.nav_lateral').toggleClass('mostrar');
     });
@@ -138,8 +138,8 @@ $(document).ready(function () {
 
         if (!esOscuro) {
             // Expandir círculo con color oscuro
-            circle.css('background-color', '#1f2a36'); // fondo oscuro de tu tema
-            circle.css('clip-path', 'circle(150% at 50% 50%)');
+            /*  circle.css('background-color', '#1f2a36'); // fondo oscuro de tu tema
+             circle.css('clip-path', 'circle(150% at 50% 50%)'); */
 
             setTimeout(() => {
                 // Cambiar tema a oscuro
@@ -152,7 +152,7 @@ $(document).ready(function () {
                     root: document.getElementById('modo_oscuro')
                 });
                 // Contraer círculo
-                circle.css('clip-path', 'circle(0% at 50% 50%)');
+                /* circle.css('clip-path', 'circle(0% at 50% 50%)'); */
                 const tema = 'oscuro';
                 let fecha = new Date();
                 fecha.setTime(fecha.getTime() + (30 * 24 * 60 * 60 * 1000));
@@ -160,8 +160,8 @@ $(document).ready(function () {
             }, 400); // espera transición clip-path
         } else {
             // Expandir círculo con color claro
-            circle.css('background-color', '#f2f3f5'); // fondo claro de tu tema
-            circle.css('clip-path', 'circle(150% at 50% 50%)');
+            /* circle.css('background-color', '#f2f3f5'); // fondo claro de tu tema
+            circle.css('clip-path', 'circle(150% at 50% 50%)'); */
 
             setTimeout(() => {
                 // Cambiar tema a claro
@@ -172,7 +172,7 @@ $(document).ready(function () {
                     root: document.getElementById('modo_oscuro')
                 });
                 // Contraer círculo
-                circle.css('clip-path', 'circle(0% at 50% 50%)');
+                /* circle.css('clip-path', 'circle(0% at 50% 50%)'); */
 
                 const tema = 'claro';
                 let fecha = new Date();
@@ -376,10 +376,11 @@ function inicializarPaginador() {
 function muestraMensaje(icono, tiempo, titulo, mensaje) {
     Swal.fire({
         icon: icono,
-        timer: tiempo,
         title: titulo,
         html: mensaje,
-        showConfirmButton: false,
+        showConfirmButton: true,
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: (icono === 'error') ? "#d30000" : "#00a200",
         customClass: {
             popup: "mi-popup",
             title: "mi-titulo",
@@ -501,7 +502,7 @@ function confirmar(titulo, callback) {
 }
 
 function confirmarAnulacion(titulo, callback) {
-    
+
     const regexMotivo = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-]+$/;
 
     Swal.fire({
@@ -527,7 +528,7 @@ function confirmarAnulacion(titulo, callback) {
             if (textoLimpio === "") {
                 return "¡Es obligatorio ingresar un motivo para la anulación!";
             }
-            
+
             // 2. Validar que cumpla con la longitud mínima (ej. 10 caracteres para que sea un motivo real)
             if (textoLimpio.length < 5) {
                 return "Por favor, escribe un motivo más detallado (mínimo 10 caracteres).";
@@ -577,7 +578,7 @@ function limpia() {
     formulario.find('input').not(':checkbox, :radio, :file, #token').val('');
 
     // 2. Limpiar input de ARCHIVO y resetear la PREVISUALIZACIÓN a la cámara
-    formulario.find('input:file').val(''); 
+    formulario.find('input:file').val('');
     $('#foto_previa').attr('src', ''); // Restablece el icono original
 
     // 3. Desmarcar checkboxes y radios
@@ -593,7 +594,7 @@ function limpia() {
 
     // 6. Resetear estados visuales y mensajes de error
     formulario.find('.denegado').removeClass('denegado');
-    $('.mensaje').text(''); 
+    $('.mensaje').text('');
 
     // 7. Restablecer bloqueos de la lógica de edad (Atletas)
     formulario.find('input, select, textarea, button').prop('disabled', false);
@@ -636,7 +637,7 @@ function toggleDetalles(elemento) {
     const panelActual = contenedorActual.find('.listado_detalle_oculto');
 
     // 2. Buscamos TODOS los paneles ocultos, EXCEPTO el que acabamos de clickear
-    $('.listado_detalle_oculto').not(panelActual).each(function() {
+    $('.listado_detalle_oculto').not(panelActual).each(function () {
         // Validamos la realidad visual: ¿Está abierto en la pantalla?
         if ($(this).is(':visible')) {
             $(this).slideUp(300); // Lo cerramos suavemente
@@ -661,10 +662,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     ws.onmessage = function (event) {
         const payload = JSON.parse(event.data);
-        
+
         // Renderizar el mensaje mini superior nativo con Lucide Icons
         renderizarNotificacionSuperior(payload.titulo, payload.mensaje, payload.tipo);
-        
+
         // Incrementar el indicador numérico sobre tu campana
         actualizarContadorBadge();
     };
@@ -679,7 +680,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnNoti && contenedorNoti) {
         btnNoti.addEventListener("click", function (e) {
             e.preventDefault();
-            
+
             // Alternar visibilidad con tu clase existente
             contenedorNoti.classList.toggle("ocultar");
 
@@ -712,20 +713,20 @@ function cargarNotificacionesEnPanel() {
             listaUl.innerHTML = ""; // Limpiar elementos estáticos viejos
 
             if (respuesta.accion === 'consultar' && respuesta.datos.length > 0) {
-                
+
                 respuesta.datos.forEach(noti => {
                     let iconName = "info";
                     let iconClass = "icon_noti_info";
 
                     if (noti.tipo === "cumpleaños") {
                         iconName = "cake";
-                        iconClass = "icon_noti_info"; 
+                        iconClass = "icon_noti_info";
                     } else if (noti.tipo === "torneo") {
                         iconName = "trophy";
                         iconClass = "icon_noti_success";
                     } else if (noti.tipo === "cuenta_cobrar") {
                         iconName = "credit-card";
-                        iconClass = "icon_noti_info"; 
+                        iconClass = "icon_noti_info";
                     }
 
                     const itemHTML = `
@@ -750,7 +751,7 @@ function cargarNotificacionesEnPanel() {
                 const badge = document.getElementById("campana-notificaciones-badge");
                 if (badge) {
                     badge.textContent = "0";
-                    badge.classList.add("ocultar"); 
+                    badge.classList.add("ocultar");
                 }
 
             } else {
@@ -780,7 +781,7 @@ function renderizarNotificacionSuperior(titulo, mensaje, tipo) {
             </div>
         </div>
     `;
-    
+
     muestraNoti(contenidoHTML, 10000);
 }
 
@@ -835,7 +836,7 @@ function manejarErrorCamara(img) {
     }
 }
 
-function ModeloBancario (selector) {
+function ModeloBancario(selector) {
     $(selector).on('input', function () {
         let entrada = $(this).val().replace(/\D/g, '');
 
@@ -857,7 +858,7 @@ function ModeloBancario (selector) {
         $(this).val(valorFormateado);
     });
 
-    $(selector).on('focus', function() {
+    $(selector).on('focus', function () {
         if ($(this).val() === '') {
             $(this).val('0.00');
         }

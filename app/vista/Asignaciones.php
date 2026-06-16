@@ -1,18 +1,25 @@
 <?php if (isset($solo_lista) && $solo_lista === true) : ?>
     <?php if (empty($registro)) : ?>
         <div class="listado_vacio">
-            <p>No se encontraron registros</p>
+            <p>No se encontraron registros de asignaciones</p>
         </div>
     <?php else : ?>
-        <?php foreach ($registro as $atleta) : 
+        <?php foreach ($registro as $atleta) :
+            // 1. Calcular totales para la cabecera y el resumen
             $asignacionesActivas = 0;
+            $totalAsignaciones = count($atleta['asignaciones']);
+
             foreach ($atleta['asignaciones'] as $asig) {
                 if ($asig['anulado'] == 0 && $asig['estatus'] == 1) {
                     $asignacionesActivas++;
                 }
             }
+
+            // Clase de estado para la tarjeta de resumen
+            $claseEstadoGeneral = ($asignacionesActivas > 0) ? 'estado_exito' : 'estado_neutral';
         ?>
             <div class="listado_contenedor_grupal">
+
                 <div class="listado_item" onclick="toggleDetalles(this)">
                     <div class="listado_col_principal">
                         <div class="listado_avatar_null">
@@ -26,8 +33,12 @@
 
                     <div class="listado_col_datos">
                         <div class="listado_dato_grupo">
-                            <small>Equipos en Préstamo</small>
-                            <span style="font-weight: bold;"><?= $asignacionesActivas ?> pieza(s) activa(s)</span>
+                            <small>EQUIPOS EN PRÉSTAMO</small>
+                            <span class="estatus_v"><?= $asignacionesActivas ?> Activa(s)</span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>HISTÓRICO</small>
+                            <span><?= $totalAsignaciones ?> Asignación(es)</span>
                         </div>
                     </div>
 
@@ -37,35 +48,55 @@
                 </div>
 
                 <div class="listado_detalle_oculto">
-                    <div class="detalle_expandido_container">
-                        <h4>Detalle de Asignaciones:</h4>
-                        <div class="detalle_fila" style="display: flex; flex-direction: column; gap: 10px;">
-                            <?php foreach ($atleta['asignaciones'] as $asignacion) : 
-                                $esAnulado = ($asignacion['anulado'] == 1 || $asignacion['estatus'] == 0);
-                                $textoEstatus = $esAnulado ? 'Anulado' : 'En Uso';
-                                
-                                $estiloBadge = $esAnulado ? 'background-color: #d1d5db; color: #374151; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;' : '';
-                                $claseEstatus = $esAnulado ? '' : 'estatus_a';
-                                $estiloTarjeta = $esAnulado ? 'opacity: 0.6; filter: grayscale(100%); background-color: var(--fondo-secundario);' : '';
+                    <div class="detalle_expandido_container" style="padding: 15px;">
+
+                        <div class="tarjeta_resumen <?= $claseEstadoGeneral ?>">
+                            <div class="tarjeta_icono"><i data-lucide="box"></i></div>
+                            <div class="tarjeta_texto">
+                                <label>RESUMEN DE EQUIPAMIENTO</label>
+                                <span class="texto_resaltado">Total Histórico: <?= $totalAsignaciones ?> | Actualmente Activas: <?= $asignacionesActivas ?></span>
+                            </div>
+                        </div>
+
+                        <hr class="separador_seccion">
+
+                        <div class="lista_sub_items">
+                            <?php foreach ($atleta['asignaciones'] as $asignacion) :
+                                // Lógica de estados actualizada
+                                $esActivo = false;
+                                if ($asignacion['anulado'] == 1) {
+                                    $textoEstatus = 'Anulado';
+                                    $claseEstatus = 'estatus_r';
+                                    $claseFila = 'fila_anulada'; // Aplica el fondo gris
+                                } elseif ($asignacion['estatus'] == 0) {
+                                    $textoEstatus = 'Devuelto';
+                                    $claseEstatus = 'estatus_v';
+                                    $claseFila = 'fila_anulada'; // Aplica el fondo gris
+                                } else {
+                                    $textoEstatus = 'En Uso';
+                                    $claseEstatus = 'estatus_a';
+                                    $claseFila = '';
+                                    $esActivo = true;
+                                }
                             ?>
-                                <div class="detalle_card" style="width: 100%; display: flex; justify-content: space-between; align-items: center; <?= $estiloTarjeta ?>">
-                                    <div style="display:flex; gap:15px; align-items:center;">
-                                        <div class="detalle_card_icon"><i data-lucide="box"></i></div>
-                                        <div class="detalle_card_txt" style="display: flex; flex-direction: column; gap: 3px;">
-                                            <span style="color: var(--texto-principal); font-weight: bold; font-size: 13px;">
-                                                <?= htmlspecialchars($asignacion['articulo']) ?>
-                                            </span>
-                                            <span style="color: var(--texto-principal); font-size: 12px; opacity: 0.7;">
-                                                Fecha de entrega: <?= $asignacion['fecha_vista'] ?>
-                                            </span>
-                                            <span class="<?= $claseEstatus ?>" style="width: fit-content; margin-top: 3px; <?= $estiloBadge ?>">
+                                <div class="sub_item_fila_estadistica <?= $claseFila ?>">
+
+                                    <div class="sub_item_info_torneo">
+                                        <span class="torneo_titulo_resaltado"><?= htmlspecialchars(mb_strtoupper($asignacion['articulo'], 'UTF-8')) ?></span>
+                                        <span class="torneo_fecha_sub">Fecha de entrega: <?= htmlspecialchars($asignacion['fecha_vista']) ?></span>
+                                    </div>
+
+                                    <div class="sub_item_bloque_metricas_horizontal">
+                                        <div class="metrica_item">
+                                            Estatus:
+                                            <strong class="<?= $claseEstatus ?>">
                                                 <?= $textoEstatus ?>
-                                            </span>
+                                            </strong>
                                         </div>
                                     </div>
-                                    
-                                    <div style="display:flex; gap:5px;" onclick="event.stopPropagation();">
-                                        <?php if (!$esAnulado) : ?>
+
+                                    <div class="sub_item_acciones_estadistica" onclick="event.stopPropagation();">
+                                        <?php if ($esActivo) : ?>
                                             <?php if (!empty($permisos['modificar'])) : ?>
                                                 <button class="btn_t cbt_v" onclick="editar(<?= $asignacion['id_asignacion'] ?>, <?= $atleta['id_atleta'] ?>, <?= $asignacion['id_equipamiento'] ?>, '<?= $asignacion['fecha_real'] ?>')" data-tippy-content="Modificar">
                                                     <i class="fi fi-sr-pencil"></i>
@@ -78,9 +109,11 @@
                                             <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
+
                                 </div>
                             <?php endforeach; ?>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -91,6 +124,7 @@
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <?php include('complementos/head.php'); ?>
     <title>Asignaciones</title>
@@ -101,6 +135,7 @@
         }
     </style>
 </head>
+
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
     <?php include('complementos/loader.php'); ?>
     <?php include('complementos/circle.php'); ?>
@@ -112,9 +147,9 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina">Asignaciones</h2>
+                            <h2 class="titulo_pagina" id="titulo">Asignaciones</h2>
                         </div>
-                        
+
                         <div class="contenedor_busqueda">
                             <input type="text" placeholder="Buscar..." autocomplete="off" id="busqueda">
                             <i class="fi fi-br-search icon_input"></i>
@@ -128,17 +163,24 @@
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
                             <?php if (empty($registro)) : ?>
-                                <div class="listado_vacio"><p>No hay asignaciones registradas.</p></div>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros de asignaciones</p>
+                                </div>
                             <?php else : ?>
-                                <?php foreach ($registro as $atleta) : 
+                                <?php foreach ($registro as $atleta) :
                                     $asignacionesActivas = 0;
+                                    $totalAsignaciones = count($atleta['asignaciones']);
+
                                     foreach ($atleta['asignaciones'] as $asig) {
                                         if ($asig['anulado'] == 0 && $asig['estatus'] == 1) {
                                             $asignacionesActivas++;
                                         }
                                     }
+
+                                    $claseEstadoGeneral = ($asignacionesActivas > 0) ? 'estado_exito' : 'estado_neutral';
                                 ?>
                                     <div class="listado_contenedor_grupal">
+
                                         <div class="listado_item" onclick="toggleDetalles(this)">
                                             <div class="listado_col_principal">
                                                 <div class="listado_avatar_null">
@@ -152,8 +194,12 @@
 
                                             <div class="listado_col_datos">
                                                 <div class="listado_dato_grupo">
-                                                    <small>Equipos en Préstamo</small>
-                                                    <span style="font-weight: bold;"><?= $asignacionesActivas ?> pieza(s) activa(s)</span>
+                                                    <small>EQUIPOS EN PRÉSTAMO</small>
+                                                    <span class="estatus_v"><?= $asignacionesActivas ?> Activa(s)</span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>HISTÓRICO</small>
+                                                    <span><?= $totalAsignaciones ?> Asignación(es)</span>
                                                 </div>
                                             </div>
 
@@ -163,35 +209,55 @@
                                         </div>
 
                                         <div class="listado_detalle_oculto">
-                                            <div class="detalle_expandido_container">
-                                                <h4>Detalle de Asignaciones:</h4>
-                                                <div class="detalle_fila" style="display: flex; flex-direction: column; gap: 10px;">
-                                                    <?php foreach ($atleta['asignaciones'] as $asignacion) : 
-                                                        $esAnulado = ($asignacion['anulado'] == 1 || $asignacion['estatus'] == 0);
-                                                        $textoEstatus = $esAnulado ? 'Anulado' : 'En Uso';
-                                                        
-                                                        $estiloBadge = $esAnulado ? 'background-color: #d1d5db; color: #374151; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;' : '';
-                                                        $claseEstatus = $esAnulado ? '' : 'estatus_a';
-                                                        $estiloTarjeta = $esAnulado ? 'opacity: 0.6; filter: grayscale(100%); background-color: var(--fondo-secundario);' : '';
+                                            <div class="detalle_expandido_container" style="padding: 15px;">
+
+                                                <div class="tarjeta_resumen <?= $claseEstadoGeneral ?>">
+                                                    <div class="tarjeta_icono"><i data-lucide="box"></i></div>
+                                                    <div class="tarjeta_texto">
+                                                        <label>RESUMEN DE EQUIPAMIENTO</label>
+                                                        <span class="texto_resaltado">Total Histórico: <?= $totalAsignaciones ?> | Actualmente Activas: <?= $asignacionesActivas ?></span>
+                                                    </div>
+                                                </div>
+
+                                                <hr class="separador_seccion">
+
+                                                <div class="lista_sub_items">
+                                                    <?php foreach ($atleta['asignaciones'] as $asignacion) :
+                                                        // Lógica de estados actualizada
+                                                        $esActivo = false;
+                                                        if ($asignacion['anulado'] == 1) {
+                                                            $textoEstatus = 'Anulado';
+                                                            $claseEstatus = 'estatus_r';
+                                                            $claseFila = 'fila_anulada'; // Aplica el fondo gris
+                                                        } elseif ($asignacion['estatus'] == 0) {
+                                                            $textoEstatus = 'Devuelto';
+                                                            $claseEstatus = 'estatus_v';
+                                                            $claseFila = 'fila_anulada'; // Aplica el fondo gris
+                                                        } else {
+                                                            $textoEstatus = 'En Uso';
+                                                            $claseEstatus = 'estatus_a';
+                                                            $claseFila = '';
+                                                            $esActivo = true;
+                                                        }
                                                     ?>
-                                                        <div class="detalle_card" style="width: 100%; display: flex; justify-content: space-between; align-items: center; <?= $estiloTarjeta ?>">
-                                                            <div style="display:flex; gap:15px; align-items:center;">
-                                                                <div class="detalle_card_icon"><i data-lucide="box"></i></div>
-                                                                <div class="detalle_card_txt" style="display: flex; flex-direction: column; gap: 3px;">
-                                                                    <span style="color: var(--texto-principal); font-weight: bold; font-size: 13px;">
-                                                                        <?= htmlspecialchars($asignacion['articulo']) ?>
-                                                                    </span>
-                                                                    <span style="color: var(--texto-principal); font-size: 12px; opacity: 0.7;">
-                                                                        Fecha de entrega: <?= $asignacion['fecha_vista'] ?>
-                                                                    </span>
-                                                                    <span class="<?= $claseEstatus ?>" style="width: fit-content; margin-top: 3px; <?= $estiloBadge ?>">
+                                                        <div class="sub_item_fila_estadistica <?= $claseFila ?>">
+
+                                                            <div class="sub_item_info_torneo">
+                                                                <span class="torneo_titulo_resaltado"><?= htmlspecialchars(mb_strtoupper($asignacion['articulo'], 'UTF-8')) ?></span>
+                                                                <span class="torneo_fecha_sub">Fecha de entrega: <?= htmlspecialchars($asignacion['fecha_vista']) ?></span>
+                                                            </div>
+
+                                                            <div class="sub_item_bloque_metricas_horizontal">
+                                                                <div class="metrica_item">
+                                                                    Estatus:
+                                                                    <strong class="<?= $claseEstatus ?>">
                                                                         <?= $textoEstatus ?>
-                                                                    </span>
+                                                                    </strong>
                                                                 </div>
                                                             </div>
-                                                            
-                                                            <div style="display:flex; gap:5px;" onclick="event.stopPropagation();">
-                                                                <?php if (!$esAnulado) : ?>
+
+                                                            <div class="sub_item_acciones_estadistica" onclick="event.stopPropagation();">
+                                                                <?php if ($esActivo) : ?>
                                                                     <?php if (!empty($permisos['modificar'])) : ?>
                                                                         <button class="btn_t cbt_v" onclick="editar(<?= $asignacion['id_asignacion'] ?>, <?= $atleta['id_atleta'] ?>, <?= $asignacion['id_equipamiento'] ?>, '<?= $asignacion['fecha_real'] ?>')" data-tippy-content="Modificar">
                                                                             <i class="fi fi-sr-pencil"></i>
@@ -204,9 +270,11 @@
                                                                     <?php endif; ?>
                                                                 <?php endif; ?>
                                                             </div>
+
                                                         </div>
                                                     <?php endforeach; ?>
                                                 </div>
+
                                             </div>
                                         </div>
                                     </div>
@@ -229,7 +297,7 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id_asignacion" name="id_asignacion">
-                    
+
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
@@ -240,7 +308,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
@@ -257,8 +325,8 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="row" style="margin-top: 10px;">
+
+                    <div class="row row_final">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="btn_guardar" data-accion="incluir">Confirmar Préstamo</button>
                             <button type="button" class="btn btn_verde" onclick="limpia()">Limpiar</button>
@@ -268,8 +336,10 @@
             </div>
         </div>
     </section>
-    
+
     <script src="js/main.js"></script>
     <script src="js/asignaciones.js"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
+
 </html>

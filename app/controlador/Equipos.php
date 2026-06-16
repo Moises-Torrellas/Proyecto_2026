@@ -28,6 +28,12 @@ if (comprobarAjax() && !empty($_POST)) {
 } else {
     registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
+
+    $error_bd = '';
+    if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        $error_bd = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : '';
+    }
+
     $registro = $respuesta['datos'] ?? [];
 
     // Cargar atletas asignados por cada equipo para que funcione el detalle_expandido_container
@@ -42,7 +48,7 @@ if (comprobarAjax() && !empty($_POST)) {
     }
     unset($equipo);
 
-    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
     cargarVista($pagina, $variables);
 }
 
@@ -202,8 +208,7 @@ function buscar($obj): void
 {
 
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],
@@ -224,12 +229,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
     $idEquipoCreado = null;
     try {
-        $validaciones = [
-            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'categoria' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Categoría inválida.'],
-        ];
-
-        validar_datos($validaciones);
+        validar_requeridos(['nombre', 'categoria']);
 
         $datos = [
             'nombre' => $_POST['nombre'],
@@ -304,13 +304,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
 
-        $validaciones = [
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'categoria' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Categoría inválida.'],
-        ];
-
-        validar_datos($validaciones);
+        validar_requeridos(['id', 'nombre', 'categoria']);
 
         $datos = [
             'id' => $_POST['id'],
@@ -363,8 +357,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],

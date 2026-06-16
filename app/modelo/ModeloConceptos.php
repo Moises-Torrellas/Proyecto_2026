@@ -2,10 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloConceptos extends ModeloBase
+class ModeloConceptos extends Conexion
 {
     private $id;
     private $nombre;
@@ -32,6 +31,7 @@ class ModeloConceptos extends ModeloBase
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
+        $this->ValidarExpresiones($datos);
         //Procesamos los datos
         $this->id = $datos['id'] ?? null;
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
@@ -242,6 +242,22 @@ class ModeloConceptos extends ModeloBase
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
+        }
+    }
+
+    private function ValidarExpresiones(array $datos): void
+    {
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+            throw new Exception('Id inválido.');
+        }
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', $datos['nombre'])) {
+            throw new Exception('Nombre inválido.');
+        }
+        if (!empty($datos['monto']) && !preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $datos['monto'])) {
+            throw new Exception('Monto inválido.');
+        }
+        if (!empty($datos['regla']) && !preg_match('/^[LMAU]$/', $datos['regla'])) {
+            throw new Exception('Frecuencia inválido.');
         }
     }
 }

@@ -25,7 +25,15 @@ if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudRoles($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
     registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    
+    $error_bd = '';
+    if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        $error_bd = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : '';
+    }
+    
+    $variables = ['permisos' => $permisos, 'error_bd' => $error_bd];
+    cargarVista($pagina, $variables);
 }
 
 /**
@@ -97,7 +105,7 @@ function consultarRolesData($obj): void
 function buscarRolesData($obj): void
 {
     try {
-        validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+        validar_requeridos(['id']);
         $idsProtegidos = [1, 2];
         if (in_array($_POST['id'], $idsProtegidos)) {
             throw new Exception('Este rol no puede ser modificado');
@@ -112,7 +120,7 @@ function buscarRolesData($obj): void
 
 function CargarPermisos($obj) : void{
     try {
-        validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+        validar_requeridos(['id']);
         $idsProtegidos = [1, 2];
         if (in_array($_POST['id'], $idsProtegidos)) {
             throw new Exception('Los permisos de este rol no pueden ser modificados');
@@ -128,8 +136,7 @@ function CargarPermisos($obj) : void{
 function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['nombre']);
 
         $datos = [
             'nombre' => $_POST['nombre'],
@@ -158,12 +165,7 @@ function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
 function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']
-        ];
-
-        validar_datos($validaciones);
+        validar_requeridos(['nombre', 'id']);
 
         $datos = [
             'id'             => $_POST['id'],
@@ -193,9 +195,7 @@ function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
 function guardarPermisosData($obj): void
 {
     try {
-        validar_datos([
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']
-        ]);
+        validar_requeridos(['id']);
 
         $datos = [
             'id'             => $_POST['id'],
@@ -208,34 +208,10 @@ function guardarPermisosData($obj): void
             throw new Exception('Debe seleccionar al menos un módulo.');
         }
 
-        $validacionesP = [];
-        if (isset($_POST['check_ingresar']) && !empty($_POST['check_ingresar'])) {
-            $validacionesP['check_ingresar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso ingresar inválido.'];
-            $datos['c_ingresar'] = $_POST['check_ingresar'];
-        }
-        if (isset($_POST['check_registrar']) && !empty($_POST['check_registrar'])) {
-            $validacionesP['check_registrar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso registrar inválido.'];
-            $datos['c_registrar'] = $_POST['check_registrar'];
-        }
-        if (isset($_POST['check_modificar']) && !empty($_POST['check_modificar'])) {
-            $validacionesP['check_modificar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso modificar inválido.'];
-            $datos['c_modificar'] = $_POST['check_modificar'];
-        }
-        if (isset($_POST['check_eliminar']) && !empty($_POST['check_eliminar'])) {
-            $validacionesP['check_eliminar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso eliminar inválido.'];
-            $datos['c_eliminar'] = $_POST['check_eliminar'];
-        }
-        if (isset($_POST['check_reporte']) && !empty($_POST['check_reporte'])) {
-            $validacionesP['check_reporte'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso reporte inválido.'];
-            $datos['c_reporte'] = $_POST['check_reporte'];
-        }
-        if (isset($_POST['check_otros']) && !empty($_POST['check_otros'])) {
-            $validacionesP['check_otros'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso otras opciones inválido.'];
-            $datos['c_otros'] = $_POST['check_otros'];
-        }
-        
-        if (!empty($validacionesP)) {
-            validarArrays($validacionesP);
+        foreach (['check_ingresar' => 'c_ingresar', 'check_registrar' => 'c_registrar', 'check_modificar' => 'c_modificar', 'check_eliminar' => 'c_eliminar', 'check_reporte' => 'c_reporte', 'check_otros' => 'c_otros'] as $postKey => $dataKey) {
+            if (isset($_POST[$postKey]) && !empty($_POST[$postKey])) {
+                $datos[$dataKey] = $_POST[$postKey];
+            }
         }
 
         $resultado = $obj->procesarDatos($datos);
@@ -254,9 +230,7 @@ function guardarPermisosData($obj): void
 function eliminarRolesData($obj, $id_modulo, $bitacoraObj)
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id'          => $_POST['id'],

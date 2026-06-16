@@ -5,7 +5,7 @@ namespace App\modelo;
 use PDO;
 use Exception;
 
-class ModeloEstadisticas extends ModeloBase
+class ModeloEstadisticas extends Conexion
 {
     private $id;
     private $atleta;
@@ -42,7 +42,6 @@ class ModeloEstadisticas extends ModeloBase
 
     public function ProcesarDatos(array $datos): array
     {
-        // Si datos esta vacio ejecutamos la excepcion
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }

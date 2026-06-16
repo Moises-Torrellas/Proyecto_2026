@@ -57,6 +57,7 @@
     </section>
     <script src="js/main.js"></script>
     <script src="js/bitacora.js"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>

@@ -26,8 +26,14 @@ if (comprobarAjax() && !empty($_POST)) {
 } else {
     registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
+    
+    $error_bd = '';
+    if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        $error_bd = 'Error al conectar con la base de datos.';
+    }
+
     $registro = $respuesta['datos'] ?? [];
-    $variables =['registro' => $registro, 'permisos' => $permisos ];
+    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
     cargarVista($pagina, $variables);
 }
 
@@ -126,8 +132,7 @@ function consultarM($obj): void
 function buscar($obj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],
@@ -145,19 +150,7 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $reglaMonto = '/^[0-9]+(\.[0-9]{1,2})?$/';
-        $reglaFecha = '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/';
-
-        $validaciones = [
-            'id_concepto'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
-            'id_atleta'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
-            'id_moneda'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'],
-            'monto_total'       => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido.'],
-            'fecha_emision'     => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de emisión inválida.'],
-            'fecha_vencimiento' => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de vencimiento inválida.']
-        ];
-
-        validar_datos($validaciones);
+        validar_requeridos(['id_concepto', 'id_atleta', 'id_moneda', 'monto_total', 'fecha_emision', 'fecha_vencimiento']);
 
         $datos = [
             'id_concepto'       => $_POST['id_concepto'],
@@ -189,21 +182,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $reglaMonto = '/^[0-9]+(\.[0-9]{1,2})?$/';
-        $reglaFecha = '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/';
-
-        $validaciones = [
-             'id'                => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-             'id_concepto'       => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Concepto inválido.'],
-             'id_atleta'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
-             'id_moneda'         => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Moneda inválida.'],
-             'monto_total'       => ['regla' => $reglaMonto, 'mensaje' => 'Monto total inválido.'],
-             'fecha_emision'     => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de emisión inválida.'],
-             'fecha_vencimiento' => ['regla' => $reglaFecha, 'mensaje' => 'Fecha de vencimiento inválida.'],
-             'estatus'           => ['regla' => '/^.+$/', 'mensaje' => 'El campo estatus es obligatorio.']
-        ];
-
-        validar_datos($validaciones);
+        validar_requeridos(['id', 'id_concepto', 'id_atleta', 'id_moneda', 'monto_total', 'fecha_emision', 'fecha_vencimiento', 'estatus']);
 
         $datos = [
             'id'                => $_POST['id'],
@@ -236,8 +215,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
             'id' => $_POST['id'],

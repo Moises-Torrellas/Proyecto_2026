@@ -6,7 +6,7 @@ namespace App\modelo;
 use Exception;
 use PDO;
 
-class ModeloNotificaciones extends ModeloBase
+class ModeloNotificaciones extends Conexion
 {
 
     public function registrarYNotificar(int $idUsuario, string $titulo, string $mensaje, string $tipo): bool

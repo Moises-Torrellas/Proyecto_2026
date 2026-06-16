@@ -15,7 +15,6 @@ abstract class ModeloBase extends Conexion
     public function __construct() {}
    
 
-    // Tu método protegido con el control de errores centralizado
     protected function getConexion(string $db = 'general')
     {
         try {

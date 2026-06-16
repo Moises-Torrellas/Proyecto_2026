@@ -30,9 +30,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                 <div class="listado_item" onclick="toggleDetalles(this)">
 
                     <div class="listado_col_principal">
-                        <div class="listado_avatar_null" style="background-color: var(--verde-suave, #22c55e20); color: var(--verde, #22c55e);">
-                            <i class="icon_con" data-lucide="banknote"></i>
-                        </div>
+                        <div class="listado_avatar_null"><i class="icon_con" data-lucide="banknote"></i></div>
                         <div class="listado_info_base">
                             <span class="listado_titulo">
                                 <?= !empty($dato['concepto_pago']) ? htmlspecialchars($dato['concepto_pago']) : 'Pago General' ?>
@@ -86,24 +84,30 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 </div>
                             </div>
                         </div>
-                        <h4>Desglose de Cuentas Abonadas:</h4>
-                        <div class="detalle_fila">
-                            <?php if (!empty($dato['detalles'])) :
-                                foreach ($dato['detalles'] as $det) : ?>
-                                    <div class="detalle_card">
-                                        <div class="detalle_card_icon"><i data-lucide="file-text"></i></div>
-                                        <div class="detalle_card_txt">
-                                            <label><?= htmlspecialchars($det['concepto']) ?></label>
-                                            <span><?= htmlspecialchars($det['atleta']) ?></span>
-                                            <small>Abono: <b style="color:#28a745;"><?= number_format($det['monto'], 2, ',', '.') ?> <?= htmlspecialchars($det['moneda']) ?></b></small>
-                                            <small>Tasa: <b style="color:#28a745;"><?= number_format($det['tasa'], 4, ',', '.') ?> <?= htmlspecialchars($det['moneda_tasa']) ?></b></small>
+                        <h4 class="titulo_des">Desglose de Cuentas Abonadas:</h4>
+                        
+                        <?php if (!empty($dato['detalles'])) :
+                            $bloquesDetalles = array_chunk($dato['detalles'], 3);
+                            foreach ($bloquesDetalles as $bloque) : ?>
+                                <div class="detalle_fila">
+                                    <?php foreach ($bloque as $det) : ?>
+                                        <div class="detalle_card">
+                                            <div class="detalle_card_icon"><i data-lucide="file-text"></i></div>
+                                            <div class="detalle_card_txt">
+                                                <label><?= htmlspecialchars($det['concepto']) ?></label>
+                                                <span><?= htmlspecialchars($det['atleta']) ?></span>
+                                                <small>Abono: <b style="color:#28a745;"><?= number_format($det['monto'], 2, ',', '.') ?> <?= htmlspecialchars($det['moneda']) ?></b></small>
+                                                <small>Tasa: <b style="color:#28a745;"><?= number_format($det['tasa'], 4, ',', '.') ?> <?= htmlspecialchars($det['moneda_tasa']) ?></b></small>
+                                            </div>
                                         </div>
-                                    </div>
-                                <?php endforeach;
-                            else : ?>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <div class="detalle_fila">
                                 <span>No hay cuentas asociadas a este pago.</span>
-                            <?php endif; ?>
-                        </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -180,9 +184,7 @@ endif;
                                         <div class="listado_item" onclick="toggleDetalles(this)">
 
                                             <div class="listado_col_principal">
-                                                <div class="listado_avatar_null" style="background-color: var(--verde-suave, #22c55e20); color: var(--verde, #22c55e);">
-                                                    <i class="icon_con" data-lucide="banknote"></i>
-                                                </div>
+                                                <div class="listado_avatar_null"><i class="icon_con" data-lucide="banknote"></i></div>
                                                 <div class="listado_info_base">
                                                     <span class="listado_titulo">
                                                         <?= !empty($dato['concepto_pago']) ? htmlspecialchars($dato['concepto_pago']) : 'Pago General' ?>
@@ -236,24 +238,30 @@ endif;
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <h4>Desglose de Cuentas Abonadas:</h4>
-                                                <div class="detalle_fila">
-                                                    <?php if (!empty($dato['detalles'])) :
-                                                        foreach ($dato['detalles'] as $det) : ?>
-                                                            <div class="detalle_card">
-                                                                <div class="detalle_card_icon"><i data-lucide="file-text"></i></div>
-                                                                <div class="detalle_card_txt">
-                                                                    <label><?= htmlspecialchars($det['concepto']) ?></label>
-                                                                    <span><?= htmlspecialchars($det['atleta']) ?></span>
-                                                                    <small>Abono: <b style="color:#28a745;"><?= number_format($det['monto'], 2, ',', '.') ?> <?= htmlspecialchars($det['moneda']) ?></b></small>
-                                                                    <small>Tasa: <b style="color:#28a745;"><?= number_format($det['tasa'], 4, ',', '.') ?> <?= htmlspecialchars($det['moneda_tasa']) ?></b></small>
+                                                <h4 class="titulo_des">Desglose de Cuentas Abonadas:</h4>
+                                                
+                                                <?php if (!empty($dato['detalles'])) :
+                                                    $bloquesDetalles = array_chunk($dato['detalles'], 3);
+                                                    foreach ($bloquesDetalles as $bloque) : ?>
+                                                        <div class="detalle_fila">
+                                                            <?php foreach ($bloque as $det) : ?>
+                                                                <div class="detalle_card">
+                                                                    <div class="detalle_card_icon"><i data-lucide="file-text"></i></div>
+                                                                    <div class="detalle_card_txt">
+                                                                        <label><?= htmlspecialchars($det['concepto']) ?></label>
+                                                                        <span><?= htmlspecialchars($det['atleta']) ?></span>
+                                                                        <small>Abono: <b style="color:#28a745;"><?= number_format($det['monto'], 2, ',', '.') ?> <?= htmlspecialchars($det['moneda']) ?></b></small>
+                                                                        <small>Tasa: <b style="color:#28a745;"><?= number_format($det['tasa'], 4, ',', '.') ?> <?= htmlspecialchars($det['moneda_tasa']) ?></b></small>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        <?php endforeach;
-                                                    else : ?>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                <?php else : ?>
+                                                    <div class="detalle_fila">
                                                         <span>No hay cuentas asociadas a este pago.</span>
-                                                    <?php endif; ?>
-                                                </div>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
@@ -379,6 +387,7 @@ endif;
     </section>
     <script src="js/main.js"></script>
     <script src="js/pagos.js"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>

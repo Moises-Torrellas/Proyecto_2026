@@ -1,8 +1,6 @@
 <?php
 
 namespace App\Modelo;
-
-use App\Modelo\Conexion;
 use PHPMailer\PHPMailer\PHPMailer;
 use Exception;
 

@@ -25,7 +25,17 @@ if (/* comprobarAjax() && */!empty($_POST)) {
     manejarSolicitudUsuarios($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
     registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
-    $variables = ['permisos' => $permisos];
+    $respuesta = $objModelo->Consultar();
+
+    $registro = [];
+    $error_bd = '';
+    
+    if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        $error_bd = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : '';
+    } else {
+        $registro = $respuesta['datos'] ?? [];
+    }
+    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
     cargarVista($pagina, $variables);
 }
 
@@ -44,7 +54,7 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
         // Validamos permisos antes de ejecutar las funciones
         switch ($accion) {
             case 'consultar':
-                consultarUsuarios($obj);
+                consultarUsuarios($obj, $permisos);
                 break;
 
             case 'consultarRoles':
@@ -95,11 +105,26 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
     }
 }
 
-function consultarUsuarios($obj): void
+
+function consultarUsuarios($obj, $permisos): void
 {
-    $filtro['filtro'] = $_POST['filtro'] ?? '';
-    $respuesta = $obj->Consultar($filtro);
-    echo json_encode($respuesta);
+    try {
+        $filtro['filtro'] = $_POST['filtro'] ?? '';
+        $respuesta = $obj->Consultar($filtro);
+
+        if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+            $mensajeError = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : $respuesta['mensaje'];
+            echo json_encode(['accion' => 'error', 'mensaje' => $mensajeError]);
+            return;
+        }
+
+        $registro = $respuesta['datos'] ?? [];
+        $solo_lista = true;
+        include(__DIR__ . '/../vista/Usuarios.php');
+    } catch (throwable $e) {
+        logs('Representantes', $e->getMessage(), 'Controlador_Consultar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
 }
 
 function consultarRoles($obj): void
@@ -118,17 +143,7 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
         if (empty($_POST)) {
             logs('Usuarios', '¡ALERTA! El array POST está vacío.', 'Controlador_Incluir');
         }
-        $validaciones = [
-            'cedula' => ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cédula inválida. Debe contener de 7 a 8 dígitos.'],
-            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido. Solo letras y espacios.'],
-            'apellido' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Apellido inválido. Solo letras y espacios.'],
-            'telefono' => ['regla' => '/^[0-9]{4}[-]{1}[0-9]{7}$/', 'mensaje' => 'Teléfono inválido.'],
-            'contraseña' => ['regla' => '/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z!@#\$%\^\&*\)\(+=._-]{8,20}$/', 'mensaje' => 'Contraseña inválida (requiere mayúscula, minúscula, número y símbolo).'],
-            'correo' => ['regla' => '/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br|ve)$/', 'mensaje' => 'Correo electrónico inválido.'],
-            'rol' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Rol inválido.']
-        ];
-
-        validar_datos($validaciones);
+        validar_requeridos(['cedula', 'nombre', 'apellido', 'telefono', 'contraseña', 'correo', 'rol']);
 
         $foto_nombre = subirImagen($_FILES['foto'], 'user', $_POST['cedula'], 'usuarios',);
 
@@ -175,21 +190,7 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'cedula' => ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cédula inválida.'],
-            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'apellido' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Apellido inválido.'],
-            'telefono' => ['regla' => '/^[0-9]{4}[-]{1}[0-9]{7}$/', 'mensaje' => 'Teléfono inválido.'],
-            'correo' => ['regla' => '/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br|ve)$/', 'mensaje' => 'Correo electrónico inválido.'],
-            'rol' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Rol inválido.']
-        ];
-
-        if (!empty($_POST['contraseña'])) {
-            $validaciones['contraseña'] = ['regla' => '/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z!@#\$%\^\&*\)\(+=._-]{8,20}$/', 'mensaje' => 'Contraseña inválida.'];
-        }
-
-        validar_datos($validaciones);
+        validar_requeridos(['id', 'cedula', 'nombre', 'apellido', 'telefono', 'correo', 'rol', 'foto_actual']);
 
         $foto_nombre = subirImagen($_FILES['foto'], 'user', $_POST['cedula'], 'usuarios', $_POST['foto_actual']);
 
@@ -238,7 +239,7 @@ function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
 function eliminarUsuario($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+        validar_requeridos(['id']);
 
         if ($_POST['id'] == $_SESSION['id']) {
             throw new Exception('No puedes eliminar tu propio usuario.');
@@ -268,7 +269,7 @@ function eliminarUsuario($obj, $id_modulo, $bitacoraObj): void
 
 function buscarUsuario($obj): void
 {
-    validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+    validar_requeridos(['id']);
 
     $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
     echo json_encode($resultado);
@@ -277,10 +278,7 @@ function buscarUsuario($obj): void
 function bloquearUsuario($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_datos([
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'bloqueo' => ['regla' => '/^[1-2]+$/', 'mensaje' => 'Error interno de bloqueo.']
-        ]);
+        validar_requeridos(['id', 'bloqueo']);
 
         if ($_POST['id'] == $_SESSION['id']) {
             throw new Exception('No puedes bloquear tu propio usuario.');
@@ -319,7 +317,7 @@ function bloquearUsuario($obj, $id_modulo, $bitacoraObj): void
 function CargarPermisosUsuario($obj): void
 {
     try {
-        validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+        validar_requeridos(['id']);
 
         $datos = ['id' => $_POST['id'], 'accion' => 'CargarPermisosUsuario'];
         $resultado = $obj->procesarDatos($datos);
@@ -333,44 +331,20 @@ function CargarPermisosUsuario($obj): void
 function guardarPermisosUsuario($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_datos([
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']
-        ]);
+        validar_requeridos(['id']);
 
         $datos = [
             'id'             => $_POST['id'],
             'accion'         => 'guardar_permisos_usuario'
         ];
 
-        $validacionesP = [];
-        if (isset($_POST['check_ingresar']) && !empty($_POST['check_ingresar'])) {
-            $validacionesP['check_ingresar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso ingresar inválido.'];
-            $datos['c_ingresar'] = $_POST['check_ingresar'];
-        }
-        if (isset($_POST['check_registrar']) && !empty($_POST['check_registrar'])) {
-            $validacionesP['check_registrar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso registrar inválido.'];
-            $datos['c_registrar'] = $_POST['check_registrar'];
-        }
-        if (isset($_POST['check_modificar']) && !empty($_POST['check_modificar'])) {
-            $validacionesP['check_modificar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso modificar inválido.'];
-            $datos['c_modificar'] = $_POST['check_modificar'];
-        }
-        if (isset($_POST['check_eliminar']) && !empty($_POST['check_eliminar'])) {
-            $validacionesP['check_eliminar'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso eliminar inválido.'];
-            $datos['c_eliminar'] = $_POST['check_eliminar'];
-        }
-        if (isset($_POST['check_reporte']) && !empty($_POST['check_reporte'])) {
-            $validacionesP['check_reporte'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso reporte inválido.'];
-            $datos['c_reporte'] = $_POST['check_reporte'];
-        }
-        if (isset($_POST['check_otros']) && !empty($_POST['check_otros'])) {
-            $validacionesP['check_otros'] = ['regla' => '/^[1]+$/', 'mensaje' => 'Valor de permiso otras opciones inválido.'];
-            $datos['c_otros'] = $_POST['check_otros'];
+        foreach (['check_ingresar' => 'c_ingresar', 'check_registrar' => 'c_registrar', 'check_modificar' => 'c_modificar', 'check_eliminar' => 'c_eliminar', 'check_reporte' => 'c_reporte', 'check_otros' => 'c_otros'] as $postKey => $dataKey) {
+            if (isset($_POST[$postKey]) && !empty($_POST[$postKey])) {
+                $datos[$dataKey] = $_POST[$postKey];
+            }
         }
 
-        if (!empty($validacionesP)) {
-            validarArrays($validacionesP);
-        }
+
 
         $resultado = $obj->procesarDatos($datos);
         if ($resultado['accion'] === 'exito') {

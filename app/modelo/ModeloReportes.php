@@ -4,7 +4,7 @@ namespace App\modelo;
 
 use Exception;
 
-class ModeloReportes extends ModeloBase
+class ModeloReportes extends Conexion
 {
     public function Consultar()
     {

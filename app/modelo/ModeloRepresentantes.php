@@ -17,24 +17,49 @@ class ModeloRepresentantes extends ModeloBase
     public function __construct()
     {
         parent::__construct();
-        //Definimos los campos permitidos para usar en las validaciones
+
         $this->campoWhitelist = [
             'cedula' => 'cedula',
             'telefono' => 'telefono',
             'id' => 'id_representante'
         ];
-        //Definimos la llave primaria de la tabla en la base de datos
+
         $this->llavePrimaria = 'id_representante';
     }
-
+    private function ValidarExpresiones(array $datos): void
+    {
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+            throw new Exception('Id inválido.');
+        }
+        if (!empty($datos['cedula']) && !preg_match('/^[0-9]{1,8}$/', $datos['cedula'])) {
+            throw new Exception('Cédula inválida.');
+        }
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', $datos['nombre'])) {
+            throw new Exception('Nombre inválido.');
+        }
+        if (!empty($datos['apellido']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', $datos['apellido'])) {
+            throw new Exception('Apellido inválido.');
+        }
+        if (!empty($datos['telefono']) && !preg_match('/^[0-9]{4}[-]{1}[0-9]{7}$/', $datos['telefono'])) {
+            throw new Exception('Teléfono inválido.');
+        }
+        if (!empty($datos['direccion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', $datos['direccion'])) {
+            throw new Exception('Dirección inválida.');
+        }
+        if (!empty($datos['nacionalidad']) && !preg_match('/^[VEP]$/', $datos['nacionalidad'])) {
+            throw new Exception('Nacionalidad inválida. Solo se permite V, E o P.');
+        }
+    }
 
     public function ProcesarDatos(array $datos): array
     {
-        //si datos esta vacio ejecutamos la excepcion
+
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
-        //Procesamos los datos
+
+        $this->ValidarExpresiones($datos);
+
         $this->cedula = $datos['cedula'] ?? '';
         $this->telefono = $datos['telefono'] ?? '';
         $this->id = $datos['id'] ?? null;
@@ -42,7 +67,7 @@ class ModeloRepresentantes extends ModeloBase
         $this->nacionalidad = $datos['nacionalidad'] ?? null;
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->apellido = mb_convert_case(trim($datos['apellido'] ?? ''), MB_CASE_TITLE, "UTF-8");
-        //ejecutamos la accion enviada por el controlador
+
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
             'incluir'   => $this->Incluir(),
@@ -56,14 +81,15 @@ class ModeloRepresentantes extends ModeloBase
 
     public function Consultar(array $filtro = []): array
     {
+        $conex=null;
         try {
             $conex = $this->conex();
-            $params = []; // Unificamos el nombre de la variable
+            $params = [];
 
-            // 1. Iniciamos la sentencia con WHERE 1=1 para concatenar AND tranquilamente
+
             $sentencia = "SELECT * FROM representantes WHERE 1=1";
 
-            // 2. BUSCADOR GENERAL (El que viene del keyup)
+
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
                 $sentencia .= " AND (
@@ -78,7 +104,7 @@ class ModeloRepresentantes extends ModeloBase
                 $params[':f4'] = $p;
             }
 
-            // 3. FILTROS ESPECÍFICOS (Si vienen del Modal o propiedades del objeto)
+
             if (!empty($this->cedula)) {
                 $sentencia .= " AND cedula LIKE :cedula";
                 $params[':cedula'] = trim($this->cedula) . "%";
@@ -89,12 +115,12 @@ class ModeloRepresentantes extends ModeloBase
                 $params[':nacionalidad'] = "%" . trim($this->nacionalidad) . "%";
             }
 
-            // 4. Orden (Asegúrate de usar una columna que exista, como id_representante)
+
             $sentencia .= " ORDER BY id_representante ASC";
 
             $stmt = $conex->prepare($sentencia);
 
-            // IMPORTANTE: Pasar los parámetros al execute
+
             $stmt->execute($params);
 
             $datos = $stmt->fetchAll();
@@ -102,7 +128,7 @@ class ModeloRepresentantes extends ModeloBase
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Representantes', $e->getMessage(), 'Modelo_Consultar');
-            return array('accion' => 'error');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
@@ -110,6 +136,7 @@ class ModeloRepresentantes extends ModeloBase
 
     private function Incluir(): array
     {
+        $conex=null;
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
@@ -145,6 +172,7 @@ class ModeloRepresentantes extends ModeloBase
 
     private function Modificar(): array
     {
+        $conex=null;
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
@@ -192,6 +220,7 @@ class ModeloRepresentantes extends ModeloBase
 
     function Buscar(): array
     {
+        $conex=null;
         try {
             $conex = $this->conex();
             $sentencia = "SELECT * FROM representantes WHERE id_representante = :id";
@@ -210,13 +239,14 @@ class ModeloRepresentantes extends ModeloBase
 
     private function Eliminar(): array
     {
+        $conex=null;
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
-            if (!$this->verificarExistencia('id', $this->id, 'representantes', NULL, bloquear:true)) {
+            if (!$this->verificarExistencia('id', $this->id, 'representantes', NULL, bloquear: true)) {
                 throw new Exception(INVALID_ID);
             }
-            if ($this->verificarExistencia('id', $this->id, 'atletas', NULL, bloquear:true)) {
+            if ($this->verificarExistencia('id', $this->id, 'atletas', NULL, bloquear: true)) {
                 throw new Exception(ASSOCIATES);
             }
             $sentencia = "DELETE FROM representantes WHERE id_representante = :id";

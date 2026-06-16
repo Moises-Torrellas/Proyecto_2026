@@ -2,10 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloCatalogos extends ModeloBase
+class ModeloCatalogos extends Conexion
 {
     private $id;
     private $nombre;
@@ -35,6 +34,8 @@ class ModeloCatalogos extends ModeloBase
             throw new Exception('No se proporcionaron datos para procesar.');
         }
 
+        $this->ValidarExpresiones($datos);
+
         $this->id = $datos['id'] ?? null;
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         // Si el id_posicion viene vacío, lo guardamos como NULL en BD
@@ -60,7 +61,6 @@ class ModeloCatalogos extends ModeloBase
             $conex = $this->conex();
             $params = [];
 
-            // Traemos los datos del catálogo más los nombres de sus relaciones
             $sentencia = "SELECT c.*, 
                                  cat.nombre as categoria_nombre, 
                                  p.nombre as posicion_nombre 
@@ -284,6 +284,28 @@ class ModeloCatalogos extends ModeloBase
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
+        }
+    }
+
+    private function ValidarExpresiones(array $datos): void
+    {
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+            throw new Exception('Id inválido.');
+        }
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-\.]{3,50}$/', $datos['nombre'])) {
+            throw new Exception('Nombre inválido.');
+        }
+        if (!empty($datos['id_categoria']) && !preg_match('/^[0-9]+$/', $datos['id_categoria'])) {
+            throw new Exception('Categoría inválida.');
+        }
+        if (isset($datos['stock_minimo']) && $datos['stock_minimo'] !== '' && !preg_match('/^[0-9]+$/', $datos['stock_minimo'])) {
+            throw new Exception('Stock mínimo debe ser un número entero.');
+        }
+        if (!empty($datos['id_posicion']) && !preg_match('/^[0-9]+$/', $datos['id_posicion'])) {
+            throw new Exception('Posición inválida.');
+        }
+        if (!empty($datos['talla']) && !preg_match('/^[a-zA-Z0-9\s\-\/]{1,10}$/', $datos['talla'])) {
+            throw new Exception('Talla inválida.');
         }
     }
 }

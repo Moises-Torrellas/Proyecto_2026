@@ -2,10 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloRoles extends ModeloBase
+class ModeloRoles extends Conexion
 {
     private int $id;
     private string $nombre;
@@ -33,6 +32,8 @@ class ModeloRoles extends ModeloBase
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
+
+        $this->ValidarExpresiones($datos);
 
         $this->id = $datos['id'] ?? 0;
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
@@ -301,6 +302,25 @@ class ModeloRoles extends ModeloBase
             return ['accion' => 'error', 'codigo' => $e->getMessage()];
         } finally {
             $conex = null;
+        }
+    }
+
+    private function ValidarExpresiones(array $datos): void
+    {
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+            throw new Exception('Id inválido.');
+        }
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', $datos['nombre'])) {
+            throw new Exception('Nombre inválido.');
+        }
+        foreach (['c_ingresar', 'c_registrar', 'c_modificar', 'c_eliminar', 'c_reporte', 'c_otros'] as $permiso) {
+            if (!empty($datos[$permiso])) {
+                foreach ($datos[$permiso] as $val) {
+                    if (!preg_match('/^[1]+$/', $val)) {
+                        throw new Exception("Valor de permiso $permiso inválido.");
+                    }
+                }
+            }
         }
     }
 }

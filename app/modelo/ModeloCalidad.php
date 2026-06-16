@@ -2,11 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
-use SensitiveParameter;
 
-class ModeloCalidad extends ModeloBase
+class ModeloCalidad extends Conexion
 {
     private $id;
     private $nombre;
@@ -58,21 +56,16 @@ class ModeloCalidad extends ModeloBase
                 $params[':f2'] = $p;
             }
 
-            // 3. FILTROS ESPECÍFICOS (Por propiedades del objeto)
-            // Filtro por Nombre
             if (!empty($this->nombre)) {
                 $sentencia .= " AND nombre LIKE :nombre";
                 $params[':nombre'] = trim($this->nombre) . "%";
             }
 
-            // Filtro por Nivel de Estado
             if (!empty($this->nivel_estado)) {
                 $sentencia .= " AND nivel_estado = :nivel";
                 $params[':nivel'] = $this->nivel;
             }
 
-            // 4. Orden (Ajustado a la tabla estado_equipamiento)
-            // Cambié id_categorias por id, o la columna primaria que uses
             $sentencia .= " ORDER BY nombre ASC";
 
             $stmt = $conex->prepare($sentencia);

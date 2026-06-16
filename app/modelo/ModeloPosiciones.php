@@ -2,11 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeladoBase;
 use Exception;
-use SensitiveParameter;
 
-class ModeloPosiciones extends ModeloBase
+class ModeloPosiciones extends Conexion
 {
     private $id;
     private $nombre;
@@ -27,6 +25,8 @@ class ModeloPosiciones extends ModeloBase
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
+
+        $this->ValidarExpresiones($datos);
 
         $this->id = $datos['id'] ?? null;
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
@@ -191,5 +191,21 @@ class ModeloPosiciones extends ModeloBase
     public function verificarPosiciones(int $id): bool
     {
         return $this->verificarExistencia('id', $id, 'posiciones', NULL);
+    }
+
+    private function ValidarExpresiones(array $datos): void
+    {
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+            throw new Exception('Id inválido.');
+        }
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', $datos['nombre'])) {
+            throw new Exception('Nombre inválido.');
+        }
+        if (!empty($datos['abreviatura']) && !preg_match('/^[a-zA-Z]{2,4}$/', $datos['abreviatura'])) {
+            throw new Exception('Abreviatura inválida.');
+        }
+        if (!empty($datos['descripcion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', $datos['descripcion'])) {
+            throw new Exception('Descripcion inválida.');
+        }
     }
 }

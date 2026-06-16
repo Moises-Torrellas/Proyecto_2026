@@ -5,7 +5,7 @@ namespace App\modelo;
 use Exception;
 use PDO;
 
-class ModeloPalmares extends ModeloBase
+class ModeloPalmares extends Conexion
 {
     private $id;
     private $id_torneo;

@@ -5,7 +5,7 @@ namespace App\modelo;
 use Exception;
 use PDO;
 
-class ModeloPagos extends ModeloBase
+class ModeloPagos extends Conexion
 {
     private $id;
     private $id_cuenta;
@@ -182,7 +182,6 @@ class ModeloPagos extends ModeloBase
             $stmt->execute($params);
             $filas = $stmt->fetchAll();
 
-            // Procesamos con nuestra función helper
             $datos = $this->agruparDetallesPagos($filas);
 
             return array('accion' => 'consultar', 'datos' => $datos);

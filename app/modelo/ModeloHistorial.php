@@ -5,7 +5,7 @@ namespace App\modelo;
 use PDO;
 use Exception;
 
-class ModeloHistorial extends ModeloBase
+class ModeloHistorial extends Conexion
 {
     public function __construct()
     {
@@ -71,9 +71,6 @@ class ModeloHistorial extends ModeloBase
             $stmt->execute();
             $palmaresGrupal = $stmt->fetchAll();
 
-            // ==========================================================================
-            // PROCESAMIENTO Y UNIFICACIÓN PARA LA VISTA
-            // ==========================================================================
             $totales = [
                 'goles'           => 0,
                 'asistencias'     => 0,

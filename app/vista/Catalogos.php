@@ -204,6 +204,7 @@ if (isset($solo_lista) && $solo_lista === true) :
     </section>
     <script src="js/main.js"></script>
     <script src="js/catalogos.js?v=<?= time(); ?>"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>

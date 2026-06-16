@@ -50,11 +50,11 @@
 [data-tema="oscuro"] {
     /* Modo oscuro */
     --fuente: sans-serif;
-    --fondo-principal: #2c3745;
-    --fondo-contraste: #334954;
+    --fondo-principal: #313841;
+    --fondo-contraste: #3a4750;
     --color-primario: #32AF0A;
     --color-claro: #828282;
-    --color-secundario: #3a4750;
+    --color-secundario: #0a1e33;
     --color-oscuro: #cfd8dc;
     --texto-principal: #cfd8dc;
     --texto-contraste: #1F283B;
@@ -509,6 +509,10 @@ option {
     flex-direction: column;
     width: 100%;
     align-items: center;
+}
+
+.titulo_des{
+    color: var(--texto-principal);
 }
 
 .resultadoconsulta {

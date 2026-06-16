@@ -127,6 +127,16 @@ function validar_datos(array $data): void
     }
 }
 
+// Función para usar en el Controlador
+function validar_requeridos(array $campos): void
+{
+    foreach ($campos as $campo) {
+        if (!isset($_POST[$campo]) || trim($_POST[$campo]) === '') {
+            throw new Exception("El campo $campo es obligatorio.");
+        }
+    }
+}
+
 /**
  * Valida datos que vienen en formato de arreglo desde el formulario.
  */

@@ -63,7 +63,7 @@
                 <!-- Detalle Acordeón con los cambios visuales para Modo Oscuro/Claro -->
                 <div class="listado_detalle_oculto">
                     <div class="detalle_expandido_container">
-                        <h4>Inventario Físico (Piezas Individuales):</h4>
+                        <h4 class="titulo_des">Inventario Físico (Piezas Individuales):</h4>
                         
                         <!-- Forzamos el apilamiento vertical -->
                         <div class="detalle_fila" style="display: flex; flex-direction: column; gap: 10px;">

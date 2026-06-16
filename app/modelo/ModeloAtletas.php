@@ -2,10 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloAtletas extends ModeloBase
+class ModeloAtletas extends Conexion
 {
     private $id;
     private $doc_identidad;
@@ -62,6 +61,8 @@ class ModeloAtletas extends ModeloBase
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar el registro del atleta.');
         }
+
+        $this->ValidarExpresiones($datos);
 
         $this->id            = $datos['id'] ?? null;
         $this->fecha_nac     = $datos['fecha_nac'] ?? '';
@@ -176,7 +177,7 @@ class ModeloAtletas extends ModeloBase
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Atletas', $e->getMessage(), 'Modelo_Consultar_Vista');
-            return array('accion' => 'error', 'msg' => $e->getMessage());
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
@@ -391,6 +392,7 @@ class ModeloAtletas extends ModeloBase
 
     private function Buscar()
     {
+        $conex=null;
         try {
             $conex = $this->conex();
             $sentencia = "SELECT * FROM atletas WHERE id_atleta = :id";
@@ -409,6 +411,7 @@ class ModeloAtletas extends ModeloBase
 
     public function ConsultarCumple()
     {
+        $conex = null;
         try {
             $conex = $this->conex();
             $sql = "SELECT nombres, apellidos FROM atletas 
@@ -423,8 +426,8 @@ class ModeloAtletas extends ModeloBase
 
     private function Eliminar(): array
     {
+        $conex = null;
         try {
-            $conex = null;
             $conex = $this->conex();
             $conex->beginTransaction();
             if (!$this->verificarExistencia('id', $this->id, 'atletas', NULL, bloquear: true)) {
@@ -446,6 +449,77 @@ class ModeloAtletas extends ModeloBase
             return ['accion' => 'error', 'codigo' => $e->getMessage()];
         } finally {
             $conex = null;
+        }
+    }
+
+    private function ValidarExpresiones(array $datos): void
+    {
+        $accion = $datos['accion'] ?? '';
+
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+            throw new Exception('Id inválido.');
+        }
+        if (!empty($datos['fecha_nac']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $datos['fecha_nac'])) {
+            throw new Exception('Formato de fecha inválido. Use AAAA-MM-DD.');
+        }
+        if (!empty($datos['nombre'])) {
+            $regla = ($accion === 'generar') ? '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,60}$/' : '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/';
+            if (!preg_match($regla, $datos['nombre'])) throw new Exception('Nombres inválido.');
+        }
+        if (!empty($datos['apellido'])) {
+            $regla = ($accion === 'generar') ? '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,60}$/' : '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/';
+            if (!preg_match($regla, $datos['apellido'])) throw new Exception('Apellidos inválido.');
+        }
+        if (!empty($datos['categoria']) && !preg_match('/^[0-9]+$/', $datos['categoria'])) {
+            throw new Exception('Categoria o categoria inválida.');
+        }
+        if (!empty($datos['posicion']) && !preg_match('/^[0-9]+$/', $datos['posicion'])) {
+            throw new Exception('Posición o posicion inválida.');
+        }
+        if (!empty($datos['genero']) && !preg_match('/^[HM]$/', $datos['genero'])) {
+            throw new Exception('Genero o genero inválido.');
+        }
+        if (!empty($datos['representante']) && !preg_match('/^[1-9]+$/', $datos['representante'])) {
+            throw new Exception('Representante inválido.');
+        }
+        if (!empty($datos['doc_identidad'])) {
+            $regla_doc = ($accion === 'generar') ? '/^[0-9]{1,8}$/' : '/^[0-9]{7,8}$/';
+            $mensaje_doc = ($accion === 'generar') ? 'documento de identidad inválido.' : 'Cedula inválida. Debe contener de 7 a 8 dígitos.';
+            if (!preg_match($regla_doc, $datos['doc_identidad'])) throw new Exception($mensaje_doc);
+        }
+        if (!empty($datos['telefono']) && !preg_match('/^[0-9]{4}[-]{1}[0-9]{7}$/', $datos['telefono'])) {
+            throw new Exception('Telefono invalido.');
+        }
+        if (!empty($datos['direccion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', $datos['direccion'])) {
+            throw new Exception('Direccion inválida.');
+        }
+        if (!empty($datos['foto_actual']) && !preg_match('/^atleta_\d{4}-\d{2}-\d{2}_\d+\.(png|jpg|jpeg|webp)$/', $datos['foto_actual'])) {
+            throw new Exception('El nombre de la foto tiene un formato inválido o una extensión no permitida.');
+        }
+        if (!empty($datos['edad']) && !preg_match('/^[0-9]{1,2}$/', $datos['edad'])) {
+            throw new Exception('Edad inválida.');
+        }
+        if (!empty($datos['estatus']) && !preg_match('/^[1-2]$/', $datos['estatus'])) {
+            throw new Exception('estatus inválido.');
+        }
+
+        if ($accion === 'incluir' || $accion === 'modificar') {
+            if (!empty($datos['fecha_nac'])) {
+                $fecha_nac = $datos['fecha_nac'];
+                $anio_nac = (int)date('Y', strtotime($fecha_nac));
+                $anio_act = (int)date('Y');
+                $edad_cal = $anio_act - $anio_nac;
+                if ($edad_cal < 18) {
+                    if (empty($datos['representante']) || $datos['representante'] == "0") {
+                        throw new Exception('El atleta es menor de edad necesita asociar un representante.');
+                    }
+                }
+                if ($edad_cal > 9) {
+                    if (empty($datos['doc_identidad'])) {
+                        throw new Exception('Necesita ingresar el documento de identidad del atleta.');
+                    }
+                }
+            }
         }
     }
 }

@@ -69,14 +69,7 @@ if (comprobarAjax() && !empty($_POST)) {
             case 'incluir':
 
                 if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar atletas.');
-                $validaciones = [
-                    'fecha_nac' => ['regla'   => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'],
-                    'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/', 'mensaje' => 'Nombres inválido.'],
-                    'apellido' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/', 'mensaje' => 'Apellidos inválido.'],
-                    'categoria' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Categoria inválida.'],
-                    'posicion' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Posición inválida.'],
-                    'genero' => ['regla'   => '/^[HM]$/', 'mensaje' => 'Genero inválido.'],
-                ];
+                validar_requeridos(['fecha_nac', 'nombre', 'apellido', 'posicion', 'categoria', 'genero']);
 
                 $datos = [
                     'fecha_nac' => $_POST['fecha_nac'],
@@ -88,42 +81,22 @@ if (comprobarAjax() && !empty($_POST)) {
                 ];
 
                 if (isset($_POST['representante'])) {
-                    $validaciones['representante'] = ['regla' => '/^[1-9]+$/', 'mensaje' => 'Representante inválido.'];
                     $datos['representante'] = $_POST['representante'];
                 }
                 if (isset($_POST['doc_i'])) {
-                    $validaciones['doc_i'] = ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cedula inválida. Debe contener de 7 a 8 dígitos.'];
                     $datos['doc_identidad'] = $_POST['doc_i'];
                 }
                 if (isset($_POST['telefono'])) {
-                    $validaciones['telefono'] = ['regla' => '/^[0-9]{4}[-]{1}[0-9]{7}$/', 'mensaje' => 'Telefono invalido.'];
                     $datos['telefono'] = $_POST['telefono'];
                 }
                 if (isset($_POST['direccion'])) {
-                    $validaciones['direccion'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', 'mensaje' => 'Direccion inválida.'];
                     $datos['direccion'] = $_POST['direccion'];
                 }
-
-                validar_datos($validaciones);
 
                 if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
                     throw new Exception('La foto del atleta es obligatoria.');
                 }
 
-                $fecha_nac = $_POST['fecha_nac'];
-                $anio_nac = (int)date('Y', strtotime($fecha_nac));
-                $anio_act = (int)date('Y');
-                $edad_cal = $anio_act - $anio_nac;
-                if ($edad_cal < 18) {
-                    if (empty($_POST['representante']) || $_POST['representante'] == "0") {
-                        throw new Exception('El atleta es menor de edad necesita asociar un representante.');
-                    }
-                }
-                if ($edad_cal > 9) {
-                    if (empty($_POST['doc_i'])) {
-                        throw new Exception('Necesita ingresar el documento de identidad del atleta.');
-                    }
-                }
 
                 $foto_nombre = subirImagen($_FILES['foto'], 'atleta', $datos['fecha_nac'], 'atletas', 'default.png');
 
@@ -162,8 +135,7 @@ if (comprobarAjax() && !empty($_POST)) {
 
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Atletas.');
 
-                $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-                validar_datos($validaciones);
+                validar_requeridos(['id']);
 
                 $datos = [
                     'id' => $_POST['id'],
@@ -177,16 +149,7 @@ if (comprobarAjax() && !empty($_POST)) {
 
             case 'modificar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Atletas.');
-                $validaciones = [
-                    'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-                    'fecha_nac' => ['regla'   => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'],
-                    'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/', 'mensaje' => 'Nombres inválido.'],
-                    'apellido' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/', 'mensaje' => 'Apellidos inválido.'],
-                    'categoria' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Categoria inválida.'],
-                    'posicion' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Posición inválida.'],
-                    'genero' => ['regla'   => '/^[HM]$/', 'mensaje' => 'Genero inválido.'],
-                    'foto_actual' => ['regla'   => '/^atleta_\d{4}-\d{2}-\d{2}_\d+\.(png|jpg|jpeg|webp)$/', 'mensaje' => 'El nombre de la foto tiene un formato inválido o una extensión no permitida.'],
-                ];
+                validar_requeridos(['id', 'fecha_nac', 'nombre', 'apellido', 'posicion', 'categoria', 'genero', 'foto_actual']);
 
                 $datos = [
                     'id' => $_POST['id'],
@@ -196,42 +159,23 @@ if (comprobarAjax() && !empty($_POST)) {
                     'posicion' => $_POST['posicion'],
                     'categoria' => $_POST['categoria'],
                     'genero' => $_POST['genero'],
+                    'foto_actual' => $_POST['foto_actual']
                 ];
 
                 if (isset($_POST['representante'])) {
-                    $validaciones['representante'] = ['regla' => '/^[1-9]+$/', 'mensaje' => 'Representante inválido.'];
                     $datos['representante'] = $_POST['representante'];
                 }
                 if (isset($_POST['doc_i'])) {
-                    $validaciones['doc_i'] = ['regla' => '/^[0-9]{7,8}$/', 'mensaje' => 'Cedula inválida. Debe contener de 7 a 8 dígitos.'];
                     $datos['doc_identidad'] = $_POST['doc_i'];
                 }
                 if (isset($_POST['telefono'])) {
-                    $validaciones['telefono'] = ['regla' => '/^[0-9]{4}[-]{1}[0-9]{7}$/', 'mensaje' => 'Telefono invalido.'];
                     $datos['telefono'] = $_POST['telefono'];
                 }
                 if (isset($_POST['direccion'])) {
-                    $validaciones['direccion'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', 'mensaje' => 'Direccion inválida.'];
                     $datos['direccion'] = $_POST['direccion'];
                 }
 
-                validar_datos($validaciones);
 
-
-                $fecha_nac = $_POST['fecha_nac'];
-                $anio_nac = (int)date('Y', strtotime($fecha_nac));
-                $anio_act = (int)date('Y');
-                $edad_cal = $anio_act - $anio_nac;
-                if ($edad_cal < 18) {
-                    if (empty($_POST['representante']) || $_POST['representante'] == "0") {
-                        throw new Exception('El atleta es menor de edad necesita asociar un representante.');
-                    }
-                }
-                if ($edad_cal > 9) {
-                    if (empty($_POST['doc_i'])) {
-                        throw new Exception('Necesita ingresar el documento de identidad del atleta.');
-                    }
-                }
 
                 if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
                     $foto_nombre = $_POST['foto_actual'];
@@ -261,8 +205,7 @@ if (comprobarAjax() && !empty($_POST)) {
                 break;
             case 'eliminar':
                 if (!$permisos['eliminar']) throw new Exception('No tienes permisos para retirar Atletas.');
-                $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-                validar_datos($validaciones);
+                validar_requeridos(['id']);
 
                 $datos = [
                     'id' => $_POST['id'],
@@ -286,50 +229,48 @@ if (comprobarAjax() && !empty($_POST)) {
             case 'generar':
                 if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar un reporte de Atletas.');
 
-                $validacionesReporte = [];
                 $datosFiltro = ['accion' => 'generar'];
 
                 if (!empty($_POST['edad'])) {
-                    $validacionesReporte['edad'] = ['regla' => '/^[0-9]{1,2}$/', 'mensaje' => 'Edad inválida.'];
                     $datosFiltro['edad'] = $_POST['edad'];
                 }
                 if (!empty($_POST['nombre'])) {
-                    $validacionesReporte['nombre'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,60}$/', 'mensaje' => 'Nombres inválido.'];
                     $datosFiltro['nombre'] = $_POST['nombre'];
                 }
                 if (!empty($_POST['apellido'])) {
-                    $validacionesReporte['apellido'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,60}$/', 'mensaje' => 'Apellido inválido.'];
                     $datosFiltro['apellido'] = $_POST['apellido'];
                 }
                 if (!empty($_POST['categoria'])) {
-                    $validacionesReporte['categoria'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'categoria inválida.'];
                     $datosFiltro['categoria'] = $_POST['categoria'];
                 }
                 if (!empty($_POST['posicion'])) {
-                    $validacionesReporte['posicion'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'posicion inválida.'];
                     $datosFiltro['posicion'] = $_POST['posicion'];
                 }
                 if (!empty($_POST['genero']) && $_POST['genero'] != 'T') {
-                    $validacionesReporte['genero'] = ['regla' => '/^[HM]$/', 'mensaje' => 'genero inválido.'];
                     $datosFiltro['genero'] = $_POST['genero'];
                 }
                 if (!empty($_POST['estatus']) && $_POST['estatus'] != 'T') {
-                    $validacionesReporte['estatus'] = ['regla' => '/^[1-2]$/', 'mensaje' => 'estatus inválido.'];
                     $datosFiltro['estatus'] = $_POST['estatus'];
                 }
                 if (!empty($_POST['doc_i'])) {
-                    $validacionesReporte['doc_i'] = ['regla' => '/^[0-9]{1,8}$/', 'mensaje' => 'documento de identidad inválido.'];
                     $datosFiltro['doc_identidad'] = $_POST['doc_i'];
                 }
 
-                validar_datos($validacionesReporte);
-
                 $respuesta =  $obj->procesarDatos($datosFiltro);
+
+                if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+                    $mensajeError = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : $respuesta['mensaje'];
+                    echo json_encode(['accion' => 'error', 'mensaje' => $mensajeError]);
+                    return;
+                }
+
                 $datos = $respuesta['datos'];
+
                 if (empty($datos)) {
                     echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron atletas para hacer el reporte.']);
-                    exit();
+                    return;
                 }
+
                 $nombreVista = 'R_Atletas';
                 $objG = new GenerarReporte();
                 $pdf = $objG->generarPDF($nombreVista, $datos, 'Atletas');
@@ -342,8 +283,7 @@ if (comprobarAjax() && !empty($_POST)) {
             case 'generarCurriculum':
                 if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar un curriculum de Atletas.');
 
-                $validacionesCV = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'El ID del atleta es inválido.']];
-                validar_datos($validacionesCV);
+                validar_requeridos(['id']);
                 $id_atleta = (int)$_POST['id'];
 
                 $modeloHistorial = new ModeloHistorial();
@@ -381,7 +321,15 @@ if (comprobarAjax() && !empty($_POST)) {
 } else {
     registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $obj->Consultar();
-    $registro = $respuesta['datos'] ?? [];
-    $variables = ['registro' => $registro, 'permisos' => $permisos];
+
+    $registro = [];
+    $error_bd = '';
+
+    if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        $error_bd = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : '';
+    } else {
+        $registro = $respuesta['datos'] ?? [];
+    }
+    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
     cargarVista($pagina, $variables);
 }

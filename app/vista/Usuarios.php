@@ -1,3 +1,87 @@
+<?php
+if (isset($solo_lista) && $solo_lista === true) :
+    if (empty($registro)) : ?>
+        <div class="listado_vacio">
+            <p>No se encontraron registros</p>
+        </div>
+        <?php else :
+        foreach ($registro as $dato) :
+            // 1. Lógica de colores e íconos para el estado de bloqueo
+            $icon  = ($dato['bloqueo'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
+            $color = ($dato['bloqueo'] == 1) ? 'cbt_g' : 'cbt_a';
+        ?>
+            <div class="listado_contenedor_grupal">
+                <div class="listado_item" onclick="toggleDetalles(this)">
+
+                    <div class="listado_col_principal">
+                        <?php if ($dato['foto'] == 'default.png') : ?>
+                            <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>
+                        <?php else : ?>
+                            <img src="img/usuarios/<?= htmlspecialchars($dato['foto']) ?>" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">
+                        <?php endif; ?>
+
+                        <div class="listado_info_base">
+                            <span class="listado_titulo"><?= htmlspecialchars($dato['nombreUsuario']) ?> <?= htmlspecialchars($dato['apellidoUsuario']) ?></span>
+                            <span class="listado_subtitulo"><?= htmlspecialchars($dato['correo']) ?></span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Cédula</small>
+                            <span><?= htmlspecialchars($dato['cedulaUsuario']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Telefono</small>
+                            <span><?= htmlspecialchars($dato['telefonoUsuario']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Rol</small>
+                            <span class="listado_resaltado"><?= htmlspecialchars($dato['nombre_rol']) ?></span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                            <?php if (isset($permisos['otros']) && $permisos['otros']) : ?>
+                                <button class="btn_t cbt_m" onclick="CargarPermisos(<?= $dato['idUsuario'] ?>)"><i class="fi fi-sr-user-permissions"></i></button>
+                            <?php endif; ?>
+
+                            <?php if (isset($permisos['modificar']) && $permisos['modificar']) : ?>
+                                <button class="btn_t cbt_v" onclick="buscar(<?= $dato['idUsuario'] ?>)"><i class="fi fi-sr-pencil"></i></button>
+                            <?php endif; ?>
+
+                            <?php if (isset($permisos['eliminar']) && $permisos['eliminar']) : ?>
+                                <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['idUsuario'] ?>)"><i class="fi fi-sr-trash-xmark"></i></button>
+                            <?php endif; ?>
+
+                            <?php if (isset($permisos['otros']) && $permisos['otros']) : ?>
+                                <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['idUsuario'] ?>, <?= $dato['bloqueo'] ?>, this)"><i class="fi <?= $icon ?>"></i></button>
+                            <?php endif; ?>
+                        </div>
+                        <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                    </div>
+                </div>
+
+                <div class="listado_detalle_oculto">
+                    <div class="detalle_expandido_container">
+                        <div class="detalle_fila">
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="calendar"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Ultimo Ingreso</label>
+                                    <span><?= !empty($dato['ultimo_ingreso']) ? date('d/m/Y h:i A', strtotime($dato['ultimo_ingreso'])) : 'Sin registros' ?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        <?php endforeach; ?>
+    <?php endif;
+    exit(); ?>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -34,6 +118,86 @@
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
+                            <?php if (empty($registro)) : ?>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros</p>
+                                </div>
+                                <?php else :
+                                foreach ($registro as $dato) :
+                                    // 1. Lógica de colores e íconos para el estado de bloqueo
+                                    $icon  = ($dato['bloqueo'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
+                                    $color = ($dato['bloqueo'] == 1) ? 'cbt_g' : 'cbt_a';
+                                ?>
+                                    <div class="listado_contenedor_grupal">
+                                        <div class="listado_item" onclick="toggleDetalles(this)">
+
+                                            <div class="listado_col_principal">
+                                                <?php if ($dato['foto'] == 'default.png') : ?>
+                                                    <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>
+                                                <?php else : ?>
+                                                    <img src="img/usuarios/<?= htmlspecialchars($dato['foto']) ?>" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">
+                                                <?php endif; ?>
+
+                                                <div class="listado_info_base">
+                                                    <span class="listado_titulo"><?= htmlspecialchars($dato['nombreUsuario']) ?> <?= htmlspecialchars($dato['apellidoUsuario']) ?></span>
+                                                    <span class="listado_subtitulo"><?= htmlspecialchars($dato['correo']) ?></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo">
+                                                    <small>Cédula</small>
+                                                    <span><?= htmlspecialchars($dato['cedulaUsuario']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Telefono</small>
+                                                    <span><?= htmlspecialchars($dato['telefonoUsuario']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Rol</small>
+                                                    <span class="listado_resaltado"><?= htmlspecialchars($dato['nombre_rol']) ?></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_acciones">
+                                                <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                                    <?php if (isset($permisos['otros']) && $permisos['otros']) : ?>
+                                                        <button class="btn_t cbt_m" onclick="CargarPermisos(<?= $dato['idUsuario'] ?>)"><i class="fi fi-sr-user-permissions"></i></button>
+                                                    <?php endif; ?>
+
+                                                    <?php if (isset($permisos['modificar']) && $permisos['modificar']) : ?>
+                                                        <button class="btn_t cbt_v" onclick="buscar(<?= $dato['idUsuario'] ?>)"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php endif; ?>
+
+                                                    <?php if (isset($permisos['eliminar']) && $permisos['eliminar']) : ?>
+                                                        <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['idUsuario'] ?>)"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                    <?php endif; ?>
+
+                                                    <?php if (isset($permisos['otros']) && $permisos['otros']) : ?>
+                                                        <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['idUsuario'] ?>, <?= $dato['bloqueo'] ?>, this)"><i class="fi <?= $icon ?>"></i></button>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                                            </div>
+                                        </div>
+
+                                        <div class="listado_detalle_oculto">
+                                            <div class="detalle_expandido_container">
+                                                <div class="detalle_fila">
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="calendar"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Ultimo Ingreso</label>
+                                                            <span><?= !empty($dato['ultimo_ingreso']) ? date('d/m/Y h:i A', strtotime($dato['ultimo_ingreso'])) : 'Sin registros' ?></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
@@ -162,6 +326,7 @@
     </section>
     <script src="js/main.js"></script>
     <script src="js/usuarios.js"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>

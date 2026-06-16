@@ -21,9 +21,15 @@ if (comprobarAjax() && !empty($_POST)) {
 } else {
     registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Asignaciones');
     $respuesta = $objAsignaciones->ConsultarAsignaciones(); 
+    
+    $error_bd = '';
+    if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        $error_bd = ($respuesta['codigo'] == 'ERR_BD') ? 'Error al conectar con la base de datos.' : '';
+    }
+
     $registro = $respuesta['datos'] ?? [];
     
-    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
     cargarVista($pagina, $variables);
 }
 
@@ -92,12 +98,7 @@ function MultiConsulta(): void {
 
 function incluir($obj, $id_modulo, $bitacoraObj): void {
     try {
-        $validaciones = [
-            'id_atleta'        => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
-            'id_equipamiento'  => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Equipamiento inválido.'],
-            'fecha_asignacion' => ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido.']
-        ];
-        validar_datos($validaciones);
+        validar_requeridos(['id_atleta', 'id_equipamiento', 'fecha_asignacion']);
 
         $datos = ['accion' => 'incluir', 'id_atleta' => $_POST['id_atleta'], 'id_equipamiento' => $_POST['id_equipamiento'], 'fecha_asignacion' => $_POST['fecha_asignacion']];
         
@@ -124,13 +125,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void {
 
 function modificar($obj, $id_modulo, $bitacoraObj): void {
     try {
-        $validaciones = [
-            'id_asignacion'    => ['regla' => '/^[0-9]+$/', 'mensaje' => 'ID inválido.'],
-            'id_atleta'        => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'],
-            'id_equipamiento'  => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Equipamiento inválido.'],
-            'fecha_asignacion' => ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido.']
-        ];
-        validar_datos($validaciones);
+        validar_requeridos(['id_asignacion', 'id_atleta', 'id_equipamiento', 'fecha_asignacion']);
 
         $datos = ['accion' => 'modificar', 'id_asignacion' => $_POST['id_asignacion'], 'id_atleta' => $_POST['id_atleta'], 'id_equipamiento' => $_POST['id_equipamiento'], 'fecha_asignacion' => $_POST['fecha_asignacion']];
         
@@ -158,11 +153,9 @@ function modificar($obj, $id_modulo, $bitacoraObj): void {
 
 function anular($obj, $id_modulo, $bitacoraObj): void {
     try {
-        $validaciones = ['id_asignacion' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Inválido.'], 'id_equipamiento' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Inválido.']];
-        validar_datos($validaciones);
+        validar_requeridos(['id_asignacion', 'id_equipamiento']);
         
         $motivo = trim(filter_var($_POST['motivo_anulacion'] ?? ($_POST['motivo'] ?? ''), FILTER_SANITIZE_SPECIAL_CHARS));
-        if (strlen($motivo) < 5) throw new Exception('El motivo debe tener al menos 5 letras.');
 
         $datos = ['accion' => 'anular', 'id_asignacion' => $_POST['id_asignacion'], 'id_equipamiento' => $_POST['id_equipamiento'], 'motivo_anulacion' => $motivo];
         

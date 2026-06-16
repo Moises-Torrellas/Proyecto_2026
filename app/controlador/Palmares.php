@@ -48,10 +48,6 @@ if (comprobarAjax() && !empty($_POST)) {
     cargarVista($pagina, $variables);
 }
 
-/**
- * --- FUNCIONES DEL CONTROLADOR ---
- */
-
 function manejarSolicitudPalmares($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
     try {
@@ -95,10 +91,10 @@ function manejarSolicitudPalmares($obj, $id_modulo, $bitacoraObj, array $permiso
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar palmarés.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
-            case 'generar':
+            /* case 'generar':
                 if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar reportes.');
                 generar($obj, $id_modulo, $bitacoraObj);
-                break;
+                break; */
 
             default:
                 throw new Exception('Acción no permitida.');
@@ -108,10 +104,6 @@ function manejarSolicitudPalmares($obj, $id_modulo, $bitacoraObj, array $permiso
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
-
-/**
- * --- LÓGICA DE ACCIONES ---
- */
 
 function consultarIndividual($obj, $permisos): void
 {
@@ -375,7 +367,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
     }
 }
 
-function generar($obj, $id_modulo, $bitacoraObj): void
+/* function generar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $validacionesReporte = [
@@ -399,9 +391,6 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             'palmares_equipo' => $_POST['palmares_equipo'] ?? ''
         ];
 
-        // Simula la llamada a la consulta en modelo si fuera necesario
-        // $respuesta = $obj->procesarDatos(['accion' => 'generar', ...]);
-        // Para este módulo, la generación directa es correcta
         $reporte = new GenerarReporte();
         $pdf = $reporte->generarPDF($tipo_reporte, $parametros, 'Palmares');
         
@@ -417,4 +406,4 @@ function generar($obj, $id_modulo, $bitacoraObj): void
         logs('Palmares', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
-}
+} */

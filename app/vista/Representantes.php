@@ -4,7 +4,7 @@ if (isset($solo_lista) && $solo_lista === true) :
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-    <?php else :
+        <?php else :
         foreach ($registro as $dato) : ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
@@ -29,19 +29,19 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <?php if ($permisos['modificar']) : ?>
+                            <?php if ($permisos['modificar']) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_representante'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <?php endif; ?>
-                                <?php if ($permisos['eliminar']) : ?>
+                            <?php endif; ?>
+                            <?php if ($permisos['eliminar']) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_representante'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                <?php endif; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
         <?php endforeach; ?>
     <?php endif;
-        exit(); ?>
+    exit(); ?>
 <?php endif; ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -83,7 +83,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                            <?php else :
+                                <?php else :
                                 foreach ($registro as $dato) : ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
@@ -108,12 +108,12 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                        <?php if ($permisos['modificar']) : ?>
+                                                    <?php if ($permisos['modificar']) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_representante'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                                        <?php endif; ?>
-                                                        <?php if ($permisos['eliminar']) : ?>
+                                                    <?php endif; ?>
+                                                    <?php if ($permisos['eliminar']) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_representante'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                                        <?php endif; ?>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -199,6 +199,7 @@ if (isset($solo_lista) && $solo_lista === true) :
     </section>
     <script src="js/main.js"></script>
     <script src="js/representantes.js"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>

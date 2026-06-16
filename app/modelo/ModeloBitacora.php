@@ -5,7 +5,7 @@ namespace App\modelo;
 use App\interface\InterBitacora;
 use Exception;
 
-class ModeloBitacora extends ModeloBase implements InterBitacora
+class ModeloBitacora extends Conexion implements InterBitacora
 {
 
     public function __construct() {}

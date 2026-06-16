@@ -2,10 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloCategorias extends ModeloBase
+class ModeloCategorias extends Conexion
 {
     private $id;
     private $nombre;
@@ -29,6 +28,8 @@ class ModeloCategorias extends ModeloBase
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
+
+        $this->ValidarExpresiones($datos);
 
         $this->id = $datos['id'] ?? null;
         $this->nombre = mb_strtoupper(trim($datos['nombre'] ?? ''), "UTF-8");
@@ -196,5 +197,24 @@ class ModeloCategorias extends ModeloBase
     public function verificarCategoria(int $id): bool
     {
         return $this->verificarExistencia('id', $id, 'categorias', NULL);
+    }
+
+    private function ValidarExpresiones(array $datos): void
+    {
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+            throw new Exception('Id inválido.');
+        }
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-Z0-9\-\s]{2,30}$/', $datos['nombre'])) {
+            throw new Exception('Nombre de categoría inválido.');
+        }
+        if (!empty($datos['edad_minima']) && !preg_match('/^[0-9]{1,2}$/', $datos['edad_minima'])) {
+            throw new Exception('Edad mínima inválida.');
+        }
+        if (!empty($datos['edad_maxima']) && !preg_match('/^[0-9]{1,2}$/', $datos['edad_maxima'])) {
+            throw new Exception('Edad máxima inválida.');
+        }
+        if (!empty($datos['edad_minima']) && !empty($datos['edad_maxima']) && (int)$datos['edad_minima'] > (int)$datos['edad_maxima']) {
+            throw new Exception('La edad mínima no puede ser mayor que la edad máxima.');
+        }
     }
 }

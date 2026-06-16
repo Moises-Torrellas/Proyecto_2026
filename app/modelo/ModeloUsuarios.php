@@ -2,10 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloUsuarios extends ModeloBase
+class ModeloUsuarios extends Conexion
 {
 
     private $id;
@@ -75,7 +74,7 @@ class ModeloUsuarios extends ModeloBase
         $this->c_eliminar  = $datos['c_eliminar']  ?? [];
         $this->c_reporte   = $datos['c_reporte']   ?? [];
         $this->c_otros     = $datos['c_otros']     ?? [];
-        
+
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
             'incluir'   => $this->Incluir(),
@@ -107,7 +106,8 @@ class ModeloUsuarios extends ModeloBase
                         u.telefonoUsuario,
                         u.correo,
                         u.bloqueo,
-                        r.nombre_rol 
+                        r.nombre_rol,
+                        u.ultimo_ingreso 
                     FROM `usuarios` u 
                     INNER JOIN roles r ON r.id_rol = u.id_rol 
                     WHERE u.estatus != 0";
@@ -531,6 +531,33 @@ class ModeloUsuarios extends ModeloBase
             }
             logs('Usuarios', $e->getMessage(), 'Modelo_GuardarPermisosUsuario');
             return ['accion' => 'error', 'codigo' => $e->getMessage()];
+        } finally {
+            $conex = null;
+        }
+    }
+
+    public function registrarUltimoIngreso(int $idUsuario): array
+    {
+        $conex=null;
+        try {
+            $conex = $this->conexSG();
+
+            $sql = "UPDATE `usuarios` SET `ultimo_ingreso` = NOW() WHERE `idUsuario` = :id;";
+
+            $stmt = $conex->prepare($sql);
+            $stmt->bindParam(':id', $idUsuario, \PDO::PARAM_INT);
+            $stmt->execute();
+
+            return [
+                'accion' => 'exito',
+                'mensaje' => 'Fecha y hora del último ingreso actualizada correctamente.'
+            ];
+        } catch (\Exception $e) {
+            logs('Usuarios', $e->getMessage(), 'ModeloUsuarios_registrarUltimoIngreso');
+            return [
+                'accion' => 'error',
+                'mensaje' => 'No se pudo actualizar el último ingreso: ' . $e->getMessage()
+            ];
         } finally {
             $conex = null;
         }

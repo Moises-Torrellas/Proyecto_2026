@@ -16,19 +16,15 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina">Devoluciones</h2>
+                            <h2 class="titulo_pagina" id="titulo">Devoluciones</h2>
                         </div>
                         <div class="botones">
-                            <?php if (!empty($permisos['registrar'])) : ?>
-                                <button class="btn btn_azul" id="btn_nuevo">
-                                    <i class="fi fi-sr-add-document"></i> Nueva Devolución
-                                </button>
+                            <?php if(!empty($permisos['registrar'])): ?>
+                                <button class="btn btn_azul" id="btn_nuevo">Nueva Devolución</button> 
                             <?php endif; ?>
                             
-                            <?php if (!empty($permisos['reporte'])) : ?>
-                                <button class="btn btn_verde" id="generar">
-                                    <i class="fi fi-sr-document"></i> Generar Reporte
-                                </button>
+                            <?php if (!empty($permisos['reporte'])): ?>
+                                <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -118,42 +114,6 @@
                                     <div><?= $botonesAccion ?></div>
                                 </div>
                             </div>
-                            <?php if (empty($registro)) { ?>
-                                <div class="listado_vacio"><p>No hay devoluciones activas.</p></div>
-                            <?php } else {
-                                foreach ($registro as $dato) { ?>
-                                    <div class="listado_contenedor_grupal">
-                                        <div class="listado_item">
-                                            <div class="listado_col_datos">
-                                                <div class="listado_dato_grupo" style="width: 15%;">
-                                                    <small>Fecha Devolución</small>
-                                                    <span style="font-weight: bold;"><?= $dato['fecha_devolucion'] ?></span>
-                                                </div>
-                                                <div class="listado_dato_grupo" style="width: 35%;">
-                                                    <small>Asignaciones</small>
-                                                    <span style="font-weight: bold; color: var(--texto-principal);"><?= $dato['asignaciones'] ?></span>
-                                                    <small>ID Asig: <?= $dato['id_asignacion'] ?></small>
-                                                </div>
-                                                <div class="listado_dato_grupo" style="width: 30%;">
-                                                    <small>Estado</small>
-                                                    <span><?= $dato['articulo'] ?></span>
-                                                    <small style="color: #6c757d;">(Pza ID: #<?= $dato['id_estado'] ?>)</small>
-                                                </div>
-                                            </div>
-                                            <div class="listado_col_acciones">
-                                                <div style="display:flex; gap:5px;">
-                                                    <?php if (!empty($permisos['modificar'])) { ?>
-                                                        <button class="btn_t cbt_v" onclick="editar(<?= $dato['id_devolucion'] ?>, <?= $dato['id_asignacion'] ?>, <?= $dato['id_estado'] ?>, '<?= $dato['fecha_devolucion'] ?>', '<?= $dato['observacion'] ?>')" title="Modificar"><i class="fi fi-sr-edit"></i></button>
-                                                    <?php } ?>
-                                                    <?php if (!empty($permisos['eliminar'])) { ?>
-                                                        <button class="btn_t cbt_r" onclick="anular(<?= $dato['id_devolucion'] ?>)" title="Anular Devolución"><i class="fi fi-sr-ban"></i></button>
-                                                    <?php } ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php }
-                            } ?>
 
             <?php if ($index === $totalRegistros - 1): ?>
                             </div>
@@ -233,4 +193,4 @@
     <script src="js/devoluciones.js"></script>
 </body>
 </html>
-                            <?php } ?>
+<?php } ?>

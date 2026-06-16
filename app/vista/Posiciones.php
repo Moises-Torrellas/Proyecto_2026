@@ -166,6 +166,7 @@ if (isset($solo_lista) && $solo_lista === true) :
     </section>
     <script src="js/main.js"></script>
     <script src="js/posiciones.js"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>

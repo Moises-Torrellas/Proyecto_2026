@@ -28,12 +28,9 @@ class ModeloRespaldo extends ModeloBase
             } elseif (file_exists('D:\xampp\mysql\bin\mysqldump.exe')) {
                 $this->mysqlPath = 'D:\xampp\mysql\bin\mysqldump.exe';
             } else {
-                // Si el archivo esta en otra ruta, se agrega en un archivo config
                 $this->mysqlPath = 'mysqldump'; 
             }
         } else {
-            // Si es un servidor de producción en internet 
-            // En un servidor el comando es global, no se necesita ruta fisica
             $this->mysqlPath = 'mysqldump'; 
         }
 

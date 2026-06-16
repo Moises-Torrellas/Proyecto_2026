@@ -4,8 +4,8 @@ if (isset($solo_lista) && $solo_lista === true) :
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-    <?php else :
-            $anioActual = date('Y');
+        <?php else :
+        $anioActual = date('Y');
         foreach ($registro as $dato) :
             $anioNacimiento = date('Y', strtotime($dato['fecha_nac']));
             $edadCalendario = $anioActual - $anioNacimiento;
@@ -22,18 +22,18 @@ if (isset($solo_lista) && $solo_lista === true) :
             } else {
                 // Comportamiento normal si está en rango
                 $fotoHTML = ($foto === 'default.png' || empty($foto))
-                ? '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>'
-                : '<img src="img/atletas/' . htmlspecialchars($foto) . '" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">';
+                    ? '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>'
+                    : '<img src="img/atletas/' . htmlspecialchars($foto) . '" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">';
             }
-            ?>
+        ?>
             <div id="registro" class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
 
                     <div class="listado_col_principal">
-                    <?= $fotoHTML ?>
+                        <?= $fotoHTML ?>
                         <div class="listado_info_base">
                             <span class="listado_titulo">
-                            <?= htmlspecialchars($dato['nombres']) ?> <?= htmlspecialchars($dato['apellidos']) ?>
+                                <?= htmlspecialchars($dato['nombres']) ?> <?= htmlspecialchars($dato['apellidos']) ?>
                             </span>
                         </div>
                     </div>
@@ -46,7 +46,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                         <div class="listado_dato_grupo">
                             <small>Edad (Año Cal.)</small>
                             <span class="listado_resaltado" <?= $fueraDeRango ? 'style="color: #eab308;"' : '' ?>>
-                            <?= $edadCalendario ?> años
+                                <?= $edadCalendario ?> años
                             </span>
                         </div>
                         <div class="listado_dato_grupo">
@@ -55,31 +55,31 @@ if (isset($solo_lista) && $solo_lista === true) :
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Estatus</small>
-                        <?php if ($dato['estatus'] == 1) : ?>
+                            <?php if ($dato['estatus'] == 1) : ?>
                                 <span class="estatus_v">Activo</span>
-                        <?php else : ?>
+                            <?php else : ?>
                                 <span class="estatus_r">Retirado</span>
-                        <?php endif; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                        <?php if ($permisos['modificar']) : ?>
+                            <?php if ($permisos['modificar']) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Modificar">
                                     <i class="fi fi-sr-pencil"></i>
                                 </button>
-                        <?php endif; ?>
-                        <?php if ($dato['estatus'] == 1 && $permisos['eliminar']) : ?>
+                            <?php endif; ?>
+                            <?php if ($dato['estatus'] == 1 && $permisos['eliminar']) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Retirar">
                                     <i class="fi fi-sr-cross-circle"></i>
                                 </button>
-                        <?php endif; ?>
-                        <?php if ($permisos['reporte']) : ?>
+                            <?php endif; ?>
+                            <?php if ($permisos['reporte']) : ?>
                                 <button id="cbt_sec" class="btn_t cbt_sec" onclick="GenerarCurriculum(<?= $dato['id_atleta'] ?>)" data-tippy-content="Generar Currículum">
                                     <i class="fi fi-sr-clipboard-user"></i>
                                 </button>
-                        <?php endif; ?>
+                            <?php endif; ?>
                         </div>
                         <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                     </div>
@@ -100,7 +100,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 </div>
                             </div>
 
-                        <?php if (!empty($dato['nombre_rep']) && trim($dato['nombre_rep']) !== "") : ?>
+                            <?php if (!empty($dato['nombre_rep']) && trim($dato['nombre_rep']) !== "") : ?>
                                 <div class="detalle_card">
                                     <div class="detalle_card_icon"><i data-lucide="user-star"></i></div>
                                     <div class="detalle_card_txt">
@@ -109,7 +109,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                         <small><?= htmlspecialchars($dato['cedula_rep'] ?? '') ?></small>
                                     </div>
                                 </div>
-                        <?php endif; ?>
+                            <?php endif; ?>
 
                             <div class="detalle_card">
                                 <div class="detalle_card_icon"><i data-lucide="land-plot"></i></div>
@@ -147,10 +147,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                     </div>
                 </div>
             </div>
-            <?php
+<?php
         endforeach;
     endif;
-        exit();
+    exit();
 endif;
 ?>
 
@@ -194,8 +194,8 @@ endif;
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                            <?php else :
-                                    $anioActual = date('Y');
+                                <?php else :
+                                $anioActual = date('Y');
                                 foreach ($registro as $dato) :
                                     // Cálculos y transformaciones de datos del Atleta
                                     $anioNacimiento = date('Y', strtotime($dato['fecha_nac']));
@@ -208,7 +208,7 @@ endif;
                                     $fueraDeRango = ($edadCalendario < $edadMin || $edadCalendario > $edadMax);
 
                                     // Renderizado dinámico del Avatar/Foto
-                                        $foto = $dato['foto'] ?? '';
+                                    $foto = $dato['foto'] ?? '';
 
                                     if ($fueraDeRango) {
                                         // Icono de alerta amarillo si no cumple con la edad de la categoría
@@ -216,10 +216,10 @@ endif;
                                     } else {
                                         // Comportamiento normal si está en rango
                                         $fotoHTML = ($foto === 'default.png' || empty($foto))
-                                        ? '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>'
-                                        : '<img src="img/atletas/' . htmlspecialchars($foto) . '" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">';
+                                            ? '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>'
+                                            : '<img src="img/atletas/' . htmlspecialchars($foto) . '" class="listado_avatar" alt="Perfil" onerror="manejarErrorCamara(this)">';
                                     }
-                                    ?>
+                                ?>
                                     <div id="registro" class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
 
@@ -341,7 +341,7 @@ endif;
                                             </div>
                                         </div>
                                     </div>
-                                    <?php
+                            <?php
                                 endforeach;
                             endif;
                             ?>
@@ -502,6 +502,7 @@ endif;
     </section>
     <script src="js/main.js"></script>
     <script src="js/atletas.js"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>
