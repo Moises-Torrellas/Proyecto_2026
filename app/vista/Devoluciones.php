@@ -58,7 +58,7 @@
                 <div class="listado_contenedor_grupal">
                     <div class="listado_item" onclick="$(this).next('.listado_detalle_oculto').slideToggle();">
                         <div class="listado_col_principal">
-                            <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>
+                            <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-star"></i></div>
                             <div class="listado_info_base">
                                 <span class="listado_titulo"><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
                             </div>
@@ -102,7 +102,7 @@
                 $botonesAccion .= '<button class="btn_t cbt_v" onclick="editar(' . $dato['id_devolucion'] . ', ' . $dato['id_asignacion'] . ', ' . $dato['id_estado'] . ', \'' . $dato['fecha_devolucion'] . '\', \'' . htmlspecialchars($dato['observacion']) . '\')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
             }
             if ($permisos['eliminar']) {
-                $botonesAccion .= '<button class="btn_t cbt_r" onclick="confirmarAnulacion(' . $dato['id_devolucion'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-trash"></i></button>';
+                $botonesAccion .= '<button class="btn_t cbt_r" onclick="anular(' . $dato['id_devolucion'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-trash"></i></button>';
             }
             ?>
                             <div class="sub_item_fila">

@@ -161,30 +161,14 @@ function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
     abrirModal();
 }
 
-function confirmarAnulacion(id_devolucion) {
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: "Se anulará la devolución y la asignacion volverá a estar asignado. Indique el motivo:",
-        icon: 'warning',
-        input: 'textarea',
-        inputPlaceholder: 'Escriba el motivo...',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, Anular',
-        cancelButtonText: 'Cancelar',
-        preConfirm: (motivo) => {
-            if (!motivo || motivo.trim() === '') {
-                Swal.showValidationMessage('Debe ingresar un motivo para anular');
-            }
-            return motivo;
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
+function anular(id_devolucion) {
+    // Calling the global function from main.js
+    confirmarAnulacion('¿Está seguro que quiere anular esta devolución?', function (motivo) {
+        if (motivo !== false) {
             let datos = new FormData();
             datos.append('accion', 'anular');
             datos.append('id_devolucion', id_devolucion);
-            datos.append('motivo_anulacion', result.value); 
+            datos.append('motivo_anulacion', motivo); 
             enviaAjax(datos);
         }
     });

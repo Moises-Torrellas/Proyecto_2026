@@ -23,7 +23,7 @@
                 <div class="listado_item" onclick="toggleDetalles(this)">
                     <div class="listado_col_principal">
                         <div class="listado_avatar_null">
-                            <i class="icon_con" data-lucide="circle-user"></i>
+                            <i class="icon_con" data-lucide="circle-star"></i>
                         </div>
                         <div class="listado_info_base">
                             <span class="listado_titulo"><?= htmlspecialchars($atleta['nombre_completo']) ?></span>
@@ -184,7 +184,7 @@
                                         <div class="listado_item" onclick="toggleDetalles(this)">
                                             <div class="listado_col_principal">
                                                 <div class="listado_avatar_null">
-                                                    <i class="icon_con" data-lucide="circle-user"></i>
+                                                    <i class="icon_con" data-lucide="circle-star"></i>
                                                 </div>
                                                 <div class="listado_info_base">
                                                     <span class="listado_titulo"><?= htmlspecialchars($atleta['nombre_completo']) ?></span>
