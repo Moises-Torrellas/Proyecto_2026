@@ -2,6 +2,7 @@ let timerBusqueda;
 
 $(document).ready(function () {
     cargarCombos();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
     $('#busqueda').off('keyup').on('keyup', function () {
         clearTimeout(timerBusqueda);
         let val = $(this).val();
@@ -106,6 +107,7 @@ function poblarCombos(catalogos, estados) {
 function crearConsulta(htmlRecibido) {
     $('#resultadoconsulta').html(htmlRecibido);
     if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
     if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 

@@ -64,7 +64,7 @@ class ModeloDevoluciones extends Conexion
                         d.id_devolucion, 
                         DATE_FORMAT(d.fecha_devolucion, '%Y-%m-%d') as fecha_vista,
                         d.fecha_devolucion, d.id_asignacion, d.id_estado, d.observacion, 
-                        ee.nombre as calidad, at.id_atleta, at.nombres as atleta_nombre,
+                        ee.nombre as calidad, ee.nivel_estado, at.id_atleta, at.nombres as atleta_nombre,
                         at.apellidos as atleta_apellido, cat.nombre as articulo_nombre,
                         (SELECT COUNT(*) FROM devoluciones d2 
                          INNER JOIN asignaciones a2 ON d2.id_asignacion = a2.id_asignacion 
@@ -131,9 +131,9 @@ class ModeloDevoluciones extends Conexion
             $idEquipamiento = $stmtAsig->fetchColumn();
 
             if ($this->objAsignaciones) {
-                $this->objAsignaciones->CambiarEstatusAsignacion($this->id_asignacion, 2, $conex);
+                $this->objAsignaciones->CambiarEstatusAsignacion($this->id_asignacion, 0, $conex);
             } else {
-                $conex->prepare("UPDATE asignaciones SET estatus = 2 WHERE id_asignacion = ?")->execute([$this->id_asignacion]);
+                $conex->prepare("UPDATE asignaciones SET estatus = 0 WHERE id_asignacion = ?")->execute([$this->id_asignacion]);
             }
 
             $stmtEqUpd = $conex->prepare("UPDATE equipamientos SET estatus = 1, id_estados = ? WHERE id_equipamiento = ?");

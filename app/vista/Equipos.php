@@ -109,62 +109,43 @@ if (isset($solo_lista) && $solo_lista === true) :
                                                 <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                                             </div>
                                         </div>
-                                        <div class="listado_detalle_oculto">
-                    <div class="detalle_expandido_container">
-
-                        <div class="detalle_fila">
-                                    <?php
-                                // Se espera que $dato venga con los atletas del equipo.
-                                // Para mostrar cada atleta, iteramos sobre $dato['atletas'].
-                                    $atletasEquipo = $dato['atletas'] ?? [];
-                                    if (empty($atletasEquipo)) :
-                                        ?>
-                                <div class="detalle_fila">
-                                    <div class="detalle_card" style="grid-column: 1 / -1;">
-                                        <div class="detalle_card_txt" style="text-align: center;">
-                                            <label>Atletas</label>
-                                            <span>No hay atletas asignados</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                    <?php else : ?>
-                                        <?php foreach ($atletasEquipo as $atleta) : ?>
-                                    <div class="detalle_fila">
-                                        <div class="detalle_card">
-                                            <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
-                                            <div class="detalle_card_txt">
-                                                <label>Cédula</label>
-                                                <span><?= htmlspecialchars($atleta['doc_i'] ?? '') ?></span>
+                                        <div class="listado_detalle_oculto" style="display:none;">
+                                            <div class="detalle_expandido_container" style="padding: 15px;">
+                                                <div class="lista_sub_items">
+                                                    <?php
+                                                    $atletasEquipo = $dato['atletas'] ?? [];
+                                                    if (empty($atletasEquipo)) :
+                                                    ?>
+                                                        <div class="sub_item_fila" style="justify-content: center; opacity: 0.6;">
+                                                            <div class="sub_item_info" style="align-items: center;">
+                                                                <span class="sub_item_titulo">No hay atletas asignados</span>
+                                                            </div>
+                                                        </div>
+                                                    <?php else : ?>
+                                                        <?php foreach ($atletasEquipo as $atleta) : ?>
+                                                            <div class="sub_item_fila">
+                                                                <div class="sub_item_info">
+                                                                    <span class="sub_item_titulo"><?= htmlspecialchars($atleta['nombre'] ?? '') ?></span>
+                                                                    <div class="sub_item_fechas">
+                                                                        <span>C.I: <?= htmlspecialchars($atleta['doc_i'] ?? '') ?></span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="sub_item_bloque_metricas_horizontal" style="display: flex; flex-direction: row; gap: 15px; align-items: center; flex-wrap: nowrap; justify-content: flex-end;">
+                                                                    <div class="metrica_item">
+                                                                        Posición:
+                                                                        <strong><?= htmlspecialchars($atleta['posicion'] ?? '') ?></strong>
+                                                                    </div>
+                                                                    <div class="metrica_item">
+                                                                        Categoría:
+                                                                        <strong><?= htmlspecialchars($atleta['categoria'] ?? '') ?></strong>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="detalle_card">
-                                            <div class="detalle_card_icon"><i data-lucide="phone"></i></div>
-                                            <div class="detalle_card_txt">
-                                                <label>Atleta</label>
-                                                <span><?= htmlspecialchars($atleta['nombre'] ?? '') ?></span>
-                                            </div>
-                                        </div>
-                                        <div class="detalle_card">
-                                            <div class="detalle_card_icon"><i data-lucide="calendar-1"></i></div>
-                                            <div class="detalle_card_txt">
-                                                <label>Posición</label>
-                                                <span><?= htmlspecialchars($atleta['posicion'] ?? '') ?></span>
-                                            </div>
-                                        </div>
-                                        <div class="detalle_card">
-                                            <div class="detalle_card_icon"><i data-lucide="tag"></i></div>
-                                            <div class="detalle_card_txt">
-                                                <label>Categoría</label>
-                                                <span><?= htmlspecialchars($atleta['categoria'] ?? '') ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                        </div>
-
-                    </div>
-                </div>
                                     </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>

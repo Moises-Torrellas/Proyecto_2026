@@ -39,12 +39,12 @@
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
                     <div class="listado_col_principal">
-                        <div class="listado_avatar_null" style="background-color: var(--verde-suave); color: var(--verde);">
+                        <div class="listado_avatar_null">
                             <i class="icon_con" data-lucide="package"></i>
                         </div>
                         <div class="listado_info_base">
                             <span class="listado_titulo"><?= htmlspecialchars($grupo['articulo']) ?></span>
-                            <small>Categoría: <?= htmlspecialchars($grupo['categoria']) ?></small>
+                            <span class="listado_subtitulo">Categoría: <?= htmlspecialchars($grupo['categoria']) ?></span>
                         </div>
                     </div>
 
@@ -61,14 +61,12 @@
                 </div>
 
                 <!-- Detalle Acordeón con los cambios visuales para Modo Oscuro/Claro -->
-                <div class="listado_detalle_oculto">
-                    <div class="detalle_expandido_container">
-                        <h4 class="titulo_des">Inventario Físico (Piezas Individuales):</h4>
+                <div class="listado_detalle_oculto" style="display:none;">
+                    <div class="detalle_expandido_container" style="padding: 15px;">
                         
-                        <!-- Forzamos el apilamiento vertical -->
-                        <div class="detalle_fila" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="lista_sub_items">
                             <?php foreach ($grupo['piezas'] as $pieza) { 
-                                // Lógica de semáforo
+                                // Lógica de semáforo de Estatus
                                 if ($pieza['estatus'] == 1) {
                                     $clase = 'estatus_v'; $txt = 'Disponible';
                                 } elseif ($pieza['estatus'] == 2) {
@@ -76,26 +74,30 @@
                                 } else {
                                     $clase = 'estatus_r'; $txt = 'Inactivo';
                                 }
-                            ?>
-                                <div class="detalle_card" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
-                                    <div style="display:flex; gap:15px; align-items:center;">
-                                        <div class="detalle_card_icon"><i data-lucide="box"></i></div>
-                                        
-                                            <div class="detalle_card_txt" style="display: flex; flex-direction: column; gap: 3px;">
-                                            
-                                            <span style="color: var(--texto-principal); font-weight: bold; font-size: 13px; text-transform: uppercase;">
-                                                Condición: <?= htmlspecialchars($pieza['estado_fisico']) ?>
-                                            </span>
-                                            
-                                            <span style="color: var(--texto-principal); font-size: 12px; opacity: 0.7;">
-                                                Detalle: <?= htmlspecialchars($pieza['detalle_material'] ?? 'N/A') ?>
-                                            </span>
 
-                                            <span class="<?= $clase ?>" style="width: fit-content; margin-top: 3px;"><?= $txt ?></span>
-                                        </div>
-                                        
+                                // Lógica de semáforo de Condición Físico
+                                $claseCondicion = 'estatus_v';
+                                if ($pieza['nivel_estado'] == 2) {
+                                    $claseCondicion = 'estatus_a';
+                                } elseif ($pieza['nivel_estado'] >= 3) {
+                                    $claseCondicion = 'estatus_r';
+                                }
+                            ?>
+                                <div class="sub_item_fila">
+                                    <div class="sub_item_info">
+                                        <span class="sub_item_titulo"><?= htmlspecialchars($grupo['articulo']) ?></span>
                                     </div>
-                                    <div style="display:flex; gap:5px;" onclick="event.stopPropagation();">
+                                    <div class="sub_item_bloque_metricas_horizontal" style="display: flex; flex-direction: row; gap: 15px; align-items: center; flex-wrap: nowrap; justify-content: flex-end;">
+                                        <div class="metrica_item">
+                                            Condición:
+                                            <strong class="<?= $claseCondicion ?>"><?= htmlspecialchars($pieza['estado_fisico']) ?></strong>
+                                        </div>
+                                        <div class="metrica_item">
+                                            Estatus:
+                                            <strong class="<?= $clase ?>"><?= $txt ?></strong>
+                                        </div>
+                                    </div>
+                                    <div class="sub_item_acciones" onclick="event.stopPropagation();">
                                         <?php if (!empty($permisos['modificar'])) { ?>
                                             <button class="btn_t cbt_v" onclick="editar(<?= $pieza['id_equipamiento'] ?>, <?= $grupo['id_catalogo'] ?>, <?= $pieza['id_estado'] ?>)" data-tippy-content="Modificar">
                                                 <i class="fi fi-sr-pencil"></i>
@@ -118,6 +120,7 @@
 <?php if (!isset($solo_lista)) { ?>
                         </div>
                     </div>
+                    <?php include('complementos/botonera.php'); ?>
                 </div>
             </div>
         </div>
@@ -143,9 +146,6 @@
                                 <label for="id_catalogo" class="titulo_formulario">Artículo del Catálogo</label>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select class="formulario" id="id_estado" name="id_estado" required>
@@ -156,9 +156,9 @@
                         </div>
                     </div>
                     
-                    <div class="row" style="margin-top: 10px;">
+                    <div class="row row_final">
                         <div class="colum">
-                            <button type="button" class="btn btn_azul" id="btn_guardar">Guardar</button>
+                            <button type="button" class="btn btn_azul" id="btn_guardar" data-accion="incluir">Guardar</button>
                             <button type="button" class="btn btn_verde" onclick="limpia()">Limpiar</button>
                         </div>
                     </div>
