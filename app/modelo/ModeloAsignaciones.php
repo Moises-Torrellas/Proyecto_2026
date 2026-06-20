@@ -14,6 +14,12 @@ class ModeloAsignaciones extends Conexion
     private $estatus;
     private $anulado;
     private $motivo;
+    
+    // Variables para el filtro de reportes
+    private $filtro;
+    private $fecha_inicio;
+    private $fecha_fin;
+    
     private $objEquipamientos;
 
     public function __construct()
@@ -46,13 +52,19 @@ class ModeloAsignaciones extends Conexion
 
         $this->ValidarExpresiones($datos);
 
+        // Mapeo de datos principales
         $this->id_asignacion    = $datos['id_asignacion'] ?? null;
         $this->id_atleta        = $datos['id_atleta'] ?? null;
         $this->id_equipamiento  = $datos['id_equipamiento'] ?? null;
         $this->fecha_asignacion = $datos['fecha_asignacion'] ?? null;
         $this->estatus          = $datos['estatus'] ?? null;
-        $this->anulado          = $datos['anulado'] ?? null;
         $this->motivo           = isset($datos['motivo_anulacion']) ? trim($datos['motivo_anulacion']) : (isset($datos['motivo']) ? trim($datos['motivo']) : '');
+
+        // Mapeo de filtros para reportes/búsquedas
+        $this->filtro           = $datos['filtro'] ?? '';
+        $this->fecha_inicio     = $datos['fecha_inicio'] ?? '';
+        $this->fecha_fin        = $datos['fecha_fin'] ?? '';
+        $this->anulado          = $datos['anulados'] ?? 0;
 
         $accion = $datos['accion'] ?? null;
 
@@ -70,28 +82,63 @@ class ModeloAsignaciones extends Conexion
         $conex = null;
         try {
             $conex = $this->conex();
-
-            // Se eliminó "WHERE a.estatus = 1" para permitir traer el histórico completo (activos, devueltos y anulados)
+            
             $sql = "SELECT a.id_asignacion, 
-                       DATE_FORMAT(a.fecha_asignacion, '%d/%m/%Y') as fecha_vista,
-                       a.fecha_asignacion as fecha_real,
-                       a.estatus as estatus_asignacion,
-                       a.anulado,
-                       a.id_atleta,
-                       CONCAT(at.nombres, ' ', at.apellidos) as atleta,
-                       at.doc_identidad,
-                       c.nombre as articulo,
-                       e.id_equipamiento
-                FROM asignaciones a
-                INNER JOIN atletas at ON a.id_atleta = at.id_atleta
-                INNER JOIN equipamientos e ON a.id_equipamiento = e.id_equipamiento
-                INNER JOIN catalogos c ON e.id_catalogo = c.id_catalogo
-                ORDER BY at.nombres ASC, a.fecha_asignacion DESC";
+                           DATE_FORMAT(a.fecha_asignacion, '%d/%m/%Y') as fecha_vista,
+                           a.fecha_asignacion as fecha_real,
+                           a.estatus as estatus_asignacion,
+                           a.anulado,
+                           a.id_atleta,
+                           CONCAT(at.nombres, ' ', at.apellidos) as atleta,
+                           at.doc_identidad,
+                           c.nombre as articulo,
+                           e.id_equipamiento
+                    FROM asignaciones a
+                    INNER JOIN atletas at ON a.id_atleta = at.id_atleta
+                    INNER JOIN equipamientos e ON a.id_equipamiento = e.id_equipamiento
+                    INNER JOIN catalogos c ON e.id_catalogo = c.id_catalogo
+                    WHERE 1=1"; 
+            
+            // Filtro del buscador de la tabla principal
+            if (!empty($this->filtro)) {
+                $sql .= " AND (at.nombres LIKE :filtro OR at.apellidos LIKE :filtro OR at.doc_identidad LIKE :filtro OR c.nombre LIKE :filtro)";
+            }
 
+            // Filtros del Modal de Reportes
+            if (!empty($this->id_atleta)) {
+                $sql .= " AND a.id_atleta = :id_atleta";
+            }
+            if (!empty($this->id_equipamiento)) {
+                $sql .= " AND a.id_equipamiento = :id_equipamiento";
+            }
+            if (!empty($this->fecha_inicio) && !empty($this->fecha_fin)) {
+                $sql .= " AND a.fecha_asignacion BETWEEN :fecha_inicio AND :fecha_fin";
+            } else if (!empty($this->fecha_inicio)) {
+                $sql .= " AND a.fecha_asignacion >= :fecha_inicio";
+            } else if (!empty($this->fecha_fin)) {
+                $sql .= " AND a.fecha_asignacion <= :fecha_fin";
+            }
+
+            // Si el checkbox de anulados NO está marcado, solo traemos los activos
+            if (empty($this->anulado)) {
+                $sql .= " AND a.estatus = 1 AND a.anulado = 0";
+            }
+            
+            $sql .= " ORDER BY at.nombres ASC, a.fecha_asignacion DESC";
+            
             $stmt = $conex->prepare($sql);
+            
+            // Bindeo de variables
+            if (!empty($this->filtro)) $stmt->bindValue(':filtro', '%' . $this->filtro . '%');
+            if (!empty($this->id_atleta)) $stmt->bindValue(':id_atleta', $this->id_atleta);
+            if (!empty($this->id_equipamiento)) $stmt->bindValue(':id_equipamiento', $this->id_equipamiento);
+            if (!empty($this->fecha_inicio)) $stmt->bindValue(':fecha_inicio', $this->fecha_inicio);
+            if (!empty($this->fecha_fin)) $stmt->bindValue(':fecha_fin', $this->fecha_fin);
+
             $stmt->execute();
             $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Agrupación de datos para la vista de acordeón
             $agrupado = [];
             foreach ($datos as $fila) {
                 $id = $fila['id_atleta'];
@@ -148,7 +195,7 @@ class ModeloAsignaciones extends Conexion
             $this->objEquipamientos->CambiarEstatus($this->id_equipamiento, 2, $conex);
 
             $conex->commit();
-            return ['accion' => 'exito', 'mensaje' => 'Asignación procesada.'];
+            return ['accion' => 'exito', 'mensaje' => 'Asignación procesada exitosamente.'];
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) $conex->rollBack();
             logs('Asignaciones', $e->getMessage(), 'Modelo_Incluir');
@@ -207,7 +254,6 @@ class ModeloAsignaciones extends Conexion
                 return ['accion' => 'error', 'codigo' => 'ERR_NO_EXISTE'];
             }
 
-            // Buscamos el equipo real asignado en la BD antes de cambiar nada
             $stmtCheck = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
             $stmtCheck->execute([$this->id_asignacion]);
             $id_equipo_actual = $stmtCheck->fetchColumn();
@@ -220,7 +266,7 @@ class ModeloAsignaciones extends Conexion
             }
 
             $conex->commit();
-            return ['accion' => 'exito', 'mensaje' => 'Asignación anulada.'];
+            return ['accion' => 'exito', 'mensaje' => 'Asignación anulada. Equipo liberado.'];
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) $conex->rollBack();
             logs('Asignaciones', $e->getMessage(), 'Modelo_Anular');
@@ -262,6 +308,12 @@ class ModeloAsignaciones extends Conexion
         }
         if (!empty($datos['fecha_asignacion']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $datos['fecha_asignacion'])) {
             throw new Exception('Formato de fecha inválido.');
+        }
+        if (!empty($datos['fecha_inicio']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $datos['fecha_inicio'])) {
+            throw new Exception('Formato de fecha de inicio inválido.');
+        }
+        if (!empty($datos['fecha_fin']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $datos['fecha_fin'])) {
+            throw new Exception('Formato de fecha de fin inválido.');
         }
 
         $motivo = isset($datos['motivo_anulacion']) ? trim($datos['motivo_anulacion']) : (isset($datos['motivo']) ? trim($datos['motivo']) : '');

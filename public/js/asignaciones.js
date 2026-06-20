@@ -78,9 +78,12 @@ $(document).ready(function () {
         
         abrirModal(); 
     });
-
+    
     $('#generar').on('click', function () {
-        window.open('?url=Reportes/Asignaciones', '_blank'); 
+        var datos = new FormData();
+        datos.append('accion', 'generar');
+        
+        enviaAjax(datos);
     });
 
     $('#ayuda').on('click', function () {
@@ -204,7 +207,10 @@ function enviaAjax(datos) {
             try {
                 var lee = typeof respuesta === 'object' ? respuesta : JSON.parse(respuesta.substring(respuesta.indexOf('{')));
 
-                if (lee.accion == "MultiConsulta") {
+                if (lee.accion === "reporte") {
+                    window.open(lee.archivo, '_blank'); 
+                } 
+                else if (lee.accion == "MultiConsulta") {
                     poblarCombos(lee.atletas, lee.equipos);
                 } else if (lee.accion == "incluir" || lee.accion == "modificar" || lee.accion == "exito") {
                     consultar();

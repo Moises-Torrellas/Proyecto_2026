@@ -3,6 +3,8 @@ use App\modelo\ModeloAsignaciones;
 use App\modelo\ModeloAtletas;
 use App\modelo\ModeloEquipamientos;
 
+use App\servicios\GenerarReporte;
+
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_ASIGNACIONES_; 
@@ -61,6 +63,10 @@ function manejarSolicitudAsignacion($obj, $id_modulo, $bitacoraObj, array $permi
             case 'anular':
                 if (empty($permisos['eliminar'])) throw new Exception('Sin permisos.');
                 anular($obj, $id_modulo, $bitacoraObj);
+                break;
+            case 'generar': // <--- 
+                if (empty($permisos['ingresar'])) throw new Exception('Sin permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
                 throw new Exception('Acción no permitida.');
@@ -176,5 +182,54 @@ function anular($obj, $id_modulo, $bitacoraObj): void {
     } catch (Exception $e) { 
         logs('Asignaciones', $e->getMessage(), 'Controlador_Anular');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]); 
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validacionesReporte = [];
+        $datosFiltro = ['accion' => 'consultar']; // Usamos consultar porque agrupa por atleta como espera la vista
+
+        // Filtros opcionales
+        if (!empty($_POST['fecha'])) {
+            $validacionesReporte['fecha'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
+            $datosFiltro['fecha_asignacion'] = $_POST['fecha'];
+        }
+        if (!empty($_POST['fecha_f'])) {
+            $validacionesReporte['fecha_f'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
+            $datosFiltro['fecha_f'] = $_POST['fecha_f'];
+        }
+
+        if (!empty($validacionesReporte)) {
+            validar_datos($validacionesReporte);
+        }
+
+        $respuesta = $obj->ProcesarDatos($datosFiltro);
+
+        if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'Ocurrió un error al consultar las asignaciones para el reporte.']);
+            exit();
+        }
+
+        $datos = $respuesta['datos'] ?? [];
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron asignaciones para generar el reporte.']);
+            exit();
+        }
+
+        $nombreVista = 'R_Asignaciones'; 
+        
+        $objG = new GenerarReporte();
+        $pdf = $objG->generarPDF($nombreVista, $datos, 'Asignaciones');
+        
+        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Asignaciones.");
+        }
+        
+        echo json_encode($pdf);
+    } catch (Exception $e) {
+        logs('Asignaciones', $e->getMessage(), 'Controlador_Generar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

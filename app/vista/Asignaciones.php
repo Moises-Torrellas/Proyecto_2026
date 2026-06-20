@@ -336,6 +336,62 @@
             </div>
         </div>
     </section>
+    <section class="contenedor_modal ocultar" id="contenedor_modal_reporte">
+            <div class="modal modal_mediano ocultar" id="modal_reporte">
+                <div class="cabecera_modal">
+                    <h2 class="titulo_modal">Generar Reporte</h2>
+                    <a type="button" class="cerrar_modal" onclick="cerrarModalReporte()">&times;</a>
+                </div>
+                <div class="contenido_modal">
+                    <form id="form_reporte" autocomplete="off">
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <select class="formulario select2_reporte" id="rep_id_atleta" name="id_atleta">
+                                        <option value="" selected disabled>Selecciona una opción</option>
+                                    </select>
+                                    <label for="rep_id_atleta" class="titulo_formulario">Atleta</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <select class="formulario select2_reporte" id="rep_id_equipamiento" name="id_equipamiento">
+                                        <option value="" selected disabled>Selecciona una opción</option>
+                                    </select>
+                                    <label for="rep_id_equipamiento" class="titulo_formulario">Equipamiento</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="date" class="formulario" id="rep_fecha_inicio" name="fecha_inicio">
+                                    <label for="rep_fecha_inicio" class="titulo_formulario">Fecha de Asignación</label>
+                                </div>
+                            </div>
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="date" class="formulario" id="rep_fecha_fin" name="fecha_fin">
+                                    <label for="rep_fecha_fin" class="titulo_formulario">Fecha Fin</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="colum" style="text-align: center; margin-top: 15px;">
+                                <label style="font-size: 13px; font-weight: bold; color: var(--texto-principal);">Incluir Asignaciones Anuladas</label><br>
+                                <input type="checkbox" id="rep_anulados" name="anulados" value="1" style="transform: scale(1.5); margin-top: 10px; cursor: pointer;">
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top: 25px; display: flex; justify-content: center; gap: 10px;">
+                            <button type="button" class="btn btn_verde" id="btn_ejecutar_reporte">Generar Reporte</button>
+                            <button type="button" class="btn btn_gris" onclick="$('#form_reporte')[0].reset(); $('.select2_reporte').val(null).trigger('change');">Limpiar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
 
     <script src="js/main.js"></script>
     <script src="js/asignaciones.js"></script>
