@@ -5,7 +5,6 @@
         </div>
     <?php else : ?>
         <?php foreach ($registro as $atleta) :
-            // 1. Calcular totales para la cabecera y el resumen
             $asignacionesActivas = 0;
             $totalAsignaciones = count($atleta['asignaciones']);
 
@@ -14,8 +13,6 @@
                     $asignacionesActivas++;
                 }
             }
-
-            // Clase de estado para la tarjeta de resumen (siempre verde)
             $claseEstadoGeneral = 'estado_exito';
         ?>
             <div class="listado_contenedor_grupal">
@@ -64,22 +61,21 @@
                             <?php foreach ($atleta['asignaciones'] as $asignacion) :
                                 // Lógica de estados actualizada
                                 $esActivo = false;
+                                $claseFila = '';
                                 if ($asignacion['anulado'] == 1) {
                                     $textoEstatus = 'Anulado';
                                     $claseEstatus = 'estatus_r';
-                                    $claseFila = 'fila_anulada'; // Aplica el fondo gris
+                                    $claseFila = 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"';
                                 } elseif ($asignacion['estatus'] == 0) {
                                     $textoEstatus = 'Devuelto';
                                     $claseEstatus = 'estatus_v';
-                                    $claseFila = ''; // Normal, no gris
                                 } else {
                                     $textoEstatus = 'En Uso';
                                     $claseEstatus = 'estatus_a';
-                                    $claseFila = '';
                                     $esActivo = true;
                                 }
                             ?>
-                                <div class="sub_item_fila <?= $claseFila ?>">
+                                <div class="sub_item_fila" <?= $claseFila ?>>
 
                                     <div class="sub_item_info">
                                         <span class="sub_item_titulo"><?= htmlspecialchars(mb_strtoupper($asignacion['articulo'], 'UTF-8')) ?></span>
@@ -156,12 +152,15 @@
                         </div>
 
                         <div class="botones">
-                            <button class="btn btn_azul" id="btn_nuevo">Nueva Asignación</button>
+                            <?php if (!empty($permisos['registrar'])) : ?>
+                                <button class="btn btn_azul" id="btn_nuevo">Nueva Asignación</button>
+                            <?php endif; ?>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
+                            <!-- El listado se carga por AJAX aquí -->
                             <?php if (empty($registro)) : ?>
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros de asignaciones</p>
@@ -176,11 +175,9 @@
                                             $asignacionesActivas++;
                                         }
                                     }
-
                                     $claseEstadoGeneral = 'estado_exito';
                                 ?>
                                     <div class="listado_contenedor_grupal">
-
                                         <div class="listado_item" onclick="toggleDetalles(this)">
                                             <div class="listado_col_principal">
                                                 <div class="listado_avatar_null">
@@ -210,7 +207,6 @@
 
                                         <div class="listado_detalle_oculto">
                                             <div class="detalle_expandido_container" style="padding: 15px;">
-
                                                 <div class="tarjeta_resumen <?= $claseEstadoGeneral ?>">
                                                     <div class="tarjeta_icono"><i data-lucide="box"></i></div>
                                                     <div class="tarjeta_texto">
@@ -223,25 +219,22 @@
 
                                                 <div class="lista_sub_items">
                                                     <?php foreach ($atleta['asignaciones'] as $asignacion) :
-                                                        // Lógica de estados actualizada
                                                         $esActivo = false;
+                                                        $claseFila = '';
                                                         if ($asignacion['anulado'] == 1) {
                                                             $textoEstatus = 'Anulado';
                                                             $claseEstatus = 'estatus_r';
-                                                            $claseFila = 'fila_anulada'; // Aplica el fondo gris
+                                                            $claseFila = 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"';
                                                         } elseif ($asignacion['estatus'] == 0) {
                                                             $textoEstatus = 'Devuelto';
                                                             $claseEstatus = 'estatus_v';
-                                                            $claseFila = ''; // Normal, no gris
                                                         } else {
                                                             $textoEstatus = 'En Uso';
                                                             $claseEstatus = 'estatus_a';
-                                                            $claseFila = '';
                                                             $esActivo = true;
                                                         }
                                                     ?>
-                                                        <div class="sub_item_fila <?= $claseFila ?>">
-
+                                                        <div class="sub_item_fila" <?= $claseFila ?>>
                                                             <div class="sub_item_info">
                                                                 <span class="sub_item_titulo"><?= htmlspecialchars(mb_strtoupper($asignacion['articulo'], 'UTF-8')) ?></span>
                                                                 <div class="sub_item_fechas">
@@ -270,11 +263,9 @@
                                                                     <?php endif; ?>
                                                                 <?php endif; ?>
                                                             </div>
-
                                                         </div>
                                                     <?php endforeach; ?>
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>
@@ -287,7 +278,6 @@
             </div>
         </div>
     </section>
-
     <section class="contenedor_modal" id="contenedor_modal">
         <div class="modal modal_mediano ocultar" id="modal">
             <div class="cabecera_modal">
@@ -298,7 +288,7 @@
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id_asignacion" name="id_asignacion">
 
-                    <div class="row">
+                    <div class="row" id="row_atleta">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select class="formulario select2" id="id_atleta" name="id_atleta" required>
@@ -308,9 +298,8 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="row">
-                        <div class="colum">
+                        <div class="colum" id="col_equipamiento">
                             <div class="caja_formulario">
                                 <select class="formulario select2" id="id_equipamiento" name="id_equipamiento" required>
                                     <option value="" selected disabled>Seleccione una pieza...</option>
@@ -318,14 +307,34 @@
                                 <label for="id_equipamiento" class="titulo_formulario">Equipamiento</label>
                             </div>
                         </div>
-                        <div class="colum">
+                        
+                        <div class="colum" id="col_fecha_inicio">
                             <div class="caja_formulario">
-                                <input type="date" class="formulario" id="fecha_asignacion" name="fecha_asignacion" required>
-                                <label for="fecha_asignacion" class="titulo_formulario">Fecha de Asignación</label>
+                                <input type="date" class="formulario" id="fecha_inicio" name="fecha_inicio" required>
+                                <label for="fecha_inicio" id="lbl_fecha" class="titulo_formulario">Fecha de Asignación</label>
+                            </div>
+                        </div>
+
+                        <div class="colum" id="col_fecha_fin">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_fin" name="fecha_fin">
+                                <label for="fecha_fin" class="titulo_formulario">Fecha Fin</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="row_anulados">
+                        <div class="colum">
+                            <div class="caja_formulario" style="text-align: center;">
+                                <label class="titulo_formulario">Incluir Asignaciones Anuladas</label>
+                                <label class="checkbox-container" style="justify-content: center; margin-top: 10px;">
+                                    <input type="checkbox" id="anulados" name="anulados" class="checkbox" value="1">
+                                    <span class="custom-checkbox"></span>
+                                </label>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Fila 4: Botonera -->
                     <div class="row row_final">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="btn_guardar" data-accion="incluir">Confirmar Préstamo</button>
@@ -336,62 +345,6 @@
             </div>
         </div>
     </section>
-    <section class="contenedor_modal ocultar" id="contenedor_modal_reporte">
-            <div class="modal modal_mediano ocultar" id="modal_reporte">
-                <div class="cabecera_modal">
-                    <h2 class="titulo_modal">Generar Reporte</h2>
-                    <a type="button" class="cerrar_modal" onclick="cerrarModalReporte()">&times;</a>
-                </div>
-                <div class="contenido_modal">
-                    <form id="form_reporte" autocomplete="off">
-                        <div class="row">
-                            <div class="colum">
-                                <div class="caja_formulario">
-                                    <select class="formulario select2_reporte" id="rep_id_atleta" name="id_atleta">
-                                        <option value="" selected disabled>Selecciona una opción</option>
-                                    </select>
-                                    <label for="rep_id_atleta" class="titulo_formulario">Atleta</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="colum">
-                                <div class="caja_formulario">
-                                    <select class="formulario select2_reporte" id="rep_id_equipamiento" name="id_equipamiento">
-                                        <option value="" selected disabled>Selecciona una opción</option>
-                                    </select>
-                                    <label for="rep_id_equipamiento" class="titulo_formulario">Equipamiento</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="colum">
-                                <div class="caja_formulario">
-                                    <input type="date" class="formulario" id="rep_fecha_inicio" name="fecha_inicio">
-                                    <label for="rep_fecha_inicio" class="titulo_formulario">Fecha de Asignación</label>
-                                </div>
-                            </div>
-                            <div class="colum">
-                                <div class="caja_formulario">
-                                    <input type="date" class="formulario" id="rep_fecha_fin" name="fecha_fin">
-                                    <label for="rep_fecha_fin" class="titulo_formulario">Fecha Fin</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="colum" style="text-align: center; margin-top: 15px;">
-                                <label style="font-size: 13px; font-weight: bold; color: var(--texto-principal);">Incluir Asignaciones Anuladas</label><br>
-                                <input type="checkbox" id="rep_anulados" name="anulados" value="1" style="transform: scale(1.5); margin-top: 10px; cursor: pointer;">
-                            </div>
-                        </div>
-                        <div class="row" style="margin-top: 25px; display: flex; justify-content: center; gap: 10px;">
-                            <button type="button" class="btn btn_verde" id="btn_ejecutar_reporte">Generar Reporte</button>
-                            <button type="button" class="btn btn_gris" onclick="$('#form_reporte')[0].reset(); $('.select2_reporte').val(null).trigger('change');">Limpiar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </section>
 
     <script src="js/main.js"></script>
     <script src="js/asignaciones.js"></script>
