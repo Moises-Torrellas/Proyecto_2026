@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 21-06-2026 a las 06:32:19
+-- Tiempo de generación: 21-06-2026 a las 18:39:11
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -62,14 +62,21 @@ CREATE TABLE `asignaciones` (
 DROP TABLE IF EXISTS `atletas`;
 CREATE TABLE `atletas` (
   `codigo_atleta` int(11) NOT NULL,
-  `p_nombre` char(1) NOT NULL,
-  `s_nombre` char(1) DEFAULT NULL,
-  `p_apellidos` char(1) NOT NULL,
-  `s_apellidos` char(1) DEFAULT NULL,
+  `p_nombre` varchar(50) NOT NULL,
+  `s_nombre` varchar(50) DEFAULT NULL,
+  `p_apellidos` varchar(50) NOT NULL,
+  `s_apellidos` varchar(50) DEFAULT NULL,
   `genero` enum('H','M') NOT NULL,
-  `fecha_nac` datetime NOT NULL,
+  `fecha_nac` date NOT NULL,
   `foto` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `atletas`
+--
+
+INSERT INTO `atletas` (`codigo_atleta`, `p_nombre`, `s_nombre`, `p_apellidos`, `s_apellidos`, `genero`, `fecha_nac`, `foto`) VALUES
+(2, 'Moises', 'Jesus', 'Torrellas', '', 'H', '2002-07-25', 'atleta_2002-07-25_1782057957.png');
 
 -- --------------------------------------------------------
 
@@ -129,6 +136,19 @@ CREATE TABLE `categorias` (
   `edad_max` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `categorias`
+--
+
+INSERT INTO `categorias` (`codigo_categoria`, `nombre`, `edad_min`, `edad_max`) VALUES
+(1, 'U-6', 5, 6),
+(2, 'U-8', 7, 8),
+(3, 'U-10', 9, 10),
+(4, 'U-12', 11, 12),
+(5, 'U-14', 13, 14),
+(6, 'U-17', 15, 17),
+(7, 'SENIOR', 18, 50);
+
 -- --------------------------------------------------------
 
 --
@@ -170,6 +190,13 @@ CREATE TABLE `contacto_atleta` (
   `direccion` varchar(255) NOT NULL,
   `telefono` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `contacto_atleta`
+--
+
+INSERT INTO `contacto_atleta` (`codigo_atleta`, `direccion`, `telefono`) VALUES
+(2, 'El Tocuyo', '0412-0565231');
 
 -- --------------------------------------------------------
 
@@ -271,6 +298,13 @@ CREATE TABLE `identidad_atleta` (
   `numero_doc` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `identidad_atleta`
+--
+
+INSERT INTO `identidad_atleta` (`codigo_atleta`, `tipo_doc`, `numero_doc`) VALUES
+(2, 'V', '29506932');
+
 -- --------------------------------------------------------
 
 --
@@ -289,6 +323,15 @@ CREATE TABLE `inscripciones` (
   `fecha_inscripcion` date NOT NULL,
   `estatus` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `inscripciones`
+--
+
+INSERT INTO `inscripciones` (`codigo_inscripcion`, `codigo_atleta`, `codigo_categoria`, `codigo_posicion`, `dorsal`, `peso_kg`, `estatura_cm`, `fecha_inscripcion`, `estatus`) VALUES
+(2, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
+(3, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
+(4, 2, 7, 1, 12, 90, 185, '2026-06-21', 1);
 
 -- --------------------------------------------------------
 
@@ -384,11 +427,18 @@ CREATE TABLE `participaciones` (
 
 DROP TABLE IF EXISTS `posiciones`;
 CREATE TABLE `posiciones` (
-  `codigo_pasicion` int(11) NOT NULL,
+  `codigo_posicion` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
   `abreviatura` varchar(255) NOT NULL,
   `descripcion` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `posiciones`
+--
+
+INSERT INTO `posiciones` (`codigo_posicion`, `nombre`, `abreviatura`, `descripcion`) VALUES
+(1, 'Delantero', 'DC', '');
 
 -- --------------------------------------------------------
 
@@ -420,6 +470,13 @@ CREATE TABLE `representantes` (
   `tipo_doc` enum('V','E','P') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `representantes`
+--
+
+INSERT INTO `representantes` (`codigo_representante`, `cedula`, `telefono`, `direccion`, `nombre`, `apellido`, `tipo_doc`) VALUES
+(2, '13197214', '0232-1334423', 'El Tocuyo', 'Jessica', 'Colmenarez', 'V');
+
 -- --------------------------------------------------------
 
 --
@@ -433,6 +490,14 @@ CREATE TABLE `retiros` (
   `fecha_retiro` date NOT NULL,
   `motivo` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `retiros`
+--
+
+INSERT INTO `retiros` (`codigo_retiro`, `codigo_inscripcion`, `fecha_retiro`, `motivo`) VALUES
+(2, 2, '2026-06-21', 'viaje largo'),
+(3, 3, '2026-06-21', 'no le gusto el hockey');
 
 -- --------------------------------------------------------
 
@@ -467,6 +532,49 @@ CREATE TABLE `torneos` (
 -- --------------------------------------------------------
 
 --
+-- Estructura Stand-in para la vista `vista_atletas`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `vista_atletas`;
+CREATE TABLE `vista_atletas` (
+`id_atleta` int(11)
+,`nombres` varchar(101)
+,`apellidos` varchar(101)
+,`p_nombre` varchar(50)
+,`s_nombre` varchar(50)
+,`p_apellidos` varchar(50)
+,`s_apellidos` varchar(50)
+,`genero` enum('H','M')
+,`fecha_nac` date
+,`foto` varchar(255)
+,`doc_identidad` varchar(255)
+,`telefono` varchar(255)
+,`direccion` varchar(255)
+,`id_representante` int(11)
+,`nombre_rep` varchar(255)
+,`apellido_rep` varchar(255)
+,`cedula_rep` varchar(255)
+,`telefono_rep` varchar(255)
+,`direccion_rep` varchar(255)
+,`id_categoria` int(11)
+,`nombre_categoria` varchar(255)
+,`edad_min` int(11)
+,`edad_max` int(11)
+,`id_posicion` int(11)
+,`nombre_posicion` varchar(255)
+,`dorsal` int(11)
+,`peso_kg` decimal(10,0)
+,`estatura_cm` int(11)
+,`estatus` int(4)
+,`fecha_ingreso` date
+,`fecha_reingreso` date
+,`fecha_retiro` date
+,`motivo_retiro` varchar(255)
+);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `vueltos`
 --
 
@@ -480,6 +588,16 @@ CREATE TABLE `vueltos` (
   `fecha_vuelto` date NOT NULL,
   `referencia` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `vista_atletas`
+--
+DROP TABLE IF EXISTS `vista_atletas`;
+
+DROP VIEW IF EXISTS `vista_atletas`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_atletas`  AS SELECT `a`.`codigo_atleta` AS `id_atleta`, concat(`a`.`p_nombre`,if(`a`.`s_nombre` is not null and `a`.`s_nombre` <> '',concat(' ',`a`.`s_nombre`),'')) AS `nombres`, concat(`a`.`p_apellidos`,if(`a`.`s_apellidos` is not null and `a`.`s_apellidos` <> '',concat(' ',`a`.`s_apellidos`),'')) AS `apellidos`, `a`.`p_nombre` AS `p_nombre`, `a`.`s_nombre` AS `s_nombre`, `a`.`p_apellidos` AS `p_apellidos`, `a`.`s_apellidos` AS `s_apellidos`, `a`.`genero` AS `genero`, `a`.`fecha_nac` AS `fecha_nac`, `a`.`foto` AS `foto`, `ia`.`numero_doc` AS `doc_identidad`, `ca`.`telefono` AS `telefono`, `ca`.`direccion` AS `direccion`, `r`.`codigo_representante` AS `id_representante`, `r`.`nombre` AS `nombre_rep`, `r`.`apellido` AS `apellido_rep`, `r`.`cedula` AS `cedula_rep`, `r`.`telefono` AS `telefono_rep`, `r`.`direccion` AS `direccion_rep`, `i`.`codigo_categoria` AS `id_categoria`, `c`.`nombre` AS `nombre_categoria`, `c`.`edad_min` AS `edad_min`, `c`.`edad_max` AS `edad_max`, `i`.`codigo_posicion` AS `id_posicion`, `p`.`nombre` AS `nombre_posicion`, `i`.`dorsal` AS `dorsal`, `i`.`peso_kg` AS `peso_kg`, `i`.`estatura_cm` AS `estatura_cm`, ifnull(`i`.`estatus`,1) AS `estatus`, `primer_ingreso`.`fecha_inscripcion` AS `fecha_ingreso`, CASE WHEN `primer_ingreso`.`codigo_inscripcion` <> `i`.`codigo_inscripcion` THEN `i`.`fecha_inscripcion` ELSE NULL END AS `fecha_reingreso`, `ret`.`fecha_retiro` AS `fecha_retiro`, `ret`.`motivo` AS `motivo_retiro` FROM ((((((((((((`atletas` `a` left join `identidad_atleta` `ia` on(`a`.`codigo_atleta` = `ia`.`codigo_atleta`)) left join `contacto_atleta` `ca` on(`a`.`codigo_atleta` = `ca`.`codigo_atleta`)) left join `atleta_representante` `ar` on(`a`.`codigo_atleta` = `ar`.`codigo_atleta`)) left join `representantes` `r` on(`ar`.`codigo_representante` = `r`.`codigo_representante`)) left join (select `inscripciones`.`codigo_atleta` AS `codigo_atleta`,max(`inscripciones`.`codigo_inscripcion`) AS `max_id` from `inscripciones` group by `inscripciones`.`codigo_atleta`) `max_i` on(`a`.`codigo_atleta` = `max_i`.`codigo_atleta`)) left join `inscripciones` `i` on(`max_i`.`max_id` = `i`.`codigo_inscripcion`)) left join `categorias` `c` on(`i`.`codigo_categoria` = `c`.`codigo_categoria`)) left join `posiciones` `p` on(`i`.`codigo_posicion` = `p`.`codigo_posicion`)) left join (select `inscripciones`.`codigo_atleta` AS `codigo_atleta`,min(`inscripciones`.`codigo_inscripcion`) AS `min_id` from `inscripciones` group by `inscripciones`.`codigo_atleta`) `min_i` on(`a`.`codigo_atleta` = `min_i`.`codigo_atleta`)) left join `inscripciones` `primer_ingreso` on(`min_i`.`min_id` = `primer_ingreso`.`codigo_inscripcion`)) left join (select `ins`.`codigo_atleta` AS `codigo_atleta`,max(`r`.`codigo_inscripcion`) AS `ultima_inscripcion_retirada` from (`retiros` `r` join `inscripciones` `ins` on(`r`.`codigo_inscripcion` = `ins`.`codigo_inscripcion`)) group by `ins`.`codigo_atleta`) `ultimo_retiro_id` on(`a`.`codigo_atleta` = `ultimo_retiro_id`.`codigo_atleta`)) left join `retiros` `ret` on(`ultimo_retiro_id`.`ultima_inscripcion_retirada` = `ret`.`codigo_inscripcion`)) ;
 
 --
 -- Índices para tablas volcadas
@@ -663,7 +781,7 @@ ALTER TABLE `participaciones`
 -- Indices de la tabla `posiciones`
 --
 ALTER TABLE `posiciones`
-  ADD PRIMARY KEY (`codigo_pasicion`);
+  ADD PRIMARY KEY (`codigo_posicion`);
 
 --
 -- Indices de la tabla `premios`
@@ -726,13 +844,13 @@ ALTER TABLE `asignaciones`
 -- AUTO_INCREMENT de la tabla `atletas`
 --
 ALTER TABLE `atletas`
-  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `atleta_representante`
 --
 ALTER TABLE `atleta_representante`
-  MODIFY `codigo_at_re` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_at_re` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `cargos`
@@ -750,7 +868,7 @@ ALTER TABLE `catalogo`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `codigo_categoria` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `categoria_catalogo`
@@ -768,7 +886,7 @@ ALTER TABLE `conceptos`
 -- AUTO_INCREMENT de la tabla `contacto_atleta`
 --
 ALTER TABLE `contacto_atleta`
-  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_equipos`
@@ -810,13 +928,13 @@ ALTER TABLE `estado_fisico`
 -- AUTO_INCREMENT de la tabla `identidad_atleta`
 --
 ALTER TABLE `identidad_atleta`
-  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `inscripciones`
 --
 ALTER TABLE `inscripciones`
-  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `metodos_pago`
@@ -858,7 +976,7 @@ ALTER TABLE `participaciones`
 -- AUTO_INCREMENT de la tabla `posiciones`
 --
 ALTER TABLE `posiciones`
-  MODIFY `codigo_pasicion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_posicion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `premios`
@@ -870,13 +988,13 @@ ALTER TABLE `premios`
 -- AUTO_INCREMENT de la tabla `representantes`
 --
 ALTER TABLE `representantes`
-  MODIFY `codigo_representante` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `retiros`
 --
 ALTER TABLE `retiros`
-  MODIFY `codigo_retiro` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_retiro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `tasa_cambios`
@@ -980,7 +1098,7 @@ ALTER TABLE `identidad_atleta`
 ALTER TABLE `inscripciones`
   ADD CONSTRAINT `inscripciones_ibfk_1` FOREIGN KEY (`codigo_atleta`) REFERENCES `atletas` (`codigo_atleta`),
   ADD CONSTRAINT `inscripciones_ibfk_2` FOREIGN KEY (`codigo_categoria`) REFERENCES `categorias` (`codigo_categoria`),
-  ADD CONSTRAINT `inscripciones_ibfk_3` FOREIGN KEY (`codigo_posicion`) REFERENCES `posiciones` (`codigo_pasicion`);
+  ADD CONSTRAINT `inscripciones_ibfk_3` FOREIGN KEY (`codigo_posicion`) REFERENCES `posiciones` (`codigo_posicion`);
 
 --
 -- Filtros para la tabla `pagos`
