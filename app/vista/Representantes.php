@@ -15,7 +15,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Cedula</small>
-                            <span><?= $dato['nacionalidad'] ?> <?= $dato['cedula'] ?></span>
+                            <span><?= $dato['tipo_doc'] ?> <?= $dato['cedula'] ?></span>
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Telefono</small>
@@ -30,10 +30,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
                             <?php if ($permisos['modificar']) : ?>
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_representante'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_representante'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                             <?php endif; ?>
                             <?php if ($permisos['eliminar']) : ?>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_representante'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_representante'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -94,7 +94,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Cedula</small>
-                                                    <span><?= $dato['nacionalidad'] ?> <?= $dato['cedula'] ?></span>
+                                                    <span><?= $dato['tipo_doc'] ?> <?= $dato['cedula'] ?></span>
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Telefono</small>
@@ -109,10 +109,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
                                                     <?php if ($permisos['modificar']) : ?>
-                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_representante'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_representante'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                                     <?php endif; ?>
                                                     <?php if ($permisos['eliminar']) : ?>
-                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_representante'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_representante'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>

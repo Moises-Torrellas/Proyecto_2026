@@ -5,7 +5,7 @@ define('_DB_HOST_SG_', 'localhost');
 define('_DB_USER_SG_', 'root');
 define('_DB_PASS_SG_', '');
 
-define('_DB_NAME_', 'cannibalsbd');
+define('_DB_NAME_', 'cannibalsbd2');
 define('_DB_HOST_', 'localhost');
 define('_DB_USER_', 'root');
 define('_DB_PASS_', '');
@@ -16,7 +16,11 @@ setlocale(LC_CTYPE, 'es_ES.UTF-8');
 
 //define('_URL_', '/Proyecto_2026/public/');
 
-define('_TEMA_', $_COOKIE['tema_preferido'] ?? 'claro');
+$tema_recibido = $_COOKIE['tema_preferido'] ?? 'claro';
+
+$tema_seguro = ($tema_recibido === 'oscuro') ? 'oscuro' : 'claro';
+
+define('_TEMA_', $tema_seguro);
 
 
 const _MD_USUARIOS_ = 1;

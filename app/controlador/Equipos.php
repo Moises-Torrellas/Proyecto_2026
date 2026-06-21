@@ -187,8 +187,6 @@ function consultar($obj, $permisos): void
     $respuesta = $obj->Consultar($filtro);
     $registro = $respuesta['datos'] ?? [];
 
-    // Cargar atletas asignados por cada equipo para que funcione el detalle_expandido_container
-    // (detalle_expandido_container muestra $dato['atletas']).
     foreach ($registro as &$equipo) {
         $idEquipo = isset($equipo['id_equipos']) ? (int)$equipo['id_equipos'] : 0;
         if ($idEquipo > 0) {

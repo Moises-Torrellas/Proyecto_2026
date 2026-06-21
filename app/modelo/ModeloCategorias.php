@@ -17,10 +17,10 @@ class ModeloCategorias extends Conexion
         parent::__construct();
         // Definimos el diccionario de campos para las validaciones del ModeloBase
         $this->campoWhitelist = [
-            'id' => 'id_categorias',
+            'id' => 'codigo_categoria',
             'nombre' => 'nombre'
         ];
-        $this->llavePrimaria = 'id_categorias';
+        $this->llavePrimaria = 'codigo_categoria';
     }
 
     public function ProcesarDatos(array $datos): array
@@ -73,7 +73,7 @@ class ModeloCategorias extends Conexion
             }
 
             // 4. Orden (Asegúrate de usar una columna que exista, como id_categorias)
-            $sentencia .= " ORDER BY id_categorias ASC";
+            $sentencia .= " ORDER BY codigo_categoria ASC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -82,7 +82,7 @@ class ModeloCategorias extends Conexion
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Categorias', $e->getMessage(), 'Modelo_Consultar');
-            return array('accion' => 'error');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
@@ -130,7 +130,7 @@ class ModeloCategorias extends Conexion
             nombre = :nombre, 
             edad_min = :edad_min, 
             edad_max = :edad_max 
-            WHERE id_categorias = :id_categorias";
+            WHERE codigo_categoria = :id_categorias";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
@@ -152,7 +152,7 @@ class ModeloCategorias extends Conexion
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM categorias WHERE id_categorias = :id";
+            $sentencia = "SELECT * FROM categorias WHERE codigo_categoria = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
@@ -180,7 +180,7 @@ class ModeloCategorias extends Conexion
                 throw new Exception('No se puede eliminar: la categoría tiene atletas asociados.');
             }
 
-            $sentencia = "DELETE FROM categorias WHERE id_categorias = :id";
+            $sentencia = "DELETE FROM categorias WHERE codigo_categoria = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();

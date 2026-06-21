@@ -5,7 +5,17 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php?pagina=$1 [QSA,L]
+
 <IfModule mod_headers.c>
+    # Previene el Clickjacking
+    Header always append X-Frame-Options "SAMEORIGIN"
+
+    # Previene MIME-sniffing
     Header set X-Content-Type-Options "nosniff"
+
+    # HSTS (COMENTADO PARA DESARROLLO LOCAL SIN SSL)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Content-Security-Policy (CSP) ajustada para plantillas dinámicas y librerías
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
 </IfModule>
-ServerSignature Off

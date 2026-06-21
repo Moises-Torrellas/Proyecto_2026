@@ -41,7 +41,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="listado_col_datos">
                         <div class="listado_dato_grupo">
                             <small>Doc de Identidad</small>
-                            <span><?= htmlspecialchars($dato['doc_identidad']) ?></span>
+                            <span><?= htmlspecialchars(!empty($dato['doc_identidad']) ? $dato['doc_identidad'] : 'R-' . ($dato['cedula_rep'] ?? '')) ?></span>
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Edad (Año Cal.)</small>
@@ -73,6 +73,11 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <?php if ($dato['estatus'] == 1 && $permisos['eliminar']) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Retirar">
                                     <i class="fi fi-sr-cross-circle"></i>
+                                </button>
+                            <?php endif; ?>
+                            <?php if ($dato['estatus'] == 2 && $permisos['modificar']) : ?>
+                                <button id="cbt_re" class="btn_t cbt_m" onclick="buscarReinscribir(<?= $dato['id_atleta'] ?>)" data-tippy-content="Re-Inscribir">
+                                    <i class="fi fi-sr-rotate-right"></i>
                                 </button>
                             <?php endif; ?>
                             <?php if ($permisos['reporte']) : ?>
@@ -125,25 +130,68 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Dirección</label>
-                                    <span><?= htmlspecialchars($dato['direccion']) ?></span>
+                                    <span><?= htmlspecialchars(!empty($dato['direccion']) ? $dato['direccion'] : ($dato['direccion_rep'] ?? '')) ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card">
                                 <div class="detalle_card_icon"><i data-lucide="phone"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Teléfono</label>
-                                    <span><?= htmlspecialchars($dato['telefono']) ?></span>
+                                    <span><?= htmlspecialchars(!empty($dato['telefono']) ? $dato['telefono'] : ($dato['telefono_rep'] ?? '')) ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card">
                                 <div class="detalle_card_icon"><i data-lucide="calendar-1"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Fecha de Nacimiento</label>
-                                    <span><?= htmlspecialchars($dato['fecha_nac']) ?></span>
+                                    <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_nac']))) ?></span>
                                 </div>
                             </div>
                         </div>
-
+                        <div class="detalle_fila">
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="ruler"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Físico</label>
+                                    <span><?= htmlspecialchars($dato['peso_kg'] ?? '0') ?> kg / <?= htmlspecialchars($dato['estatura_cm'] ?? '0') ?> cm</span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="shirt"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Dorsal</label>
+                                    <span><?= htmlspecialchars($dato['dorsal'] ?? 'N/A') ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="calendar-plus"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Fecha de Ingreso</label>
+                                    <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_ingreso']))) ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detalle_fila">
+                            <?php if (!empty($dato['fecha_retiro'])) : ?>
+                                <div class="detalle_card">
+                                    <div class="detalle_card_icon" style="color:#ef4444;"><i data-lucide="calendar-minus"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Fecha de Retiro</label>
+                                        <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_retiro']))) ?></span>
+                                        <small style="color:#ef4444;">Motivo: <?= htmlspecialchars($dato['motivo_retiro'] ?? 'No especificado') ?></small>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($dato['fecha_reingreso'])) : ?>
+                                <div class="detalle_card">
+                                    <div class="detalle_card_icon" style="color:#22c55e;"><i data-lucide="calendar-sync"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Fecha de Re-Ingreso</label>
+                                        <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_reingreso']))) ?></span>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -197,12 +245,9 @@ endif;
                                 <?php else :
                                 $anioActual = date('Y');
                                 foreach ($registro as $dato) :
-                                    // Cálculos y transformaciones de datos del Atleta
                                     $anioNacimiento = date('Y', strtotime($dato['fecha_nac']));
                                     $edadCalendario = $anioActual - $anioNacimiento;
                                     $genero = ($dato['genero'] === 'H') ? 'Hombre' : 'Mujer';
-
-                                    // Validación del rango de edad para la categoría
                                     $edadMin = $dato['edad_min'] ?? 0;
                                     $edadMax = $dato['edad_max'] ?? 99;
                                     $fueraDeRango = ($edadCalendario < $edadMin || $edadCalendario > $edadMax);
@@ -211,7 +256,6 @@ endif;
                                     $foto = $dato['foto'] ?? '';
 
                                     if ($fueraDeRango) {
-                                        // Icono de alerta amarillo si no cumple con la edad de la categoría
                                         $fotoHTML = '<div class="listado_avatar_null" style="color: #eab308;" data-tippy-content="Edad fuera del rango de la categoría"><i class="icon_con" data-lucide="circle-alert"></i></div>';
                                     } else {
                                         // Comportamiento normal si está en rango
@@ -235,7 +279,7 @@ endif;
                                             <div class="listado_col_datos">
                                                 <div class="listado_dato_grupo">
                                                     <small>Doc de Identidad</small>
-                                                    <span><?= htmlspecialchars($dato['doc_identidad']) ?></span>
+                                                    <span><?= htmlspecialchars(!empty($dato['doc_identidad']) ? $dato['doc_identidad'] : 'R-' . ($dato['cedula_rep'] ?? '')) ?></span>
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Edad (Año Cal.)</small>
@@ -267,6 +311,11 @@ endif;
                                                     <?php if ($dato['estatus'] == 1 && $permisos['eliminar']) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Retirar">
                                                             <i class="fi fi-sr-cross-circle"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                    <?php if ($dato['estatus'] == 2 && $permisos['modificar']) : ?>
+                                                        <button id="cbt_re" class="btn_t cbt_m" onclick="buscarReinscribir(<?= $dato['id_atleta'] ?>)" data-tippy-content="Re-Inscribir">
+                                                            <i class="fi fi-sr-rotate-right"></i>
                                                         </button>
                                                     <?php endif; ?>
                                                     <?php if ($permisos['reporte']) : ?>
@@ -319,25 +368,68 @@ endif;
                                                         <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
                                                         <div class="detalle_card_txt">
                                                             <label>Dirección</label>
-                                                            <span><?= htmlspecialchars($dato['direccion']) ?></span>
+                                                            <span><?= htmlspecialchars(!empty($dato['direccion']) ? $dato['direccion'] : ($dato['direccion_rep'] ?? '')) ?></span>
                                                         </div>
                                                     </div>
                                                     <div class="detalle_card">
                                                         <div class="detalle_card_icon"><i data-lucide="phone"></i></div>
                                                         <div class="detalle_card_txt">
                                                             <label>Teléfono</label>
-                                                            <span><?= htmlspecialchars($dato['telefono']) ?></span>
+                                                            <span><?= htmlspecialchars(!empty($dato['telefono']) ? $dato['telefono'] : ($dato['telefono_rep'] ?? '')) ?></span>
                                                         </div>
                                                     </div>
                                                     <div class="detalle_card">
                                                         <div class="detalle_card_icon"><i data-lucide="calendar-1"></i></div>
                                                         <div class="detalle_card_txt">
                                                             <label>Fecha de Nacimiento</label>
-                                                            <span><?= htmlspecialchars($dato['fecha_nac']) ?></span>
+                                                            <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_nac']))) ?></span>
                                                         </div>
                                                     </div>
                                                 </div>
-
+                                                <div class="detalle_fila">
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="ruler"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Físico</label>
+                                                            <span><?= htmlspecialchars($dato['peso_kg'] ?? '0') ?> kg / <?= htmlspecialchars($dato['estatura_cm'] ?? '0') ?> cm</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="shirt"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Dorsal</label>
+                                                            <span><?= htmlspecialchars($dato['dorsal'] ?? 'N/A') ?></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="calendar-plus"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Fecha de Ingreso</label>
+                                                            <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_ingreso']))) ?></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="detalle_fila">
+                                                    <?php if (!empty($dato['fecha_retiro'])) : ?>
+                                                        <div class="detalle_card">
+                                                            <div class="detalle_card_icon" style="color:#ef4444;"><i data-lucide="calendar-minus"></i></div>
+                                                            <div class="detalle_card_txt">
+                                                                <label>Fecha de Retiro</label>
+                                                                <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_retiro']))) ?></span>
+                                                                <small style="color:#ef4444;">Motivo: <?= htmlspecialchars($dato['motivo_retiro'] ?? 'No especificado') ?></small>
+                                                            </div>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($dato['fecha_reingreso'])) : ?>
+                                                        <div class="detalle_card">
+                                                            <div class="detalle_card_icon" style="color:#22c55e;"><i data-lucide="calendar-sync"></i></div>
+                                                            <div class="detalle_card_txt">
+                                                                <label>Fecha de Re-Ingreso</label>
+                                                                <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_reingreso']))) ?></span>
+                                                            </div>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -468,6 +560,31 @@ endif;
                                 <input type="text" class="formulario" id="direccion" name="direccion">
                                 <label for="direccion" class="titulo_formulario">Direccion</label>
                                 <span class="mensaje" id="direccion_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="number" class="formulario" id="dorsal" name="dorsal">
+                                <label for="dorsal" class="titulo_formulario">Dorsal</label>
+                                <span class="mensaje" id="dorsal_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="number" class="formulario" step="0.01" id="peso" name="peso">
+                                <label for="peso" class="titulo_formulario">Peso (kg)</label>
+                                <span class="mensaje" id="peso_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="number" class="formulario" id="estatura" name="estatura">
+                                <label for="estatura" class="titulo_formulario">Estatura (cm)</label>
+                                <span class="mensaje" id="estatura_spam"></span>
                             </div>
                         </div>
                     </div>

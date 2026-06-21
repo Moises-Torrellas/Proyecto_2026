@@ -164,7 +164,7 @@ function modificar(datos) {
     $("#proceso").text("Modificar Posición");
     $("#titulo_modal").text("Modificar Posición");
     $('#descripcion').closest('.colum').show();
-    $('#id').val(datos[0].id_posicion);
+    $('#id').val(datos[0].codigo_posicion);
     $('#nombre').val(datos[0].nombre);
     $('#abreviatura').val(datos[0].abreviatura);
     $('#descripcion').val(datos[0].descripcion);

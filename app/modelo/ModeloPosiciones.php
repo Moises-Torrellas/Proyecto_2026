@@ -16,9 +16,9 @@ class ModeloPosiciones extends Conexion
         $this->campoWhitelist = [
             'nombre' => 'nombre',
             'abreviatura' => 'abreviatura',
-            'id' => 'id_posicion'
+            'id' => 'codigo_posicion'
         ];
-        $this->llavePrimaria = 'id_posicion';
+        $this->llavePrimaria = 'codigo_posicion';
     }
     public function ProcesarDatos(array $datos): array
     {
@@ -75,7 +75,7 @@ class ModeloPosiciones extends Conexion
             }
 
             // 4. ORDENAMIENTO
-            $sentencia .= " ORDER BY id_posicion ASC";
+            $sentencia .= " ORDER BY codigo_posicion ASC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -95,7 +95,7 @@ class ModeloPosiciones extends Conexion
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM posiciones WHERE id_posicion = :id";
+            $sentencia = "SELECT * FROM posiciones WHERE codigo_posicion = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
@@ -144,7 +144,7 @@ class ModeloPosiciones extends Conexion
                 return array('accion' => 'error', 'mensaje' => 'La posicion tiene atletas asociados.');
             }
             $conex = $this->conex();
-            $sentencia = "DELETE FROM posiciones WHERE id_posicion = :id";
+            $sentencia = "DELETE FROM posiciones WHERE codigo_posicion = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
@@ -172,7 +172,7 @@ class ModeloPosiciones extends Conexion
             }
 
             $conex = $this->conex();
-            $sentencia = "UPDATE posiciones SET nombre = :n, abreviatura = :a, descripcion = :d WHERE id_posicion = :id";
+            $sentencia = "UPDATE posiciones SET nombre = :n, abreviatura = :a, descripcion = :d WHERE codigo_posicion = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':n', $this->nombre);
             $stmt->bindParam(':a', $this->abreviatura);

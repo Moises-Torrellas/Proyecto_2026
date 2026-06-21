@@ -1,45 +1,77 @@
-<?php
-// Defaults para evitar warnings si la vista se renderiza sin permisos.
-if (!isset($permisos) || !is_array($permisos)) {
-    $permisos = [];
-}
-
-
-if (isset($solo_lista) && $solo_lista === true) :
+<?php if (isset($solo_lista) && $solo_lista === true) :
     if (empty($registro)) : ?>
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-    <?php else :
+        <?php else :
         foreach ($registro as $dato) : ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
                     <div class="listado_col_datos">
                         <div class="listado_dato_grupo">
-                            <small>Nombre de equipo</small>
+                            <small>Nombre de Equipos</small>
                             <span><?= $dato['nombre'] ?></span>
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Categoria</small>
                             <span><?= $dato['categoria'] ?></span>
                         </div>
+
                     </div>
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <?php if (($permisos['modificar'] ?? false)) : ?>
+                            <?php if (($permisos['modificar'] ?? false)) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_equipos'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <?php endif; ?>
-                                <?php if (($permisos['eliminar'] ?? false)) : ?>
+                            <?php endif; ?>
+                            <?php if (($permisos['eliminar'] ?? false)) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_equipos'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+                        <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                    </div>
+                </div>
+                <div class="listado_detalle_oculto" style="display:none;">
+                    <div class="detalle_expandido_container" style="padding: 15px;">
+                        <div class="lista_sub_items">
+                            <?php
+                            $atletasEquipo = $dato['atletas'] ?? [];
+                            if (empty($atletasEquipo)) :
+                            ?>
+                                <div class="sub_item_fila" style="justify-content: center; opacity: 0.6;">
+                                    <div class="sub_item_info" style="align-items: center;">
+                                        <span class="sub_item_titulo">No hay atletas asignados</span>
+                                    </div>
+                                </div>
+                            <?php else : ?>
+                                <?php foreach ($atletasEquipo as $atleta) : ?>
+                                    <div class="sub_item_fila">
+                                        <div class="sub_item_info">
+                                            <span class="sub_item_titulo"><?= htmlspecialchars($atleta['nombre'] ?? '') ?></span>
+                                            <div class="sub_item_fechas">
+                                                <span>C.I: <?= htmlspecialchars($atleta['doc_i'] ?? '') ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="sub_item_bloque_metricas_horizontal" style="display: flex; flex-direction: row; gap: 15px; align-items: center; flex-wrap: nowrap; justify-content: flex-end;">
+                                            <div class="metrica_item">
+                                                Posición:
+                                                <strong><?= htmlspecialchars($atleta['posicion'] ?? '') ?></strong>
+                                            </div>
+                                            <div class="metrica_item">
+                                                Categoría:
+                                                <strong><?= htmlspecialchars($atleta['categoria'] ?? '') ?></strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
         <?php endforeach; ?>
     <?php endif;
-        exit(); ?>
+    exit(); ?>
 <?php endif; ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -81,7 +113,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                            <?php else :
+                                <?php else :
                                 foreach ($registro as $dato) : ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
@@ -99,12 +131,12 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                        <?php if (($permisos['modificar'] ?? false)) : ?>
+                                                    <?php if (($permisos['modificar'] ?? false)) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_equipos'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                                        <?php endif; ?>
-                                                        <?php if (($permisos['eliminar'] ?? false)) : ?>
+                                                    <?php endif; ?>
+                                                    <?php if (($permisos['eliminar'] ?? false)) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_equipos'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                                        <?php endif; ?>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                                             </div>

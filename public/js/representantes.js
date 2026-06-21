@@ -218,7 +218,7 @@ function modificar(datos) {
     $('#telefono').closest('.colum').show();
     $('#apellido').closest('.colum').show();
     $('#nombre').closest('.colum').show();
-    $('#id').val(datos[0].id_representante);
+    $('#id').val(datos[0].codigo_representante);
     $('#cedula').val(datos[0].cedula);
     $('#nombre').val(datos[0].nombre);
     $('#apellido').val(datos[0].apellido);

@@ -20,15 +20,13 @@
                             <h2 class="titulo_pagina" id="titulo">Mantenimiento BD</h2>
                         </div>
                         <div class="botones">
-                            <button class="btn btn_azul" id="btn_generar">
-                                <i class="fi fi-sr-disk"></i> Crear Punto de Restauración
-                            </button>
+                            <button class="btn btn_azul" id="btn_generar"> Crear Punto de Restauración</button>
                         </div>
                     </div>
                     
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

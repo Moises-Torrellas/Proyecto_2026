@@ -132,37 +132,29 @@ $(document).ready(function () {
 
     let body = $('body');
     let circle = $('#circle-transition');
-    $('#modo_oscuro').on('click', function () {
 
+    $('#modo_oscuro').on('click', function () {
         let esOscuro = body.attr('data-tema') === 'oscuro';
 
         if (!esOscuro) {
-            // Expandir círculo con color oscuro
-            /*  circle.css('background-color', '#1f2a36'); // fondo oscuro de tu tema
-             circle.css('clip-path', 'circle(150% at 50% 50%)'); */
-
             setTimeout(() => {
                 // Cambiar tema a oscuro
                 body.attr('data-tema', 'oscuro');
                 $('#modo_oscuro').find('svg').remove();
-                // 2. Metemos la etiqueta <i> de Lucide al principio del botón
                 $('#modo_oscuro').prepend('<i class="opciones_i" data-lucide="sun"></i> ');
-                // 3. Le decimos a Lucide que dibuje el icono
                 lucide.createIcons({
                     root: document.getElementById('modo_oscuro')
                 });
-                // Contraer círculo
-                /* circle.css('clip-path', 'circle(0% at 50% 50%)'); */
+
                 const tema = 'oscuro';
                 let fecha = new Date();
                 fecha.setTime(fecha.getTime() + (30 * 24 * 60 * 60 * 1000));
-                document.cookie = "tema_preferido=" + tema + ";expires=" + fecha.toUTCString() + ";path=/";
-            }, 400); // espera transición clip-path
-        } else {
-            // Expandir círculo con color claro
-            /* circle.css('background-color', '#f2f3f5'); // fondo claro de tu tema
-            circle.css('clip-path', 'circle(150% at 50% 50%)'); */
 
+                // CORRECCIÓN DE SEGURIDAD AQUÍ: Agregamos SameSite
+                // Nota: Cuando migres a Linux con HTTPS, cambia el final a: ";path=/;SameSite=Lax;Secure";
+                document.cookie = "tema_preferido=" + tema + ";expires=" + fecha.toUTCString() + ";path=/;SameSite=Lax";
+            }, 400);
+        } else {
             setTimeout(() => {
                 // Cambiar tema a claro
                 body.attr('data-tema', 'claro');
@@ -171,13 +163,13 @@ $(document).ready(function () {
                 lucide.createIcons({
                     root: document.getElementById('modo_oscuro')
                 });
-                // Contraer círculo
-                /* circle.css('clip-path', 'circle(0% at 50% 50%)'); */
 
                 const tema = 'claro';
                 let fecha = new Date();
                 fecha.setTime(fecha.getTime() + (30 * 24 * 60 * 60 * 1000));
-                document.cookie = "tema_preferido=" + tema + ";expires=" + fecha.toUTCString() + ";path=/";
+
+                // CORRECCIÓN DE SEGURIDAD AQUÍ
+                document.cookie = "tema_preferido=" + tema + ";expires=" + fecha.toUTCString() + ";path=/;SameSite=Lax";
             }, 400);
         }
     });
@@ -509,9 +501,9 @@ function confirmarAnulacion(titulo, callback) {
         icon: "warning",
         title: titulo,
         input: "text",
-        inputPlaceholder: "Escribe el motivo de la anulación aquí...",
+        inputPlaceholder: "Escribe el motivo aquí...",
         showCancelButton: true,
-        confirmButtonText: "SI, ANULAR",
+        confirmButtonText: "SI",
         confirmButtonColor: "#00a200",
         cancelButtonText: "NO",
         cancelButtonColor: "#d30000",

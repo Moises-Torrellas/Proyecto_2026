@@ -78,6 +78,19 @@ $(document).ready(function () {
                 });
             }
         }
+        else if (accion == "reinscribir") {
+            if (validarEnvio(accion)) {
+                confirmar('¿Está seguro que quiere re-inscribir a este atleta?', function (confirmado) {
+                    if (confirmado) {
+                        var datos = new FormData($('#f')[0]);
+                        var fotoActual = $("#proceso").data("foto_actual");
+                        datos.append('foto_actual', fotoActual);
+                        datos.append('accion', 'reinscribir');
+                        enviaAjax(datos);
+                    }
+                });
+            }
+        }
         else if (accion == "generar") {
             confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
                 if (confirmado) {
@@ -130,6 +143,9 @@ $(document).ready(function () {
         $('#representante').val(null).trigger('change');
         $('#posicion').val(null).trigger('change');
         $('#categoria').val(null).trigger('change');
+        $('#dorsal').val('');
+        $('#peso').val('');
+        $('#estatura').val('');
         abrirModal();
     });
 
@@ -363,12 +379,18 @@ function buscar(id) {
     datos.append('id', id);
     enviaAjax(datos);
 }
+function buscarReinscribir(id) {
+    window.esReinscripcion = true;
+    buscar(id);
+}
+
 function eliminar(id) {
-    confirmar('¿Está seguro que quiere retirar este atleta del club?', function (confirmado) {
-        if (confirmado) {
+    confirmarAnulacion('¿Está seguro que quiere retirar este atleta del club?', function (motivo) {
+        if (motivo !== false) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
             datos.append('id', id);
+            datos.append('motivo_retiro', motivo);
             enviaAjax(datos);
         }
     });
@@ -386,9 +408,16 @@ function GenerarCurriculum(id) {
 }
 function modificar(datos) {
     limpia();
-    $("#proceso").data("accion", "modificar");
-    $("#proceso").text("Modificar Atleta");
-    $("#titulo_modal").text("Modificar Atleta");
+    if (window.esReinscripcion) {
+        $("#proceso").data("accion", "reinscribir");
+        $("#proceso").text("Re-inscribir Atleta");
+        $("#titulo_modal").text("Re-inscribir Atleta");
+        window.esReinscripcion = false;
+    } else {
+        $("#proceso").data("accion", "modificar");
+        $("#proceso").text("Modificar Atleta");
+        $("#titulo_modal").text("Modificar Atleta");
+    }
     $('#fecha_nac').closest('.colum').show();
     $('#representante').closest('.colum').show();
     $('#telefono').closest('.colum').show();
@@ -409,6 +438,9 @@ function modificar(datos) {
     $('#representante').val(datos[0].id_representante).trigger('change');
     $('#posicion').val(datos[0].id_posicion).trigger('change');
     $('#categoria').val(datos[0].id_categoria).trigger('change');
+    $('#dorsal').val(datos[0].dorsal);
+    $('#peso').val(datos[0].peso_kg);
+    $('#estatura').val(datos[0].estatura_cm);
     $("#proceso").data("foto_actual", datos[0].foto);
     const rutaCarpeta = "img/atletas/";
     const nombreFoto = datos[0].foto ? datos[0].foto : "default.png";
@@ -521,9 +553,9 @@ function enviaAjax(datos) {
                 var lee = JSON.parse(respuesta);
 
                 if (lee.accion == "MultiConsulta") {
-                    construirSelect('representante', lee.representantes, 'id_representante', 'nombre', 'apellido', 'cedula');
-                    construirSelect('posicion', lee.posiciones, 'id_posicion', 'nombre', 'abreviatura');
-                    construirSelect('categoria', lee.categorias, 'id_categorias', 'nombre', 'edad_min', 'edad_max');
+                    construirSelect('representante', lee.representantes, 'codigo_representante', 'nombre', 'apellido', 'cedula');
+                    construirSelect('posicion', lee.posiciones, 'codigo_posicion', 'nombre', 'abreviatura');
+                    construirSelect('categoria', lee.categorias, 'codigo_categoria', 'nombre', 'edad_min', 'edad_max');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
@@ -531,11 +563,11 @@ function enviaAjax(datos) {
                 } else if (lee.accion == "eliminar") {
                     consultar();
                     muestraMensaje("success", 2000, "Retiro Exitoso", lee.mensaje);
-                } else if (lee.accion == "modificar") {
+                } else if (lee.accion == "modificar" || lee.accion == "reinscribir") {
                     consultar();
                     limpia();
                     cerrarModal();
-                    muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
+                    muestraMensaje("success", 2000, "Operación Exitosa", lee.mensaje);
                 }
                 else if (lee.accion == "reporte") {
                     // 1. Cerramos la alerta de espera de inmediato

@@ -78,6 +78,9 @@ if (comprobarAjax() && !empty($_POST)) {
                     'posicion' => $_POST['posicion'],
                     'categoria' => $_POST['categoria'],
                     'genero' => $_POST['genero'],
+                    'dorsal' => $_POST['dorsal'] ?? 0,
+                    'peso' => $_POST['peso'] ?? 0,
+                    'estatura' => $_POST['estatura'] ?? 0,
                 ];
 
                 if (isset($_POST['representante'])) {
@@ -159,6 +162,9 @@ if (comprobarAjax() && !empty($_POST)) {
                     'posicion' => $_POST['posicion'],
                     'categoria' => $_POST['categoria'],
                     'genero' => $_POST['genero'],
+                    'dorsal' => $_POST['dorsal'] ?? 0,
+                    'peso' => $_POST['peso'] ?? 0,
+                    'estatura' => $_POST['estatura'] ?? 0,
                     'foto_actual' => $_POST['foto_actual']
                 ];
 
@@ -209,6 +215,7 @@ if (comprobarAjax() && !empty($_POST)) {
 
                 $datos = [
                     'id' => $_POST['id'],
+                    'motivo_retiro' => $_POST['motivo_retiro'] ?? 'Retiro voluntario',
                     'accion' => 'eliminar'
                 ];
 
@@ -223,6 +230,29 @@ if (comprobarAjax() && !empty($_POST)) {
                         DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                         default          => 'Ocurrió un error inesperado en el retiro.'
                     };
+                }
+                echo json_encode($resultado);
+                break;
+            case 'reinscribir':
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para re-inscribir Atletas.');
+                validar_requeridos(['id', 'posicion', 'categoria']);
+
+                $datos = [
+                    'id' => $_POST['id'],
+                    'posicion' => $_POST['posicion'],
+                    'categoria' => $_POST['categoria'],
+                    'dorsal' => $_POST['dorsal'] ?? 0,
+                    'peso' => $_POST['peso'] ?? 0,
+                    'estatura' => $_POST['estatura'] ?? 0,
+                    'accion' => 'reinscribir'
+                ];
+
+                $resultado = $obj->ProcesarDatos($datos);
+                if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+                    registrarBitacora($bitacora, $id_modulo, "Re-inscribió al Atleta: " . $datos['id']);
+                    $resultado = array('accion' => 'reinscribir', 'mensaje' => 'Atleta re-inscrito exitosamente.');
+                } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+                    $resultado['mensaje'] = 'Ocurrió un error inesperado al re-inscribir al atleta.';
                 }
                 echo json_encode($resultado);
                 break;

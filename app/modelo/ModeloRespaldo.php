@@ -2,11 +2,10 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 use PDO;
 
-class ModeloRespaldo extends ModeloBase
+class ModeloRespaldo extends Conexion
 {
     private $mysqlPath;
     private $dbName = 'cannibalsbd';

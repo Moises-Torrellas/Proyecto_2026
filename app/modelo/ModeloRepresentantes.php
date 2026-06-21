@@ -21,10 +21,10 @@ class ModeloRepresentantes extends ModeloBase
         $this->campoWhitelist = [
             'cedula' => 'cedula',
             'telefono' => 'telefono',
-            'id' => 'id_representante'
+            'id' => 'codigo_representante'
         ];
 
-        $this->llavePrimaria = 'id_representante';
+        $this->llavePrimaria = 'codigo_representante';
     }
     private function ValidarExpresiones(array $datos): void
     {
@@ -116,7 +116,7 @@ class ModeloRepresentantes extends ModeloBase
             }
 
 
-            $sentencia .= " ORDER BY id_representante ASC";
+            $sentencia .= " ORDER BY codigo_representante ASC";
 
             $stmt = $conex->prepare($sentencia);
 
@@ -147,7 +147,7 @@ class ModeloRepresentantes extends ModeloBase
                 throw new Exception(DUPLICATE_PHONE);
             }
 
-            $sentencia = "INSERT INTO representantes (`cedula`, `nacionalidad`, `nombre`, `apellido`, `telefono`, `direccion`) VALUES (:cedula, :nacionalidad,:nombre, :apellido,:telefono, :direccion)";
+            $sentencia = "INSERT INTO representantes (`cedula`, `tipo_doc`, `nombre`, `apellido`, `telefono`, `direccion`) VALUES (:cedula, :nacionalidad,:nombre, :apellido,:telefono, :direccion)";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':nacionalidad', $this->nacionalidad);
@@ -189,12 +189,12 @@ class ModeloRepresentantes extends ModeloBase
             }
             $sentencia = "UPDATE representantes SET 
             cedula = :cedula, 
-            nacionalidad = :nacionalidad, 
+            tipo_doc = :nacionalidad, 
             nombre = :nombre, 
             apellido = :apellido, 
             telefono = :telefono, 
             direccion = :direccion 
-            WHERE id_representante = :id_representante";
+            WHERE codigo_representante = :codigo_representante";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':nacionalidad', $this->nacionalidad);
@@ -202,7 +202,7 @@ class ModeloRepresentantes extends ModeloBase
             $stmt->bindParam(':apellido', $this->apellido);
             $stmt->bindParam(':telefono', $this->telefono);
             $stmt->bindParam(':direccion', $this->direccion);
-            $stmt->bindParam(':id_representante', $this->id);
+            $stmt->bindParam(':codigo_representante', $this->id);
             $stmt->execute();
 
             $conex->commit();
@@ -223,7 +223,7 @@ class ModeloRepresentantes extends ModeloBase
         $conex=null;
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM representantes WHERE id_representante = :id";
+            $sentencia = "SELECT * FROM representantes WHERE codigo_representante = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
@@ -249,7 +249,7 @@ class ModeloRepresentantes extends ModeloBase
             if ($this->verificarExistencia('id', $this->id, 'atletas', NULL, bloquear: true)) {
                 throw new Exception(ASSOCIATES);
             }
-            $sentencia = "DELETE FROM representantes WHERE id_representante = :id";
+            $sentencia = "DELETE FROM representantes WHERE codigo_representante = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();

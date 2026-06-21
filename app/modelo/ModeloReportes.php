@@ -6,6 +6,10 @@ use Exception;
 
 class ModeloReportes extends Conexion
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
     public function Consultar()
     {
         try {

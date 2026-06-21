@@ -143,7 +143,7 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Categoría");
 
     // Llenamos el formulario con los datos recibidos de la BD
-    $('#id').val(datos[0].id_categorias);
+    $('#id').val(datos[0].codigo_categoria);
     $('#nombre').val(datos[0].nombre);
     $('#edad_min').val(datos[0].edad_min);
     $('#edad_max').val(datos[0].edad_max);
