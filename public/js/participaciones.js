@@ -63,12 +63,13 @@ $(document).ready(function () {
         }
     });
 
-    $('#torneo').select2({
+    // Ajustado para codigo_torneo y codigo_equipo
+    $('#codigo_torneo').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
         dropdownParent: $('.contenedor_modal'),
     });
-    $('#equipo').select2({
+    $('#codigo_equipo').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
         dropdownParent: $('.contenedor_modal'),
@@ -77,11 +78,14 @@ $(document).ready(function () {
     $("#incluir").on("click", function () {
         limpia();
 
+        // Limpiar el campo oculto
+        $('#codigo_participacion').val("");
+
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Participacion");
         $("#titulo_modal").text("Registrar Participacion");
-        $('#torneo').trigger('change');
-        $('#equipo').trigger('change');
+        $('#codigo_torneo').trigger('change'); // Ajustado
+        $('#codigo_equipo').trigger('change'); // Ajustado
         abrirModal();
     });
 
@@ -91,8 +95,8 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
-        $('#torneo').trigger('change');
-        $('#equipo').trigger('change');
+        $('#codigo_torneo').trigger('change'); // Ajustado
+        $('#codigo_equipo').trigger('change'); // Ajustado
         abrirModal();
     });
 
@@ -143,12 +147,12 @@ $(document).ready(function () {
 });
 
 function validarEnvio(proceso) {
-    // 1. Validación de Selects
-    if ($('#torneo').val() === null || $('#torneo').val() === "") {
+    // 1. Validación de Selects (Ajustados)
+    if ($('#codigo_torneo').val() === null || $('#codigo_torneo').val() === "") {
         muestraMensaje("error", 2000, "Error", "Debe seleccionar un torneo");
         return false;
     }
-    if ($('#equipo').val() === null || $('#atleta').val() === "") {
+    if ($('#codigo_equipo').val() === null || $('#codigo_equipo').val() === "") {
         muestraMensaje("error", 2000, "Error", "Debe seleccionar un equipo");
         return false;
     }
@@ -156,18 +160,21 @@ function validarEnvio(proceso) {
     return true;
 }
 
-function buscar(id) {
+// Recibe codigo_participacion
+function buscar(codigo_participacion) {
     var datos = new FormData();
     datos.append('accion', 'buscar');
-    datos.append('id', id);
+    datos.append('codigo_participacion', codigo_participacion); // Ajustado
     enviaAjax(datos);
 }
-function eliminar(id) {
+
+// Recibe codigo_participacion
+function eliminar(codigo_participacion) {
     confirmar('¿Está seguro que quiere eliminar esta participacion?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
-            datos.append('id', id);
+            datos.append('codigo_participacion', codigo_participacion); // Ajustado
             enviaAjax(datos);
         }
     });
@@ -192,10 +199,10 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
         let textoMostrar = "";
         let atributosExtra = "";
 
-        if (idSelect === 'torneo' && campo1 && campo2) {
+        if (idSelect === 'codigo_torneo' && campo1 && campo2) { // Ajustado a codigo_torneo
             textoMostrar = `${escapeHTML(dato[campo1])} - ${escapeHTML(dato[campo2])}`;
         }
-        else if (idSelect === 'equipo' || idSelect === 'palmares_equipo') {
+        else if (idSelect === 'codigo_equipo' || idSelect === 'palmares_equipo') { // Ajustado a codigo_equipo
             textoMostrar = `${escapeHTML(dato[campo1])} - ${escapeHTML(dato[campo2])}`;
         }
         else {
@@ -222,8 +229,12 @@ function modificar(datos) {
     $("#proceso").data("accion", "modificar");
     $("#proceso").text("Modificar Estadística");
     $("#titulo_modal").text("Modificar Participacion");
-    $('#torneo').val(datos[0].id_torneo).trigger('change');
-    $('#equipo').val(datos[0].id_equipos).trigger('change');
+    
+    // ** CORRECCIÓN: Asignamos el valor de la base de datos al input hidden para que funcione el UPDATE **
+    $('#codigo_participacion').val(datos[0].codigo_participacion); 
+    
+    $('#codigo_torneo').val(datos[0].codigo_torneo).trigger('change'); // Ajustado
+    $('#codigo_equipo').val(datos[0].codigo_equipo).trigger('change'); // Ajustado
     abrirModal();
 }
 
@@ -249,8 +260,9 @@ function enviaAjax(datos) {
             try {
                 var lee = JSON.parse(respuesta);
                 if (lee.accion == "MultiConsulta") {
-                    construirSelect('torneo', lee.torneo, 'id_torneo', 'nombre', 'fecha_inicio');
-                    construirSelect('equipo', lee.equipo, 'id_equipos', 'nombre', 'categoria');
+                    // Ajustado para enviar el ID del DOM (codigo_torneo y codigo_equipo) y el campo llave que llega del Controller
+                    construirSelect('codigo_torneo', lee.torneo, 'codigo_torneo', 'nombre', 'fecha_inicio');
+                    construirSelect('codigo_equipo', lee.equipo, 'codigo_equipo', 'nombre', 'categoria');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();

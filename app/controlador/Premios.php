@@ -6,7 +6,6 @@ use App\servicios\GenerarReporte;
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
-
 // 2. Configuración del módulo
 $id_modulo = _MD_PREMIOS_;
 
@@ -22,7 +21,7 @@ if (!class_exists($nombreClaseModelo)) {
 }
 
 $objModelo = new ModeloPremios();
-$pagina = 'Premios'; // CORRECCIÓN: Definición de la página para evitar errores de variable indefinida
+$pagina = 'Premios'; 
 
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudPremios($objModelo, $id_modulo, $bitacora, $permisos);
@@ -74,7 +73,6 @@ function manejarSolicitudPremios($obj, $id_modulo, $bitacoraObj, array $permisos
                 if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar un reporte de los premios.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
-
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -87,7 +85,6 @@ function manejarSolicitudPremios($obj, $id_modulo, $bitacoraObj, array $permisos
 /**
  * --- LÓGICA DE ACCIONES ---
  */
-
 
 function consultar($obj, $permisos): void
 {
@@ -103,11 +100,12 @@ function consultar($obj, $permisos): void
 function buscar($obj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
+        // Ajustado a codigo_premio
+        $validaciones = ['codigo_premio' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Código inválido.']];
         validar_datos($validaciones);
 
         $datos = [
-            'id' => $_POST['id'],
+            'codigo_premio' => $_POST['codigo_premio'], // Ajustado
             'accion' => 'buscar'
         ];
 
@@ -124,7 +122,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
     try {
         $validaciones = [
             'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'tipo'   => ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválido. Solo se permite G o I.'] // CORRECCIÓN: Validación adaptada al ENUM en mayúsculas
+            'tipo'   => ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválido. Solo se permite G o I.']
         ];
 
         validar_datos($validaciones);
@@ -138,11 +136,9 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
             registrarBitacora($bitacoraObj, $id_modulo, "Registró al Premio: " . $_POST['nombre'] . ' ' . $_POST['tipo']);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Premio registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un Premio registrado con ese Nombre.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
@@ -159,29 +155,28 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
+        // Ajustado a codigo_premio
         $validaciones = [
-            'id'     => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
-            'tipo'   => ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválido. Solo se permite G o I.'] // CORRECCIÓN: Validación adaptada al ENUM en mayúsculas
+            'codigo_premio' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Código inválido.'],
+            'nombre'        => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
+            'tipo'          => ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválido. Solo se permite G o I.']
         ];
 
         validar_datos($validaciones);
 
         $datos = [
-            'id'     => $_POST['id'],
-            'nombre' => $_POST['nombre'],
-            'tipo'   => $_POST['tipo'] // CORRECCIÓN: Mapeo completo de la clave tipo enviada por POST
+            'codigo_premio' => $_POST['codigo_premio'], // Ajustado
+            'nombre'        => $_POST['nombre'],
+            'tipo'          => $_POST['tipo'] 
         ];
         $datos['accion'] = 'modificar';
 
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
             registrarBitacora($bitacoraObj, $id_modulo, "Modifico al Premio: " . $_POST['nombre'] . ' ' . $_POST['tipo']);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Premio modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un Premio registrado con ese nombre.',
                 default        => 'Ocurrió un error inesperado en la modificacion.'
@@ -198,21 +193,20 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
+        // Ajustado a codigo_premio
+        $validaciones = ['codigo_premio' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Código inválido.']];
         validar_datos($validaciones);
 
         $datos = [
-            'id'     => $_POST['id'],
-            'accion' => 'eliminar'
+            'codigo_premio' => $_POST['codigo_premio'], // Ajustado
+            'accion'        => 'eliminar'
         ];
 
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino al Premio: " . $_POST['id']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino al Premio: " . $_POST['codigo_premio']); // Ajustado para bitácora
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Premio eliminado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El Premio no existe.',
                 ASSOCIATES => 'El Premio tiene detalle palmare asociados.',
@@ -238,7 +232,7 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             $datosFiltro['nombre'] = $_POST['nombre'];
         }
         if (!empty($_POST['tipo'])) {
-            $validacionesReporte['tipo'] = ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválida. Solo se permite G o I.']; // CORRECCIÓN: Validación adaptada al ENUM en mayúsculas
+            $validacionesReporte['tipo'] = ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválida. Solo se permite G o I.'];
             $datosFiltro['tipo'] = $_POST['tipo'];
         }
 

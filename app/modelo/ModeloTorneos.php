@@ -6,7 +6,7 @@ use Exception;
 
 class ModeloTorneos extends Conexion
 {
-    private $id;
+    private $codigo_torneo; // Cambiado de $id
     private $nombre;
     private $fecha_inicio;
     private $fecha_fin;
@@ -17,10 +17,10 @@ class ModeloTorneos extends Conexion
     {
         parent::__construct();
         $this->campoWhitelist = [
-            'id' => 'id_torneo', 
+            'codigo_torneo' => 'codigo_torneo', // Ajustado a la BD
             'nombre' => 'nombre'
         ];
-        $this->llavePrimaria = 'id_torneo'; 
+        $this->llavePrimaria = 'codigo_torneo'; // Ajustado a la BD
     }
 
     public function ProcesarDatos(array $datos): array
@@ -31,7 +31,8 @@ class ModeloTorneos extends Conexion
         
         $this->ValidarExpresiones($datos);
         
-        $this->id = $datos['id'] ?? null;
+        // Asignamos usando la nueva clave
+        $this->codigo_torneo = $datos['codigo_torneo'] ?? null; 
         $this->nombre = mb_strtoupper(trim($datos['nombre'] ?? ''), "UTF-8");
         $this->fecha_inicio = $datos['fecha_inicio'] ?? null;
         $this->fecha_fin = $datos['fecha_fin'] ?? null;
@@ -69,7 +70,7 @@ class ModeloTorneos extends Conexion
                 $params[':nombre'] = trim($this->nombre) . "%";
             }
 
-            $sentencia .= " ORDER BY id_torneo ASC";
+            $sentencia .= " ORDER BY codigo_torneo ASC"; // Ajustado a la BD
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -89,7 +90,6 @@ class ModeloTorneos extends Conexion
         try {
             $conex = $this->conex();
             
-            // Usamos Exception en lugar de un return directo
             if ($this->verificarExistencia('nombre', $this->nombre, 'torneos', NULL)) {
                 throw new Exception('Ya existe un torneo registrado con este nombre.');
             }
@@ -103,11 +103,9 @@ class ModeloTorneos extends Conexion
             $stmt->bindParam(':estatus', $this->estatus);
             $stmt->execute();
 
-            // Retorno estándar
             return array('accion' => 'exito');
         } catch (Exception $e) {
             logs('Torneos', $e->getMessage(), 'Modelo');
-            // Capturamos la excepción y la mandamos en el formato 'codigo'
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
@@ -119,7 +117,7 @@ class ModeloTorneos extends Conexion
         try {
             $conex = $this->conex();
             
-            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'torneos', NULL)) {
+            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->codigo_torneo, 'torneos', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'torneos', NULL)) {
                     throw new Exception('Ya existe otro torneo registrado con este nombre.');
                 }
@@ -131,7 +129,7 @@ class ModeloTorneos extends Conexion
             fecha_fin = :fecha_fin, 
             ubicacion = :ubicacion, 
             estatus = :estatus 
-            WHERE id_torneo = :id_torneo";
+            WHERE codigo_torneo = :codigo_torneo"; // Ajustado a la BD
             
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
@@ -139,7 +137,7 @@ class ModeloTorneos extends Conexion
             $stmt->bindParam(':fecha_fin', $this->fecha_fin);
             $stmt->bindParam(':ubicacion', $this->ubicacion);
             $stmt->bindParam(':estatus', $this->estatus);
-            $stmt->bindParam(':id_torneo', $this->id);
+            $stmt->bindParam(':codigo_torneo', $this->codigo_torneo); // Ajustado a la BD
             $stmt->execute();
 
             return array('accion' => 'exito');
@@ -155,9 +153,9 @@ class ModeloTorneos extends Conexion
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM torneos WHERE id_torneo = :id";
+            $sentencia = "SELECT * FROM torneos WHERE codigo_torneo = :codigo_torneo"; // Ajustado a la BD
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':codigo_torneo', $this->codigo_torneo); // Ajustado a la BD
             $stmt->execute();
             $datos = $stmt->fetchAll();
             
@@ -175,17 +173,18 @@ class ModeloTorneos extends Conexion
         try {
             $conex = $this->conex();
 
-            if (!$this->verificarExistencia('id', $this->id, 'torneos', NULL)) {
+            if (!$this->verificarExistencia('codigo_torneo', $this->codigo_torneo, 'torneos', NULL)) {
                 throw new Exception('El torneo no existe.');
             }
             
-            if ($this->verificarExistencia('id', $this->id, 'equipos', NULL)) {
+            // Si la FK en la tabla equipos se llama distinto, debes ajustarla aquí. Asumo que es codigo_torneo también.
+            if ($this->verificarExistencia('codigo_torneo', $this->codigo_torneo, 'equipos', NULL)) {
                 throw new Exception('No se puede eliminar: el torneo tiene equipos o atletas asociados.');
             }
 
-            $sentencia = "DELETE FROM torneos WHERE id_torneo = :id";
+            $sentencia = "DELETE FROM torneos WHERE codigo_torneo = :codigo_torneo"; // Ajustado a la BD
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':codigo_torneo', $this->codigo_torneo); // Ajustado a la BD
             $stmt->execute();
             
             return array('accion' => 'exito');
@@ -199,8 +198,9 @@ class ModeloTorneos extends Conexion
 
     private function ValidarExpresiones(array $datos): void
     {
-        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
-            throw new Exception('Id inválido.');
+        // Cambiado de 'id' a 'codigo_torneo'
+        if (!empty($datos['codigo_torneo']) && !preg_match('/^[0-9]+$/', $datos['codigo_torneo'])) {
+            throw new Exception('Código de torneo inválido.');
         }
         if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\-\s]{2,30}$/u', $datos['nombre'])) {
             throw new Exception('Nombre de torneo inválido.');

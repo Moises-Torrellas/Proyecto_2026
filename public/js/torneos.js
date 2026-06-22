@@ -67,7 +67,7 @@ $(document).ready(function () {
     // 4. Botones de la vista (Abrir Modales)
     $("#incluir").on("click", function () {
         limpia(); // Limpia el formulario
-        $("#id").val("");
+        $("#codigo_torneo").val(""); // Cambiado de id a codigo_torneo
         $('#estatus').val("").trigger('change'); // Limpia el select
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Torneo");
@@ -86,19 +86,19 @@ $(document).ready(function () {
 
 // --- FUNCIONES LÓGICAS GLOBALES ---
 
-function buscar(id) {
+function buscar(codigo_torneo) {
     var datos = new FormData();
     datos.append('accion', 'buscar');
-    datos.append('id', id);
+    datos.append('codigo_torneo', codigo_torneo); // Ajustado
     enviaAjax(datos);
 }
 
-function eliminar(id) {
+function eliminar(codigo_torneo) {
     confirmar('¿Está seguro que quiere eliminar este torneo?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
-            datos.append('id', id);
+            datos.append('codigo_torneo', codigo_torneo); // Ajustado
             enviaAjax(datos);
         }
     });
@@ -148,8 +148,8 @@ function modificar(datos) {
     $("#proceso").text("Modificar Torneo");
     $("#titulo_modal").text("Modificar Torneo");
     
-    // Llenamos el formulario con los datos de la BD
-    $('#id').val(datos[0].id_torneo);
+    // Llenamos el formulario con los datos de la BD ajustado a codigo_torneo
+    $('#codigo_torneo').val(datos[0].codigo_torneo);
     $('#nombre').val(datos[0].nombre);
     $('#fecha_inicio').val(datos[0].fecha_inicio);
     $('#fecha_fin').val(datos[0].fecha_fin);
@@ -200,8 +200,8 @@ function crearConsulta(datos) {
 
                         <div class="listado_col_acciones">
                             <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_torneo})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_torneo})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.codigo_torneo})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.codigo_torneo})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             </div>
                         </div>
                     </div>

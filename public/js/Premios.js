@@ -67,6 +67,7 @@ $(document).ready(function () {
     // Evento para abrir el modal en modo inclusión
     $("#incluir").on("click", function () {
         limpia();
+        $('#codigo_premio').val(""); // Limpiar el input hidden correctamente
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Premio");
         $("#titulo_modal").text("Registrar Premio");
@@ -116,19 +117,21 @@ $(document).ready(function () {
     });
 });
 
-function buscar(id) {
+// Parámetro ajustado a codigo_premio
+function buscar(codigo_premio) {
     var datos = new FormData();
     datos.append('accion', 'buscar');
-    datos.append('id', id);
+    datos.append('codigo_premio', codigo_premio); // Ajustado a codigo_premio
     enviaAjax(datos);
 }
 
-function eliminar(id) {
+// Parámetro ajustado a codigo_premio
+function eliminar(codigo_premio) {
     confirmar('¿Está seguro que quiere eliminar este premio?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
-            datos.append('id', id);
+            datos.append('codigo_premio', codigo_premio); // Ajustado a codigo_premio
             enviaAjax(datos);
         }
     });
@@ -165,7 +168,8 @@ function modificar(datos) {
     $('#nombre').closest('.colum').show();
     $('#tipo').closest('.colum').show();
 
-    $('#id').val(datos[0].id_premio);
+    // Ajustado para usar codigo_premio en el input hidden
+    $('#codigo_premio').val(datos[0].codigo_premio);
     $('#nombre').val(datos[0].nombre);
     
     // Forzamos mayúsculas para emparejar la selección con las opciones del HTML

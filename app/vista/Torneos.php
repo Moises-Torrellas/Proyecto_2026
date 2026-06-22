@@ -46,7 +46,7 @@
             </div>
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
-                    <input type="hidden" id="id" name="id">
+                    <input type="hidden" id="codigo_torneo" name="codigo_torneo">
                     
                     <div class="row">
                         <div class="colum">

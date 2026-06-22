@@ -25,10 +25,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
                             <?php if ($permisos['modificar']) : ?>
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_premio'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_premio'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                             <?php endif; ?>
                             <?php if ($permisos['eliminar']) : ?>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_premio'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_premio'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -98,10 +98,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
                                                     <?php if ($permisos['modificar']) : ?>
-                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_premio'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_premio'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                                     <?php endif; ?>
                                                     <?php if ($permisos['eliminar']) : ?>
-                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_premio'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_premio'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
@@ -125,7 +125,7 @@ if (isset($solo_lista) && $solo_lista === true) :
             </div>
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
-                    <input type="hidden" id="id" name="id">
+                    <input type="hidden" id="codigo_premio" name="codigo_premio">
 
                     <div class="row">
                         <div class="colum">
