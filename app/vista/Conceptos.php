@@ -13,6 +13,7 @@
                 'A' => 'Anual',
                 'U' => 'Unico'
             };
+            $dias = ($dato['dias_gracia'] == 0) ? 'No Aplica' : $dato['dias_gracia'];
         ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
@@ -31,7 +32,7 @@
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Dias Limite de Pago</small>
-                            <span><?= $dato['dias_gracia'] ?></span>
+                            <span><?= $dias ?></span>
                         </div>
                     </div>
 
@@ -101,6 +102,7 @@
                                         'A' => 'Anual',
                                         'U' => 'Unico'
                                     };
+                                    $dias = ($dato['dias_gracia'] == 0) ? 'No Aplica' : $dato['dias_gracia'];
                                 ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
@@ -119,7 +121,7 @@
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Dias Limite de Pago</small>
-                                                    <span><?= $dato['dias_gracia'] ?></span>
+                                                    <span><?= $dias ?></span>
                                                 </div>
                                             </div>
 
