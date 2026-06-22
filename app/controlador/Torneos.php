@@ -90,10 +90,10 @@ function consultar($obj): void
 function buscar($obj): void
 {
     try {
-        validar_requeridos(['id']);
+        validar_requeridos(['codigo_torneo']); // Ajustado a la BD
 
         $datos = [
-            'id' => $_POST['id'],
+            'codigo_torneo' => $_POST['codigo_torneo'], // Ajustado a la BD
             'accion' => 'buscar'
         ];
 
@@ -125,7 +125,6 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             registrarBitacora($bitacoraObj, $id_modulo, "Registró el torneo: " . $_POST['nombre']);
             $resultado = ['accion' => 'incluir', 'mensaje' => 'Torneo registrado exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-            // Mapeo de errores específicos del modelo
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 'Ya existe un torneo registrado con este nombre.' => $resultado['codigo'],
                 default => 'Ocurrió un error inesperado en el registro del torneo.'
@@ -142,10 +141,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id', 'nombre', 'fecha_inicio', 'fecha_fin', 'ubicacion', 'estatus']);
+        // Se cambió 'id' por 'codigo_torneo'
+        validar_requeridos(['codigo_torneo', 'nombre', 'fecha_inicio', 'fecha_fin', 'ubicacion', 'estatus']);
 
         $datos = [
-            'id'           => $_POST['id'],
+            'codigo_torneo' => $_POST['codigo_torneo'], // Ajustado a la BD
             'nombre'       => $_POST['nombre'],
             'fecha_inicio' => $_POST['fecha_inicio'],
             'fecha_fin'    => $_POST['fecha_fin'],
@@ -176,17 +176,17 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id']);
+        validar_requeridos(['codigo_torneo']); // Ajustado a la BD
 
         $datos = [
-            'id' => $_POST['id'],
+            'codigo_torneo' => $_POST['codigo_torneo'], // Ajustado a la BD
             'accion' => 'eliminar'
         ];
 
         $resultado = $obj->procesarDatos($datos);
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el torneo con ID: " . $_POST['id']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el torneo con código: " . $_POST['codigo_torneo']);
             $resultado = ['accion' => 'eliminar', 'mensaje' => 'Torneo eliminado exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {

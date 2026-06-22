@@ -7,19 +7,19 @@ use Exception;
 
 class ModeloParticipaciones extends Conexion
 {
-    private $id;
-    private $torneo;
-    private $equipo;
+    private $codigo_participacion;
+    private $codigo_torneo;
+    private $codigo_equipo;
 
     public function __construct()
     {
         parent::__construct();
         $this->campoWhitelist = [
-            'id_participacion' => 'id_participacion',
-            'id_equipo' => 'id_equipos',
-            'id_torneo' => 'id_torneo'
+            'codigo_participacion' => 'codigo_participacion',
+            'codigo_equipo'        => 'codigo_equipo',
+            'codigo_torneo'        => 'codigo_torneo'
         ];
-        $this->llavePrimaria = 'id_participacion';
+        $this->llavePrimaria = 'codigo_participacion';
     }
 
     public function ProcesarDatos(array $datos): array
@@ -28,9 +28,9 @@ class ModeloParticipaciones extends Conexion
             throw new Exception('No se proporcionaron datos para procesar.');
         }
 
-        $this->id     = isset($datos['id']) ? (int)$datos['id'] : null;
-        $this->torneo = isset($datos['torneo']) ? (int)$datos['torneo'] : null;
-        $this->equipo = isset($datos['equipo']) ? (int)$datos['equipo'] : null;
+        $this->codigo_participacion = isset($datos['codigo_participacion']) ? (int)$datos['codigo_participacion'] : null;
+        $this->codigo_torneo        = isset($datos['codigo_torneo']) ? (int)$datos['codigo_torneo'] : null;
+        $this->codigo_equipo        = isset($datos['codigo_equipo']) ? (int)$datos['codigo_equipo'] : null;
 
         $accion = $datos['accion'] ?? null;
 
@@ -49,17 +49,17 @@ class ModeloParticipaciones extends Conexion
             $conex = $this->conex();
             $params = [];
 
-            // SE AGREGÓ: t.estatus AS torneo_estatus
+            // SE AJUSTARON LOS CAMPOS A CODIGO_
             $sentencia = "SELECT 
-            p.id_participacion, 
-            t.id_torneo, 
+            p.codigo_participacion, 
+            t.codigo_torneo, 
             t.nombre AS torneo_nombre, 
             t.estatus AS torneo_estatus, 
-            e.id_equipos, 
+            e.codigo_equipo, 
             e.nombre AS equipo_nombre
         FROM participaciones p
-        INNER JOIN torneos t ON p.id_torneo = t.id_torneo
-        INNER JOIN equipos e ON p.id_equipo = e.id_equipos
+        INNER JOIN torneos t ON p.codigo_torneo = t.codigo_torneo
+        INNER JOIN equipos e ON p.codigo_equipo = e.codigo_equipo
         WHERE 1=1";
 
             if (!empty($filtro['filtro'])) {
@@ -69,7 +69,7 @@ class ModeloParticipaciones extends Conexion
                 $params[':f2'] = $p;
             }
 
-            $sentencia .= " ORDER BY t.id_torneo DESC, e.nombre ASC";
+            $sentencia .= " ORDER BY t.codigo_torneo DESC, e.nombre ASC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -91,23 +91,23 @@ class ModeloParticipaciones extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id_torneo', $this->torneo, 'torneos', NULL)) {
+            if (!$this->verificarExistencia('codigo_torneo', $this->codigo_torneo, 'torneos', NULL)) {
                 throw new Exception(INVALID_ID);
             }
-            if (!$this->verificarExistencia('id_equipo', $this->equipo, 'equipos', NULL)) {
+            if (!$this->verificarExistencia('codigo_equipo', $this->codigo_equipo, 'equipos', NULL)) {
                 throw new Exception(INVALID_ID . '0');
             }
 
-            if ($this->validarParticipacionGrupal($this->torneo, $this->equipo)) {
+            if ($this->validarParticipacionGrupal($this->codigo_torneo, $this->codigo_equipo)) {
                 throw new Exception(DUPLICATE);
             }
 
-            $sql = "INSERT INTO participaciones (id_torneo, id_equipo) 
-                    VALUES (:torneo, :equipo)";
+            $sql = "INSERT INTO participaciones (codigo_torneo, codigo_equipo) 
+                    VALUES (:codigo_torneo, :codigo_equipo)";
 
             $stmt = $conex->prepare($sql);
-            $stmt->bindValue(':torneo', $this->torneo, PDO::PARAM_INT);
-            $stmt->bindValue(':equipo', $this->equipo, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_torneo', $this->codigo_torneo, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_equipo', $this->codigo_equipo, PDO::PARAM_INT);
 
             $stmt->execute();
             $conex->commit();
@@ -126,36 +126,36 @@ class ModeloParticipaciones extends Conexion
 
 
     public function Buscar(): array
-{
-    $conex = null;
-    try {
-        $conex = $this->conex();
-        $sql = "SELECT 
-                    p.id_participacion, 
-                    p.id_torneo, 
-                    p.id_equipo
-                FROM participaciones p
-                WHERE p.id_participacion = :id";
-
-        $stmt = $conex->prepare($sql);
-        $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        $resultado = $stmt->fetchAll();
-
-        if (!$resultado) {
-            return array('accion' => 'error', 'mensaje' => 'Registro no encontrado');
-        }
-
-        return array('accion' => 'consultar', 'datos' => $resultado);
-
-    } catch (Exception $e) {
-        logs('Participaciones', $e->getMessage(), 'Modelo_Buscar');
-        return array('accion' => 'error', 'mensaje' => 'Error al buscar el registro');
-    } finally {
+    {
         $conex = null;
+        try {
+            $conex = $this->conex();
+            $sql = "SELECT 
+                        p.codigo_participacion, 
+                        p.codigo_torneo, 
+                        p.codigo_equipo
+                    FROM participaciones p
+                    WHERE p.codigo_participacion = :codigo_participacion";
+
+            $stmt = $conex->prepare($sql);
+            $stmt->bindValue(':codigo_participacion', $this->codigo_participacion, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $resultado = $stmt->fetchAll();
+
+            if (!$resultado) {
+                return array('accion' => 'error', 'mensaje' => 'Registro no encontrado');
+            }
+
+            return array('accion' => 'consultar', 'datos' => $resultado);
+
+        } catch (Exception $e) {
+            logs('Participaciones', $e->getMessage(), 'Modelo_Buscar');
+            return array('accion' => 'error', 'mensaje' => 'Error al buscar el registro');
+        } finally {
+            $conex = null;
+        }
     }
-}
 
     private function Modificar(): array
     {
@@ -164,30 +164,30 @@ class ModeloParticipaciones extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id_participacion', $this->id, 'participaciones', null)) {
+            if (!$this->verificarExistencia('codigo_participacion', $this->codigo_participacion, 'participaciones', null)) {
                 throw new Exception(INVALID_ID . '2');
             }
 
-            if (!$this->verificarExistencia('id_torneo', $this->torneo, 'torneos', null)) {
+            if (!$this->verificarExistencia('codigo_torneo', $this->codigo_torneo, 'torneos', null)) {
                 throw new Exception(INVALID_ID);
             }
-            if (!$this->verificarExistencia('id_equipo', $this->equipo, 'equipos', null)) {
+            if (!$this->verificarExistencia('codigo_equipo', $this->codigo_equipo, 'equipos', null)) {
                 throw new Exception(INVALID_ID . '0');
             }
 
-            if ($this->validarParticipacionDuplicadaPropia($this->torneo, $this->equipo, $this->id)) {
+            if ($this->validarParticipacionDuplicadaPropia($this->codigo_torneo, $this->codigo_equipo, $this->codigo_participacion)) {
                 throw new Exception(DUPLICATE);
             }
 
             $sql = "UPDATE participaciones SET 
-                        id_torneo = :torneo, 
-                        id_equipo = :equipo 
-                    WHERE id_participacion = :id";
+                        codigo_torneo = :codigo_torneo, 
+                        codigo_equipo = :codigo_equipo 
+                    WHERE codigo_participacion = :codigo_participacion";
 
             $stmt = $conex->prepare($sql);
-            $stmt->bindValue(':torneo', $this->torneo, PDO::PARAM_INT);
-            $stmt->bindValue(':equipo', $this->equipo, PDO::PARAM_INT);
-            $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_torneo', $this->codigo_torneo, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_equipo', $this->codigo_equipo, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_participacion', $this->codigo_participacion, PDO::PARAM_INT);
 
             $stmt->execute();
             $conex->commit();
@@ -211,13 +211,13 @@ class ModeloParticipaciones extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id_participacion', $this->id, 'participaciones', null)) {
+            if (!$this->verificarExistencia('codigo_participacion', $this->codigo_participacion, 'participaciones', null)) {
                 throw new Exception(INVALID_ID);
             }
 
-            $sql = "DELETE FROM participaciones WHERE id_participacion = :id";
+            $sql = "DELETE FROM participaciones WHERE codigo_participacion = :codigo_participacion";
             $stmt = $conex->prepare($sql);
-            $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_participacion', $this->codigo_participacion, PDO::PARAM_INT);
             $stmt->execute();
 
             $conex->commit();
@@ -233,18 +233,18 @@ class ModeloParticipaciones extends Conexion
         }
     }
 
-    public function validarParticipacionIndividual(int $id_torneo, int $id_atleta): bool
+    public function validarParticipacionIndividual(int $codigo_torneo, int $codigo_atleta): bool
     {
         $conex = null;
         try {
             $conex = $this->conex();
             $stmt = $conex->prepare(
                 "SELECT COUNT(*) FROM participaciones par
-                INNER JOIN detalles_equipos de ON par.id_equipo = de.id_equipo
-                WHERE par.id_torneo = :id_torneo AND de.id_atleta = :id_atleta"
+                INNER JOIN detalles_equipos de ON par.codigo_equipo = de.codigo_equipo
+                WHERE par.codigo_torneo = :codigo_torneo AND de.codigo_atleta = :codigo_atleta"
             );
-            $stmt->bindValue(':id_torneo', $id_torneo, PDO::PARAM_INT);
-            $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_torneo', $codigo_torneo, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_atleta', $codigo_atleta, PDO::PARAM_INT);
             $stmt->execute();
 
             return ((int)$stmt->fetchColumn() > 0);
@@ -256,17 +256,17 @@ class ModeloParticipaciones extends Conexion
         }
     }
 
-    public function validarParticipacionGrupal(int $id_torneo, int $id_equipo): bool
+    public function validarParticipacionGrupal(int $codigo_torneo, int $codigo_equipo): bool
     {
         $conex = null;
         try {
             $conex = $this->conex();
             $stmt = $conex->prepare(
                 "SELECT COUNT(*) FROM participaciones 
-                 WHERE id_torneo = :id_torneo AND id_equipo = :id_equipo"
+                 WHERE codigo_torneo = :codigo_torneo AND codigo_equipo = :codigo_equipo"
             );
-            $stmt->bindValue(':id_torneo', $id_torneo, PDO::PARAM_INT);
-            $stmt->bindValue(':id_equipo', $id_equipo, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_torneo', $codigo_torneo, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_equipo', $codigo_equipo, PDO::PARAM_INT);
             $stmt->execute();
 
             return ((int)$stmt->fetchColumn() > 0);
@@ -278,18 +278,18 @@ class ModeloParticipaciones extends Conexion
         }
     }
 
-    public function validarParticipacionDuplicadaPropia(int $id_torneo, int $id_equipo, int $id): bool
+    public function validarParticipacionDuplicadaPropia(int $codigo_torneo, int $codigo_equipo, int $codigo_participacion): bool
     {
         $conex = null;
         try {
             $conex = $this->conex();
             $stmt = $conex->prepare(
                 "SELECT COUNT(*) FROM participaciones 
-                 WHERE id_torneo = :id_torneo AND id_equipo = :id_equipo AND id_participacion != :id"
+                 WHERE codigo_torneo = :codigo_torneo AND codigo_equipo = :codigo_equipo AND codigo_participacion != :codigo_participacion"
             );
-            $stmt->bindValue(':id_torneo', $id_torneo, PDO::PARAM_INT);
-            $stmt->bindValue(':id_equipo', $id_equipo, PDO::PARAM_INT);
-            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_torneo', $codigo_torneo, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_equipo', $codigo_equipo, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_participacion', $codigo_participacion, PDO::PARAM_INT);
             $stmt->execute();
 
             return ((int)$stmt->fetchColumn() > 0);

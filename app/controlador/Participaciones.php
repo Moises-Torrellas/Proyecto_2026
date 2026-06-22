@@ -6,7 +6,7 @@ use App\servicios\GenerarReporte;
 use App\modelo\ModeloEquipos;
 use App\modelo\ModeloTorneos;
 
-//Cargamos las funciones base para los controladores
+// Cargamos las funciones base para los controladores
 require_once __DIR__ . '/Base.php';
 
 // Configuración del id del módulo
@@ -21,6 +21,7 @@ if (!class_exists($nombreClaseModelo)) {
 }
 
 $objModelo = new ModeloParticipaciones();
+$pagina = 'Participaciones'; // Se define para la carga de vista
 
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora, $permisos);
@@ -66,7 +67,7 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        logs('Devoluciones', $e->getMessage(), 'Controlador_ManejarSolicitud');
+        logs('Participaciones', $e->getMessage(), 'Controlador_ManejarSolicitud'); // Corregido de Devoluciones a Participaciones
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -87,23 +88,24 @@ function MultiConsulta(): void {
         $respEquipo = $equipo->Consultar(); 
 
         echo json_encode([
-            'accion'       => 'MultiConsulta',
+            'accion' => 'MultiConsulta',
             'torneo' => $respTorneo['datos'] ?? [],
-            'equipo'      => $respEquipo['datos'] ?? []
+            'equipo' => $respEquipo['datos'] ?? []
         ]);
     } catch (Exception $e) {
         echo json_encode(['accion' => 'error', 'mensaje' => 'Error al cargar listas.']);
     }
 }
 
-function buscar($obj): void
+function buscar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
+        // Ajustado a codigo_participacion
+        $validaciones = ['codigo_participacion' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Código inválido.']];
         validar_datos($validaciones);
 
         $datos = [
-            'id' => $_POST['id'],
+            'codigo_participacion' => $_POST['codigo_participacion'],
             'accion' => 'buscar'
         ];
 
@@ -119,16 +121,16 @@ function incluir($obj, $id_modulo, $bitacoraObj) : void {
     try {
         // Validamos que los IDs de torneo y equipo sean números válidos
         $validaciones = [
-            'torneo' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'El ID del torneo es inválido.'],
-            'equipo' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'El ID del equipo es inválido.'],
+            'codigo_torneo' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'El código del torneo es inválido.'],
+            'codigo_equipo' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'El código del equipo es inválido.'],
         ];
 
         validar_datos($validaciones);
 
         $datos['accion'] = 'incluir';
         
-        $datos['torneo'] = $_POST['torneo'];
-        $datos['equipo'] = $_POST['equipo'];
+        $datos['codigo_torneo'] = $_POST['codigo_torneo'];
+        $datos['codigo_equipo'] = $_POST['codigo_equipo'];
 
         $resultado = $obj->ProcesarDatos($datos);
 
@@ -150,6 +152,47 @@ function incluir($obj, $id_modulo, $bitacoraObj) : void {
         
     } catch (Exception $e) {
         logs('Participaciones', $e->getMessage(), 'Controlador_Incluir');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function modificar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validaciones = [
+            'codigo_participacion' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Código inválido.'],
+            'codigo_torneo'        => ['regla' => '/^[0-9]+$/', 'mensaje' => 'El código del torneo es inválido.'],
+            'codigo_equipo'        => ['regla' => '/^[0-9]+$/', 'mensaje' => 'El código del equipo es inválido.']
+        ];
+
+        validar_datos($validaciones);
+
+        $datos = [
+            'codigo_participacion' => $_POST['codigo_participacion'],
+            'codigo_torneo'        => $_POST['codigo_torneo'],
+            'codigo_equipo'        => $_POST['codigo_equipo']
+        ];
+        $datos['accion'] = 'modificar';
+
+        $resultado = $obj->ProcesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico una participacion");
+            $resultado = array('accion' => 'modificar', 'mensaje' => 'Participación modificada exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                INVALID_ID . '2'   => 'La participacion que intenta editar no existe.',
+                INVALID_ID         => 'El torneo seleccionado no existe.',
+                INVALID_ID . '0'   => 'El equipo seleccionado no existe.',
+                DUPLICATE          => 'Este equipo ya se encuentra inscrito en el torneo.',
+                DB_CONNECTION      => 'Ocurrió un error al conectarse con la base de datos.',
+                default            => 'Ocurrió un error inesperado en la modificación.'
+            };
+        }
+
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Participaciones', $e->getMessage(), 'Controlador_Modificar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

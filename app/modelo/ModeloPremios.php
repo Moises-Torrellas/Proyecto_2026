@@ -6,7 +6,7 @@ use Exception;
 
 class ModeloPremios extends Conexion
 {
-    private $id;
+    private $codigo_premio; // Cambiado de $id a $codigo_premio
     private $nombre;
     private $tipo;
 
@@ -16,10 +16,10 @@ class ModeloPremios extends Conexion
         // Definimos los campos permitidos para usar en las validaciones
         $this->campoWhitelist = [
             'nombre' => 'nombre',
-            'id' => 'id_premio'
+            'codigo_premio' => 'codigo_premio' // Ajustado a la BD
         ];
         // Definimos la llave primaria de la tabla en la base de datos
-        $this->llavePrimaria = 'id_premio';
+        $this->llavePrimaria = 'codigo_premio'; // Ajustado a la BD
     }
 
     public function ProcesarDatos(array $datos): array
@@ -28,7 +28,7 @@ class ModeloPremios extends Conexion
             throw new Exception('No se proporcionaron datos para procesar.');
         }
 
-        $this->id = $datos['id'] ?? null;
+        $this->codigo_premio = $datos['codigo_premio'] ?? null; // Ajustado
 
         $this->tipo = isset($datos['tipo']) ? strtoupper(trim($datos['tipo'])) : null;
         
@@ -70,7 +70,7 @@ class ModeloPremios extends Conexion
                 $params[':tipo'] = $this->tipo;
             }
 
-            $sentencia .= " ORDER BY id_premio ASC";
+            $sentencia .= " ORDER BY codigo_premio ASC"; // Ajustado a la BD
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -121,17 +121,18 @@ class ModeloPremios extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'premios', NULL, bloquear: true)) {
+            // Ajustado a codigo_premio
+            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->codigo_premio, 'premios', NULL, bloquear: true)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'premios', NULL, bloquear: true)) {
                     throw new Exception(DUPLICATE_NAME);
                 }
             }
 
-            $sentencia = "UPDATE premios SET nombre = :nombre, tipo = :tipo WHERE id_premio = :id_premio";
+            $sentencia = "UPDATE premios SET nombre = :nombre, tipo = :tipo WHERE codigo_premio = :codigo_premio"; // Ajustado a la BD
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':tipo', $this->tipo);
-            $stmt->bindParam(':id_premio', $this->id);
+            $stmt->bindParam(':codigo_premio', $this->codigo_premio); // Ajustado
             $stmt->execute();
 
             $conex->commit();
@@ -151,9 +152,9 @@ class ModeloPremios extends Conexion
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM premios WHERE id_premio = :id";
+            $sentencia = "SELECT * FROM premios WHERE codigo_premio = :codigo_premio"; // Ajustado a la BD
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':codigo_premio', $this->codigo_premio); // Ajustado
             $stmt->execute();
             $datos = $stmt->fetchAll();
             return array('accion' => 'buscar', 'datos' => $datos);
@@ -171,17 +172,18 @@ class ModeloPremios extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
             
-            // CORRECCIÓN: Regresamos a la clave 'id' para que use la lista blanca de ModeloBase
-            if (!$this->verificarExistencia('id', $this->id, 'premios', NULL, bloquear:true)) {
+            // CORRECCIÓN: Ajustado a codigo_premio
+            if (!$this->verificarExistencia('codigo_premio', $this->codigo_premio, 'premios', NULL, bloquear:true)) {
                 throw new Exception(INVALID_ID);
             }
-            if ($this->verificarExistencia('id', $this->id, 'detalles_palmares', NULL, bloquear:true)) {
+            // Si la llave foránea en 'detalles_palmares' se llama distinto, ajústalo aquí. Asumo que es 'codigo_premio'
+            if ($this->verificarExistencia('codigo_premio', $this->codigo_premio, 'detalles_palmares', NULL, bloquear:true)) {
                 throw new Exception(ASSOCIATES);
             }
             
-            $sentencia = "DELETE FROM premios WHERE id_premio = :id";
+            $sentencia = "DELETE FROM premios WHERE codigo_premio = :codigo_premio"; // Ajustado a la BD
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':codigo_premio', $this->codigo_premio); // Ajustado
             $stmt->execute();
             $conex->commit();
             return array('accion' => 'exito');
@@ -195,13 +197,14 @@ class ModeloPremios extends Conexion
             $conex = NULL;
         }
     }
-    public function validarTipoPremio(int $id_premio, string $tipoEsperado): void
+
+    public function validarTipoPremio(int $codigo_premio, string $tipoEsperado): void // Ajustado
     {
         $conex = null;
         try {
             $conex = $this->conex();
-            $stmt = $conex->prepare("SELECT tipo FROM premios WHERE id_premio = :id_premio");
-            $stmt->bindValue(':id_premio', $id_premio, \PDO::PARAM_INT);
+            $stmt = $conex->prepare("SELECT tipo FROM premios WHERE codigo_premio = :codigo_premio"); // Ajustado
+            $stmt->bindValue(':codigo_premio', $codigo_premio, \PDO::PARAM_INT); // Ajustado
             $stmt->execute();
             $premio = $stmt->fetch();
 

@@ -8,7 +8,7 @@
         $totalRegistros = count($registro);
 
         foreach ($registro as $index => $dato) :
-            $idTorneo = $dato['id_torneo'];
+            $idTorneo = $dato['codigo_torneo']; // Ajustado
 
             if ($idTorneo !== $torneoActual) :
 
@@ -22,7 +22,7 @@
 
                         $idxAux = $index;
                         $cantidadEquipos = 0;
-                        while (isset($registro[$idxAux]) && $registro[$idxAux]['id_torneo'] == $idTorneo) {
+                        while (isset($registro[$idxAux]) && $registro[$idxAux]['codigo_torneo'] == $idTorneo) { // Ajustado
                             $cantidadEquipos++;
                             $idxAux++;
                         }
@@ -30,7 +30,7 @@
                         // LÓGICA DE ESTATUS DINÁMICO
                         $estatusTorneo = (int)$dato['torneo_estatus'];
                         $textoEstatus = ($estatusTorneo === 1) ? 'Activo' : 'Inactivo';
-                        $claseEstatus = ($estatusTorneo === 1) ? 'estatus_v' : 'estatus_r'; // Usa tu clase roja o amarilla para inactivo
+                        $claseEstatus = ($estatusTorneo === 1) ? 'estatus_v' : 'estatus_r'; 
                             ?>
                 <div class="listado_contenedor_grupal">
 
@@ -75,10 +75,12 @@
                             <?php endif;
                         $botonesAccion = '';
                         if ($permisos['modificar']) {
-                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_participacion'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
+                            // Ajustado a codigo_participacion
+                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                         }
                         if ($permisos['eliminar']) {
-                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['id_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
+                            // Ajustado a codigo_participacion
+                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
                         }
                             ?>
                             <div class="sub_item_fila">
@@ -149,12 +151,10 @@
         $torneoActual = null;
         $totalRegistros = count($registro);
 
-        // BUCLE ÚNICO TOTALMENTE LINEAL O(N) - Agrupando por Torneo
         foreach ($registro as $index => $dato) :
-            $idTorneo = $dato['id_torneo'];
+            $idTorneo = $dato['codigo_torneo']; // Ajustado
 
             if ($idTorneo !== $torneoActual) :
-                // Si ya veníamos procesando un torneo anterior, cerramos sus contenedores
                 if ($torneoActual !== null) : ?>
                     </div>
                     </div>
@@ -163,10 +163,9 @@
 
                         $torneoActual = $idTorneo;
 
-                        // OPTIMIZACIÓN MÁXIMA: Contar los equipos inscritos en este torneo
                         $idxAux = $index;
                         $cantidadEquipos = 0;
-                        while (isset($registro[$idxAux]) && $registro[$idxAux]['id_torneo'] == $idTorneo) {
+                        while (isset($registro[$idxAux]) && $registro[$idxAux]['codigo_torneo'] == $idTorneo) { // Ajustado
                             $cantidadEquipos++;
                             $idxAux++;
                         }
@@ -174,7 +173,7 @@
                         // LÓGICA DE ESTATUS DINÁMICO
                         $estatusTorneo = (int)$dato['torneo_estatus'];
                         $textoEstatus = ($estatusTorneo === 1) ? 'Activo' : 'Inactivo';
-                        $claseEstatus = ($estatusTorneo === 1) ? 'estatus_v' : 'estatus_r'; // Usa tu clase roja o amarilla para inactivo
+                        $claseEstatus = ($estatusTorneo === 1) ? 'estatus_v' : 'estatus_r';
                             ?>
                 <div class="listado_contenedor_grupal">
 
@@ -219,10 +218,12 @@
                             <?php endif;
                         $botonesAccion = '';
                         if ($permisos['modificar']) {
-                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_participacion'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
+                            // Ajustado a codigo_participacion
+                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                         }
                         if ($permisos['eliminar']) {
-                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['id_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
+                            // Ajustado a codigo_participacion
+                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
                         }
                             ?>
                             <div class="sub_item_fila">
@@ -262,23 +263,23 @@
             </div>
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
-                    <input type="hidden" id="id" name="id">
+                    <input type="hidden" id="codigo_participacion" name="codigo_participacion">
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <select name="torneo" id="torneo" class="formulario select">
+                                <select name="codigo_torneo" id="codigo_torneo" class="formulario select">
                                     <option value="">Seleccione...</option>
                                 </select>
-                                <label for="torneo_ind" class="titulo_formulario">Torneo</label>
+                                <label for="codigo_torneo" class="titulo_formulario">Torneo</label>
                                 <span class="mensaje" id="torneo_ind_span"></span>
                             </div>
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <select name="equipo" id="equipo" class="formulario select">
+                                <select name="codigo_equipo" id="codigo_equipo" class="formulario select">
                                     <option value="">Seleccione...</option>
                                 </select>
-                                <label for="equipo" class="titulo_formulario">Equipo</label>
+                                <label for="codigo_equipo" class="titulo_formulario">Equipo</label>
                                 <span class="mensaje" id="equipo_span"></span>
                             </div>
                         </div>
