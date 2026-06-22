@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 21-06-2026 a las 18:39:11
+-- Tiempo de generación: 22-06-2026 a las 03:10:26
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -35,7 +35,7 @@ CREATE TABLE `articulos_inventario` (
   `id_estado` int(11) NOT NULL,
   `id_catalogo` int(11) NOT NULL,
   `codigo_club` int(11) NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- --------------------------------------------------------
@@ -50,7 +50,7 @@ CREATE TABLE `asignaciones` (
   `codigo_atleta` int(11) NOT NULL,
   `codigo_articulo` int(11) NOT NULL,
   `fecha_asignacion` datetime NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- --------------------------------------------------------
@@ -104,7 +104,7 @@ CREATE TABLE `cargos` (
   `codigo_atleta` int(11) NOT NULL,
   `monto_total` decimal(10,0) NOT NULL,
   `fecha_emision` date NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- --------------------------------------------------------
@@ -175,7 +175,7 @@ CREATE TABLE `conceptos` (
   `monto` decimal(10,0) NOT NULL,
   `frecuencia` enum('A','M','L','U') NOT NULL,
   `dias_gracia` int(11) NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- --------------------------------------------------------
@@ -282,7 +282,7 @@ DROP TABLE IF EXISTS `estado_fisico`;
 CREATE TABLE `estado_fisico` (
   `id_estado` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
-  `nivel_estado` tinyint(4) NOT NULL
+  `nivel_estado` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- --------------------------------------------------------
@@ -321,7 +321,7 @@ CREATE TABLE `inscripciones` (
   `peso_kg` decimal(10,0) NOT NULL,
   `estatura_cm` int(11) NOT NULL,
   `fecha_inscripcion` date NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
@@ -331,7 +331,8 @@ CREATE TABLE `inscripciones` (
 INSERT INTO `inscripciones` (`codigo_inscripcion`, `codigo_atleta`, `codigo_categoria`, `codigo_posicion`, `dorsal`, `peso_kg`, `estatura_cm`, `fecha_inscripcion`, `estatus`) VALUES
 (2, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
 (3, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
-(4, 2, 7, 1, 12, 90, 185, '2026-06-21', 1);
+(4, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
+(5, 2, 7, 1, 12, 90, 185, '2026-06-21', 1);
 
 -- --------------------------------------------------------
 
@@ -344,8 +345,15 @@ CREATE TABLE `metodos_pago` (
   `codigo_metodo` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
   `nec_referencia` tinyint(4) NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `metodos_pago`
+--
+
+INSERT INTO `metodos_pago` (`codigo_metodo`, `nombre`, `nec_referencia`, `estatus`) VALUES
+(2, 'Transferencia', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -359,8 +367,8 @@ CREATE TABLE `monedas` (
   `nombre` varchar(255) NOT NULL,
   `abreviatura` varchar(255) NOT NULL,
   `simbolo` varchar(255) NOT NULL,
-  `base` tinyint(4) NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `base` tinyint(4) NOT NULL DEFAULT 2,
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- --------------------------------------------------------
@@ -377,7 +385,7 @@ CREATE TABLE `pagos` (
   `monto_pago` decimal(10,0) NOT NULL,
   `fecha` date NOT NULL,
   `referencia` varchar(255) NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- --------------------------------------------------------
@@ -497,7 +505,8 @@ CREATE TABLE `retiros` (
 
 INSERT INTO `retiros` (`codigo_retiro`, `codigo_inscripcion`, `fecha_retiro`, `motivo`) VALUES
 (2, 2, '2026-06-21', 'viaje largo'),
-(3, 3, '2026-06-21', 'no le gusto el hockey');
+(3, 3, '2026-06-21', 'no le gusto el hockey'),
+(4, 4, '2026-06-21', 'falta de pago');
 
 -- --------------------------------------------------------
 
@@ -526,7 +535,7 @@ CREATE TABLE `torneos` (
   `fecha_inicio` datetime NOT NULL,
   `fecha_fin` datetime NOT NULL,
   `ubicacion` varchar(255) NOT NULL,
-  `estatus` tinyint(4) NOT NULL
+  `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- --------------------------------------------------------
@@ -934,13 +943,13 @@ ALTER TABLE `identidad_atleta`
 -- AUTO_INCREMENT de la tabla `inscripciones`
 --
 ALTER TABLE `inscripciones`
-  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `metodos_pago`
 --
 ALTER TABLE `metodos_pago`
-  MODIFY `codigo_metodo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_metodo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `monedas`
@@ -994,7 +1003,7 @@ ALTER TABLE `representantes`
 -- AUTO_INCREMENT de la tabla `retiros`
 --
 ALTER TABLE `retiros`
-  MODIFY `codigo_retiro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `codigo_retiro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `tasa_cambios`

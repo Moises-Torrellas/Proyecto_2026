@@ -20,10 +20,10 @@ class ModeloMetodosPago extends Conexion
             'nombre' => 'nombre',
             'nec_referencia' => 'nec_referencia',
             'estatus' => 'estatus',
-            'id' => 'id_metodos'
+            'id' => 'codigo_metodo'
         ];
         //Definimos la llave primaria de la tabla en la base de datos
-        $this->llavePrimaria = 'id_metodos';
+        $this->llavePrimaria = 'codigo_metodo';
     }
 
 
@@ -78,7 +78,7 @@ class ModeloMetodosPago extends Conexion
             }
 
             // 4. Orden (Asegúrate de usar una columna que exista, como id_metodos)
-            $sentencia .= " ORDER BY id_metodos ASC";
+            $sentencia .= " ORDER BY codigo_metodo ASC";
 
             $stmt = $conex->prepare($sentencia);
 
@@ -138,7 +138,7 @@ class ModeloMetodosPago extends Conexion
             $sentencia = "UPDATE metodos_pago SET 
             nombre = :nombre, 
             nec_referencia = :nec_referencia
-            WHERE id_metodos = :id_metodos"; 
+            WHERE codigo_metodo = :id_metodos"; 
             
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
@@ -163,7 +163,7 @@ class ModeloMetodosPago extends Conexion
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM metodos_pago WHERE id_metodos = :id";
+            $sentencia = "SELECT * FROM metodos_pago WHERE codigo_metodo = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
@@ -188,7 +188,7 @@ class ModeloMetodosPago extends Conexion
             if ($this->verificarExistencia('id', $this->id, 'pagos', NULL, bloquear:true)) {
                 throw new Exception(ASSOCIATES);
             }
-            $sentencia = "DELETE FROM metodos_pago WHERE id_metodos = :id";
+            $sentencia = "DELETE FROM metodos_pago WHERE codigo_metodo = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
@@ -217,7 +217,7 @@ class ModeloMetodosPago extends Conexion
 
             $nuevoEstado = ($this->bloqueo == 1) ? 2 : 1;
 
-            $sql = "UPDATE `metodos_pago` SET `estatus` = :estado WHERE id_metodos = :id";
+            $sql = "UPDATE `metodos_pago` SET `estatus` = :estado WHERE codigo_metodo = :id";
             $stmt = $conex->prepare($sql);
 
             $stmt->execute([

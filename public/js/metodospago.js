@@ -125,7 +125,7 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Método de Pago");
 
     // Llenamos el formulario con los datos recibidos de la BD
-    $('#id').val(datos[0].id_metodos);
+    $('#id').val(datos[0].codigo_metodo);
     $('#nombre').val(datos[0].nombre);
     $('#nec_referencia').val(datos[0].nec_referencia);
     $('#estatus').val(datos[0].estatus);
