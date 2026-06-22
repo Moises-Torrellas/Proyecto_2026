@@ -5,11 +5,15 @@ if (isset($solo_lista) && $solo_lista === true) :
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-    <?php else :
+        <?php else :
         foreach ($registro as $dato) :
             $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
             $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
-            ?>
+            $base = ($dato['base'] == 1) ? 'cbt_m' : 'cbt_g';
+
+            // Evaluamos si es moneda base para asignar la función correspondiente
+            $onclickAccion = ($dato['base'] == 1) ? 'msj()' : 'seleccionar(' . $dato['codigo_moneda'] . ')';
+        ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item">
                     <div class="listado_col_datos">
@@ -28,15 +32,21 @@ if (isset($solo_lista) && $solo_lista === true) :
                     </div>
                     <div class="listado_col_acciones">
                         <div style="display:flex; gap:5px;">
-                        <?php if ($permisos['modificar']) : ?>
-                                <button class="btn_t cbt_v" onclick="buscar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                        <?php endif; ?>
-                        <?php if ($permisos['eliminar']) : ?>
-                                <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                        <?php endif; ?>
-                        <?php if ($permisos['otros']) : ?>
-                                <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_moneda'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
-                        <?php endif; ?>
+                            <?php if ($permisos['otros']) : ?>
+                                <button class="btn_t <?= $base ?>" onclick="<?= $onclickAccion ?>" data-tippy-content="Seleccionar como moneda base"><i class="fi fi-sr-money-transfer-coin-arrow"></i></button>
+                            <?php endif; ?>
+
+                            <?php if ($permisos['modificar']) : ?>
+                                <button class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_moneda'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                            <?php endif; ?>
+
+                            <?php if ($permisos['eliminar']) : ?>
+                                <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_moneda'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                            <?php endif; ?>
+
+                            <?php if ($permisos['otros']): ?>
+                                <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['codigo_moneda'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -87,11 +97,15 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                            <?php else :
+                                <?php else :
                                 foreach ($registro as $dato) :
                                     $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
                                     $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
-                                    ?>
+                                    $base = ($dato['base'] == 1) ? 'cbt_m' : 'cbt_g';
+
+                                    // Evaluamos si es moneda base para asignar la función correspondiente
+                                    $onclickAccion = ($dato['base'] == 1) ? 'msj()' : 'seleccionar(' . $dato['codigo_moneda'] . ')';
+                                ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item">
                                             <div class="listado_col_datos">
@@ -110,20 +124,26 @@ if (isset($solo_lista) && $solo_lista === true) :
                                             </div>
                                             <div class="listado_col_acciones">
                                                 <div style="display:flex; gap:5px;">
-                                                <?php if ($permisos['modificar']) : ?>
-                                                        <button class="btn_t cbt_v" onclick="buscar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                                <?php endif; ?>
-                                                <?php if ($permisos['eliminar']) : ?>
-                                                        <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_moneda'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                    <?php if ($permisos['otros']) : ?>
+                                                        <button class="btn_t <?= $base ?>" onclick="<?= $onclickAccion ?>" data-tippy-content="Seleccionar como moneda base"><i class="fi fi-sr-money-transfer-coin-arrow"></i></button>
                                                     <?php endif; ?>
+
+                                                    <?php if ($permisos['modificar']) : ?>
+                                                        <button class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_moneda'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php endif; ?>
+
+                                                    <?php if ($permisos['eliminar']) : ?>
+                                                        <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_moneda'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                    <?php endif; ?>
+
                                                     <?php if ($permisos['otros']): ?>
-                                                        <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['id_moneda'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
-                                                <?php endif; ?>
+                                                        <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['codigo_moneda'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <?php
+                            <?php
                                 endforeach;
                             endif; ?>
                         </div>

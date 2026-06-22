@@ -163,7 +163,7 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina" id="titulo">Cuentas por Cobrar</h2>
+                            <h2 class="titulo_pagina" id="titulo">Cargos</h2>
                         </div>
                         <div class="contenedor_busqueda">
                             <input type="text" placeholder="Buscar cargo..." autocomplete="off" id="busqueda">

@@ -168,7 +168,7 @@ function modificar(datos) {
     $("#proceso").data("accion", "modificar");
     $("#proceso").text("Modificar Moneda");
     $("#titulo_modal").text("Modificar Moneda");
-    $('#id').val(datos[0].id_moneda);
+    $('#id').val(datos[0].codigo_moneda);
     $('#nombre').val(datos[0].nombre);
     $('#abreviatura').val(datos[0].abreviatura);
     $('#simbolo').val(datos[0].simbolo);
@@ -192,7 +192,20 @@ function bloquear(id, b, elemento) {
     });
 }
 
-// Reemplaza por completo tu función anterior en monedas.js
+function seleccionar(id) {
+    confirmar(`¿Está seguro que quiere seleccionar esta Moneda como la moneda base del sistema? información: Esto remplazara la moneda actual y todas los cargos se cargaran con esta moneda.`, function (confirmado) {
+        if (confirmado) {
+            var datos = new FormData();
+            datos.append('accion', 'select');
+            datos.append('id', id);
+            enviaAjax(datos);
+        }
+    });
+}
+function msj() {
+    muestraMensaje("error", 2000, "Necesita seleccionar otra moneda", "No puede desactivar la moneda base, si desea cambiarla debe seleccionar otra moneda.");
+}
+
 function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
 
@@ -246,6 +259,9 @@ function enviaAjax(datos) {
                     modificar(lee.datos);
                 } else if (lee.accion == "bloquear") {
                     muestraMensaje("success", 2000, "Bloqueo Exitosa", lee.mensaje);
+                    consultar();
+                } else if (lee.accion == "select") {
+                    muestraMensaje("success", 2000, "Cambio Exitoso", lee.mensaje);
                     consultar();
                 } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);

@@ -123,13 +123,15 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try { 
-        validar_requeridos(['nombre', 'monto', 'regla']);
+        validar_requeridos(['nombre', 'monto', 'frecuencia', 'dias']);
 
         $datos = [
             'nombre'     => $_POST['nombre'],
             'monto'   => $_POST['monto'],
-            'regla'   => $_POST['regla']
+            'frecuencia'   => $_POST['frecuencia'],
+            'dias'   => $_POST['dias']
         ];
+
         $datos['accion'] = 'incluir';
 
         $resultado = $obj->procesarDatos($datos);
@@ -158,13 +160,14 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id', 'nombre', 'monto', 'regla']);
+        validar_requeridos(['id', 'nombre', 'monto', 'frecuencia', 'dias']);
 
         $datos = [
             'id' => $_POST['id'],
             'nombre' => $_POST['nombre'],
             'monto'     => $_POST['monto'],
-            'regla'   => $_POST['regla']
+            'frecuencia'   => $_POST['frecuencia'],
+            'dias'   => $_POST['dias']
         ];
         $datos['accion'] = 'modificar';
 
@@ -179,6 +182,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un concepto de pago con ese nombre.',
+                INVALID_ID     => 'No se pudo encontrar el concepto de pago.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
@@ -211,7 +215,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El concepto de pago no existe.',
-                ASSOCIATES  => 'El concepto de pago tiene atletas asociados.',
+                ASSOCIATES  => 'El concepto de pago tiene cargos asociados.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la eliminacion.'
             };

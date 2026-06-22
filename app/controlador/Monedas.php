@@ -2,6 +2,8 @@
 
 use App\modelo\ModeloMonedas;
 
+use const Dom\VALIDATION_ERR;
+
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
@@ -24,7 +26,7 @@ $objModelo = new ModeloMonedas();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
+    registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
     $registro = $respuesta['datos'] ?? [];
     $variables = ['registro' => $registro, 'permisos' => $permisos];
@@ -66,6 +68,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
             case 'bloquear':
                 if (!$permisos['otros']) throw new Exception('No tienes permisos para bloquear Monedas.');
                 bloquear($obj, $id_modulo, $bitacoraObj);
+                break;
+            case 'select':
+                if (!$permisos['otros']) throw new Exception('No tienes permisos para selecionar la Moneda base.');
+                select($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
                 throw new Exception('Acción no permitida.');
@@ -211,9 +217,14 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
                 ASSOCIATES => 'No se puede eliminar la moneda porque esta asociado a pagos.',
+                ASSOCIATES . '2' => 'No se puede eliminar la moneda porque esta asociado a vueltos.',
+                ASSOCIATES . '3' => 'No se puede eliminar la moneda porque esta asociado a tasa de cambio.',
+                VALIDATION     => 'No se puede eliminar la moneda base del sistema.',
+                VALIDATION . '2'  => 'No se puede eliminar. Deben existir al menos dos monedas en el sistema.',
+                VALIDATION . '3'  => 'No se puede eliminar. Deben mantenerse al menos dos monedas activas en el sistema.',
                 INVALID_ID => 'La moneda no existe.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
-                default          => 'Ocurrió un error inesperado en la modificacion.'
+                default          => 'Ocurrió un error inesperado en la eliminacion.'
             };
         }
         echo json_encode($respuesta);
@@ -248,10 +259,44 @@ function bloquear($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                ASSOCIATES => 'El Super Usuario no puede ser bloqueado.',
-                INVALID_ID => 'El usuario que intenta modificar ya no existe.',
+                VALIDATION     => 'No se puede bloquear la moneda base del sistema.',
+                VALIDATION . '2'  => 'No se puede bloquear. Deben mantenerse al menos dos monedas activas en el sistema.',
+                INVALID_ID => 'La moneda no existe.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default    => 'No se pudo completar la operación de bloqueo.'
+            };
+        }
+
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Monedas', $e->getMessage(), 'Controlador_Bloquear');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function select($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        validar_datos([
+            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']
+        ]);
+
+        $datos = [
+            'id' => $_POST['id'],
+            'accion' => 'select'
+        ];
+
+        $resultado = $obj->procesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Selecciono la moneda: " . $_POST['id']);
+            $resultado = array('accion' => 'select', 'mensaje' => 'Cambio de moneda exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                INVALID_ID => 'La moneda no existe.',
+                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
+                default    => 'No se pudo completar la operación de cambio.'
             };
         }
 

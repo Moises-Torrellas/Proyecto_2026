@@ -3,17 +3,17 @@
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-    <?php else :
+        <?php else :
         foreach ($registro as $dato) :
             $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
             $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
-            $regla = match ($dato['regla']) {
+            $frecuencia = match ($dato['frecuencia']) {
                 'L' => 'Libre',
                 'M' => 'Mensual',
                 'A' => 'Anual',
                 'U' => 'Unico'
             };
-            ?>
+        ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
                     <div class="listado_col_datos">
@@ -27,21 +27,25 @@
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Frecuencia</small>
-                            <span><?= $regla ?></span>
+                            <span><?= $frecuencia ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Dias Limite de Pago</small>
+                            <span><?= $dato['dias_gracia'] ?></span>
                         </div>
                     </div>
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                        <?php if ($permisos['modificar']) : ?>
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_conceptos'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                        <?php endif; ?>
-                        <?php if ($permisos['eliminar']) : ?>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_conceptos'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                        <?php endif; ?>
-                        <?php if ($permisos['otros']) : ?>
-                                <button class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['id_conceptos'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
-                        <?php endif; ?>
+                            <?php if ($permisos['modificar']) : ?>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_concepto'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                            <?php endif; ?>
+                            <?php if ($permisos['eliminar']) : ?>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_concepto'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                            <?php endif; ?>
+                            <?php if ($permisos['otros']) : ?>
+                                <button class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['codigo_concepto'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -69,7 +73,7 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina" id="titulo">Conceptos de Cuentas</h2>
+                            <h2 class="titulo_pagina" id="titulo">Conceptos de Cargos</h2>
                         </div>
                         <div class="contenedor_busqueda">
                             <input type="text" placeholder="Buscar..." autocomplete="off" id="busqueda">
@@ -87,17 +91,17 @@
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                            <?php else :
+                                <?php else :
                                 foreach ($registro as $dato) :
                                     $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
                                     $color = ($dato['estatus'] == 1) ? 'cbt_g' : 'cbt_a';
-                                    $regla = match ($dato['regla']) {
+                                    $frecuencia = match ($dato['frecuencia']) {
                                         'L' => 'Libre',
                                         'M' => 'Mensual',
                                         'A' => 'Anual',
                                         'U' => 'Unico'
                                     };
-                                    ?>
+                                ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
                                             <div class="listado_col_datos">
@@ -111,21 +115,25 @@
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Frecuencia</small>
-                                                    <span><?= $regla ?></span>
+                                                    <span><?= $frecuencia ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Dias Limite de Pago</small>
+                                                    <span><?= $dato['dias_gracia'] ?></span>
                                                 </div>
                                             </div>
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                <?php if ($permisos['modificar']) : ?>
-                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_conceptos'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                                <?php endif; ?>
-                                                <?php if ($permisos['eliminar']) : ?>
-                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_conceptos'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                                <?php endif; ?>
-                                                <?php if ($permisos['otros']) : ?>
-                                                        <button class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['id_conceptos'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
-                                                <?php endif; ?>
+                                                    <?php if ($permisos['modificar']) : ?>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_concepto'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if ($permisos['eliminar']) : ?>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_concepto'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if ($permisos['otros']) : ?>
+                                                        <button class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['codigo_concepto'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -167,22 +175,30 @@
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <select name="regla" id="regla" class="formulario select">
+                                <select name="frecuencia" id="frecuencia" class="formulario select">
                                     <option value="L" selected>Libre</option>
                                     <option value="M">Mensual</option>
                                     <option value="A">Anual</option>
                                     <option value="U">Unico</option>
                                 </select>
-                                <label for="regla" class="titulo_formulario">Frecuencia</label>
-                                <span class="mensaje" id="regla_span"></span>
+                                <label for="frecuencia" class="titulo_formulario">Frecuencia</label>
+                                <span class="mensaje" id="frecuencia_span"></span>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="colum">
-                                <button type="button" class="btn btn_azul" id="proceso">Registra Concepto</button>
-                                <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="dias" name="dias">
+                                <label for="dias" class="titulo_formulario">Dias Limites de Pago</label>
+                                <span class="mensaje" id="dias_spam"></span>
                             </div>
                         </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <button type="button" class="btn btn_azul" id="proceso">Registra Concepto</button>
+                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>

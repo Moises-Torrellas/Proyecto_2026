@@ -23,6 +23,8 @@ $(document).ready(function () {
 
     // Validación de monto
     Validacion("monto", /^[0-9\b\,]*$/, /^[0-9]+(.[0-9]{1,2})?$/, "Solo números con hasta dos decimales (solo comas)", "proceso");
+    
+    Validacion("dias", /^[0-9]*$/, /^[0-9]{1,3}$/, "Solo números hasta tres digitos", "proceso");
 
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
@@ -164,8 +166,12 @@ function validarEnvio(proceso) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar un monto válido");
         return false;
     }
-    else if ($('#regla').val() == "" || $('#regla').val() == null) {
+    else if ($('#frecuencia').val() == "" || $('#frecuencia').val() == null) {
         muestraMensaje("error", 2000, "Error", "Debe elegir la frecuencia");
+        return false;
+    }else if (validarkeyup(/^[0-9]{0,10}$/, $('#dias'),
+        $("#dias_spam"), "Solo números de hasta 3 digitos.", true)) {
+        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un numero de dias valido");
         return false;
     }
 
@@ -176,10 +182,11 @@ function modificar(datos) {
     $("#proceso").data("accion", "modificar");
     $("#proceso").text("Modificar concepto de pago");
     $("#titulo_modal").text("Modificar concepto de pago");
-    $('#id').val(datos[0].id_conceptos);
+    $('#id').val(datos[0].codigo_concepto);
     $('#nombre').val(datos[0].nombre);
     $('#monto').val(datos[0].monto);
-    $('#regla').val(datos[0].regla);
+    $('#frecuencia').val(datos[0].frecuencia);
+    $('#dias').val(datos[0].dias_gracia);
     abrirModal();
 }
 function crearConsulta(htmlRecibido) {

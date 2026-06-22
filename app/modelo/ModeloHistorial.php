@@ -27,7 +27,7 @@ class ModeloHistorial extends Conexion
                       FROM atletas a 
                       LEFT JOIN categorias c ON a.id_categoria = c.id_categorias 
                       LEFT JOIN posiciones p ON a.id_posicion = p.id_posicion 
-                      WHERE a.id_atleta = :id_atleta";
+                      WHERE a.codigo_atleta = :id_atleta";
             $stmt = $conex->prepare($sqlAtleta);
             $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);
             $stmt->execute();
@@ -41,7 +41,7 @@ class ModeloHistorial extends Conexion
             $sqlEstadisticas = "SELECT e.*, t.nombre as nombre_torneo, t.fecha_inicio, t.fecha_fin, t.ubicacion 
                             FROM estadisticas e 
                             INNER JOIN torneos t ON e.id_torneo = t.id_torneo 
-                            WHERE e.id_atleta = :id_atleta
+                            WHERE e.codigo_atleta = :id_atleta
                             ORDER BY t.fecha_inicio DESC";
             $stmt = $conex->prepare($sqlEstadisticas);
             $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);
@@ -53,7 +53,7 @@ class ModeloHistorial extends Conexion
                            INNER JOIN premios p ON pi.id_premio = p.id_premio
                            LEFT JOIN palmares pa ON pi.id_palmares = pa.id_palmares
                            LEFT JOIN torneos t ON pa.id_torneo = t.id_torneo
-                           WHERE pi.id_atleta = :id_atleta";
+                           WHERE pi.codigo_atleta = :id_atleta";
             $stmt = $conex->prepare($sqlPalmaresInd);
             $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);
             $stmt->execute();
@@ -65,7 +65,7 @@ class ModeloHistorial extends Conexion
                    INNER JOIN detalles_equipos de ON pg.id_equipo = de.id_equipo
                    INNER JOIN equipos eq ON pg.id_equipo = eq.id_equipos
                    LEFT JOIN palmares pa ON pg.id_palmares = pa.id_palmares
-                   WHERE de.id_atleta = :id_atleta";
+                   WHERE de.codigo_atleta = :id_atleta";
             $stmt = $conex->prepare($sqlPalmaresGrp);
             $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);
             $stmt->execute();

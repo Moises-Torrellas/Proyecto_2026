@@ -40,7 +40,7 @@
                 <li class="nav_identificador">Cobranzas</li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_CUENTAS_)) : ?>
-                        <a type="button" href="CuentasCobrar" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Cuentas por Cobrar</a>
+                        <a type="button" href="CuentasCobrar" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Cargos</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_PAGOS_)) : ?>
@@ -52,7 +52,7 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_CONCEPTOS_)) : ?>
-                        <a type="button" href="Conceptos" class="opciones"><i class="opciones_i" data-lucide="receipt"></i> Conceptos de Cuentas</a>
+                        <a type="button" href="Conceptos" class="opciones"><i class="opciones_i" data-lucide="receipt"></i> Conceptos de Cargos</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_MONEDAS_)) : ?>

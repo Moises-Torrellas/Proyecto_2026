@@ -19,9 +19,9 @@ class ModeloMonedas extends Conexion
             'nombre' => 'nombre',
             'abreviatura' => 'abreviatura',
             'simbolo' => 'simbolo',
-            'id'    => 'id_moneda'
+            'id'    => 'codigo_moneda'
         ];
-        $this->llavePrimaria = 'id_moneda';
+        $this->llavePrimaria = 'codigo_moneda';
     }
 
     public function ProcesarDatos(array $datos)
@@ -44,6 +44,7 @@ class ModeloMonedas extends Conexion
             'eliminar' => $this->Eliminar(),
             'modificar' => $this->Modificar(),
             'bloquear' => $this->Bloquear(),
+            'select' => $this->SelecMonedaBase(),
             default => throw new Exception('La accion no es valida')
         };
     }
@@ -87,9 +88,9 @@ class ModeloMonedas extends Conexion
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM monedas WHERE id_moneda = :id";
+            $sentencia = "SELECT * FROM monedas WHERE codigo_moneda = :id";
             $stmt = $conex->prepare($sentencia);
-            if($id===null) $id = $this->id;
+            if ($id === null) $id = $this->id;
             $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
             $stmt->execute();
             $datos = $stmt->fetchAll();
@@ -162,7 +163,7 @@ class ModeloMonedas extends Conexion
                 }
             }
 
-            $sentencia = "UPDATE monedas SET nombre = :nombre, abreviatura = :abreviatura, simbolo = :simbolo WHERE id_moneda = :id_moneda";
+            $sentencia = "UPDATE monedas SET nombre = :nombre, abreviatura = :abreviatura, simbolo = :simbolo WHERE codigo_moneda = :id_moneda";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id_moneda', $this->id);
             $stmt->bindParam(':nombre', $this->nombre);
@@ -188,15 +189,35 @@ class ModeloMonedas extends Conexion
             if ($this->verificarExistencia('id', $this->id, 'pagos', NULL)) {
                 throw new Exception(ASSOCIATES);
             }
+            if ($this->verificarExistencia('id', $this->id, 'vueltos', NULL)) {
+                throw new Exception(ASSOCIATES . '2');
+            }
+            if ($this->verificarExistencia('id', $this->id, 'tasa_cambios', NULL)) {
+                throw new Exception(ASSOCIATES . '3');
+            }
 
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id', $this->id, 'monedas', NULL, bloquear: true)) {
+            $moneda = $this->obtenerDatosMoneda($conex, $this->id);
+
+            if (!$moneda) {
                 throw new Exception(INVALID_ID);
             }
 
-            $sentencia = "DELETE FROM monedas WHERE id_moneda = :id_moneda";
+            if ($moneda['base'] == 1) {
+                throw new Exception(VALIDATION);
+            }
+
+            if ($this->obtenerCantidadTotalMonedas($conex) <= 2) {
+                throw new Exception(VALIDATION . '2');
+            }
+
+            if ($moneda['estatus'] == 1 && $this->obtenerCantidadMonedasActivas($conex) <= 2) {
+                throw new Exception(VALIDATION . '3');
+            }
+
+            $sentencia = "DELETE FROM monedas WHERE codigo_moneda = :id_moneda";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id_moneda', $this->id);
             $stmt->execute();
@@ -213,25 +234,35 @@ class ModeloMonedas extends Conexion
 
     private function Bloquear(): array
     {
-
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id', $this->id, 'monedas', NULL, bloquear: true)) {
+            $moneda = $this->obtenerDatosMoneda($conex, $this->id);
+
+            if (!$moneda) {
                 throw new Exception(INVALID_ID);
             }
 
             $nuevoEstado = ($this->bloqueo == 1) ? 2 : 1;
 
-            $sql = "UPDATE `monedas` SET `estatus` = :estado WHERE id_moneda = :id";
+            if ($nuevoEstado == 2) {
+                if ($moneda['base'] == 1) {
+                    throw new Exception(VALIDATION);
+                }
+
+                if ($this->obtenerCantidadMonedasActivas($conex) <= 2) {
+                    throw new Exception(VALIDATION . '2');
+                }
+            }
+
+            $sql = "UPDATE `monedas` SET `estatus` = :estado WHERE codigo_moneda = :id";
             $stmt = $conex->prepare($sql);
 
             $stmt->execute([
                 ':estado' => $nuevoEstado,
                 ':id' => $this->id
             ]);
-
 
             $conex->commit();
             return ['accion' => 'exito'];
@@ -244,5 +275,61 @@ class ModeloMonedas extends Conexion
         } finally {
             $conex = null;
         }
+    }
+
+    private function SelecMonedaBase(): array
+    {
+        try {
+            $conex = $this->conex();
+            $conex->beginTransaction();
+
+            if (!$this->verificarExistencia('id', $this->id, 'monedas', NULL, bloquear: true)) {
+                throw new Exception(INVALID_ID);
+            }
+
+            // Usamos marcadores distintos: :id_case y :id_where
+            $sql = "UPDATE `monedas` 
+                        SET `base` = CASE 
+                            WHEN `codigo_moneda` = :id_case THEN 1 
+                            ELSE 2 
+                        END 
+                        WHERE `codigo_moneda` = :id_where OR `base` = 1";
+
+            $stmt = $conex->prepare($sql);
+            $stmt->execute([
+                ':id_case'  => $this->id,
+                ':id_where' => $this->id
+            ]);
+
+            $conex->commit();
+            return ['accion' => 'exito'];
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            logs('Monedas', $e->getMessage(), 'Modelo_Selec');
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+        } finally {
+            $conex = null;
+        }
+    }
+
+    private function obtenerCantidadTotalMonedas(\PDO $conex): int
+    {
+        $stmt = $conex->query("SELECT COUNT(*) FROM monedas");
+        return (int) $stmt->fetchColumn();
+    }
+
+    private function obtenerCantidadMonedasActivas(\PDO $conex): int
+    {
+        $stmt = $conex->query("SELECT COUNT(*) FROM monedas WHERE estatus = 1");
+        return (int) $stmt->fetchColumn();
+    }
+
+    private function obtenerDatosMoneda(\PDO $conex, int $id)
+    {
+        $stmt = $conex->prepare("SELECT base, estatus FROM monedas WHERE codigo_moneda = :id");
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 }

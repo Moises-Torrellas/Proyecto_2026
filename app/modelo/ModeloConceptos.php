@@ -10,7 +10,8 @@ class ModeloConceptos extends Conexion
     private $nombre;
     private $monto;
     private $estatus;
-    private $regla;
+    private $frecuencia;
+    private $dias;
     public function __construct()
     {
         parent::__construct();
@@ -18,10 +19,10 @@ class ModeloConceptos extends Conexion
         $this->campoWhitelist = [
             'nombre' => 'nombre',
             'monto' => 'monto',
-            'id' => 'id_conceptos'
+            'id' => 'codigo_concepto'
         ];
         //Definimos la llave primaria de la tabla en la base de datos
-        $this->llavePrimaria = 'id_conceptos';
+        $this->llavePrimaria = 'codigo_concepto';
     }
 
 
@@ -37,7 +38,8 @@ class ModeloConceptos extends Conexion
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->monto = floatval(str_replace(',', '.', trim($datos['monto'] ?? '')));
         $this->estatus = $datos['estatus'] ?? null;
-        $this->regla = $datos['regla'] ?? null;
+        $this->frecuencia = $datos['frecuencia'] ?? null;
+        $this->dias = $datos['dias'] ?? null;
         //ejecutamos la accion enviada por el controlador
         $accion = $datos['accion'] ?? null;
         
@@ -85,7 +87,7 @@ class ModeloConceptos extends Conexion
 
 
             // 4. Orden (Asegúrate de usar una columna que exista, como id_conceptos)
-            $sentencia .= " ORDER BY id_conceptos ASC";
+            $sentencia .= " ORDER BY codigo_concepto ASC";
 
             $stmt = $conex->prepare($sentencia);
 
@@ -113,11 +115,12 @@ class ModeloConceptos extends Conexion
                 throw new Exception(DUPLICATE_NAME);
             }
 
-            $sentencia = "INSERT INTO conceptos (`nombre`, `monto`, `regla`) VALUES (:nombre, :monto, :regla)";
+            $sentencia = "INSERT INTO conceptos (`nombre`, `monto`, `frecuencia`, `dias_gracia`) VALUES (:nombre, :monto, :frecuencia, :dias)";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':monto', $this->monto);
-            $stmt->bindParam(':regla', $this->regla);
+            $stmt->bindParam(':frecuencia', $this->frecuencia);
+            $stmt->bindParam(':dias', $this->dias);
             $stmt->execute();
 
             $conex->commit();
@@ -139,6 +142,10 @@ class ModeloConceptos extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
+            if (!$this->verificarExistencia('id', $this->id, 'conceptos', NULL, bloquear: true)) {
+                throw new Exception(INVALID_ID);
+            }
+
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'conceptos', NULL, bloquear: true)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'conceptos', NULL, bloquear: true)) {
                     throw new Exception(DUPLICATE_NAME);
@@ -148,13 +155,15 @@ class ModeloConceptos extends Conexion
             $sentencia = "UPDATE conceptos SET 
             nombre = :nombre, 
             monto = :monto,
-            regla = :regla
-            WHERE id_conceptos = :id_conceptos";
+            frecuencia = :frecuencia,
+            dias_gracia = :dias
+            WHERE codigo_concepto = :id_conceptos";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':monto', $this->monto);
             $stmt->bindParam(':id_conceptos', $this->id);
-            $stmt->bindParam(':regla', $this->regla);
+            $stmt->bindParam(':frecuencia', $this->frecuencia);
+            $stmt->bindParam(':dias', $this->dias);
             $stmt->execute();
 
             $conex->commit();
@@ -174,7 +183,7 @@ class ModeloConceptos extends Conexion
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM conceptos WHERE id_conceptos = :id";
+            $sentencia = "SELECT * FROM conceptos WHERE codigo_concepto = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
@@ -194,9 +203,12 @@ class ModeloConceptos extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
             if (!$this->verificarExistencia('id', $this->id, 'conceptos', NULL, bloquear: true)) {
-                throw new Exception('El registro no existe.');
+                throw new Exception(INVALID_ID);
             }
-            $sentencia = "DELETE FROM conceptos WHERE id_conceptos = :id";
+            if (!$this->verificarExistencia('id', $this->id, 'cargos', NULL, bloquear: true)) {
+                throw new Exception(ASSOCIATES);
+            }
+            $sentencia = "DELETE FROM conceptos WHERE codigo_concepto = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
@@ -220,13 +232,13 @@ class ModeloConceptos extends Conexion
             $conex->beginTransaction();
 
             if (!$this->verificarExistencia('id', $this->id, 'conceptos', NULL, bloquear: true)) {
-                throw new Exception('El concepto de pago no existe.');
+                throw new Exception(INVALID_ID);
             }
 
             // Alternar entre 1 y 2
             $nuevoEstado = ($this->estatus == 1) ? 2 : 1;
 
-            $sentencia = "UPDATE conceptos SET estatus = :estatus WHERE id_conceptos = :id_conceptos";
+            $sentencia = "UPDATE conceptos SET estatus = :estatus WHERE codigo_concepto = :id_conceptos";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':estatus', $nuevoEstado);
             $stmt->bindParam(':id_conceptos', $this->id);
@@ -256,8 +268,11 @@ class ModeloConceptos extends Conexion
         if (!empty($datos['monto']) && !preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $datos['monto'])) {
             throw new Exception('Monto inválido.');
         }
-        if (!empty($datos['regla']) && !preg_match('/^[LMAU]$/', $datos['regla'])) {
+        if (!empty($datos['frecuencia']) && !preg_match('/^[LMAU]$/', $datos['frecuencia'])) {
             throw new Exception('Frecuencia inválido.');
+        }
+        if (!empty($datos['dias']) && !preg_match('/^[0-9]{1,3}$/', $datos['dias'])) {
+            throw new Exception('dias de pago inválido.');
         }
     }
 }
