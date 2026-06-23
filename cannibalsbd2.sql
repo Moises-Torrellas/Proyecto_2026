@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 23-06-2026 a las 03:59:36
+-- Tiempo de generación: 23-06-2026 a las 19:43:01
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -230,7 +230,7 @@ CREATE TABLE `detalles_equipos` (
 --
 
 INSERT INTO `detalles_equipos` (`codigo_detalle`, `codigo_equipo`, `codigo_atleta`) VALUES
-(1, 1, 2);
+(2, 1, 2);
 
 -- --------------------------------------------------------
 
@@ -305,7 +305,7 @@ CREATE TABLE `equipos` (
 --
 
 INSERT INTO `equipos` (`codigo_equipo`, `nombre`) VALUES
-(1, 'SENIOR');
+(1, 'Senior');
 
 -- --------------------------------------------------------
 
@@ -439,10 +439,17 @@ CREATE TABLE `pagos` (
 
 DROP TABLE IF EXISTS `palmares_grupal`;
 CREATE TABLE `palmares_grupal` (
-  `id_grupal` int(11) NOT NULL,
+  `codigo_grupal` int(11) NOT NULL,
   `codigo_participacion` int(11) NOT NULL,
   `codigo_premio` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `palmares_grupal`
+--
+
+INSERT INTO `palmares_grupal` (`codigo_grupal`, `codigo_participacion`, `codigo_premio`) VALUES
+(2, 1, 2);
 
 -- --------------------------------------------------------
 
@@ -456,6 +463,13 @@ CREATE TABLE `palmares_individual` (
   `codigo_premio` int(11) NOT NULL,
   `codigo_dtll_prtc` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `palmares_individual`
+--
+
+INSERT INTO `palmares_individual` (`codigo_individual`, `codigo_premio`, `codigo_dtll_prtc`) VALUES
+(2, 3, 2);
 
 -- --------------------------------------------------------
 
@@ -516,7 +530,9 @@ CREATE TABLE `premios` (
 --
 
 INSERT INTO `premios` (`codigo_premio`, `tipo`, `nombre`) VALUES
-(1, 'I', 'Mvp');
+(1, 'I', 'Mvp'),
+(2, 'G', 'Primer Lugar'),
+(3, 'I', 'Maximo Goleador');
 
 -- --------------------------------------------------------
 
@@ -876,7 +892,7 @@ ALTER TABLE `pagos`
 -- Indices de la tabla `palmares_grupal`
 --
 ALTER TABLE `palmares_grupal`
-  ADD PRIMARY KEY (`id_grupal`),
+  ADD PRIMARY KEY (`codigo_grupal`),
   ADD KEY `codigo_premio` (`codigo_premio`),
   ADD KEY `codigo_participacion` (`codigo_participacion`);
 
@@ -1011,7 +1027,7 @@ ALTER TABLE `contacto_atleta`
 -- AUTO_INCREMENT de la tabla `detalles_equipos`
 --
 ALTER TABLE `detalles_equipos`
-  MODIFY `codigo_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `codigo_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_pagos`
@@ -1035,7 +1051,7 @@ ALTER TABLE `devoluciones`
 -- AUTO_INCREMENT de la tabla `equipos`
 --
 ALTER TABLE `equipos`
-  MODIFY `codigo_equipo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `codigo_equipo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `estado_fisico`
@@ -1077,13 +1093,13 @@ ALTER TABLE `pagos`
 -- AUTO_INCREMENT de la tabla `palmares_grupal`
 --
 ALTER TABLE `palmares_grupal`
-  MODIFY `id_grupal` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_grupal` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `palmares_individual`
 --
 ALTER TABLE `palmares_individual`
-  MODIFY `codigo_individual` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_individual` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `participaciones`
@@ -1101,7 +1117,7 @@ ALTER TABLE `posiciones`
 -- AUTO_INCREMENT de la tabla `premios`
 --
 ALTER TABLE `premios`
-  MODIFY `codigo_premio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `codigo_premio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `representantes`

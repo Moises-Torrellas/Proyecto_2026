@@ -1,15 +1,15 @@
 <?php if (isset($solo_lista) && $solo_lista === true) :
     // RECARGA VÍA AJAX
     $registro = ($tipo_lista === 'individual') ? ($registroInd ?? []) : ($registroGrp ?? []);
-    
+
     if (empty($registro)) : ?>
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-    <?php else :
+        <?php else :
         // 1. PRIMER BUCLE: Recorremos los Atletas o Equipos
         foreach ($registro as $dato) :
-            
+
             // Preparamos la info de la cabecera dependiendo del tipo
             if ($tipo_lista === 'individual') {
                 $nombrePadre = $dato['atleta_nombres'] . ' ' . $dato['atleta_apellidos'];
@@ -20,17 +20,14 @@
                 $iconoPadre = '<i class="icon_con" data-lucide="shield-half"></i>';
                 $datoSub = 'Equipo';
             }
-            ?>
-            
+        ?>
+
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
                     <div class="listado_col_principal">
                         <div class="listado_avatar_null"><?= $iconoPadre ?></div>
                         <div class="listado_info_base">
                             <span class="listado_titulo"><?= htmlspecialchars($nombrePadre) ?></span>
-                            <?php if ($tipo_lista === 'grupal') : ?>
-                                <span class="listado_subtitulo"><?= htmlspecialchars($dato['nombre_categoria']) ?></span>
-                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -53,27 +50,23 @@
                 <div class="listado_detalle_oculto">
                     <div class="detalle_expandido_container" style="padding: 15px;">
                         <div class="lista_sub_items">
-                            
-                            <?php 
+
+                            <?php
                             // 2. SEGUNDO BUCLE: Recorremos los premios específicos
-                            foreach ($dato['premios'] as $premio) : 
-                                
-                                $id_item = ($tipo_lista === 'individual') ? $premio['id_individual'] : $premio['id_grupal'];
+                            foreach ($dato['premios'] as $premio) :
+
+                                $id_item = ($tipo_lista === 'individual') ? $premio['id_individual'] : $premio['codigo_grupal'];
                                 $tipo_param = "'{$tipo_lista}'";
 
                                 $botonesAccion = '';
-                                if ((int)$premio['en_historial'] === 0) {
-                                    if (isset($permisos['modificar']) && $permisos['modificar']) {
-                                        $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
-                                    }
-                                    if (isset($permisos['eliminar']) && $permisos['eliminar']) {
-                                        $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash"></i></button>';
-                                    }
-                                } else {
-                                    $botonesAccion = '<span class="texto_alerta" style="font-size: 0.8rem; padding: 5px; border: 1px solid red; border-radius: 5px;" data-tippy-content="En historial. No se puede modificar ni eliminar."><i class="fi fi-sr-lock"></i> Bloqueado</span>';
+                                if (isset($permisos['modificar']) && $permisos['modificar']) {
+                                    $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                                 }
-                                ?>
-                                
+                                if (isset($permisos['eliminar']) && $permisos['eliminar']) {
+                                    $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash"></i></button>';
+                                }
+                            ?>
+
                                 <div class="sub_item_fila">
                                     <div class="sub_item_info" style="flex: 1.5;">
                                         <span class="sub_item_titulo"><?= htmlspecialchars($premio['nombre_premio']) ?></span>
@@ -88,16 +81,16 @@
                                         <?= $botonesAccion ?>
                                     </div>
                                 </div>
-                                
+
                             <?php endforeach; ?>
-                            
+
                         </div>
                     </div>
                 </div>
             </div>
-            
+
         <?php endforeach; ?>
-        
+
 <?php endif;
     exit();
 endif; ?>
@@ -144,7 +137,7 @@ endif; ?>
                             <button class="pestana-btn" data-target="#tab-grupal"><i class="fi fi-sr-users"></i> Palmarés Grupal</button>
                         </div>
                         <div class="pestanas-body">
-                            
+
                             <div class="pestana-content activa" id="tab-individual" style="flex: 1; flex-direction: column;">
                                 <div class="contenedor_resultados" style="flex-grow: 1; overflow-y: auto;">
                                     <div id="resultadoconsulta-ind" class="resultadoconsulta" data-tipo="individual">
@@ -182,20 +175,17 @@ endif; ?>
                                                     <div class="listado_detalle_oculto">
                                                         <div class="detalle_expandido_container" style="padding: 15px;">
                                                             <div class="lista_sub_items">
-                                                                <?php foreach ($dato['premios'] as $premio) : 
+                                                                <?php foreach ($dato['premios'] as $premio) :
                                                                     $id_item = $premio['id_individual'];
                                                                     $tipo_param = "'individual'";
 
                                                                     $botonesAccion = '';
-                                                                    if ((int)$premio['en_historial'] === 0) {
-                                                                        if (isset($permisos['modificar']) && $permisos['modificar']) {
-                                                                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
-                                                                        }
-                                                                        if (isset($permisos['eliminar']) && $permisos['eliminar']) {
-                                                                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash"></i></button>';
-                                                                        }
-                                                                    } else {
-                                                                        $botonesAccion = '<span class="texto_alerta" style="font-size: 0.8rem; padding: 5px; border: 1px solid red; border-radius: 5px;" data-tippy-content="En historial. No se puede modificar ni eliminar."><i class="fi fi-sr-lock"></i> Bloqueado</span>';
+
+                                                                    if (isset($permisos['modificar']) && $permisos['modificar']) {
+                                                                        $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
+                                                                    }
+                                                                    if (isset($permisos['eliminar']) && $permisos['eliminar']) {
+                                                                        $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash"></i></button>';
                                                                     }
                                                                 ?>
                                                                     <div class="sub_item_fila">
@@ -251,7 +241,6 @@ endif; ?>
                                                             <div class="listado_avatar_null"><i class="icon_con" data-lucide="shield-half"></i></div>
                                                             <div class="listado_info_base">
                                                                 <span class="listado_titulo"><?= htmlspecialchars($dato['nombre_equipo']) ?></span>
-                                                                <span class="listado_subtitulo"><?= htmlspecialchars($dato['nombre_categoria']) ?></span>
                                                             </div>
                                                         </div>
 
@@ -274,21 +263,19 @@ endif; ?>
                                                     <div class="listado_detalle_oculto">
                                                         <div class="detalle_expandido_container" style="padding: 15px;">
                                                             <div class="lista_sub_items">
-                                                                <?php foreach ($dato['premios'] as $premio) : 
-                                                                    $id_item = $premio['id_grupal'];
+                                                                <?php foreach ($dato['premios'] as $premio) :
+                                                                    $id_item = $premio['codigo_grupal'];
                                                                     $tipo_param = "'grupal'";
 
                                                                     $botonesAccion = '';
-                                                                    if ((int)$premio['en_historial'] === 0) {
-                                                                        if (isset($permisos['modificar']) && $permisos['modificar']) {
-                                                                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
-                                                                        }
-                                                                        if (isset($permisos['eliminar']) && $permisos['eliminar']) {
-                                                                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash"></i></button>';
-                                                                        }
-                                                                    } else {
-                                                                        $botonesAccion = '<span class="texto_alerta" style="font-size: 0.8rem; padding: 5px; border: 1px solid red; border-radius: 5px;" data-tippy-content="En historial. No se puede modificar ni eliminar."><i class="fi fi-sr-lock"></i> Bloqueado</span>';
+
+                                                                    if (isset($permisos['modificar']) && $permisos['modificar']) {
+                                                                        $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                                                                     }
+                                                                    if (isset($permisos['eliminar']) && $permisos['eliminar']) {
+                                                                        $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash"></i></button>';
+                                                                    }
+
                                                                 ?>
                                                                     <div class="sub_item_fila">
                                                                         <div class="sub_item_info" style="flex: 1.5;">
@@ -428,4 +415,5 @@ endif; ?>
     <script src="js/main.js"></script>
     <script src="js/palmares.js"></script>
 </body>
+
 </html>

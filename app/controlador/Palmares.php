@@ -32,18 +32,15 @@ if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudPalmares($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
     registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
-    
+
     // Carga inicial: Consultamos ambas listas
     $respuestaInd = $objModelo->ConsultarIndividual();
-    $registroInd = $respuestaInd['datos'] ?? [];
-
     $respuestaGrp = $objModelo->ConsultarGrupal();
-    $registroGrp = $respuestaGrp['datos'] ?? [];
 
     $variables = [
-        'registroInd' => $registroInd, 
-        'registroGrp' => $registroGrp, 
-        'permisos' => $permisos 
+        'registroInd' => $respuestaInd['datos'] ?? [],
+        'registroGrp' => $respuestaGrp['datos'] ?? [],
+        'permisos'    => $permisos
     ];
     cargarVista($pagina, $variables);
 }
@@ -58,7 +55,7 @@ function manejarSolicitudPalmares($obj, $id_modulo, $bitacoraObj, array $permiso
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
-        // Seguridad centralizada
+        // Seguridad centralizada y enrutamiento
         switch ($accion) {
             case 'consultarIndividual':
                 if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar palmarés individual.');
@@ -69,7 +66,7 @@ function manejarSolicitudPalmares($obj, $id_modulo, $bitacoraObj, array $permiso
                 consultarGrupal($obj, $permisos);
                 break;
             case 'MultiConsulta':
-                MultiConsulta($obj);
+                MultiConsulta();
                 break;
             case 'buscarIndividual':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar palmarés individual.');
@@ -91,11 +88,6 @@ function manejarSolicitudPalmares($obj, $id_modulo, $bitacoraObj, array $permiso
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar palmarés.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
-            /* case 'generar':
-                if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar reportes.');
-                generar($obj, $id_modulo, $bitacoraObj);
-                break; */
-
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -107,29 +99,29 @@ function manejarSolicitudPalmares($obj, $id_modulo, $bitacoraObj, array $permiso
 
 function consultarIndividual($obj, $permisos): void
 {
-    $filtro['filtro'] = $_POST['filtro'] ?? '';
+    $filtro['filtro'] = isset($_POST['filtro']) ? filter_var($_POST['filtro'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
     $respuesta = $obj->ConsultarIndividual($filtro);
-    
-    $registroInd = $respuesta['datos'] ?? []; 
+
+    $registroInd = $respuesta['datos'] ?? [];
     $solo_lista = true;
     $tipo_lista = 'individual';
 
-    include (__DIR__.'/../vista/Palmares.php');
+    include(__DIR__ . '/../vista/Palmares.php');
 }
 
 function consultarGrupal($obj, $permisos): void
 {
-    $filtro['filtro'] = $_POST['filtro'] ?? '';
+    $filtro['filtro'] = isset($_POST['filtro']) ? filter_var($_POST['filtro'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
     $respuesta = $obj->ConsultarGrupal($filtro);
-    
-    $registroGrp = $respuesta['datos'] ?? []; 
+
+    $registroGrp = $respuesta['datos'] ?? [];
     $solo_lista = true;
     $tipo_lista = 'grupal';
 
-    include (__DIR__.'/../vista/Palmares.php');
+    include(__DIR__ . '/../vista/Palmares.php');
 }
 
-function MultiConsulta($obj): void
+function MultiConsulta(): void
 {
     try {
         $modeloTorneos = new ModeloTorneos();
@@ -137,41 +129,20 @@ function MultiConsulta($obj): void
         $modeloAtletas = new ModeloAtletas();
         $modeloEquipos = new ModeloEquipos();
 
-        $respTorneos = $modeloTorneos->Consultar();
-        $torneos = $respTorneos['datos'] ?? [];
+        $torneos = $modeloTorneos->Consultar()['datos'] ?? [];
+        $premios = $modeloPremios->Consultar()['datos'] ?? [];
 
-        $respPremios = $modeloPremios->Consultar();
-        $premios = $respPremios['datos'] ?? [];
+        $atletasFiltrados = array_filter($modeloAtletas->Consultar()['datos'] ?? [], fn($item) => !isset($item['estatus']) || (int)$item['estatus'] === 1);
+        $equiposFiltrados = array_filter($modeloEquipos->Consultar()['datos'] ?? [], fn($item) => !isset($item['estatus']) || (int)$item['estatus'] === 1);
 
-        $respAtletas = $modeloAtletas->Consultar();
-        $atletasFiltrados = array_filter($respAtletas['datos'] ?? [], function ($item) {
-            return !isset($item['estatus']) || (int)$item['estatus'] === 1;
-        });
-
-        $respEquipos = $modeloEquipos->Consultar();
-        $equiposFiltrados = array_filter($respEquipos['datos'] ?? [], function ($item) {
-            return !isset($item['estatus']) || (int)$item['estatus'] === 1;
-        });
-
-        // Formatear salida para no romper el frontend, asumiendo llaves estándar de los modelos base
-        $torneosArray = array_map(function($t) {
-            return ['id_torneo' => $t['id_torneo'], 'nombre' => $t['nombre'], 'fecha_inicio' => $t['fecha_inicio']];
-        }, $torneos);
-
-        $premiosArray = array_map(function($p) {
-            return ['id_premio' => $p['id_premio'], 'nombre' => $p['nombre'], 'tipo' => $p['tipo']];
-        }, $premios);
-
-        $atletasArray = array_map(function($a) {
-            return ['id_atleta' => $a['id_atleta'], 'nombres' => $a['nombres'], 'apellidos' => $a['apellidos'], 'doc_identidad' => $a['doc_identidad']];
-        }, $atletasFiltrados);
-
-        $equiposArray = array_map(function($e) {
-            return ['id_equipos' => $e['id_equipos'], 'nombre' => $e['nombre'], 'categoria' => $e['categoria'] ?? ''];
-        }, $equiposFiltrados);
+        // Formatear salida para no romper el frontend
+        $torneosArray = array_map(fn($t) => ['id_torneo' => $t['codigo_torneo'], 'nombre' => $t['nombre'], 'fecha_inicio' => $t['fecha_inicio']], $torneos);
+        $premiosArray = array_map(fn($p) => ['id_premio' => $p['codigo_premio'], 'nombre' => $p['nombre'], 'tipo' => $p['tipo']], $premios);
+        $atletasArray = array_map(fn($a) => ['id_atleta' => $a['id_atleta'], 'nombres' => $a['nombres'], 'apellidos' => $a['apellidos'], 'doc_identidad' => $a['doc_identidad']], $atletasFiltrados);
+        $equiposArray = array_map(fn($e) => ['id_equipos' => $e['id_equipos'], 'nombre' => $e['nombre'] ?? ''], $equiposFiltrados);
 
         echo json_encode([
-            'accion' => 'MultiConsulta',
+            'accion'  => 'MultiConsulta',
             'torneos' => array_values($torneosArray),
             'premios' => array_values($premiosArray),
             'atletas' => array_values($atletasArray),
@@ -179,22 +150,15 @@ function MultiConsulta($obj): void
         ]);
     } catch (Exception $e) {
         logs('Palmares', $e->getMessage(), 'Controlador_MultiConsulta');
-        echo json_encode([
-            'accion' => 'error',
-            'mensaje' => 'Error en la carga masiva de datos: ' . $e->getMessage()
-        ]);
+        echo json_encode(['accion' => 'error', 'mensaje' => 'Error en la carga masiva de datos: ' . $e->getMessage()]);
     }
 }
 
 function buscarIndividual($obj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
-
-        $id = (int)$_POST['id'];
-        $resultado = $obj->BuscarIndividual($id);
-        
+        validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+        $resultado = $obj->BuscarIndividual((int)$_POST['id']);
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Palmares', $e->getMessage(), 'Controlador_BuscarIndividual');
@@ -205,12 +169,8 @@ function buscarIndividual($obj): void
 function buscarGrupal($obj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
-        validar_datos($validaciones);
-
-        $id = (int)$_POST['id'];
-        $resultado = $obj->BuscarGrupal($id);
-        
+        validar_datos(['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']]);
+        $resultado = $obj->BuscarGrupal((int)$_POST['id']);
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Palmares', $e->getMessage(), 'Controlador_BuscarGrupal');
@@ -221,13 +181,15 @@ function buscarGrupal($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
+        $tipo_palmares = $_POST['tipo_palmares'] ?? '';
+
         $validaciones = [
             'torneo'        => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Torneo inválido.'],
             'premio'        => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Premio inválido.'],
             'tipo_palmares' => ['regla' => '/^(individual|grupal)$/', 'mensaje' => 'Tipo de palmarés inválido.']
         ];
-        
-        if ($_POST['tipo_palmares'] === 'individual') {
+
+        if ($tipo_palmares === 'individual') {
             $validaciones['atleta'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'];
         } else {
             $validaciones['equipo'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Equipo inválido.'];
@@ -236,38 +198,43 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         validar_datos($validaciones);
 
         $datos = [
-            'torneo'        => $_POST['torneo'],
-            'premio'        => $_POST['premio'],
-            'tipo_palmares' => $_POST['tipo_palmares'],
+            'torneo'        => (int)$_POST['torneo'],
+            'premio'        => (int)$_POST['premio'],
+            'tipo_palmares' => $tipo_palmares,
             'accion'        => 'incluir'
         ];
 
-        if ($_POST['tipo_palmares'] === 'individual') {
-            $datos['atleta'] = $_POST['atleta'];
+        if ($tipo_palmares === 'individual') {
+            $datos['atleta'] = (int)$_POST['atleta'];
+            $desc = "al atleta ID: " . $datos['atleta'];
         } else {
-            $datos['equipo'] = $_POST['equipo'];
+            $datos['equipo'] = (int)$_POST['equipo'];
+            $desc = "al equipo ID: " . $datos['equipo'];
         }
 
+        // Inyectamos los modelos auxiliares requeridos por el modelo principal
         $obj->setModeloParticipaciones(new ModeloParticipaciones());
         $obj->setModeloPremios(new ModeloPremios());
 
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            $desc = $_POST['tipo_palmares'] === 'individual' ? "al atleta ID: " . $_POST['atleta'] : "al equipo ID: " . $_POST['equipo'];
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró un palmarés {$_POST['tipo_palmares']} " . $desc);
-            $resultado = array('accion' => 'incluir', 'mensaje' => 'Palmarés registrado exitosamente.', 'tipo_palmares' => $_POST['tipo_palmares']);
-        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-            $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID    => 'El torneo, premio o entidad (atleta/equipo) seleccionado no existe.',
-                VALIDATION    => 'El tipo de premio es incorrecto o no se registró participación en el torneo.',
-                DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.', 
-                DUPLICATE     => 'Ya este Atleta/Equipo Tiene este Premio en este Torneo.',
-                default       => 'Ocurrió un error inesperado en el registro.'
-            };
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró un palmarés {$tipo_palmares} {$desc}");
+            echo json_encode(['accion' => 'incluir', 'mensaje' => 'Palmarés registrado exitosamente.', 'tipo_palmares' => $tipo_palmares]);
+            return;
         }
 
-        echo json_encode($resultado);
+        // Manejo estandarizado de errores
+        $codigoError = $resultado['codigo'] ?? '';
+        $mensaje = match ($codigoError) {
+            INVALID_ID    => 'El torneo, premio o entidad (atleta/equipo) seleccionado no existe.',
+            VALIDATION    => 'El tipo de premio es incorrecto o no se registró participación en el torneo.',
+            DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
+            DUPLICATE     => 'Esta entidad ya tiene registrado este premio en el torneo especificado.',
+            default       => $resultado['mensaje'] ?? 'Ocurrió un error inesperado en el registro.'
+        };
+
+        echo json_encode(['accion' => 'error', 'mensaje' => $mensaje]);
     } catch (Exception $e) {
         logs('Palmares', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
@@ -277,13 +244,16 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
+        $tipo_palmares = $_POST['tipo_palmares'] ?? '';
+
         $validaciones = [
             'id'            => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
             'premio'        => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Premio inválido.'],
+            'torneo'        => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Torneo inválido.'], // <-- AGREGADO
             'tipo_palmares' => ['regla' => '/^(individual|grupal)$/', 'mensaje' => 'Tipo de palmarés inválido.']
         ];
-        
-        if ($_POST['tipo_palmares'] === 'individual') {
+
+        if ($tipo_palmares === 'individual') {
             $validaciones['atleta'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Atleta inválido.'];
         } else {
             $validaciones['equipo'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Equipo inválido.'];
@@ -292,39 +262,41 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         validar_datos($validaciones);
 
         $datos = [
-            'id'            => $_POST['id'],
-            'premio'        => $_POST['premio'],
-            'tipo_palmares' => $_POST['tipo_palmares'],
+            'id'            => (int)$_POST['id'],
+            'premio'        => (int)$_POST['premio'],
+            'torneo'        => (int)$_POST['torneo'], // <-- AGREGADO
+            'tipo_palmares' => $tipo_palmares,
             'accion'        => 'modificar'
         ];
 
-        if ($_POST['tipo_palmares'] === 'individual') {
-            $datos['atleta'] = $_POST['atleta'];
+        if ($tipo_palmares === 'individual') {
+            $datos['atleta'] = (int)$_POST['atleta'];
         } else {
-            $datos['equipo'] = $_POST['equipo'];
+            $datos['equipo'] = (int)$_POST['equipo'];
         }
 
         $obj->setModeloParticipaciones(new ModeloParticipaciones());
-        $obj->setModeloHistorial(new ModeloHistorial());
         $obj->setModeloPremios(new ModeloPremios());
 
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el palmarés {$_POST['tipo_palmares']} ID: " . $_POST['id']);
-            $resultado = array('accion' => 'modificar', 'mensaje' => 'Palmarés modificado exitosamente.', 'tipo_palmares' => $_POST['tipo_palmares']);
-        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-            $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID    => 'El palmarés, torneo, premio o entidad (atleta/equipo) seleccionado no existe.',
-                VALIDATION    => 'El tipo de premio es incorrecto o no se registró participación en el torneo.',
-                ASSOCIATES    => 'No se puede modificar este palmarés porque ya forma parte de un historial.',
-                DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
-                DUPLICATE     => 'Ya este Atleta/Equipo Tiene este Premio en este Torneo.',
-                default       => 'Ocurrió un error inesperado en la modificación.'
-            };
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el palmarés {$tipo_palmares} ID: " . $datos['id']);
+            echo json_encode(['accion' => 'modificar', 'mensaje' => 'Palmarés modificado exitosamente.', 'tipo_palmares' => $tipo_palmares]);
+            return;
         }
 
-        echo json_encode($resultado);
+        $codigoError = $resultado['codigo'] ?? '';
+        $mensaje = match ($codigoError) {
+            INVALID_ID    => 'El palmarés, torneo, premio o entidad seleccionado no existe.',
+            VALIDATION    => 'El tipo de premio es incorrecto o no se registró participación en el torneo.',
+            ASSOCIATES    => 'No se puede modificar este palmarés porque ya forma parte de un historial.',
+            DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
+            DUPLICATE     => 'Esta entidad ya tiene registrado este premio en el torneo especificado.',
+            default       => $resultado['mensaje'] ?? 'Ocurrió un error inesperado en la modificación.'
+        };
+
+        echo json_encode(['accion' => 'error', 'mensaje' => $mensaje]);
     } catch (Exception $e) {
         logs('Palmares', $e->getMessage(), 'Controlador_Modificar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
@@ -334,76 +306,39 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
+        validar_datos([
+            'id'            => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
             'tipo_palmares' => ['regla' => '/^(individual|grupal)$/', 'mensaje' => 'Tipo de palmarés inválido.']
-        ];
-        validar_datos($validaciones);
+        ]);
+
+        $tipo_palmares = $_POST['tipo_palmares'];
+        $id = (int)$_POST['id'];
 
         $datos = [
-            'id' => $_POST['id'],
-            'tipo_palmares' => $_POST['tipo_palmares'],
-            'accion' => 'eliminar'
+            'id'            => $id,
+            'tipo_palmares' => $tipo_palmares,
+            'accion'        => 'eliminar'
         ];
 
-        $obj->setModeloHistorial(new ModeloHistorial());
-
         $resultado = $obj->ProcesarDatos($datos);
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el palmarés {$_POST['tipo_palmares']} ID: " . $_POST['id']);
-            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Palmarés eliminado correctamente.', 'tipo_palmares' => $_POST['tipo_palmares']);
-        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-            $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID    => 'El palmarés no existe.',
-                ASSOCIATES    => 'No se puede eliminar este palmarés porque ya forma parte de un historial.',
-                DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
-                default       => 'Ocurrió un error inesperado en la eliminación.'
-            };
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el palmarés {$tipo_palmares} ID: {$id}");
+            echo json_encode(['accion' => 'eliminar', 'mensaje' => 'Palmarés eliminado correctamente.', 'tipo_palmares' => $tipo_palmares]);
+            return;
         }
-        echo json_encode($resultado);
+
+        $codigoError = $resultado['codigo'] ?? '';
+        $mensaje = match ($codigoError) {
+            INVALID_ID    => 'El palmarés no existe.',
+            ASSOCIATES    => 'No se puede eliminar este palmarés porque ya forma parte de un historial.',
+            DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
+            default       => $resultado['mensaje'] ?? 'Ocurrió un error inesperado en la eliminación.'
+        };
+
+        echo json_encode(['accion' => 'error', 'mensaje' => $mensaje]);
     } catch (Exception $e) {
         logs('Palmares', $e->getMessage(), 'Controlador_Eliminar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
-
-/* function generar($obj, $id_modulo, $bitacoraObj): void
-{
-    try {
-        $validacionesReporte = [
-            'tipo_reporte' => ['regla' => '/^(estadistico|tabular)$/', 'mensaje' => 'Tipo de reporte inválido.']
-        ];
-        
-        if (!empty($_POST['palmares_fecha_inicio'])) {
-            $validacionesReporte['palmares_fecha_inicio'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido.'];
-        }
-        if (!empty($_POST['palmares_fecha_fin'])) {
-            $validacionesReporte['palmares_fecha_fin'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido.'];
-        }
-
-        validar_datos($validacionesReporte);
-
-        $tipo_reporte = $_POST['tipo_reporte'];
-        $parametros = [
-            'palmares_fecha_inicio' => $_POST['palmares_fecha_inicio'] ?? '',
-            'palmares_fecha_fin' => $_POST['palmares_fecha_fin'] ?? '',
-            'palmares_atleta' => $_POST['palmares_atleta'] ?? '',
-            'palmares_equipo' => $_POST['palmares_equipo'] ?? ''
-        ];
-
-        $reporte = new GenerarReporte();
-        $pdf = $reporte->generarPDF($tipo_reporte, $parametros, 'Palmares');
-        
-        // Ajustamos la respuesta
-        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Palmarés.");
-            echo json_encode($pdf);
-        } else {
-            throw new Exception("No se pudo generar el documento PDF");
-        }
-
-    } catch (Exception $e) {
-        logs('Palmares', $e->getMessage(), 'Controlador_Generar');
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
-    }
-} */
