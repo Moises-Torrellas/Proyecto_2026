@@ -159,13 +159,30 @@ class ModeloMetodosPago extends Conexion
         }
     }
 
-    function Buscar(): array
+    public function Buscar(): array
     {
         try {
             $conex = $this->conex();
             $sentencia = "SELECT * FROM metodos_pago WHERE codigo_metodo = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
+            $stmt->execute();
+            $datos = $stmt->fetchAll();
+            return array('accion' => 'buscar', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('metodos_pago', $e->getMessage(), 'Modelo');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
+        }
+    }
+
+    public function ConsultarMetodos(): array
+    {
+        try {
+            $conex = $this->conex();
+            $sentencia = "SELECT * FROM metodos_pago WHERE estatus = 1";
+            $stmt = $conex->prepare($sentencia);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             return array('accion' => 'buscar', 'datos' => $datos);

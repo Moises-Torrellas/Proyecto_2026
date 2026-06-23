@@ -33,7 +33,7 @@
     width: 100% !important;
 }
 
-/* --- Select2 dropdown encima del modal --- */
+/* Evita que Select2 se desplace fuera del modal (transform del .modal rompe el posicionamiento) */
 .select2-container--open .select2-dropdown {
     z-index: 10060;
 }

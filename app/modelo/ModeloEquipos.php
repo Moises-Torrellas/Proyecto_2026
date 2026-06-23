@@ -16,16 +16,16 @@ class ModeloEquipos extends Conexion
             $conex = $this->conex();
             $params = [];
 
-            $sentencia = "SELECT a.id_atleta,
-                                 a.doc_identidad,
-                                 a.nombres,
-                                 a.apellidos,
-                                 c.nombre AS nombre_categoria,
-                                 p.nombre AS nombre_posicion
-                          FROM atletas a
-                          INNER JOIN categorias c ON c.id_categorias = a.id_categoria
-                          INNER JOIN posiciones p ON p.id_posicion = a.id_posicion
-                          WHERE 1=1";
+            $sentencia = "SELECT a.codigo_atleta AS id_atleta,
+                                a.doc_identidad,
+                                a.nombres,
+                                a.apellidos,
+                                c.nombre AS nombre_categoria,
+                                p.nombre AS nombre_posicion
+                        FROM atletas a
+                        INNER JOIN categorias c ON c.id_categorias = a.id_categoria
+                        INNER JOIN posiciones p ON p.id_posicion = a.id_posicion
+                        WHERE 1=1";
 
             if (!empty($filtro['filtro'])) {
                 $p = '%' . trim($filtro['filtro']) . '%';
@@ -264,6 +264,23 @@ class ModeloEquipos extends Conexion
         $conex = NULL;
     }
 }
+
+    public function ConsultarEquipos(){
+        try {
+            $conex = $this->conex();
+            $sentencia = "SELECT * FROM `equipos` WHERE 1";
+
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute();
+            $datos = $stmt->fetchAll();
+            return array('accion' => 'buscar', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Equipos', $e->getMessage(), 'Modelo_Buscar');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
+        }
+    }
     private function Incluir()
     {
         $conex = null;

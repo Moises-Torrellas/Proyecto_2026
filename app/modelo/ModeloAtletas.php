@@ -25,7 +25,7 @@ class ModeloAtletas extends Conexion
     private $peso_kg;
     private $estatura_cm;
     private $motivo_retiro;
-    
+
     private $ObjCat;
     private $ObjRep;
     private $ObjPos;
@@ -45,17 +45,17 @@ class ModeloAtletas extends Conexion
     }
 
 
-    public function setModeloCategorias(ModeloCategorias $modeloCat) 
+    public function setModeloCategorias(ModeloCategorias $modeloCat)
     {
         $this->ObjCat = $modeloCat;
     }
 
-    public function setModeloPosiciones(ModeloPosiciones $modeloPos) 
+    public function setModeloPosiciones(ModeloPosiciones $modeloPos)
     {
         $this->ObjPos = $modeloPos;
     }
 
-    public function setModeloRepresentantes(ModeloRepresentantes $modeloRep) 
+    public function setModeloRepresentantes(ModeloRepresentantes $modeloRep)
     {
         $this->ObjRep = $modeloRep;
     }
@@ -139,7 +139,7 @@ class ModeloAtletas extends Conexion
                 $params[':f5'] = $p;
                 $params[':f6'] = $p;
                 $params[':f7'] = $p;
-                $params[':f8'] = $p; 
+                $params[':f8'] = $p;
             }
 
             // 3. FILTROS ESPECÍFICOS
@@ -192,11 +192,46 @@ class ModeloAtletas extends Conexion
         }
     }
 
+    public function ConsultarAtletas()
+    {
+        $conex = null;
+        try {
+            $conex = $this->conex();
+            $sentencia = "SELECT 
+                            a.codigo_atleta,
+                            a.p_nombre, 
+                            a.p_apellidos,
+                            a.s_nombre,
+                            a.s_apellidos,
+                            cat.nombre AS categoria,
+                            CASE 
+                                WHEN ia.numero_doc IS NOT NULL AND ia.numero_doc <> '' THEN ia.numero_doc
+                                ELSE CONCAT('R-', r.cedula)
+                            END AS documento_identidad
+                            FROM atletas a
+                            INNER JOIN inscripciones i ON a.codigo_atleta = i.codigo_atleta
+                            INNER JOIN categorias cat ON i.codigo_categoria = cat.codigo_categoria
+                            LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta
+                            LEFT JOIN atleta_representante ar ON a.codigo_atleta = ar.codigo_atleta
+                            LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
+                            WHERE i.estatus = 1;";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute();
+            $datos = $stmt->fetchAll();
+            return array('accion' => 'consultarA', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Atletas', $e->getMessage(), 'Modelo');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
+        }
+    }
+
     private function Incluir()
     {
         $conex = null;
         try {
-            if(!$this->ObjCat->verificarCategoria($this->categoria)) {
+            if (!$this->ObjCat->verificarCategoria($this->categoria)) {
                 throw new Exception(INVALID_ID);
             }
             if (!$this->ObjPos->verificarPosiciones($this->posicion)) {
@@ -407,7 +442,7 @@ class ModeloAtletas extends Conexion
                     $stmtAr->execute([':cr' => $this->representante, ':id' => $this->id]);
                 }
             }
-            
+
             // Update inscripciones (the latest one)
             $sqlInsc = "UPDATE inscripciones SET codigo_categoria = :cc, codigo_posicion = :cp, dorsal = :dorsal, peso_kg = :peso, estatura_cm = :estatura 
                         WHERE codigo_atleta = :id AND codigo_inscripcion = (SELECT max_id FROM (SELECT MAX(codigo_inscripcion) as max_id FROM inscripciones WHERE codigo_atleta = :id2) AS temp)";
@@ -437,7 +472,7 @@ class ModeloAtletas extends Conexion
 
     private function Buscar()
     {
-        $conex=null;
+        $conex = null;
         try {
             $conex = $this->conex();
             $sentencia = "SELECT * FROM vista_atletas WHERE id_atleta = :id";

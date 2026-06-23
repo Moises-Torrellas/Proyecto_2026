@@ -89,12 +89,12 @@
             <?php endif; // Fin del bloque de inicialización de la cabecera del Atleta
 
                     // 2. RENDERIZAR LAS FACTURAS DIRECTAMENTE (Se ejecuta de forma lineal)
-                    $anulado = ((int)$dato['anulado']) === 1;
-                    $pagado = ((int)$dato['estatus'] === 1);
+                    $estatusCargo = (int) $dato['estatus'];
+                    $anulado = $estatusCargo === 3;
+                    $pagado = $estatusCargo === 2;
 
                     $claseFila = $anulado ? 'fila_anulada' : '';
 
-                    // CORREGIDO: Uso estricto de tus clases nativas de estado para cada fila
                     $claseEstatus = $anulado ? 'estatus_r' : ($pagado ? 'estatus_v' : 'estatus_a');
                     $textoEstatus = $anulado ? 'Anulado' : ($pagado ? 'Pagado' : 'Pendiente');
 
@@ -270,12 +270,12 @@
                                     <?php endif; // Fin del bloque de inicialización de la cabecera del Atleta
 
                                         // 2. RENDERIZAR LAS FACTURAS DIRECTAMENTE (Se ejecuta de forma lineal)
-                                        $anulado = ((int)$dato['anulado']) === 1;
-                                        $pagado = ((int)$dato['estatus'] === 1);
+                                        $estatusCargo = (int) $dato['estatus'];
+                                        $anulado = $estatusCargo === 3;
+                                        $pagado = $estatusCargo === 2;
 
                                         $claseFila = $anulado ? 'fila_anulada' : '';
 
-                                        // CORREGIDO: Uso estricto de tus clases nativas de estado para cada fila
                                         $claseEstatus = $anulado ? 'estatus_r' : ($pagado ? 'estatus_v' : 'estatus_a');
                                         $textoEstatus = $anulado ? 'Anulado' : ($pagado ? 'Pagado' : 'Pendiente');
 
@@ -342,31 +342,23 @@
                     <input type="hidden" id="id" name="id">
 
                     <div class="row">
-                        <div class="colum">
+                        <div class="colum colum_select_multiple">
                             <div class="caja_formulario">
-                                <select name="id_atleta" id="id_atleta" class="formulario select">
+                                <select name="id_atleta[]" id="id_atleta" class="formulario select" multiple="multiple">
                                 </select>
-                                <label for="id_atleta" class="titulo_formulario">Atleta</label>
+                                <label for="id_atleta" class="titulo_formulario">Atleta(s)</label>
                                 <span class="mensaje" id="id_atleta_span"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="id_concepto" id="id_concepto" class="formulario select">
-                                </select>
-                                <label for="id_concepto" class="titulo_formulario">Concepto de Cobro</label>
-                                <span class="mensaje" id="id_concepto_span"></span>
                             </div>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="colum">
+                         <div class="colum">
                             <div class="caja_formulario">
-                                <select name="id_moneda" id="id_moneda" class="formulario select">
+                                <select name="id_concepto" id="id_concepto" class="formulario select">
                                 </select>
-                                <label for="id_moneda" class="titulo_formulario">Moneda</label>
-                                <span class="mensaje" id="id_moneda_span"></span>
+                                <label for="id_concepto" class="titulo_formulario">Concepto de Cobro</label>
+                                <span class="mensaje" id="id_concepto_span"></span>
                             </div>
                         </div>
                         <div class="colum">
@@ -381,13 +373,6 @@
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="monto_pendiente" name="monto_pendiente" readonly>
-                                <label for="monto_pendiente" class="titulo_formulario">Monto Pendiente</label>
-                                <span class="mensaje" id="monto_pendiente_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
                                 <input type="date" class="formulario" id="fecha_emision" name="fecha_emision">
                                 <label for="fecha_emision" class="titulo_formulario">Fecha de Emisión</label>
                                 <span class="mensaje" id="fecha_emision_spam"></span>
@@ -396,13 +381,6 @@
                     </div>
 
                     <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="date" class="formulario" id="fecha_vencimiento" name="fecha_vencimiento">
-                                <label for="fecha_vencimiento" class="titulo_formulario">Fecha de Vencimiento</label>
-                                <span class="mensaje" id="fecha_vencimiento_spam"></span>
-                            </div>
-                        </div>
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="estatus" id="estatus" class="formulario select" disabled>
@@ -427,7 +405,7 @@
         </div>
     </section>
     <script src="js/main.js"></script>
-    <script src="js/cuentas_cobrar.js?v=<?= time(); ?>"></script>
+    <script src="js/cuentas_cobrar.js"></script>
     <?php include('complementos/mensajeError.php'); ?>
 </body>
 

@@ -27,12 +27,12 @@
                         $idxAux = $index;
                         $totalGoles = 0;
                         $totalPartidos = 0;
-                        $totalTorneos = 0;
+                        $totalParticipaciones = 0;
 
                         while (isset($registro[$idxAux]) && $registro[$idxAux]['id_atleta'] == $idAtleta) {
                             $totalGoles += (int)$registro[$idxAux]['goles'];
                             $totalPartidos += (int)$registro[$idxAux]['partidos_jugados'];
-                            $totalTorneos++;
+                            $totalParticipaciones++;
                             $idxAux++;
                         }
 
@@ -55,7 +55,7 @@
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>PARTICIPACIÓN</small>
-                                <span><?= $totalTorneos ?> Torneo(s)</span>
+                                <span><?= $totalParticipaciones ?> Torneo(s)</span>
                             </div>
                         </div>
 
@@ -185,12 +185,12 @@
                                         $idxAux = $index;
                                         $totalGoles = 0;
                                         $totalPartidos = 0;
-                                        $totalTorneos = 0;
+                                        $totalParticipaciones = 0;
 
                                         while (isset($registro[$idxAux]) && $registro[$idxAux]['id_atleta'] == $idAtleta) {
                                             $totalGoles += (int)$registro[$idxAux]['goles'];
                                             $totalPartidos += (int)$registro[$idxAux]['partidos_jugados'];
-                                            $totalTorneos++;
+                                            $totalParticipaciones++;
                                             $idxAux++;
                                         }
 
@@ -213,7 +213,7 @@
                     </div>
                     <div class="listado_dato_grupo">
                         <small>PARTICIPACIÓN</small>
-                        <span><?= $totalTorneos ?> Torneo(s)</span>
+                        <span><?= $totalParticipaciones ?> Torneo(s)</span>
                     </div>
                 </div>
 
@@ -296,10 +296,10 @@
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <select name="torneo" id="torneo" class="formulario select">
+                                <select name="participacion" id="participacion" class="formulario select">
 
                                 </select>
-                                <label for="torneo" class="titulo_formulario">Torneo</label>
+                                <label for="participacion" class="titulo_formulario">Participación / Torneo</label>
                             </div>
                         </div>
                         <div class="colum">

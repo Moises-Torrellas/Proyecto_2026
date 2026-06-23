@@ -49,12 +49,12 @@ class ModeloParticipaciones extends Conexion
             $conex = $this->conex();
             $params = [];
 
-            // SE AJUSTARON LOS CAMPOS A CODIGO_
             $sentencia = "SELECT 
             p.codigo_participacion, 
             t.codigo_torneo, 
             t.nombre AS torneo_nombre, 
-            t.estatus AS torneo_estatus, 
+            t.estatus AS torneo_estatus,
+            t.fecha_inicio,
             e.codigo_equipo, 
             e.nombre AS equipo_nombre
         FROM participaciones p
@@ -147,7 +147,7 @@ class ModeloParticipaciones extends Conexion
                 return array('accion' => 'error', 'mensaje' => 'Registro no encontrado');
             }
 
-            return array('accion' => 'consultar', 'datos' => $resultado);
+            return array('accion' => 'buscar', 'datos' => $resultado);
 
         } catch (Exception $e) {
             logs('Participaciones', $e->getMessage(), 'Modelo_Buscar');

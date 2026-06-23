@@ -164,7 +164,7 @@ function validarEnvio(proceso) {
 function buscar(codigo_participacion) {
     var datos = new FormData();
     datos.append('accion', 'buscar');
-    datos.append('codigo_participacion', codigo_participacion); // Ajustado
+    datos.append('codigo_participacion', codigo_participacion);
     enviaAjax(datos);
 }
 
@@ -202,8 +202,8 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
         if (idSelect === 'codigo_torneo' && campo1 && campo2) { // Ajustado a codigo_torneo
             textoMostrar = `${escapeHTML(dato[campo1])} - ${escapeHTML(dato[campo2])}`;
         }
-        else if (idSelect === 'codigo_equipo' || idSelect === 'palmares_equipo') { // Ajustado a codigo_equipo
-            textoMostrar = `${escapeHTML(dato[campo1])} - ${escapeHTML(dato[campo2])}`;
+        else if (idSelect === 'codigo_equipo') { // Ajustado a codigo_equipo
+            textoMostrar = `${escapeHTML(dato[campo1])}`;
         }
         else {
             textoMostrar = escapeHTML(String(dato[campo1]));
@@ -260,9 +260,8 @@ function enviaAjax(datos) {
             try {
                 var lee = JSON.parse(respuesta);
                 if (lee.accion == "MultiConsulta") {
-                    // Ajustado para enviar el ID del DOM (codigo_torneo y codigo_equipo) y el campo llave que llega del Controller
                     construirSelect('codigo_torneo', lee.torneo, 'codigo_torneo', 'nombre', 'fecha_inicio');
-                    construirSelect('codigo_equipo', lee.equipo, 'codigo_equipo', 'nombre', 'categoria');
+                    construirSelect('codigo_equipo', lee.equipo, 'codigo_equipo', 'nombre');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();

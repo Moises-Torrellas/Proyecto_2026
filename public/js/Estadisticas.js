@@ -62,7 +62,7 @@ $(document).ready(function () {
         accion = $(this).data("accion");
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere registrar estas Estadisticas?', function (confirmado) {
+                confirmar('¿Está seguro que quiere registrar estas Estadísticas?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
@@ -73,7 +73,7 @@ $(document).ready(function () {
         }
         else if (accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar estas Estadisticas?', function (confirmado) {
+                confirmar('¿Está seguro que quiere modificar estas Estadísticas?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
@@ -85,7 +85,7 @@ $(document).ready(function () {
         else if (accion == "generar") {
             confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
                 if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento')
+                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento')
                     var datos = new FormData($('#f')[0]);
                     datos.append('accion', 'generar');
                     enviaAjax(datos);
@@ -93,7 +93,7 @@ $(document).ready(function () {
             });
         }
     });
-    $('#torneo').select2({
+    $('#participacion').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
         dropdownParent: $('.contenedor_modal'),
@@ -108,8 +108,8 @@ $(document).ready(function () {
         limpia();
         $('#goles, #asistencias, #penalizaciones, #goles_c, #partido, #average').val("0");
         $("#proceso").data("accion", "incluir");
-        $("#proceso").text("Registrar Estadisticas");
-        $("#titulo_modal").text("Registrar Estadisticas");
+        $("#proceso").text("Registrar Estadísticas");
+        $("#titulo_modal").text("Registrar Estadísticas");
         abrirModal();
     });
 
@@ -126,27 +126,27 @@ $(document).ready(function () {
         const pasos = [
             {
                 element: '#busqueda',
-                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar las estadisticas de los atletas que necesites.', position: 'bottom' }
+                popover: { title: 'Barra de Búsqueda', description: 'Aquí puedes buscar las estadísticas de los atletas que necesites.', position: 'bottom' }
             },
             {
                 element: '#incluir',
-                popover: { title: 'Nuevas Estadisticas', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevas Estadisticas', position: 'bottom' }
+                popover: { title: 'Nuevas Estadísticas', description: 'Si pulsa aquí se abrirá un modal para ingresar nuevas estadísticas', position: 'bottom' }
             },
             {
                 element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
+                popover: { title: 'Generar Reportes', description: 'Si pulsa aquí se abrirá un modal para generar un reporte en PDF.', position: 'left' }
             },
             {
                 element: '#resultadoconsulta',
-                popover: { title: 'Estadisticas Registrados', description: 'Aqui se mostraran todos las estadisticas agrupadas por atletas.', position: 'top' }
+                popover: { title: 'Estadísticas Registradas', description: 'Aquí se mostrarán todas las estadísticas agrupadas por atletas.', position: 'top' }
             },
             {
                 element: '#rowsPerPage',
-                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+                popover: { title: 'Registros Deseados', description: 'Aquí podrá seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
             },
             {
                 element: '#botonera',
-                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
+                popover: { title: 'Cambiar de Página', description: 'Botones para cambiar de página.', position: 'top' }
             },
         ];
 
@@ -158,8 +158,8 @@ $(document).ready(function () {
 
 function validarEnvio(proceso) {
     // 1. Validación de Selects
-    if ($('#torneo').val() === null || $('#torneo').val() === "") {
-        muestraMensaje("error", 2000, "Error", "Debe seleccionar un torneo");
+    if ($('#participacion').val() === null || $('#participacion').val() === "") {
+        muestraMensaje("error", 2000, "Error", "Debe seleccionar una participación / torneo");
         return false;
     }
     if ($('#atleta').val() === null || $('#atleta').val() === "") {
@@ -197,7 +197,7 @@ function buscar(id) {
     enviaAjax(datos);
 }
 function eliminar(id) {
-    confirmar('¿Está seguro que quiere eliminar estas Estadisticas?', function (confirmado) {
+    confirmar('¿Está seguro que quiere eliminar estas Estadísticas?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
@@ -226,11 +226,11 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
         let textoMostrar = "";
         let atributosExtra = ""; // Variable para guardar los límites de edad
 
-        if (idSelect === 'torneo' && campo1 && campo2) {
+        if (idSelect === 'participacion' && campo1 && campo2) {
             textoMostrar = `${escapeHTML(dato[campo1])} - ${escapeHTML(dato[campo2])}`;
         }
         else if (idSelect === 'atleta' && campo1 && campo2 && campo3) {
-            textoMostrar = `${escapeHTML(dato[campo1])} ${escapeHTML(dato[campo2])} - ${escapeHTML(dato[campo3])}`;
+            textoMostrar = `${escapeHTML(dato[campo1])} ${escapeHTML(dato[campo2])} - ${escapeHTML(dato[campo3])}/${escapeHTML(dato[campo4])}`;
         }
         else {
             textoMostrar = escapeHTML(String(dato[campo1]));
@@ -249,7 +249,7 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Estadística");
 
     // 2. Asegurar la visibilidad de todas las columnas del formulario
-    $('#torneo').closest('.colum').show();
+    $('#participacion').closest('.colum').show();
     $('#atleta').closest('.colum').show();
     $('#goles').closest('.colum').show();
     $('#asistencias').closest('.colum').show();
@@ -260,7 +260,7 @@ function modificar(datos) {
 
     // 3. Asignar los valores devueltos por el método Buscar() a cada input/select
     $('#id').val(datos[0].id_estadisticas);
-    $('#torneo').val(datos[0].id_torneo);
+    $('#participacion').val(datos[0].id_torneo);
     $('#atleta').val(datos[0].id_atleta);
     $('#goles').val(datos[0].goles);
     $('#asistencias').val(datos[0].asistencias);
@@ -269,7 +269,7 @@ function modificar(datos) {
     $('#partido').val(datos[0].partidos_jugados);   // Mapea con 'partidos_jugados' del SELECT
     $('#average').val(datos[0].average);
 
-    $('#torneo').trigger('change');
+    $('#participacion').trigger('change');
     $('#atleta').trigger('change');
     abrirModal();
 }
@@ -307,20 +307,20 @@ function enviaAjax(datos) {
             try {
                 var lee = JSON.parse(respuesta);
                 if (lee.accion == "MultiConsulta") {
-                    construirSelect('torneo', lee.torneos, 'id_torneo', 'nombre', 'fecha_inicio');
-                    construirSelect('atleta', lee.atletas, 'id_atleta', 'nombres', 'apellidos', 'doc_identidad');
+                    construirSelect('participacion', lee.participaciones, 'codigo_participacion', 'torneo_nombre', 'fecha_inicio');
+                    construirSelect('atleta', lee.atletas, 'codigo_atleta', 'p_nombre', 'p_apellidos', 'documento_identidad','categoria');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } else if (lee.accion == "eliminar") {
                     consultar();
-                    muestraMensaje("success", 2000, "Eliminacion Exitosa", lee.mensaje);
+                    muestraMensaje("success", 2000, "Eliminación Exitosa", lee.mensaje);
                 } else if (lee.accion == "modificar") {
                     consultar();
                     limpia();
                     cerrarModal();
-                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
+                    muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }

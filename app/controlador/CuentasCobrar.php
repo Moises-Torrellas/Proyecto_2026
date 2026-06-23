@@ -1,6 +1,9 @@
 <?php
 
 use App\modelo\ModeloCuentasCobrar;
+use App\modelo\ModeloAtletas;
+use App\modelo\ModeloConceptos;
+use App\modelo\ModeloMonedas;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -59,15 +62,15 @@ function manejarSolicitudCuentasCobrar($obj, $id_modulo, $bitacoraObj, array $pe
                 break;
             case 'consultarA':
                 if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
-                consultarA($obj);
+                consultarA();
                 break;
             case 'consultarCo':
                 if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
-                consultarCo($obj);
+                consultarCo();
                 break;
-            case 'consultarM':
+            case 'consultarMoneda':
                 if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
-                consultarM($obj);
+                consultarMoneda();
                 break;
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar cuentas por cobrar.');
@@ -110,24 +113,27 @@ function consultar($obj, $permisos): void
     include (__DIR__.'/../vista/CuentasCobrar.php');
 }
 
-function consultarA($obj): void
-{
-    $respuesta = $obj->ConsultarAtletas();
+function consultarA(): void
+{   
+    $objAtleta = new ModeloAtletas();
+    $respuesta = $objAtleta->ConsultarAtletas();
     echo json_encode($respuesta);
 }
 
-function consultarCo($obj): void
+function consultarCo(): void
 {
-    $respuesta = $obj->ConsultarConceptos();
+    $objConcepto = new ModeloConceptos();
+    $respuesta = $objConcepto->ConsultarConcepto();
     echo json_encode($respuesta);
 }
 
-// NUEVA FUNCIÓN PARA MONEDAS
-function consultarM($obj): void
+function consultarMoneda(): void
 {
-    $respuesta = $obj->ConsultarMonedas();
+    $objMoneda = new ModeloMonedas();
+    $respuesta = $objMoneda->obtenerMonedaBase();
     echo json_encode($respuesta);
 }
+
 
 function buscar($obj): void
 {
@@ -150,23 +156,20 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id_concepto', 'id_atleta', 'id_moneda', 'monto_total', 'fecha_emision', 'fecha_vencimiento']);
+        validar_requeridos(['id_concepto', 'monto_total', 'fecha_emision']);
 
         $datos = [
             'id_concepto'       => $_POST['id_concepto'],
-            'id_atleta'         => $_POST['id_atleta'],
-            'id_moneda'         => $_POST['id_moneda'],
+            'id_atleta'         => is_array($_POST['id_atleta']) ? $_POST['id_atleta'] : [$_POST['id_atleta']],
             'monto_total'       => $_POST['monto_total'],
-            'fecha_emision'     => $_POST['fecha_emision'],
-            'fecha_vencimiento' => $_POST['fecha_vencimiento'],
-            'estatus'           => 'Pendiente', 
+            'fecha_emision'     => $_POST['fecha_emision'], 
             'accion'            => 'incluir'
         ];
 
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó un cargo de " . $_POST['monto_total'] . " al atleta ID: " . $_POST['id_atleta']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó cargo(s) de " . $_POST['monto_total']);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Cuenta por cobrar registrada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = ($resultado['codigo'] ?? '');
@@ -182,16 +185,17 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id', 'id_concepto', 'id_atleta', 'id_moneda', 'monto_total', 'fecha_emision', 'fecha_vencimiento', 'estatus']);
+        validar_requeridos(['id', 'id_concepto', 'monto_total', 'fecha_emision', 'estatus']);
+
+        // Extraer el primer atleta en caso de que llegue como array (en modificar siempre es 1)
+        $id_atleta = is_array($_POST['id_atleta']) ? $_POST['id_atleta'][0] : $_POST['id_atleta'];
 
         $datos = [
             'id'                => $_POST['id'],
             'id_concepto'       => $_POST['id_concepto'],
-            'id_atleta'         => $_POST['id_atleta'],
-            'id_moneda'         => $_POST['id_moneda'],
+            'id_atleta'         => $id_atleta,
             'monto_total'       => $_POST['monto_total'],
             'fecha_emision'     => $_POST['fecha_emision'],
-            'fecha_vencimiento' => $_POST['fecha_vencimiento'],
             'estatus'           => $_POST['estatus'],
             'accion'            => 'modificar'
         ];

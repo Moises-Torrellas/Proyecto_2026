@@ -57,6 +57,7 @@
 
                     <?php if ($puedeVer(_MD_MONEDAS_)) : ?>
                         <a type="button" href="Monedas" class="opciones"><i class="opciones_i" data-lucide="coins"></i> Monedas</a>
+                        <a type="button" href="TasaCambios" class="opciones"><i class="opciones_i" data-lucide="arrow-left-right"></i> Tasas de Cambio</a>
                     <?php endif; ?>
                 </li>
             <?php endif; ?>

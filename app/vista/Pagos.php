@@ -108,6 +108,25 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <span>No hay cuentas asociadas a este pago.</span>
                             </div>
                         <?php endif; ?>
+                        <?php if (!empty($dato['vueltos'])) : ?>
+                            <h4 class="titulo_des">Vueltos Registrados:</h4>
+                            <div class="detalle_fila">
+                                <?php foreach ($dato['vueltos'] as $v) : ?>
+                                    <div class="detalle_card">
+                                        <div class="detalle_card_icon"><i data-lucide="hand-coins"></i></div>
+                                        <div class="detalle_card_txt">
+                                            <label>Vuelto Entregado</label>
+                                            <span>Monto: <b style="color:#28a745;"><?= number_format($v['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($v['simbolo'] . ' ' . $v['abreviatura']) ?></b></span>
+                                            <small>Método: <?= htmlspecialchars($v['nombre_metodo_vuelto'] ?? 'N/A') ?></small>
+                                            <small>Fecha: <?= date('d/m/Y', strtotime($v['fecha_vuelto'])) ?></small>
+                                            <?php if(!empty($v['referencia'])): ?>
+                                            <small>Ref: <?= htmlspecialchars($v['referencia']) ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -262,8 +281,27 @@ endif;
                                                         <span>No hay cuentas asociadas a este pago.</span>
                                                     </div>
                                                 <?php endif; ?>
-                                            </div>
+                                                <?php if (!empty($dato['vueltos'])) : ?>
+                            <h4 class="titulo_des">Vueltos Registrados:</h4>
+                            <div class="detalle_fila">
+                                <?php foreach ($dato['vueltos'] as $v) : ?>
+                                    <div class="detalle_card">
+                                        <div class="detalle_card_icon"><i data-lucide="hand-coins"></i></div>
+                                        <div class="detalle_card_txt">
+                                            <label>Vuelto Entregado</label>
+                                            <span>Monto: <b style="color:#28a745;"><?= number_format($v['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($v['simbolo'] . ' ' . $v['abreviatura']) ?></b></span>
+                                            <small>Método: <?= htmlspecialchars($v['nombre_metodo_vuelto'] ?? 'N/A') ?></small>
+                                            <small>Fecha: <?= date('d/m/Y', strtotime($v['fecha_vuelto'])) ?></small>
+                                            <?php if(!empty($v['referencia'])): ?>
+                                            <small>Ref: <?= htmlspecialchars($v['referencia']) ?></small>
+                                            <?php endif; ?>
                                         </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
                                     </div>
                             <?php
                                 endforeach;
@@ -385,6 +423,64 @@ endif;
             </div>
         </div>
     </section>
+
+    <section class="contenedor_modal" id="modal_vuelto">
+        <div class="modal ocultar" id="vuelto_modal_content">
+            <div class="cabecera_modal">
+                <h2 class="titulo_modal">Registrar Vuelto</h2>
+                <a type="button" class="cerrar_modal" id="cerrar_modal_vuelto">&times;</a>
+            </div>
+            <div class="contenido_modal">
+                <form id="f_vuelto" autocomplete="off">
+                    <input type="hidden" id="codigo_pago_vuelto" name="codigo_pago">
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="monto_vuelto" name="monto_vuelto" readonly>
+                                <label for="monto_vuelto" class="titulo_formulario">Monto Vuelto</label>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="codigo_moneda" id="codigo_moneda_vuelto" class="formulario select">
+                                </select>
+                                <label for="codigo_moneda_vuelto" class="titulo_formulario">Moneda</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="codigo_metodo" id="codigo_metodo_vuelto" class="formulario select">
+                                </select>
+                                <label for="codigo_metodo_vuelto" class="titulo_formulario">Método de Pago</label>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="referencia_vuelto" name="referencia_vuelto">
+                                <label for="referencia_vuelto" class="titulo_formulario">Referencia (Opcional)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_vuelto" name="fecha_vuelto">
+                                <label for="fecha_vuelto" class="titulo_formulario">Fecha del Vuelto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <button type="button" class="btn btn_azul" id="proceso_vuelto">Guardar Vuelto</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
     <script src="js/main.js"></script>
     <script src="js/pagos.js"></script>
     <?php include('complementos/mensajeError.php'); ?>

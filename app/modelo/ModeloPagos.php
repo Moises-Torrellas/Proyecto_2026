@@ -77,6 +77,7 @@ class ModeloPagos extends Conexion
             'incluir'   => $this->Incluir(),
             'eliminar'  => $this->Eliminar(),
             'generar'   => $this->ConsultarReporte(),
+            'registrar_vuelto' => $this->RegistrarVuelto($datos),
             default => throw new Exception('La accion solicitada para el pago no es valida.')
         };
     }
@@ -211,7 +212,8 @@ class ModeloPagos extends Conexion
                     'moneda' => $row['moneda'],
                     'concepto_pago' => 'Pago Múltiple',
                     'nombre_metodo_pago' => $row['nombre_metodo_pago'],
-                    'detalles' => []
+                    'detalles' => [],
+                    'vueltos' => []
                 ];
             }
 
@@ -233,37 +235,26 @@ class ModeloPagos extends Conexion
                 ];
             }
         }
+
+        try {
+            $conex = $this->conex();
+            $stmtVueltos = $conex->prepare("SELECT v.*, m.simbolo, m.abreviatura, mp.nombre AS nombre_metodo_vuelto FROM vueltos v INNER JOIN monedas m ON v.codigo_moneda = m.codigo_moneda INNER JOIN metodos_pago mp ON v.codigo_metodo = mp.id_metodo");
+            $stmtVueltos->execute();
+            $vueltosAll = $stmtVueltos->fetchAll();
+            foreach ($vueltosAll as $v) {
+                if (isset($pagosAgrupados[$v['codigo_pago']])) {
+                    $pagosAgrupados[$v['codigo_pago']]['vueltos'][] = $v;
+                }
+            }
+        } catch(Exception $e) {}
+
         return array_values($pagosAgrupados);
     }
 
     public function obtenerTasa($monedaBase, $monedaPago)
     {
-        if (($monedaBase === 'USD' && $monedaPago === 'USDT') || ($monedaBase === 'USDT' && $monedaPago === 'USD')) {
-            return 1.0000;
-        }
-        if ($monedaBase === $monedaPago) {
-            return 1.0000;
-        }
-
-        $apiKey = EXCHANGE_RATE_API_KEY;
-        $url = "https://v6.exchangerate-api.com/v6/{$apiKey}/pair/{$monedaBase}/{$monedaPago}";
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-        $response = curl_exec($ch);
-        curl_close($ch);
-
-        $datosApi = json_decode($response, true);
-
-        if (isset($datosApi['result']) && $datosApi['result'] === 'success') {
-            $tasa = $datosApi['conversion_rate'] ?? $datosApi['conversion_rates'][$monedaPago] ?? null;
-            if ($tasa !== null) {
-                return floatval($tasa);
-            }
-        }
-        throw new Exception("No se pudo obtener la tasa de cambio de {$monedaBase} a {$monedaPago}.");
+        $modeloTasa = new ModeloTasaCambios();
+        return $modeloTasa->obtenerTasaDeAPI($monedaBase, $monedaPago);
     }
 
     private function Incluir(): array
@@ -357,7 +348,7 @@ class ModeloPagos extends Conexion
             $stmtVuelto->execute([$vuelto, $id_pago]);
 
             $conex->commit();
-            return array('accion' => 'exito');
+            return array('accion' => 'exito', 'vuelto' => $vuelto, 'id_pago' => $id_pago);
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
@@ -366,6 +357,45 @@ class ModeloPagos extends Conexion
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
+        }
+    }
+
+    private function RegistrarVuelto($datos): array
+    {
+        $conex = null;
+        try {
+            $conex = $this->conex();
+            $conex->beginTransaction();
+
+            $codigo_pago = $datos['codigo_pago'];
+            $codigo_metodo = $datos['codigo_metodo'];
+            $codigo_moneda = $datos['codigo_moneda'];
+            $monto_vuelto = $datos['monto_vuelto'];
+            $referencia = $datos['referencia'] ?? null;
+            $fecha_vuelto = $datos['fecha_vuelto'] ?? date('Y-m-d');
+
+            $sql = "INSERT INTO vueltos (codigo_metodo, codigo_pago, codigo_moneda, monto_vuelto, fecha_vuelto, referencia) 
+                    VALUES (:metodo, :pago, :moneda, :monto, :fecha, :referencia)";
+            $stmt = $conex->prepare($sql);
+            $stmt->execute([
+                ':metodo' => $codigo_metodo,
+                ':pago' => $codigo_pago,
+                ':moneda' => $codigo_moneda,
+                ':monto' => $monto_vuelto,
+                ':fecha' => $fecha_vuelto,
+                ':referencia' => $referencia
+            ]);
+
+            $conex->commit();
+            return ['accion' => 'exito_vuelto', 'mensaje' => 'Vuelto registrado exitosamente'];
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            logs('Pagos', $e->getMessage(), 'Modelo_RegistrarVuelto');
+            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
+        } finally {
+            $conex = null;
         }
     }
 

@@ -84,7 +84,24 @@ class ModeloMonedas extends Conexion
         }
     }
 
-    function Buscar(int $id = null): array
+    public function ConsultarMonedas(): array
+    {
+        try {
+            $conex = $this->conex();
+            $sentencia = "SELECT * FROM monedas WHERE estatus = 1";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute();
+            $datos = $stmt->fetchAll();
+            return array('accion' => 'buscar', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Monedas', $e->getMessage(), 'Modelo_Buscar');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
+        }
+    }
+
+    public function Buscar(int $id = null): array
     {
         try {
             $conex = $this->conex();
@@ -100,6 +117,30 @@ class ModeloMonedas extends Conexion
             return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
+        }
+    }
+
+    public function obtenerMonedaBase(): array
+    {
+        try {
+            $conex = $this->conex();
+            $stmt = $conex->prepare(
+                "SELECT codigo_moneda, nombre, simbolo, abreviatura
+                 FROM monedas
+                 WHERE base = 1 AND estatus = 1
+                 LIMIT 1"
+            );
+            $stmt->execute();
+            $dato = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$dato) {
+                throw new Exception('No hay moneda base configurada en el sistema.');
+            }
+
+            return ['accion' => 'consultarMoneda', 'datos' => $dato];
+        } catch (Exception $e) {
+            logs('Monedas', $e->getMessage(), 'Modelo_ObtenerMonedaBase');
+            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         }
     }
 

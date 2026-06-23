@@ -85,7 +85,7 @@ function MultiConsulta(): void {
         $equipo = new ModeloEquipos(); 
 
         $respTorneo = $torneo->Consultar(); 
-        $respEquipo = $equipo->Consultar(); 
+        $respEquipo = $equipo->ConsultarEquipos(); 
 
         echo json_encode([
             'accion' => 'MultiConsulta',

@@ -42,7 +42,7 @@ class ModeloConceptos extends Conexion
         $this->dias = $datos['dias'] ?? null;
         //ejecutamos la accion enviada por el controlador
         $accion = $datos['accion'] ?? null;
-        
+
         return match ($accion) {
             'incluir'   => $this->Incluir(),
             'eliminar'  => $this->Eliminar(),
@@ -100,6 +100,23 @@ class ModeloConceptos extends Conexion
         } catch (Exception $e) {
             logs('Concepto', $e->getMessage(), 'Modelo_Consultar');
             return array('accion' => 'error');
+        } finally {
+            $conex = NULL;
+        }
+    }
+
+    public function ConsultarConcepto(): array
+    {
+        try {
+            $conex = $this->conex();
+            $sentencia = "SELECT * FROM conceptos WHERE estatus = 1";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute();
+            $datos = $stmt->fetchAll();
+            return array('accion' => 'consultarCo', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Concepto', $e->getMessage(), 'Modelo');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
         }

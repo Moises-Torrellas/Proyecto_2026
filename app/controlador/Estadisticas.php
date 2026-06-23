@@ -2,14 +2,13 @@
 
 use App\modelo\ModeloEstadisticas;
 use App\modelo\ModeloAtletas;
-use App\modelo\ModeloTorneos;
-use App\modelo\ModeloParticipaciones;
+
+use App\modelo\ModeloParticipaciones; 
 use App\modelo\ModeloHistorial;
 use App\servicios\GenerarReporte;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
-
 
 $id_modulo = _MD_ESTADISTICAS_;
 
@@ -55,16 +54,16 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
             case 'MultiConsulta':
                 if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar las estadisticas.');
 
-                $modeloTor = new ModeloTorneos();
+                $modeloPart = new ModeloParticipaciones();
                 $modeloAtl = new ModeloAtletas();
 
-                $TorRespuesta = $modeloTor->Consultar();
-                $AtlRespuesta = $modeloAtl->Consultar();
+                $PartRespuesta = $modeloPart->Consultar();
+                $AtlRespuesta = $modeloAtl->ConsultarAtletas();
 
                 echo json_encode([
-                    'accion'         => 'MultiConsulta',
-                    'torneos' => $TorRespuesta['datos'] ?? [],
-                    'atletas'     => $AtlRespuesta['datos'] ?? []
+                    'accion'          => 'MultiConsulta',
+                    'participaciones' => $PartRespuesta['datos'] ?? [], // Enviamos participaciones al frontend
+                    'atletas'         => $AtlRespuesta['datos'] ?? []
                 ]);
 
                 break;
@@ -102,7 +101,6 @@ function consultar($obj, $permisos): void
     $registro = $respuesta['datos'] ?? [];
     $solo_lista = true;
 
-
     include(__DIR__ . '/../vista/Estadisticas.php');
 }
 
@@ -128,8 +126,8 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
+        // Se valida 'participacion' pero se deja 'torneo' como respaldo temporal para evitar errores en la transición
         $validaciones = [
-            'torneo'         => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Seleccione un torneo válido.'],
             'atleta'         => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Seleccione un atleta válido.'],
             'goles'          => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Goles: Ingrese una cantidad válida (0-999).'],
             'asistencias'    => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Asistencias: Ingrese una cantidad válida (0-999).'],
@@ -139,10 +137,14 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             'average'        => ['regla' => '/^[0-9]+(\.[0-9]{1,2})?$/', 'mensaje' => 'Formato decimal inválido (ej: 1.50).']
         ];
 
+        // Validamos participacion o torneo (dependiendo de qué envíe tu frontend actualmente)
+        $llave_participacion = isset($_POST['participacion']) ? 'participacion' : 'torneo';
+        $validaciones[$llave_participacion] = ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Seleccione una participación válida.'];
+
         validar_datos($validaciones);
 
         $datos = [
-            'torneo'         => $_POST['torneo'],
+            'participacion'  => $_POST[$llave_participacion],
             'atleta'         => $_POST['atleta'],
             'goles'          => $_POST['goles'],
             'asistencias'    => $_POST['asistencias'],
@@ -164,12 +166,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID      => 'El torneo ingresado no existe en los registros del club.',
+                INVALID_ID      => 'La participación ingresada no existe en los registros del club.',
                 INVALID_ID.'1'  => 'El Atleta ingresado no existe en los registros del club.',
-                EMPTY_SELECTION => 'El tleta seleccionado no participo en el torneo seleccionado.',
-                DUPLICATE       => 'Ya este atleta tiene registrada unas estadisticas para este torneo.',
+                EMPTY_SELECTION => 'El atleta seleccionado no formó parte de la participación seleccionada.',
+                DUPLICATE       => 'Ya este atleta tiene registradas unas estadísticas para esta participación.',
                 DB_CONNECTION   => 'Ocurrio un error al conectarse con la base de datos.',
-                default         => 'Ocurrió un error inesperado en el registro de las estadisticas.'
+                default         => 'Ocurrió un error inesperado en el registro de las estadísticas.'
             };
         }
         echo json_encode($resultado);
@@ -184,7 +186,6 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
     try {
         $validaciones = [
             'id'             => ['regla' => '/^[0-9]*$/', 'mensaje' => 'Id inválido.'],
-            'torneo'         => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Seleccione un torneo válido.'],
             'atleta'         => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Seleccione un atleta válido.'],
             'goles'          => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Goles: Ingrese una cantidad válida (0-999).'],
             'asistencias'    => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Asistencias: Ingrese una cantidad válida (0-999).'],
@@ -194,11 +195,15 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'average'        => ['regla' => '/^[0-9]+(\.[0-9]{1,2})?$/', 'mensaje' => 'Formato decimal inválido (ej: 1.50).']
         ];
 
+        // Validamos participacion o torneo (dependiendo de qué envíe tu frontend actualmente)
+        $llave_participacion = isset($_POST['participacion']) ? 'participacion' : 'torneo';
+        $validaciones[$llave_participacion] = ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Seleccione una participación válida.'];
+
         validar_datos($validaciones);
 
         $datos = [
             'id'             => $_POST['id'],
-            'torneo'         => $_POST['torneo'],
+            'participacion'  => $_POST[$llave_participacion],
             'atleta'         => $_POST['atleta'],
             'goles'          => $_POST['goles'],
             'asistencias'    => $_POST['asistencias'],
@@ -221,13 +226,13 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID      => 'El torneo ingresado no existe en los registros del club.',
+                INVALID_ID      => 'La participación ingresada no existe en los registros del club.',
                 INVALID_ID.'1'  => 'El Atleta ingresado no existe en los registros del club.',
-                INVALID_ID.'2'  => 'Las estadisticas que intenta modificar no existe en los registros del club.',
-                EMPTY_SELECTION => 'El atleta seleccionado no participo en el torneo seleccionado.',
-                DUPLICATE       => 'Ya este atleta tiene registrada unas estadisticas para este torneo.',
+                INVALID_ID.'2'  => 'Las estadísticas que intenta modificar no existen en los registros del club.',
+                EMPTY_SELECTION => 'El atleta seleccionado no formó parte de la participación seleccionada.',
+                DUPLICATE       => 'Ya este atleta tiene registradas unas estadísticas para esta participación.',
                 DB_CONNECTION   => 'Ocurrio un error al conectarse con la base de datos.',
-                default         => 'Ocurrió un error inesperado en la modificacion de las estadisticas.'
+                default         => 'Ocurrió un error inesperado en la modificacion de las estadísticas.'
             };
         }
         echo json_encode($resultado);
@@ -261,10 +266,10 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID      => 'Las estadisticas que intenta modificar no existe en los registros del club.',
-                ASSOCIATES      => 'No puede eliminar una estadistica que ya este asociado al historial de un atleta.',
+                INVALID_ID      => 'Las estadísticas que intenta eliminar no existen en los registros del club.',
+                ASSOCIATES      => 'No puede eliminar una estadística que ya esté asociada al historial de un atleta.',
                 DB_CONNECTION   => 'Ocurrio un error al conectarse con la base de datos.',
-                default         => 'Ocurrió un error inesperado en la eliminacion de las estadisticas.'
+                default         => 'Ocurrió un error inesperado en la eliminacion de las estadísticas.'
             };
         }
         echo json_encode($resultado);

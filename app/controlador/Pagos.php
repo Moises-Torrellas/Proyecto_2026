@@ -66,6 +66,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
             case 'MultiConsulta':
                 MultiConsulta();
                 break;
+            case 'registrar_vuelto':
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos.');
+                registrar_vuelto($obj, $id_modulo, $bitacoraObj);
+                break;
             case 'consultarTasa':
                 consultarTasa($obj);
                 break;
@@ -114,32 +118,23 @@ function consultar($obj, $permisos): void
 function MultiConsulta(): void
 {
     try {
-        // 1. Instanciar los modelos
         $modeloCuentas = new ModeloCuentasCobrar();
         $modeloMonedas = new ModeloMonedas();
         $modeloMP      = new ModeloMetodosPago();
 
-        $respCuentas = $modeloCuentas->Consultar();
-        $cuentasFiltradas = array_filter($respCuentas['datos'] ?? [], function ($item) {
-            return (int)$item['anulado'] === 0 && floatval($item['monto_pendiente']) > 0 && (int)$item['estatus'] === 0;
-        });
-
-        // 3. Obtener y filtrar Monedas (Solo estatus 1)
-        $respMonedas = $modeloMonedas->Consultar();
-        $monedasFiltradas = array_filter($respMonedas['datos'] ?? [], function ($item) {
-            return isset($item['estatus']) && (int)$item['estatus'] === 1;
-        });
-
-        // 4. Obtener y filtrar Métodos de Pago (Solo estatus 1)
-        $respMP = $modeloMP->Consultar();
-        $metodosFiltrados = array_filter($respMP['datos'] ?? [], function ($item) {
-            return isset($item['estatus']) && (int)$item['estatus'] === 1;
-        });
+        $respCuentas = $modeloCuentas->ConsultarCargos();
+        $respMonedas = $modeloMonedas->ConsultarMonedas();
+        $respMP      = $modeloMP->ConsultarMetodos();
+        
+        $cuentasDatos = isset($respCuentas['datos']) ? $respCuentas['datos'] : [];
+        $monedasDatos = isset($respMonedas['datos']) ? $respMonedas['datos'] : [];
+        $metodosDatos = isset($respMP['datos']) ? $respMP['datos'] : [];
+        
         echo json_encode([
             'accion'  => 'MultiConsulta',
-            'cuentas' => array_values($cuentasFiltradas),
-            'monedas' => array_values($monedasFiltradas),
-            'metodos' => array_values($metodosFiltrados)
+            'cuentas' => $cuentasDatos,
+            'monedas' => $monedasDatos,
+            'metodos' => $metodosDatos
         ]);
     } catch (Exception $e) {
         logs('Pagos', $e->getMessage(), 'Controlador_MultiConsulta');
@@ -203,7 +198,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             $cuentas_str = is_array($datos['cuenta']) ? implode(', ', $datos['cuenta']) : $datos['cuenta'];
             registrarBitacora($bitacoraObj, $id_modulo, "Registro de Pago a las cuentas por cobrar: " . $cuentas_str);
-            $resultado = array('accion' => 'incluir', 'mensaje' => 'Pago registrado exitosamente.');
+            $resultado = array(
+                'accion' => 'incluir', 
+                'mensaje' => 'Pago registrado exitosamente.', 
+                'vuelto' => $resultado['vuelto'] ?? 0,
+                'id_pago' => $resultado['id_pago'] ?? 0
+            );
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID         => 'El método de pago seleccionado no existe.',
@@ -256,6 +256,38 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Pagos', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function registrar_vuelto($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validaciones = [
+            'codigo_pago' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Pago inválido.'],
+            'codigo_metodo' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Método de pago inválido.'],
+            'codigo_moneda' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Moneda inválida.'],
+            'monto_vuelto' => ['regla' => '/^\d+(\.\d{1,2})?$/', 'mensaje' => 'Monto inválido.']
+        ];
+        validar_datos($validaciones);
+
+        $datos = [
+            'codigo_pago' => $_POST['codigo_pago'],
+            'codigo_metodo' => $_POST['codigo_metodo'],
+            'codigo_moneda' => $_POST['codigo_moneda'],
+            'monto_vuelto' => $_POST['monto_vuelto'],
+            'fecha_vuelto' => $_POST['fecha_vuelto'] ?? date('Y-m-d'),
+            'referencia' => $_POST['referencia_vuelto'] ?? '',
+            'accion' => 'registrar_vuelto'
+        ];
+
+        $resultado = $obj->ProcesarDatos($datos);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito_vuelto') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Registro de vuelto para el pago: " . $datos['codigo_pago']);
+        }
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Pagos', $e->getMessage(), 'Controlador_RegistrarVuelto');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

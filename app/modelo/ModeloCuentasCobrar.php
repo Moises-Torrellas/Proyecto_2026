@@ -6,29 +6,25 @@ use Exception;
 
 class ModeloCuentasCobrar extends Conexion
 {
-    private $id;
-    private $id_concepto;
-    private $id_atleta;
-    private $id_moneda;
-    private $monto;
+    private $codigo_cargo;
+    private $codigo_concepto;
+    private $codigo_atleta;
+    private $monto_total;
     private $fecha_emision;
-    private $fecha_vencimiento;
     private $estatus;
 
     public function __construct()
     {
         parent::__construct();
+        // Ajustado para coincidir con la tabla cargos
         $this->campoWhitelist = [
-            'id' => 'id_cobrar',
-            'id_cobrar' => 'id_cobrar',
-            'id_concepto' => 'id_concepto',
-            'id_conceptos' => 'id_conceptos',
-            'id_atleta' => 'id_atleta',
-            'id_moneda' => 'id_moneda',
-            'monto_pendiente' => 'monto_pendiente', // <-- AGREGADO PARA LA LISTA BLANCA
+            'id' => 'codigo_cargo',
+            'id_cobrar' => 'codigo_cargo',
+            'id_concepto' => 'codigo_concepto',
+            'id_atleta' => 'codigo_atleta', 
             'estatus' => 'estatus'
         ];
-        $this->llavePrimaria = 'id_cobrar';
+        $this->llavePrimaria = 'codigo_cargo';
     }
 
     public function ProcesarDatos(array $datos): array
@@ -37,18 +33,14 @@ class ModeloCuentasCobrar extends Conexion
             throw new Exception('No se proporcionaron datos para procesar.');
         }
 
-        $this->id = $datos['id'] ?? null;
-        $this->id_concepto = $datos['id_concepto'] ?? null;
-        $this->id_atleta = $datos['id_atleta'] ?? null;
-        $this->id_moneda = $datos['id_moneda'] ?? null;
-        $this->monto = $datos['monto_total'] ?? 0;
+        $this->codigo_cargo = $datos['id'] ?? null;
+        $this->codigo_concepto = $datos['id_concepto'] ?? null;
+        $this->codigo_atleta = $datos['id_atleta'] ?? null; 
+        $this->monto_total = $datos['monto_total'] ?? 0;
 
-        // Leemos las fechas enviadas por el formulario
         $this->fecha_emision = !empty($datos['fecha_emision']) ? $datos['fecha_emision'] : date('Y-m-d');
 
-        $this->fecha_vencimiento = !empty($datos['fecha_vencimiento']) ? $datos['fecha_vencimiento'] : date('Y-m-d', strtotime($this->fecha_emision . ' + 30 days'));
-
-        $this->estatus = mb_convert_case(trim($datos['estatus'] ?? 'Pendiente'), MB_CASE_TITLE, "UTF-8");
+        $this->estatus = $this->normalizarEstatus($datos['estatus'] ?? 1);
 
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
@@ -66,30 +58,24 @@ class ModeloCuentasCobrar extends Conexion
             $conex = $this->conex();
             $params = [];
 
-            // 1. Consultamos directamente la nueva vista
-            $sentencia = "SELECT * FROM vista_cuentas_cobrar WHERE 1=1";
+            // Se mantiene el uso de tu vista, asegúrate de que la vista en BD esté apuntando a la tabla 'cargos'
+            $sentencia = "SELECT * FROM vista_cargos WHERE 1=1";
 
-            // 2. Buscador general dinámico
             if (!empty($filtro['filtro'])) {
                 $p = "%" . trim($filtro['filtro']) . "%";
-
-                // Agregamos estatus_texto a la búsqueda
                 $sentencia .= " AND (
                 atleta_nombre LIKE :f1 OR 
                 atleta_apellido LIKE :f2 OR 
                 concepto_nombre LIKE :f3 OR
-                moneda_nombre LIKE :f4 OR
                 estatus_texto LIKE :f5
             )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
                 $params[':f3'] = $p;
-                $params[':f4'] = $p;
                 $params[':f5'] = $p;
             }
 
-            // 3. Ordenamiento basado en la vista
-            $sentencia .= " ORDER BY fecha_emision DESC";
+            $sentencia .= " ORDER BY id_atleta, fecha_emision DESC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -98,60 +84,44 @@ class ModeloCuentasCobrar extends Conexion
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('CuentasCobrar', $e->getMessage(), 'Modelo_Consultar');
-            return array('accion' => 'error');
+            return array('accion' => 'error' );
         } finally {
             $conex = NULL;
         }
     }
 
-    public function ConsultarAtletas(): array
+    public function ConsultarCargos(): array
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT id_atleta, nombres as nombre, apellidos as apellido FROM atletas ORDER BY nombres ASC";
-            $stmt = $conex->prepare($sentencia);
-            $stmt->execute();
-            $datos = $stmt->fetchAll();
-            return array('accion' => 'consultarA', 'datos' => $datos);
-        } catch (Exception $e) {
-            logs('CuentasCobrar', $e->getMessage(), 'Modelo_ConsultarAtletas');
-            return array('accion' => 'error', 'mensaje' => 'Error al cargar los atletas.');
-        } finally {
-            $conex = NULL;
-        }
-    }
 
-    public function ConsultarConceptos(): array
-    {
-        try {
-            $conex = $this->conex();
-            // ADAPTACIÓN: Seleccionamos también la columna 'monto' de la tabla conceptos para usarla en JS
-            $sentencia = "SELECT id_conceptos as id_concepto, nombre, monto FROM conceptos ORDER BY nombre ASC";
-            $stmt = $conex->prepare($sentencia);
-            $stmt->execute();
-            $datos = $stmt->fetchAll();
-            return array('accion' => 'consultarCo', 'datos' => $datos);
-        } catch (Exception $e) {
-            logs('CuentasCobrar', $e->getMessage(), 'Modelo_ConsultarConceptos');
-            return array('accion' => 'error', 'mensaje' => 'Error al cargar los conceptos.');
-        } finally {
-            $conex = NULL;
-        }
-    }
+            $sentencia = "SELECT 
+                c.codigo_cargo,
+                a.p_nombre, 
+                a.p_apellidos, 
+                co.nombre AS concepto, 
+                c.fecha_emision, 
+                c.monto_total,
+                m.simbolo AS simbolo_moneda
+                    FROM 
+                        cargos c
+                    INNER JOIN 
+                        atletas a ON c.codigo_atleta = a.codigo_atleta
+                    INNER JOIN 
+                        conceptos co ON c.codigo_concepto = co.codigo_concepto
+                    INNER JOIN 
+                        monedas m ON m.base = 1
+                    WHERE 
+                        c.estatus = 1;";
 
-    // NUEVO MÉTODO PARA CARGAR SELECT DE MONEDAS
-    public function ConsultarMonedas(): array
-    {
-        try {
-            $conex = $this->conex();
-            $sentencia = "SELECT id_moneda, nombre FROM monedas WHERE estatus = 1 ORDER BY nombre ASC";
             $stmt = $conex->prepare($sentencia);
             $stmt->execute();
             $datos = $stmt->fetchAll();
-            return array('accion' => 'consultarM', 'datos' => $datos);
+            
+            return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
-            logs('CuentasCobrar', $e->getMessage(), 'Modelo_ConsultarMonedas');
-            return array('accion' => 'error', 'mensaje' => 'Error al cargar las monedas.');
+            logs('CuentasCobrar', $e->getMessage(), 'Modelo_Buscar');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
@@ -161,54 +131,48 @@ class ModeloCuentasCobrar extends Conexion
     {
         try {
             $conex = $this->conex();
-            $conex->beginTransaction(); // Aquí inicias la transacción
+            $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id_atleta', $this->id_atleta, 'atletas', NULL, bloquear: true)) {
-                throw new Exception("El atleta seleccionado no existe en el sistema.");
-            }
+            $this->estatus = 1;
 
-            if (!$this->verificarExistencia('id_conceptos', $this->id_concepto, 'conceptos', NULL, bloquear: true)) {
+            if (!$this->verificarExistencia('id_concepto', $this->codigo_concepto, 'conceptos', NULL, bloquear: true)) {
                 throw new Exception("El concepto de cobro seleccionado no existe.");
             }
 
-            if (!$this->verificarExistencia('id_moneda', $this->id_moneda, 'monedas', NULL, bloquear: true)) {
-                throw new Exception("La moneda seleccionada no existe.");
-            }
+            $codigo_moneda = $this->obtenerMonedaBaseId($conex);
 
-            if ($this->validarFrecuencia($conex, $this->id_concepto, $this->id_atleta, $this->fecha_emision)) {
-                throw new Exception("El atleta ya tiene asignado este concepto para el periodo correspondiente.");
-            }
-
-            // Añadimos monto_pendiente a los campos y los valores de la sentencia SQL
-            $sentencia = "INSERT INTO cuentas_cobrar (`id_concepto`, `id_atleta`, `id_moneda`, `monto_personalizado`, `monto_pendiente`, `fecha_emision`, `fecha_vencimiento`, `estatus`) 
-                        VALUES (:id_concepto, :id_atleta, :id_moneda, :monto, :monto_pendiente, :fecha_emision, :fecha_vencimiento, :estatus)";
+            $sentencia = "INSERT INTO cargos (`codigo_concepto`, `codigo_atleta`, `monto_total`, `fecha_emision`, `estatus`) 
+                          VALUES (:codigo_concepto, :codigo_atleta, :monto_total, :fecha_emision, :estatus)";
 
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id_concepto', $this->id_concepto);
-            $stmt->bindParam(':id_atleta', $this->id_atleta);
-            $stmt->bindParam(':id_moneda', $this->id_moneda);
-            $stmt->bindParam(':monto', $this->monto); // Se guarda en monto_personalizado
 
-            // ASIGNACIÓN REQUERIDA: Al crear, el saldo inicial es el total
-            $stmt->bindParam(':monto_pendiente', $this->monto);
+            // Iteramos sobre el array de atletas para registrarlos uno por uno
+            foreach ($this->codigo_atleta as $id_atleta) {
+                if (!$this->verificarExistencia('id_atleta', $id_atleta, 'atletas', NULL, bloquear: true)) {
+                    throw new Exception("El atleta seleccionado no existe o está inactivo.");
+                }
 
-            $stmt->bindParam(':fecha_emision', $this->fecha_emision);
-            $stmt->bindParam(':fecha_vencimiento', $this->fecha_vencimiento);
-            $stmt->bindParam(':estatus', $this->estatus);
+                if ($this->validarFrecuencia($conex, $this->codigo_concepto, $id_atleta, $this->fecha_emision)) {
+                    throw new Exception("El atleta ya tiene asignado este concepto para el periodo correspondiente.");
+                }
 
-            $stmt->execute();
-            // CRÍTICO: Si esta línea no se ejecuta o está antes del execute, los datos se borran al cerrar la conexión
+                $stmt->bindParam(':codigo_concepto', $this->codigo_concepto);
+                $stmt->bindParam(':codigo_atleta', $id_atleta);
+                $stmt->bindParam(':monto_total', $this->monto_total); 
+                $stmt->bindParam(':fecha_emision', $this->fecha_emision);
+                $stmt->bindParam(':estatus', $this->estatus);
+
+                $stmt->execute();
+            }
+
             $conex->commit();
-
             return array('accion' => 'exito');
+
         } catch (Exception $e) {
-            // Si algo falla adentro, deshace el intento de inserción para no dejar datos corruptos
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();
             }
             logs('CuentasCobrar', $e->getMessage(), 'Modelo_Incluir');
-
-            // Retornamos el error para que el controlador sepa que NO fue exitoso
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
@@ -221,30 +185,27 @@ class ModeloCuentasCobrar extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id_cobrar', $this->id, 'cuentas_cobrar', NULL, bloquear: true)) {
+            if (!$this->verificarExistencia('id', $this->codigo_cargo, 'cargos', NULL, bloquear: true)) {
                 throw new Exception(INVALID_ID);
             }
 
-            // Agregamos fecha_emision y fecha_vencimiento al UPDATE
-            $sentencia = "UPDATE cuentas_cobrar SET 
-                          id_concepto = :id_concepto, 
-                          id_atleta = :id_atleta, 
-                          id_moneda = :id_moneda,
-                          monto_personalizado = :monto, 
+            $sentencia = "UPDATE cargos SET 
+                          codigo_concepto = :codigo_concepto, 
+                          codigo_atleta = :codigo_atleta, 
+                          monto_total = :monto_total, 
                           fecha_emision = :fecha_emision,
-                          fecha_vencimiento = :fecha_vencimiento,
                           estatus = :estatus 
-                          WHERE id_cobrar = :id_cobrar";
+                          WHERE codigo_cargo = :id";
 
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id_concepto', $this->id_concepto);
-            $stmt->bindParam(':id_atleta', $this->id_atleta);
-            $stmt->bindParam(':id_moneda', $this->id_moneda);
-            $stmt->bindParam(':monto', $this->monto);
+            $stmt->bindParam(':codigo_concepto', $this->codigo_concepto);
+            // Si en modificar envías un solo atleta, nos aseguramos de que sea un string/int y no un array
+            $atleta_id = is_array($this->codigo_atleta) ? $this->codigo_atleta[0] : $this->codigo_atleta;
+            $stmt->bindParam(':codigo_atleta', $atleta_id);
+            $stmt->bindParam(':monto_total', $this->monto_total);
             $stmt->bindParam(':fecha_emision', $this->fecha_emision);
-            $stmt->bindParam(':fecha_vencimiento', $this->fecha_vencimiento);
             $stmt->bindParam(':estatus', $this->estatus);
-            $stmt->bindParam(':id_cobrar', $this->id);
+            $stmt->bindParam(':id', $this->codigo_cargo);
             $stmt->execute();
 
             $conex->commit();
@@ -265,20 +226,16 @@ class ModeloCuentasCobrar extends Conexion
         try {
             $conex = $this->conex();
 
-            // CORRECCIÓN: Cambiado monto a monto_personalizado para evitar el error 1054
-            $sentencia = "SELECT *, 
-                                    monto_personalizado as monto_total, 
-                                    monto_pendiente as monto_pendiente 
-                            FROM cuentas_cobrar 
-                            WHERE id_cobrar = :id";
+            $sentencia = "SELECT * FROM vista_cargos WHERE id_cobrar = :id";
 
             $stmt = $conex->prepare($sentencia);
-            if ($id===null) {
-                $id = $this->id;
+            if ($id === null) {
+                $id = $this->codigo_cargo;
             }
             $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
             $stmt->execute();
             $datos = $stmt->fetchAll();
+            
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('CuentasCobrar', $e->getMessage(), 'Modelo_Buscar');
@@ -294,18 +251,17 @@ class ModeloCuentasCobrar extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id_cobrar', $this->id, 'cuentas_cobrar', NULL, bloquear: true)) {
+            if (!$this->verificarExistencia('id', $this->codigo_cargo, 'cargos', NULL, bloquear: true)) {
                 throw new Exception(INVALID_ID);
             }
 
-            if ($this->verificarExistencia('id_cobrar', $this->id, 'pagos', NULL, bloquear: true)) {
-                throw new Exception("No se puede anular un cargo que ya tiene pagos registrados.");
+            if ($this->verificarExistencia('id', $this->codigo_cargo, 'detalles_pagos', NULL, bloquear: true)) {
+                throw new Exception(ASSOCIATES);
             }
 
-            // CAMBIO: Activamos la bandera de anulado
-            $sentencia = "UPDATE cuentas_cobrar SET anulado = 1 WHERE id_cobrar = :id";
+            $sentencia = "UPDATE cargos SET estatus = 3 WHERE codigo_cargo = :id";
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':id', $this->codigo_cargo);
             $stmt->execute();
 
             $conex->commit();
@@ -324,25 +280,24 @@ class ModeloCuentasCobrar extends Conexion
     public function validarFrecuencia($conex, $id_concepto, $id_atleta, $fecha_emision): bool
     {
         try {
-            $sql = "SELECT (SELECT COUNT(id_cobrar) 
-                            FROM cuentas_cobrar 
-                            WHERE id_concepto = c.id_conceptos 
-                              AND id_atleta = :id_atleta 
-                              AND (anulado = 0 OR anulado IS NULL)
+            $sql = "SELECT (SELECT COUNT(codigo_cargo) 
+                            FROM cargos 
+                            WHERE codigo_concepto = c.codigo_concepto 
+                              AND codigo_atleta = :id_atleta 
+                              AND estatus != 3
                               AND (
-                                  (c.regla = 'M' AND MONTH(fecha_emision) = MONTH(:fecha1) AND YEAR(fecha_emision) = YEAR(:fecha2)) OR
-                                  (c.regla = 'A' AND YEAR(fecha_emision) = YEAR(:fecha3)) OR
-                                  (c.regla = 'U')
+                                  (c.frecuencia = 'M' AND MONTH(fecha_emision) = MONTH(:fecha1) AND YEAR(fecha_emision) = YEAR(:fecha2)) OR
+                                  (c.frecuencia = 'A' AND YEAR(fecha_emision) = YEAR(:fecha3)) OR
+                                  (c.frecuencia = 'U')
                               )
                            ) as colisiones
                     FROM conceptos c 
-                    WHERE c.id_conceptos = :id_concepto";
+                    WHERE c.codigo_concepto = :id_concepto";
 
             $stmt = $conex->prepare($sql);
             $stmt->bindParam(':id_concepto', $id_concepto);
             $stmt->bindParam(':id_atleta', $id_atleta);
 
-            // Asignamos la fecha a cada uno de los parámetros que exige el SQL
             $stmt->bindParam(':fecha1', $fecha_emision);
             $stmt->bindParam(':fecha2', $fecha_emision);
             $stmt->bindParam(':fecha3', $fecha_emision);
@@ -351,16 +306,44 @@ class ModeloCuentasCobrar extends Conexion
 
             $resultado = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-            // Si hay colisiones retorna true, si da 0 o la regla es 'L' retorna false
             return ($resultado && $resultado['colisiones'] > 0);
         } catch (Exception $e) {
             logs('CuentasCobrar', $e->getMessage(), 'Modelo_ValidarFrecuencia');
-            // Lanzamos la excepción hacia arriba para que la transacción haga rollback
             throw new Exception("Error al validar la frecuencia del concepto en la base de datos.");
         }
     }
 
-    public function ModificarEstatus(int $id, int $estatus, float $monto, ?\PDO $conexExterna = null): bool
+    private function obtenerMonedaBaseId(\PDO $conex): int
+    {
+        $stmt = $conex->prepare(
+            "SELECT codigo_moneda FROM monedas WHERE base = 1 AND estatus = 1 LIMIT 1"
+        );
+        $stmt->execute();
+        $id = $stmt->fetchColumn();
+
+        if (!$id) {
+            throw new Exception('No hay moneda base configurada en el sistema.');
+        }
+
+        return (int) $id;
+    }
+
+    private function normalizarEstatus($estatus): int
+    {
+        if (is_numeric($estatus)) {
+            return (int) $estatus;
+        }
+
+        $texto = mb_convert_case(trim((string) $estatus), MB_CASE_TITLE, 'UTF-8');
+        return match ($texto) {
+            'Pendiente', 'Abonado' => 1,
+            'Pagado' => 2,
+            'Anulado' => 3,
+            default => 1,
+        };
+    }
+
+    public function ModificarEstatus(int $id, int $estatus, ?\PDO $conexExterna = null): bool
     {
         $transaccionPropia = false;
         try {
@@ -372,11 +355,11 @@ class ModeloCuentasCobrar extends Conexion
                 $transaccionPropia = true;
             }
 
-            $sentencia = "UPDATE cuentas_cobrar SET estatus = :estatus, monto_pendiente = :monto WHERE id_cobrar = :id";
+            // Removido monto_pendiente ya que no existe en cargos
+            $sentencia = "UPDATE cargos SET estatus = :estatus WHERE codigo_cargo = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $id);
             $stmt->bindParam(':estatus', $estatus);
-            $stmt->bindParam(':monto', $monto);
             $stmt->execute();
 
             if ($transaccionPropia) {

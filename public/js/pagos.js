@@ -81,17 +81,17 @@ $(document).ready(function () {
     $('#cuenta').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
-        dropdownParent: $('.contenedor_modal'),
+        dropdownParent: $('#contenedor_modal'),
     });
     $('#metodo').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
-        dropdownParent: $('.contenedor_modal'),
+        dropdownParent: $('#contenedor_modal'),
     });
     $('#moneda').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
-        dropdownParent: $('.contenedor_modal'),
+        dropdownParent: $('#contenedor_modal'),
     });
 
     $("#incluir").on("click", function () {
@@ -110,7 +110,10 @@ $(document).ready(function () {
         $('#cuenta').val(null).trigger('change');
         $('#metodo').val(null).trigger('change');
         $('#moneda').val(null).trigger('change');
-        
+        $('#monto').val('');
+        $('#tasa').val('');
+        $('#referencia').val('');
+
         $('#referencia').prop('disabled', false).removeClass("campo_deshabilitado");
 
         // Limpieza de mensajes dinámicos de ayuda
@@ -121,7 +124,7 @@ $(document).ready(function () {
         // Forzar fecha del sistema
         let hoy = new Date().toISOString().split('T')[0];
         $('#fecha').val(hoy);
-        
+
         abrirModal();
     });
 
@@ -213,11 +216,11 @@ $(document).ready(function () {
         let idsCobrar = $(this).val();
         if (!idsCobrar || idsCobrar.length === 0) {
             cuentaSeleccionadaActual = null;
-            $('#detalles_deuda_ayuda').html(''); 
+            $('#detalles_deuda_ayuda').html('');
             $('#monto_equivalente_ayuda').html('');
             return;
         }
-        
+
         // Validación de protección multimoneda en selección múltiple
         let primeraCuenta = listadoCuentas.find(c => c.id_cobrar == idsCobrar[0]);
         let monedaIncompatible = false;
@@ -238,9 +241,9 @@ $(document).ready(function () {
         }
 
         cuentaSeleccionadaActual = primeraCuenta;
-        
+
         let htmlDeudas = '<div class="alerta-info-deuda" style="background-color: #f0f7ff; border-left: 4px solid #007bff; padding: 10px; margin-top: 5px; border-radius: 4px;"><p style="margin: 0; font-size: 13px; color: #333;">⚠️ <strong>Cuentas seleccionadas:</strong></p><ul style="margin: 5px 0 0 20px;">';
-        
+
         idsCobrar.forEach(id => {
             let cuenta = listadoCuentas.find(c => c.id_cobrar == id);
             if (cuenta) {
@@ -263,6 +266,31 @@ $(document).ready(function () {
     // Listener en tiempo real para amortización y monto al cambio
     $('#monto, #tasa').on('input', function () {
         recalcularAmortizacion();
+    });
+
+    $('#cerrar_modal_vuelto').on('click', function () {
+        $('#modal_vuelto').removeClass('mostrar');
+        $('#vuelto_modal_content').removeClass('mostrar_modal').addClass('ocultar');
+        $('#f_vuelto')[0].reset();
+    });
+
+    $('#proceso_vuelto').on('click', function () {
+        if ($('#codigo_moneda_vuelto').val() == "" || $('#codigo_moneda_vuelto').val() == null) {
+            muestraMensaje("error", 2000, "Error", "Debe seleccionar una moneda");
+            return false;
+        }
+        if ($('#codigo_metodo_vuelto').val() == "" || $('#codigo_metodo_vuelto').val() == null) {
+            muestraMensaje("error", 2000, "Error", "Debe seleccionar un método de pago");
+            return false;
+        }
+
+        confirmar('¿Está seguro que quiere registrar este vuelto?', function (confirmado) {
+            if (confirmado) {
+                var datos = new FormData($('#f_vuelto')[0]);
+                datos.append('accion', 'registrar_vuelto');
+                enviaAjax(datos);
+            }
+        });
     });
 });
 
@@ -299,7 +327,7 @@ function solicitarTasaAPI() {
     datos.append('fecha', fecha);
 
     $.ajax({
-        url: "", 
+        url: "",
         type: "POST",
         contentType: false,
         processData: false,
@@ -331,14 +359,14 @@ function recalcularAmortizacion() {
     if (monto > 0 && tasa > 0 && cuentaSeleccionadaActual) {
         // Cálculo del monto convertido (Ej: 18000 Bs / 40 Tasa = 450 USD)
         let montoAmortizado = monto / tasa;
-        
+
         // 1. Llenamos AUTOMÁTICAMENTE tu input real del formulario con 2 decimales
         $('#monto_cambio').val(montoAmortizado.toFixed(2));
-        
+
         // 2. Mantenemos el bloque visual de ayuda por si quieres mostrarle el desglose al usuario
         let simDeuda = cuentaSeleccionadaActual.moneda_simbolo;
         let isoDeuda = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
-        
+
         let idMonedaPago = $('#moneda').val();
         let monedaPagoObj = listadoMonedas.find(m => m.id_moneda == idMonedaPago);
         let isoPago = monedaPagoObj ? monedaPagoObj.abreviatura.toUpperCase() : '';
@@ -374,17 +402,17 @@ function recalcularAmortizacion() {
     }
 }
 
-function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3 = null, campo4 = null, campo5= null) {
+function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3 = null, campo4 = null, campo5 = null, campo6 = null) {
     var select = $('#' + idSelect);
     select.empty();
-    
+
     if (!select.prop('multiple')) {
         select.append('<option value="" selected disabled>Seleccione una opción</option>');
     }
 
     datos.forEach(dato => {
         let textoMostrar = "";
-        let atributosExtra = ""; 
+        let atributosExtra = "";
 
         if (idSelect === 'moneda' && campo1 && campo2) {
             textoMostrar = `${dato[campo1]} ${dato[campo2]}`;
@@ -393,9 +421,11 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
             textoMostrar = `${dato[campo1]}`;
             atributosExtra = `data-nec_ref="${dato[campo2]}"`;
         }
+
         else if (idSelect === 'cuenta' && campo1 && campo2 && campo3) {
-            textoMostrar = `${dato[campo1]} ${dato[campo4]}${dato[campo5]} - ${dato[campo2]} ${dato[campo3]}`;
+            textoMostrar = `${dato[campo6]} - ${dato[campo1]} ${dato[campo4]}${dato[campo5]} - ${dato[campo2]} ${dato[campo3]}`;
         }
+
         else {
             textoMostrar = escapeHTML(String(dato[campo1]));
         }
@@ -416,7 +446,7 @@ function crearConsulta(htmlRecibido) {
 
 function eliminar(id) {
     confirmarAnulacion('¿Está seguro que quiere anular este pago?', function (motivo) {
-        if (motivo !== false) { 
+        if (motivo !== false) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
             datos.append('id', id);
@@ -505,10 +535,11 @@ function enviaAjax(datos) {
                 if (lee.accion == "MultiConsulta") {
                     listadoMonedas = lee.monedas;
                     listadoCuentas = lee.cuentas;
+                    listadoMetodosVuelto = lee.metodos;
 
-                    construirSelect('moneda', lee.monedas, 'id_moneda', 'simbolo', 'nombre');
-                    construirSelect('metodo', lee.metodos, 'id_metodos', 'nombre', 'nec_referencia');
-                    construirSelect('cuenta', lee.cuentas, 'id_cobrar', 'concepto_nombre', 'atleta_nombre', 'atleta_apellido', 'moneda_simbolo', 'monto_pendiente');
+                    construirSelect('moneda', lee.monedas, 'codigo_moneda', 'simbolo', 'nombre');
+                    construirSelect('metodo', lee.metodos, 'codigo_metodo', 'nombre', 'nec_referencia');
+                    construirSelect('cuenta', lee.cuentas, 'codigo_cargo', 'concepto', 'p_nombre', 'p_apellidos', 'monto_total', 'simbolo_moneda', 'fecha_emision');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
@@ -516,6 +547,31 @@ function enviaAjax(datos) {
                     $('#detalles_deuda_ayuda').html('');
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                     cerrarModal();
+
+                    if (lee.vuelto && parseFloat(lee.vuelto) > 0) {
+                        $('#codigo_pago_vuelto').val(lee.id_pago);
+                        $('#monto_vuelto').val(parseFloat(lee.vuelto).toFixed(2));
+
+                        // Establecer fecha del día
+                        let hoyVuelto = new Date().toISOString().split('T')[0];
+                        $('#fecha_vuelto').val(hoyVuelto);
+
+                        construirSelect('codigo_moneda_vuelto', listadoMonedas, 'id_moneda', 'simbolo', 'nombre');
+                        construirSelect('codigo_metodo_vuelto', listadoMetodosVuelto, 'id_metodos', 'nombre', 'nec_referencia');
+
+                        $('#codigo_moneda_vuelto').select2({ placeholder: "Selecciona una Moneda", dropdownParent: $('#modal_vuelto') });
+                        $('#codigo_metodo_vuelto').select2({ placeholder: "Selecciona un Método", dropdownParent: $('#modal_vuelto') });
+
+                        $('#modal_vuelto').addClass('mostrar');
+                        $('#vuelto_modal_content').removeClass('ocultar').addClass('mostrar_modal');
+                    }
+                } else if (lee.accion == "exito_vuelto") {
+                    $('#modal_vuelto').removeClass('mostrar');
+                    $('#vuelto_modal_content').removeClass('mostrar_modal').addClass('ocultar');
+                    $('#f_vuelto')[0].reset();
+                    muestraMensaje("success", 2000, "Vuelto Registrado", lee.mensaje);
+                    consultar();
+                    MultiConsulta();
                 } else if (lee.accion == "eliminar") {
                     consultar();
                     muestraMensaje("success", 2000, "Retiro Exitoso", lee.mensaje);
@@ -538,7 +594,7 @@ function enviaAjax(datos) {
                         enlaceFantasma.click();
                         document.body.removeChild(enlaceFantasma);
                     }, 1000);
-                }  else if (lee.accion == "error") {
+                } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }
             } catch (e) {

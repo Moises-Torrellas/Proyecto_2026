@@ -9,7 +9,7 @@ class ModeloEstadisticas extends Conexion
 {
     private $id;
     private $atleta;
-    private $torneo;
+    private $participacion;
     private $goles;
     private $asistencias;
     private $penalizaciones;
@@ -24,11 +24,11 @@ class ModeloEstadisticas extends Conexion
     {
         parent::__construct();
         $this->campoWhitelist = [
-            'id'          => 'id_estadisticas',
-            'id_torneo'   => 'id_torneo',
-            'id_atleta'   => 'id_atleta',
+            'id'             => 'codigo_dtll_prtc',
+            'participacion'  => 'codigo_participacion',
+            'codigo_atleta'      => 'codigo_atleta',
         ];
-        $this->llavePrimaria = 'id_estadisticas';
+        $this->llavePrimaria = 'codigo_dtll_prtc';
     }
 
     public function setHistorial(ModeloHistorial $obj)
@@ -47,8 +47,10 @@ class ModeloEstadisticas extends Conexion
         }
 
         $this->id             = isset($datos['id']) ? (int)$datos['id'] : null;
-        $this->torneo         = isset($datos['torneo']) ? (int)$datos['torneo'] : null;
         $this->atleta         = isset($datos['atleta']) ? (int)$datos['atleta'] : null;
+        
+        // Soporte transicional: acepta 'participacion' pero mantiene compatibilidad si el frontend sigue enviando 'torneo'
+        $this->participacion  = isset($datos['participacion']) ? (int)$datos['participacion'] : (isset($datos['torneo']) ? (int)$datos['torneo'] : null);
 
         $this->goles          = isset($datos['goles']) ? (int)$datos['goles'] : 0;
         $this->asistencias    = isset($datos['asistencias']) ? (int)$datos['asistencias'] : 0;
@@ -75,23 +77,24 @@ class ModeloEstadisticas extends Conexion
             $conex = $this->conex();
             $params = [];
 
-            // 1. Consulta principal usando JOINs
             $sentencia = "SELECT 
-                        e.id_estadisticas, e.goles, e.asistencias, e.penalizaciones, 
-                        e.partidos_jugados, e.average, e.goles_contra,
-                        a.id_atleta, a.nombres, a.apellidos,
+                        dp.codigo_dtll_prtc AS id_estadisticas, 
+                        dp.goles, dp.asistencias, dp.penalizaciones, 
+                        dp.partidos_jugados, dp.average, dp.goles_contra,
+                        a.codigo_atleta AS id_atleta, a.p_nombre AS nombres, a.p_apellidos AS apellidos,
                         t.nombre AS torneo_nombre, t.fecha_inicio
-                    FROM estadisticas e
-                    INNER JOIN atletas a ON e.id_atleta = a.id_atleta
-                    INNER JOIN torneos t ON e.id_torneo = t.id_torneo
+                    FROM detalles_participacion dp
+                    INNER JOIN atletas a ON dp.codigo_atleta = a.codigo_atleta
+                    INNER JOIN participaciones p ON dp.codigo_participacion = p.codigo_participacion
+                    INNER JOIN torneos t ON p.codigo_torneo = t.codigo_torneo
                     WHERE 1=1";
 
             if (!empty($filtro['filtro'])) {
                 $p = "%" . trim($filtro['filtro']) . "%";
 
                 $sentencia .= " AND (
-                a.nombres LIKE :f1 OR 
-                a.apellidos LIKE :f2 OR 
+                a.p_nombre LIKE :f1 OR 
+                a.p_apellidos LIKE :f2 OR 
                 t.nombre LIKE :f3
             )";
 
@@ -100,7 +103,7 @@ class ModeloEstadisticas extends Conexion
                 $params[':f3'] = $p;
             }
 
-            $sentencia .= " ORDER BY a.id_atleta ASC, t.fecha_inicio DESC";
+            $sentencia .= " ORDER BY a.codigo_atleta ASC, t.fecha_inicio DESC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -121,29 +124,31 @@ class ModeloEstadisticas extends Conexion
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
-            if (!$this->verificarExistencia('id_torneo', $this->torneo, 'torneos', NULL)) {
+
+            // Verificamos que exista la participación y el atleta
+            if (!$this->verificarExistencia('participacion', $this->participacion, 'participaciones', NULL)) {
                 throw new Exception(INVALID_ID);
             }
-            if (!$this->verificarExistencia('id_atleta', $this->atleta, 'atletas', NULL)) {
+            if (!$this->verificarExistencia('codigo_atleta', $this->atleta, 'atletas', NULL)) {
                 throw new Exception(INVALID_ID . '1');
             }
 
-            if (!$this->ModeloParticipaciones->validarParticipacionIndividual($this->torneo, $this->atleta)) {
+            if (!$this->ModeloParticipaciones->validarParticipacionIndividual($this->participacion, $this->atleta)) {
                 throw new Exception(EMPTY_SELECTION);
             }
 
-            if ($this->validarEstadisticaDuplicada($this->torneo, $this->atleta)) {
+            if ($this->validarEstadisticaDuplicada($this->participacion, $this->atleta)) {
                 throw new Exception(DUPLICATE);
             }
 
-            $sql = "INSERT INTO estadisticas 
-                    (id_torneo, id_atleta, goles, asistencias, penalizaciones, goles_contra, partidos_jugados, average) 
-                    VALUES (:torneo, :atleta, :goles, :asistencias, :penalizaciones, :goles_c, :partidos, :average)";
+            $sql = "INSERT INTO detalles_participacion 
+                    (codigo_participacion, codigo_atleta, goles, asistencias, penalizaciones, goles_contra, partidos_jugados, average) 
+                    VALUES (:participacion, :atleta, :goles, :asistencias, :penalizaciones, :goles_c, :partidos, :average)";
 
             $stmt = $conex->prepare($sql);
 
             // Asignar parámetros
-            $stmt->bindValue(':torneo', $this->torneo, PDO::PARAM_INT);
+            $stmt->bindValue(':participacion', $this->participacion, PDO::PARAM_INT);
             $stmt->bindValue(':atleta', $this->atleta, PDO::PARAM_INT);
             $stmt->bindValue(':goles', $this->goles, PDO::PARAM_INT);
             $stmt->bindValue(':asistencias', $this->asistencias, PDO::PARAM_INT);
@@ -172,14 +177,18 @@ class ModeloEstadisticas extends Conexion
         try {
             $conex = $this->conex();
             $sql = "SELECT 
-                        e.id_estadisticas, e.id_torneo, e.id_atleta, e.goles, e.asistencias, e.penalizaciones, 
-                        e.partidos_jugados, e.average, e.goles_contra,
-                        a.nombres, a.apellidos,
+                        dp.codigo_dtll_prtc AS id_estadisticas, 
+                        dp.codigo_participacion AS id_torneo,
+                        dp.codigo_atleta AS id_atleta, 
+                        dp.goles, dp.asistencias, dp.penalizaciones, 
+                        dp.partidos_jugados, dp.average, dp.goles_contra,
+                        a.p_nombre AS nombres, a.p_apellidos AS apellidos,
                         t.nombre AS torneo_nombre, t.fecha_inicio
-                    FROM estadisticas e
-                    INNER JOIN atletas a ON e.id_atleta = a.id_atleta
-                    INNER JOIN torneos t ON e.id_torneo = t.id_torneo
-                    WHERE e.id_estadisticas = :id";
+                    FROM detalles_participacion dp
+                    INNER JOIN atletas a ON dp.codigo_atleta = a.codigo_atleta
+                    INNER JOIN participaciones p ON dp.codigo_participacion = p.codigo_participacion
+                    INNER JOIN torneos t ON p.codigo_torneo = t.codigo_torneo
+                    WHERE dp.codigo_dtll_prtc = :id";
 
             $stmt = $conex->prepare($sql);
             $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
@@ -206,7 +215,7 @@ class ModeloEstadisticas extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id', $this->id, 'estadisticas', null)) {
+            if (!$this->verificarExistencia('id', $this->id, 'detalles_participacion', null)) {
                 throw new Exception(INVALID_ID . '2');
             }
 
@@ -214,34 +223,34 @@ class ModeloEstadisticas extends Conexion
                 throw new Exception(ASSOCIATES);
             }
 
-            if (!$this->verificarExistencia('id_torneo', $this->torneo, 'torneos', null)) {
+            if (!$this->verificarExistencia('participacion', $this->participacion, 'participaciones', null)) {
                 throw new Exception(INVALID_ID);
             }
-            if (!$this->verificarExistencia('id_atleta', $this->atleta, 'atletas', null)) {
+            if (!$this->verificarExistencia('codigo_atleta', $this->atleta, 'atletas', null)) {
                 throw new Exception(INVALID_ID . '1');
             }
 
-            if (!$this->ModeloParticipaciones->validarParticipacionIndividual($this->torneo, $this->atleta)) {
+            if (!$this->ModeloParticipaciones->validarParticipacionIndividual($this->participacion, $this->atleta)) {
                 throw new Exception(EMPTY_SELECTION);
             }
 
-            if ($this->validarEstadisticaDuplicadaPropia($this->torneo, $this->atleta, $this->id)) {
+            if ($this->validarEstadisticaDuplicadaPropia($this->participacion, $this->atleta, $this->id)) {
                 throw new Exception(DUPLICATE);
             }
 
-            $sql = "UPDATE estadisticas SET 
-                        id_torneo = :torneo, 
-                        id_atleta = :atleta, 
+            $sql = "UPDATE detalles_participacion SET 
+                        codigo_participacion = :participacion, 
+                        codigo_atleta = :atleta, 
                         goles = :goles, 
                         asistencias = :asistencias, 
                         penalizaciones = :penalizaciones, 
                         goles_contra = :goles_c, 
                         partidos_jugados = :partidos, 
                         average = :average 
-                    WHERE id_estadisticas = :id";
+                    WHERE codigo_dtll_prtc = :id";
 
             $stmt = $conex->prepare($sql);
-            $stmt->bindValue(':torneo', $this->torneo, PDO::PARAM_INT);
+            $stmt->bindValue(':participacion', $this->participacion, PDO::PARAM_INT);
             $stmt->bindValue(':atleta', $this->atleta, PDO::PARAM_INT);
             $stmt->bindValue(':goles', $this->goles, PDO::PARAM_INT);
             $stmt->bindValue(':asistencias', $this->asistencias, PDO::PARAM_INT);
@@ -273,15 +282,11 @@ class ModeloEstadisticas extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id', $this->id, 'estadisticas', null)) {
+            if (!$this->verificarExistencia('id', $this->id, 'detalles_participacion', null)) {
                 throw new Exception(INVALID_ID);
             }
 
-            if ($this->ModeloHistorial->verificarHistorialIndividual($this->id) || $this->ModeloHistorial->verificarHistorialGrupal($this->id)) {
-                throw new Exception(ASSOCIATES);
-            }
-
-            $sql = "DELETE FROM estadisticas WHERE id_estadisticas = :id";
+            $sql = "DELETE FROM detalles_participacion WHERE codigo_dtll_prtc = :id";
             $stmt = $conex->prepare($sql);
             $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
             $stmt->execute();
@@ -299,16 +304,16 @@ class ModeloEstadisticas extends Conexion
         }
     }
 
-    public function validarEstadisticaDuplicada(int $id_torneo, int $id_atleta): bool
+    public function validarEstadisticaDuplicada(int $id_participacion, int $id_atleta): bool
     {
         $conex = null;
         try {
             $conex = $this->conex();
             $stmt = $conex->prepare(
-                "SELECT COUNT(*) FROM estadisticas 
-                WHERE id_torneo = :id_torneo AND id_atleta = :id_atleta"
+                "SELECT COUNT(*) FROM detalles_participacion 
+                WHERE codigo_participacion = :id_participacion AND codigo_atleta = :id_atleta"
             );
-            $stmt->bindValue(':id_torneo', $id_torneo, PDO::PARAM_INT);
+            $stmt->bindValue(':id_participacion', $id_participacion, PDO::PARAM_INT);
             $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);
             $stmt->execute();
 
@@ -321,16 +326,16 @@ class ModeloEstadisticas extends Conexion
         }
     }
 
-    public function validarEstadisticaDuplicadaPropia(int $id_torneo, int $id_atleta, int $id): bool
+    public function validarEstadisticaDuplicadaPropia(int $id_participacion, int $id_atleta, int $id): bool
     {
         $conex = null;
         try {
             $conex = $this->conex();
             $stmt = $conex->prepare(
-                "SELECT COUNT(*) FROM estadisticas 
-            WHERE id_torneo = :id_torneo AND id_atleta = :id_atleta AND id_estadisticas != :id"
+                "SELECT COUNT(*) FROM detalles_participacion 
+            WHERE codigo_participacion = :id_participacion AND codigo_atleta = :id_atleta AND codigo_dtll_prtc != :id"
             );
-            $stmt->bindValue(':id_torneo', $id_torneo, PDO::PARAM_INT);
+            $stmt->bindValue(':id_participacion', $id_participacion, PDO::PARAM_INT);
             $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             $stmt->execute();

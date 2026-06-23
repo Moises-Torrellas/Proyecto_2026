@@ -196,7 +196,7 @@
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['nacionalidad'] . '-' . $r['cedula']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['tipo_doc'] . '-' . $r['cedula']) ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['telefono']) ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['direccion']) ?></td>
                     </tr>
