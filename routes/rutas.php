@@ -62,7 +62,7 @@ function manejarRuta($pagina): void
         'Devoluciones' => 'Devoluciones',
         'Equipos'=>'Equipos',
         'Asignaciones' => 'Asignaciones',
-        'Equipamientos'=>'Equipamientos',
+        'ArticulosInventario'=>'ArticulosInventario',
         'Palmares'=>'Palmares',
         'Estadisticas'=>'Estadisticas',
         'Historial'=>'Historial',
