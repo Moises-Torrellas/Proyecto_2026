@@ -9,7 +9,7 @@ function consultar() {
 
 function MultiConsulta() {
     let datos = new FormData();
-    datos.append('accion', 'MultiConsulta'); // Acción unificada
+    datos.append('accion', 'MultiConsulta'); 
     enviaAjax(datos);
 }
 
@@ -27,10 +27,8 @@ function busqueda() {
 $(document).ready(function () {
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
     
-    // Llamada unificada al cargar la pantalla
     MultiConsulta();
 
-    // --- Filtros visuales de inputs ---
     $("#stock_minimo").on("input", function () {
         var input = $(this).val().replace(/[^0-9]/g, '');
         $(this).val(input);
@@ -40,7 +38,6 @@ $(document).ready(function () {
         $(this).val($(this).val().toUpperCase());
     });
 
-    // --- Validaciones en tiempo real ---
     Validacion("nombre", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-\.]*$/, /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-\.]{3,50}$/, "Entre 3 y 50 caracteres", "proceso");
     Validacion("stock_minimo", /^[0-9\b]*$/, /^[0-9]+$/, "Debe ingresar un número entero", "proceso");
     Validacion("talla", /^[A-Z0-9\s\-\/]*$/, /^[A-Z0-9\s\-\/]{0,10}$/, "Máximo 10 caracteres permitidos", "proceso");
@@ -72,7 +69,6 @@ $(document).ready(function () {
         else if (accion == "generar") {
             confirmar('¿Está seguro que quiere generar un reporte del catálogo?', function (confirmado) {
                 if (confirmado) {
-                    // Mantenemos la alerta de espera para el PDF
                     if(typeof abrirAlertaEspara === 'function') abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
                     var datos = new FormData($('#f')[0]);
                     datos.append('accion', 'generar');
@@ -82,27 +78,23 @@ $(document).ready(function () {
         }
     });
 
-    // Configuración de Select2
     if ($.fn.select2) {
         $('#id_categoria').select2({ placeholder: "Selecciona una Categoría", allowClear: true, dropdownParent: $('.contenedor_modal') });
-        $('#id_posicion').select2({ placeholder: "Selecciona una Posición (Opcional)", allowClear: true, dropdownParent: $('.contenedor_modal') });
     }
 
     $("#incluir").on("click", function () {
         limpia();
+        $('#id_catalogo').val(""); 
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Artículo");
         $("#titulo_modal").text("Nuevo Artículo");
         
-        // Aseguramos que se muestren los campos
         $('#nombre').closest('.colum').show();
         $('#stock_minimo').closest('.colum').show();
         $('#talla').closest('.colum').show();
-        $('#id_posicion').closest('.colum').show();
         
         if ($.fn.select2) {
             $('#id_categoria').val(null).trigger('change');
-            $('#id_posicion').val(null).trigger('change');
         }
         abrirModal();
     });
@@ -115,13 +107,10 @@ $(document).ready(function () {
         
         $('#nombre').closest('.colum').hide();
         $('#stock_minimo').closest('.colum').hide();
-        
-        $('#id_posicion').closest('.colum').show();
         $('#talla').closest('.colum').show();
 
         if ($.fn.select2) {
             $('#id_categoria').val(null).trigger('change');
-            $('#id_posicion').val(null).trigger('change');
         }
         
         abrirModal();
@@ -139,19 +128,19 @@ $(document).ready(function () {
     });
 });
 
-function buscar(id) {
+function buscar(id_catalogo) {
     var datos = new FormData();
     datos.append('accion', 'buscar');
-    datos.append('id', id);
+    datos.append('id_catalogo', id_catalogo);
     enviaAjax(datos);
 }
 
-function eliminar(id) {
+function eliminar(id_catalogo) {
     confirmar('¿Está seguro que quiere eliminar este artículo del catálogo?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
-            datos.append('id', id);
+            datos.append('id_catalogo', id_catalogo);
             enviaAjax(datos);
         }
     });
@@ -190,16 +179,14 @@ function modificar(datos) {
     $('#nombre').closest('.colum').show();
     $('#stock_minimo').closest('.colum').show();
     $('#talla').closest('.colum').show();
-    $('#id_posicion').closest('.colum').show();
 
-    $('#id').val(datos[0].id_catalogo);
+    $('#id_catalogo').val(datos[0].id_catalogo);
     $('#nombre').val(datos[0].nombre);
     $('#stock_minimo').val(datos[0].stock_minimo);
     $('#talla').val(datos[0].talla);
     
     if ($.fn.select2) {
         $('#id_categoria').val(datos[0].id_categoria).trigger('change');
-        $('#id_posicion').val(datos[0].id_posicion).trigger('change');
     }
 
     abrirModal();
@@ -261,10 +248,8 @@ function enviaAjax(datos) {
             try {
                 var lee = JSON.parse(respuesta);
                 
-                // Mapeo unificado MultiConsulta
                 if (lee.accion === "MultiConsulta") {
                     construirSelect('id_categoria', lee.categorias, 'id_categoria', 'nombre');
-                    construirSelect('id_posicion', lee.posiciones, 'id_posicion', 'nombre');
                 } 
                 else if (lee.accion === "incluir") {
                     consultar();
@@ -286,7 +271,6 @@ function enviaAjax(datos) {
                     modificar(lee.datos);
                 } 
                 else if (lee.accion === "reporte") {
-                    // Mantenemos la lógica intacta del Reporte PDF
                     if(typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
                     cerrarModal();
                     muestraMensaje("success", 1000, "Reporte Generado", 'Se ha generado el reporte');

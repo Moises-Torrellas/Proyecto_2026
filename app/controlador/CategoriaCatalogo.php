@@ -1,30 +1,25 @@
 <?php
 
-use App\modelo\ModeloCategoriaEquipamiento;
+use App\modelo\ModeloCategoriaCatalogo;
 
-// 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
+$id_modulo = _MD_CATEGORIA_CAT_;
 
-// 2. Configuración del módulo (Corregido al ID de Categorías)
-$id_modulo = _MD_CATEGORIA_EQUI_;
-
-// 3. Procesar permisos (Retorna el array de permisos)
 $permisos = procesarPermisos($id_modulo, $bitacora);
 
-// 4. Lógica de despacho (Router interno)
-$nombreClaseModelo = 'App\modelo\ModeloCategoriaEquipamiento';
+$nombreClaseModelo = 'App\modelo\ModeloCategoriaCatalogo'; // Ajustado
 
 if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
     exit();
 }
 
-$objModelo = new ModeloCategoriaEquipamiento();
+$objModelo = new ModeloCategoriaCatalogo();
 
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudCategorias($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
+    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo Categoría Catálogo');
     cargarVista($pagina);
 }
 
@@ -48,19 +43,19 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
                 consultar($obj);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar categoria equipamientos.');
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar categorías.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar categoria equipamientos.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar categorías.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar categoria equipamiento.');
+                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar categorías.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar categoria equipamiento.');
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar categorías.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
 
@@ -87,17 +82,18 @@ function consultar($obj): void
 function buscar($obj): void
 {
     try {
-        validar_requeridos(['id']);
+        // Ajustado a id_categoria
+        validar_requeridos(['id_categoria']);
 
         $datos = [
-            'id' => $_POST['id'],
-            'accion' => 'buscar'
+            'id_categoria' => $_POST['id_categoria'], // Ajustado
+            'accion'       => 'buscar'
         ];
 
         $resultado = $obj->procesarDatos($datos);
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('CategoriaEquipamiento', $e->getMessage(), 'Controlador');
+        logs('CategoriaCatalogo', $e->getMessage(), 'Controlador_Buscar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -108,7 +104,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         validar_requeridos(['nombre', 'descripcion']);
 
         $datos = [
-            'nombre'     => $_POST['nombre'],
+            'nombre'      => $_POST['nombre'],
             'descripcion' => $_POST['descripcion']
         ];  
         $datos['accion'] = 'incluir';
@@ -121,7 +117,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('CategoriaEquipamiento', $e->getMessage(), 'Controlador');
+        logs('CategoriaCatalogo', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -129,44 +125,47 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id', 'nombre', 'descripcion']);
+        // Ajustado a id_categoria
+        validar_requeridos(['id_categoria', 'nombre', 'descripcion']);
 
         $datos = [
-            'id' => $_POST['id'],
-            'nombre'     => $_POST['nombre'],
-            'descripcion' => $_POST['descripcion'],
+            'id_categoria' => $_POST['id_categoria'], // Ajustado
+            'nombre'       => $_POST['nombre'],
+            'descripcion'  => $_POST['descripcion'],
         ];
         $datos['accion'] = 'modificar';
 
         $resultado = $obj->procesarDatos($datos);
 
-        if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-            registrarBitacora($bitacoraObj, $id_modulo, "modificó la categoría equipamiento: " . $_POST['nombre']);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') { // Corrección: el modelo devuelve 'modificar'
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó la categoría: " . $_POST['nombre']);
         }
 
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('CategoriaEquipamiento', $e->getMessage(), 'Controlador');
+        logs('CategoriaCatalogo', $e->getMessage(), 'Controlador_Modificar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
+
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id']);
+        // Ajustado a id_categoria
+        validar_requeridos(['id_categoria']);
 
         $datos = [
-            'id' => $_POST['id'],
-            'accion' => 'eliminar'
+            'id_categoria' => $_POST['id_categoria'], // Ajustado
+            'accion'       => 'eliminar'
         ];
 
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'eliminar') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó la categoría equipamiento: " . $_POST['id']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó la categoría: " . $_POST['id_categoria']);
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('CategoriaEquipamiento', $e->getMessage(), 'Controlador');
+        logs('CategoriaCatalogo', $e->getMessage(), 'Controlador_Eliminar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

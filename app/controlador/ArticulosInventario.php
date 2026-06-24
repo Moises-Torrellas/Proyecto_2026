@@ -4,7 +4,7 @@ use App\modelo\ModeloArticulosInventario;
 require_once __DIR__ . '/Base.php';
 
 // Actualiza esta constante en tu archivo global si es necesario
-$id_modulo = defined('_MD_ARTICULOS_INVENTARIO_') ? _MD_ARTICULOS_INVENTARIO_ : _MD_EQUIPAMIENTO_; 
+$id_modulo = _MD_ARTICULOS_INVENTARIO_;
 $permisos = procesarPermisos($id_modulo, $bitacora ?? null);
 
 $nombreClaseModelo = 'App\modelo\ModeloArticulosInventario';

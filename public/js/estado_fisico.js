@@ -19,22 +19,16 @@ function busqueda() {
 }
 
 $(document).ready(function () {
-    // 1. Cargar la tabla al iniciar
     consultar();
 
-    // 3. Validaciones en tiempo real para Categorías
-    // Nombre: Letras, números, espacios y guiones (Ej: "U-12", "Sub 20")
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
 
-
-
-    // 4. Lógica de los Botones Guardar/Modificar
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
         
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere registrar esta calidad?', function (confirmado) {
+                confirmar('¿Está seguro que quiere registrar este estado físico?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
@@ -45,7 +39,7 @@ $(document).ready(function () {
         }
         else if (accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar esta calidad?', function (confirmado) {
+                confirmar('¿Está seguro que quiere modificar este estado físico?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
@@ -57,7 +51,7 @@ $(document).ready(function () {
         else if (accion == "generar") {
             confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
                 if (confirmado) {
-                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento')
+                    if(typeof abrirAlertaEspara === 'function') abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
                     var datos = new FormData($('#f')[0]);
                     datos.append('accion', 'generar');
                     enviaAjax(datos);
@@ -66,14 +60,13 @@ $(document).ready(function () {
         }
     });
 
-    // 5. Botones de la vista
     $("#incluir").on("click", function () {
-        limpia(); // Limpia el formulario
-        $("#id").val("");
+        limpia(); 
+        $("#id_estado").val(""); // Ajustado
         $("#proceso").data("accion", "incluir");
-        $("#proceso").text("Registrar Calidad");
-        $("#titulo_modal").text("Registrar Nueva Calidad");
-        abrirModal(); // Esta función debe estar definida en tu main.js o base.js
+        $("#proceso").text("Registrar Estado");
+        $("#titulo_modal").text("Registrar Nuevo Estado Físico");
+        abrirModal(); 
     });
 
     $("#generar").on("click", function () {
@@ -87,19 +80,19 @@ $(document).ready(function () {
 
 // --- FUNCIONES LÓGICAS GLOBALES ---
 
-function buscar(id) {
+function buscar(id_estado) { // Ajustado a id_estado
     var datos = new FormData();
     datos.append('accion', 'buscar');
-    datos.append('id', id);
+    datos.append('id_estado', id_estado);
     enviaAjax(datos);
 }
 
-function eliminar(id) {
-    confirmar('¿Está seguro que quiere eliminar esta calidad?', function (confirmado) {
+function eliminar(id_estado) { // Ajustado a id_estado
+    confirmar('¿Está seguro que quiere eliminar este estado físico?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
-            datos.append('id', id);
+            datos.append('id_estado', id_estado);
             enviaAjax(datos);
         }
     });
@@ -107,11 +100,11 @@ function eliminar(id) {
 
 function validarEnvio(proceso) {
     if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 3 y 30 caracteres solo letras", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de calidad válido");
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre válido para el estado físico.");
         return false;
     }
-    else if ($('#nivel option:selected').val() == null) {
-        muestraMensaje("error", 2000, "Error", "Tiene que elegir una opción de nivel");
+    else if ($('#nivel_estado option:selected').val() == null || $('#nivel_estado option:selected').val() == "") {
+        muestraMensaje("error", 2000, "Error", "Tiene que elegir una opción de nivel.");
         return false;
     }
 
@@ -120,13 +113,13 @@ function validarEnvio(proceso) {
 
 function modificar(datos) {
     $("#proceso").data("accion", "modificar");
-    $("#proceso").text("Modificar Calidad");
-    $("#titulo_modal").text("Modificar Calidad");
+    $("#proceso").text("Modificar Estado");
+    $("#titulo_modal").text("Modificar Estado Físico");
     
-    // Llenamos el formulario con los datos recibidos de la BD
-    $('#id').val(datos[0].id_estado);
+    // Ajustado a las variables correctas
+    $('#id_estado').val(datos[0].id_estado);
     $('#nombre').val(datos[0].nombre);
-    $('#nivel').val(datos[0].nivel_estado);
+    $('#nivel_estado').val(datos[0].nivel_estado);
 
     abrirModal();
 }
@@ -139,17 +132,17 @@ function crearConsulta(datos) {
         contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
     } else {
         datos.forEach(dato => {
-            var nivel = dato.nivel_estado == 1 ? "Buena Calidad" : (dato.nivel_estado == 2 ? "Media Calidad" : "Mala Calidad"); 
+            var nivel = dato.nivel_estado == 1 ? "Buen Estado" : (dato.nivel_estado == 2 ? "Desgaste Medio" : "Mal Estado"); 
             let registro = `
                 <div class="listado_contenedor_grupal">
                     <div class="listado_item" onclick="toggleDetalles(this)">
                         <div class="listado_col_datos">
                             <div class="listado_dato_grupo">
-                                <small>Categoría</small>
+                                <small>Estado Físico</small>
                                 <span style="font-weight: bold; color: #2ec135;">${escapeHTML(dato.nombre)}</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Nivel De Calidad</small>
+                                <small>Nivel De Condición</small>
                                 <span>${nivel}</span>
                             </div>
                         </div>
@@ -172,14 +165,12 @@ function crearConsulta(datos) {
 }
 
 function escapeHTML(texto) {
-    var caracteres = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return texto.replace(/[&<>"']/g, m => caracteres[m]);
+    var caracteres = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return texto ? texto.replace(/[&<>"']/g, m => caracteres[m]) : '';
+}
+
+function limpia() {
+    if($('#f')[0]) $('#f')[0].reset();
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -187,7 +178,7 @@ var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
         async: true,
-        url: "", // Se envía al controlador actual de la ruta (/Categorias)
+        url: "", 
         type: "POST",
         contentType: false,
         data: datos,
@@ -207,7 +198,7 @@ function enviaAjax(datos) {
                 else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
-                    cerrarModal(); // Agregado para que se cierre al guardar
+                    cerrarModal(); 
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } 
                 else if (lee.accion == "eliminar") {
@@ -228,7 +219,7 @@ function enviaAjax(datos) {
                 }
             } catch (e) {
                 alert("Error procesando los datos: " + e.message);
-                console.error(respuesta); // Útil para ver en la consola si el PHP imprimió un error visible
+                console.error(respuesta); 
             }
         },
         error: function (request, status, err) {

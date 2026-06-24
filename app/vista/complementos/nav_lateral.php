@@ -62,7 +62,7 @@
                 </li>
             <?php endif; ?>
 
-            <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_) || $puedeVer(_MD_CATALOGO_) || $puedeVer(_MD_CATEGORIA_EQUI_) || $puedeVer(_MD_CALIDAD_) || $puedeVer(_MD_ASIGNACIONES_) || $puedeVer(_MD_DEVOLUCIONES_)) : ?>
+            <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_) || $puedeVer(_MD_CATALOGO_) || $puedeVer(_MD_CATEGORIA_CAT_) || $puedeVer(_MD_ESTADO_FISICO_) || $puedeVer(_MD_ASIGNACIONES_) || $puedeVer(_MD_DEVOLUCIONES_)) : ?>
                 <li class="nav_identificador">Inventario</li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_)) : ?>
@@ -70,15 +70,15 @@
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_CATALOGO_)) : ?>
-                        <a type="button" href="Catalogos" class="opciones"><i class="opciones_i" data-lucide="clipboard-pen-line"></i> Catalogo</a>
+                        <a type="button" href="Catalogo" class="opciones"><i class="opciones_i" data-lucide="clipboard-pen-line"></i> Catalogo</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_CATEGORIA_EQUI_)) : ?>
-                        <a type="button" href="CategoriaEquipamiento" class="opciones"><i class="opciones_i" data-lucide="layers-plus"></i> Categoría de Equipamientos</a>
+                    <?php if ($puedeVer(_MD_CATEGORIA_CAT_)) : ?>
+                        <a type="button" href="CategoriaCatalogo" class="opciones"><i class="opciones_i" data-lucide="layers-plus"></i> Categoría de Catalogo</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_CALIDAD_)) : ?>
-                        <a type="button" href="Calidad" class="opciones"><i class="opciones_i" data-lucide="badge-check"></i> Calidad</a>
+                    <?php if ($puedeVer(_MD_ESTADO_FISICO_)) : ?>
+                        <a type="button" href="EstadoFisico" class="opciones"><i class="opciones_i" data-lucide="badge-check"></i> Estado Físico</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_ASIGNACIONES_)) : ?>

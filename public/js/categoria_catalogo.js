@@ -22,27 +22,18 @@ $(document).ready(function () {
     // 1. Cargar la tabla al iniciar
     consultar();
 
-    // 2. Filtros de escritura (evitar letras en las edades)
-   /* $("#edad_min, #edad_max").on("input", function () {
-        var input = $(this).val().replace(/[^0-9]/g, ''); // Solo números
-        if (input.length > 2) {
-            input = input.substring(0, 2); // Máximo 2 dígitos
-        }
-        $(this).val(input);
-    });*/
-
-    // 3. Validaciones en tiempo real para Categorías
+    // 2. Validaciones en tiempo real para Categorías
     // Nombre: Letras, números, espacios y guiones (Ej: "U-12", "Sub 20")
     Validacion("nombre", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras, números y guiones)", "proceso");
     Validacion("descripcion", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras, números y guiones)", "proceso");
 
-    // 4. Lógica de los Botones Guardar/Modificar
+    // 3. Lógica de los Botones Guardar/Modificar
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
         
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere registrar esta categoría equipamiento?', function (confirmado) {
+                confirmar('¿Está seguro que quiere registrar esta categoría?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
@@ -53,7 +44,7 @@ $(document).ready(function () {
         }
         else if (accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar esta categoría equipamiento?', function (confirmado) {
+                confirmar('¿Está seguro que quiere modificar esta categoría?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
@@ -74,13 +65,13 @@ $(document).ready(function () {
         }
     });
 
-    // 5. Botones de la vista
+    // 4. Botones de la vista
     $("#incluir").on("click", function () {
         limpia(); // Limpia el formulario
-        $("#id").val("");
+        $("#id_categoria").val(""); // Ajustado a id_categoria
         $("#proceso").data("accion", "incluir");
-        $("#proceso").text("Registrar Categoría Equipamiento");
-        $("#titulo_modal").text("Registrar Nueva Categoría Equipamiento");
+        $("#proceso").text("Registrar Categoría");
+        $("#titulo_modal").text("Registrar Nueva Categoría");
         abrirModal(); // Esta función debe estar definida en tu main.js o base.js
     });
 
@@ -95,19 +86,19 @@ $(document).ready(function () {
 
 // --- FUNCIONES LÓGICAS GLOBALES ---
 
-function buscar(id) {
+function buscar(id_categoria) { // Parámetro ajustado
     var datos = new FormData();
     datos.append('accion', 'buscar');
-    datos.append('id', id);
+    datos.append('id_categoria', id_categoria); // Ajustado a id_categoria
     enviaAjax(datos);
 }
 
-function eliminar(id) {
-    confirmar('¿Está seguro que quiere eliminar esta categoría equipamiento?', function (confirmado) {
+function eliminar(id_categoria) { // Parámetro ajustado
+    confirmar('¿Está seguro que quiere eliminar esta categoría?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
-            datos.append('id', id);
+            datos.append('id_categoria', id_categoria); // Ajustado a id_categoria
             enviaAjax(datos);
         }
     });
@@ -115,33 +106,24 @@ function eliminar(id) {
 
 function validarEnvio(proceso) {
     if (validarkeyup(/^[A-Za-z0-9\-\b\s]{2,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 2 y 30 caracteres (letras, números y guiones)", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de categoría equipamientos válido");
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de categoría válido");
         return false;
     }
     else if (validarkeyup(/^[A-Za-z0-9\-\b\s]{2,30}$/, $("#descripcion"), $("#descripcion_spam"), "Permitido entre 2 y 30 caracteres (letras, números y guiones)", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar una descripcion válida");
+        muestraMensaje("error", 2000, "Error", "Debe ingresar una descripción válida");
         return false;
     }
     
-
-    // Validación lógica: Edad mínima no puede ser mayor a la máxima
-  /*  let min = parseInt($("#edad_min").val(), 10);
-    let max = parseInt($("#edad_max").val(), 10);
-    if (min > max) {
-        muestraMensaje("error", 3000, "Error", "La edad mínima no puede ser mayor a la edad máxima");
-        return false;
-    }*/
-
     return true;
 }
 
 function modificar(datos) {
     $("#proceso").data("accion", "modificar");
-    $("#proceso").text("Modificar CategoríaEquipamiento");
-    $("#titulo_modal").text("Modificar Categoría Equipamiento");
+    $("#proceso").text("Modificar Categoría");
+    $("#titulo_modal").text("Modificar Categoría");
     
-    // Llenamos el formulario con los datos recibidos de la BD
-    $('#id').val(datos[0].id_categoria);
+    // Llenamos el formulario con los datos recibidos de la BD (Ajustado id_categoria)
+    $('#id_categoria').val(datos[0].id_categoria);
     $('#nombre').val(datos[0].nombre);
     $('#descripcion').val(datos[0].descripcion);
 
@@ -153,7 +135,7 @@ function crearConsulta(datos) {
     contenedor.empty();
 
     if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron categorías equipamientos registradas</p></div>');
+        contenedor.append('<div class="listado_vacio"><p>No se encontraron categorías registradas</p></div>');
     } else {
         datos.forEach(dato => {
             let registro = `
@@ -165,8 +147,8 @@ function crearConsulta(datos) {
                                 <span style="font-weight: bold; color: #2ec135;">${escapeHTML(dato.nombre)}</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Descripcion</small>
-                                <span>${dato.descripcion} </span>
+                                <small>Descripción</small>
+                                <span>${escapeHTML(dato.descripcion)} </span>
                             </div>
                         </div>
 
@@ -188,6 +170,7 @@ function crearConsulta(datos) {
 }
 
 function escapeHTML(texto) {
+    if (!texto) return "";
     var caracteres = {
         '&': '&amp;',
         '<': '&lt;',
@@ -195,7 +178,7 @@ function escapeHTML(texto) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return texto.replace(/[&<>"']/g, m => caracteres[m]);
+    return String(texto).replace(/[&<>"']/g, m => caracteres[m]);
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -203,7 +186,7 @@ var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
         async: true,
-        url: "", // Se envía al controlador actual de la ruta (/Categorias)
+        url: "", // Se envía al controlador actual de la ruta (/CategoriaCatalogo)
         type: "POST",
         contentType: false,
         data: datos,
