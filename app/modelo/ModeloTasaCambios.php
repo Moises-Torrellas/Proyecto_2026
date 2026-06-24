@@ -78,10 +78,10 @@ class ModeloTasaCambios extends Conexion
         try {
             $conex = $this->conex();
             $sentencia = "SELECT t.codigo_tasa, t.fecha, t.valor_tasa, m.nombre AS moneda, m.simbolo 
-                          FROM tasa_cambios t 
-                          INNER JOIN monedas m ON t.codigo_moneda = m.codigo_moneda 
-                          ORDER BY t.fecha DESC, t.codigo_tasa DESC";
-            
+                        FROM tasa_cambios t 
+                        INNER JOIN monedas m ON t.codigo_moneda = m.codigo_moneda 
+                        ORDER BY t.fecha DESC, t.codigo_tasa DESC";
+
             $stmt = $conex->prepare($sentencia);
             $stmt->execute();
             $datos = $stmt->fetchAll();
@@ -92,6 +92,34 @@ class ModeloTasaCambios extends Conexion
             return array('accion' => 'error', 'mensaje' => 'Error al consultar el historial de tasas.');
         } finally {
             $conex = NULL;
+        }
+    }
+
+    public function ConsultarTasaDelDia($conex, $fecha_pago, $codigo_moneda): array
+    {
+        try {
+            $sentencia = "SELECT t.valor_tasa
+                      FROM tasa_cambios t 
+                      INNER JOIN monedas m ON t.codigo_moneda = m.codigo_moneda
+                      WHERE t.fecha = :fecha_pago AND t.codigo_moneda = :codigo_moneda";
+
+            $stmt = $conex->prepare($sentencia);
+
+            $stmt->bindParam(':fecha_pago', $fecha_pago);
+            $stmt->bindParam(':codigo_moneda', $codigo_moneda);
+
+            $stmt->execute();
+
+            $datos = $stmt->fetch();
+
+            if (!$datos) {
+                return array('accion' => 'error', 'mensaje' => 'No se encontró una tasa registrada para esta fecha y moneda.');
+            }
+
+            return array('tasa' => $datos['valor_tasa']);
+        } catch (Exception $e) {
+            logs('TasaCambios', $e->getMessage(), 'Modelo_Consultar');
+            return array('accion' => 'error', 'mensaje' => 'Error al consultar la tasa de cambio.');
         }
     }
 
@@ -140,7 +168,7 @@ class ModeloTasaCambios extends Conexion
                 $stmt->bindParam(':tasa', $this->valor_tasa);
                 $stmt->bindParam(':codigo_tasa', $tasaExistente);
                 $stmt->execute();
-                
+
                 $mensaje = 'Tasa de cambio actualizada exitosamente.';
             } else {
                 // No existe: Insertamos uno nuevo
@@ -150,13 +178,12 @@ class ModeloTasaCambios extends Conexion
                 $stmt->bindParam(':fecha', $this->fecha);
                 $stmt->bindParam(':tasa', $this->valor_tasa);
                 $stmt->execute();
-                
+
                 $mensaje = 'Tasa de cambio registrada exitosamente.';
             }
 
             $conex->commit();
             return array('accion' => 'exito', 'mensaje' => $mensaje);
-            
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();
@@ -176,7 +203,7 @@ class ModeloTasaCambios extends Conexion
             }
 
             $conex = $this->conex();
-        
+
             $stmtBase = $conex->prepare("SELECT abreviatura FROM monedas WHERE base = 1 AND estatus = 1 LIMIT 1");
             $stmtBase->execute();
             $isoBase = $stmtBase->fetchColumn();
@@ -196,9 +223,8 @@ class ModeloTasaCambios extends Conexion
 
             $this->valor_tasa = $tasa;
             $this->fecha = date('Y-m-d');
-            
-            return $this->Registrar();
 
+            return $this->Registrar();
         } catch (Exception $e) {
             logs('TasaCambios', $e->getMessage(), 'Modelo_Sincronizar');
             return array('accion' => 'error', 'mensaje' => $e->getMessage());
@@ -229,7 +255,7 @@ class ModeloTasaCambios extends Conexion
 
             if ($isoBase && $isoMoneda) {
                 $tasaApi = $this->obtenerTasaDeAPI($isoBase, $isoMoneda);
-                
+
                 $this->codigo_moneda = $codigo_moneda;
                 $this->fecha = $fecha_hoy;
                 $this->valor_tasa = $tasaApi;

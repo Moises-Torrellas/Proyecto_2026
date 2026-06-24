@@ -73,7 +73,6 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="detalle_card_txt">
                                     <label>Detalles Financieros del Pago General</label>
                                     <span>Moneda: <?= htmlspecialchars($dato['moneda']) ?></span>
-                                    <small>Vuelto Generado: <b style="color:#28a745;"><?= number_format($dato['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($dato['abre']) ?></b></small>
                                 </div>
                             </div>
                             <div class="detalle_card" style="width: 100%;">
@@ -246,7 +245,6 @@ endif;
                                                         <div class="detalle_card_txt">
                                                             <label>Detalles Financieros del Pago General</label>
                                                             <span>Moneda: <?= htmlspecialchars($dato['moneda']) ?></span>
-                                                            <small>Vuelto Generado: <b style="color:#28a745;"><?= number_format($dato['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($dato['abre']) ?></b></small>
                                                         </div>
                                                     </div>
                                                     <div class="detalle_card" style="width: 100%;">
@@ -424,11 +422,11 @@ endif;
         </div>
     </section>
 
-    <section class="contenedor_modal" id="modal_vuelto">
-        <div class="modal ocultar" id="vuelto_modal_content">
+    <section class="contenedor_modal" id="secundario_modal_contenedor">
+        <div class="modal ocultar" id="secundario_modal">
             <div class="cabecera_modal">
                 <h2 class="titulo_modal">Registrar Vuelto</h2>
-                <a type="button" class="cerrar_modal" id="cerrar_modal_vuelto">&times;</a>
+                <a type="button" class="cerrar_modal" id="cerrar_modal_Secundario">&times;</a>
             </div>
             <div class="contenido_modal">
                 <form id="f_vuelto" autocomplete="off">

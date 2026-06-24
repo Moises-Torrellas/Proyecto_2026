@@ -547,6 +547,7 @@ function enviaAjax(datos) {
                     $('#detalles_deuda_ayuda').html('');
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                     cerrarModal();
+                    MultiConsulta();
 
                     if (lee.vuelto && parseFloat(lee.vuelto) > 0) {
                         $('#codigo_pago_vuelto').val(lee.id_pago);
@@ -562,8 +563,7 @@ function enviaAjax(datos) {
                         $('#codigo_moneda_vuelto').select2({ placeholder: "Selecciona una Moneda", dropdownParent: $('#modal_vuelto') });
                         $('#codigo_metodo_vuelto').select2({ placeholder: "Selecciona un Método", dropdownParent: $('#modal_vuelto') });
 
-                        $('#modal_vuelto').addClass('mostrar');
-                        $('#vuelto_modal_content').removeClass('ocultar').addClass('mostrar_modal');
+                        abrirModalSecundario();
                     }
                 } else if (lee.accion == "exito_vuelto") {
                     $('#modal_vuelto').removeClass('mostrar');
@@ -574,13 +574,9 @@ function enviaAjax(datos) {
                     MultiConsulta();
                 } else if (lee.accion == "eliminar") {
                     consultar();
+                    MultiConsulta();
                     muestraMensaje("success", 2000, "Retiro Exitoso", lee.mensaje);
-                } else if (lee.accion == "modificar") {
-                    consultar();
-                    limpia();
-                    cerrarModal();
-                    muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
-                } else if (lee.accion == "buscar") {
+                }  else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 } else if (lee.accion == "reporte") {
                     cerrarAlertaEspara();
