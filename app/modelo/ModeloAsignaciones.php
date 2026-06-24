@@ -8,13 +8,11 @@ use PDO;
 class ModeloAsignaciones extends Conexion
 {
     private $id_asignacion;
-    private $id_atleta;
-    private $id_equipamiento;
+    private $codigo_atleta;
+    private $codigo_articulo;
     private $fecha_asignacion;
     private $estatus;
-    private $anulado;
-    private $motivo;
-    private $objEquipamientos;
+    private $objArticulos; // Instancia del modelo ArticulosInventario
 
     public function __construct()
     {
@@ -22,20 +20,19 @@ class ModeloAsignaciones extends Conexion
 
         $this->campoWhitelist = [
             'id_asignacion'    => 'id_asignacion',
-            'id_atleta'        => 'id_atleta',
-            'id_equipamiento'  => 'id_equipamiento',
+            'codigo_atleta'    => 'codigo_atleta',
+            'codigo_articulo'  => 'codigo_articulo',
             'fecha_asignacion' => 'fecha_asignacion',
-            'estatus'          => 'estatus',
-            'anulado'          => 'anulado',
-            'motivo'           => 'motivo'
+            'estatus'          => 'estatus'
         ];
 
         $this->llavePrimaria = 'id_asignacion';
     }
 
-    public function setEquipamientos(ModeloEquipamientos $equipamientos)
+    // Recibe la instancia del modelo de inventario físico
+    public function setArticulos(ModeloArticulosInventario $articulos)
     {
-        $this->objEquipamientos = $equipamientos;
+        $this->objArticulos = $articulos;
     }
 
     public function ProcesarDatos(array $datos): array
@@ -47,12 +44,10 @@ class ModeloAsignaciones extends Conexion
         $this->ValidarExpresiones($datos);
 
         $this->id_asignacion    = $datos['id_asignacion'] ?? null;
-        $this->id_atleta        = $datos['id_atleta'] ?? null;
-        $this->id_equipamiento  = $datos['id_equipamiento'] ?? null;
+        $this->codigo_atleta    = $datos['codigo_atleta'] ?? null;
+        $this->codigo_articulo  = $datos['codigo_articulo'] ?? null;
         $this->fecha_asignacion = $datos['fecha_asignacion'] ?? null;
         $this->estatus          = $datos['estatus'] ?? null;
-        $this->anulado          = $datos['anulado'] ?? null;
-        $this->motivo           = isset($datos['motivo_anulacion']) ? trim($datos['motivo_anulacion']) : (isset($datos['motivo']) ? trim($datos['motivo']) : '');
 
         $accion = $datos['accion'] ?? null;
 
@@ -71,22 +66,20 @@ class ModeloAsignaciones extends Conexion
         try {
             $conex = $this->conex();
 
-            // Se eliminó "WHERE a.estatus = 1" para permitir traer el histórico completo (activos, devueltos y anulados)
+            // Consulta corregida usando p_nombre, p_apellidos y codigo_atleta
             $sql = "SELECT a.id_asignacion, 
-                       DATE_FORMAT(a.fecha_asignacion, '%d/%m/%Y') as fecha_vista,
-                       a.fecha_asignacion as fecha_real,
-                       a.estatus as estatus_asignacion,
-                       a.anulado,
-                       a.id_atleta,
-                       CONCAT(at.nombres, ' ', at.apellidos) as atleta,
-                       at.doc_identidad,
-                       c.nombre as articulo,
-                       e.id_equipamiento
-                FROM asignaciones a
-                INNER JOIN atletas at ON a.id_atleta = at.id_atleta
-                INNER JOIN equipamientos e ON a.id_equipamiento = e.id_equipamiento
-                INNER JOIN catalogos c ON e.id_catalogo = c.id_catalogo
-                ORDER BY at.nombres ASC, a.fecha_asignacion DESC";
+                           DATE_FORMAT(a.fecha_asignacion, '%d/%m/%Y %H:%i') as fecha_vista,
+                           a.fecha_asignacion as fecha_real,
+                           a.estatus as estatus_asignacion,
+                           a.codigo_atleta,
+                           CONCAT(at.p_nombre, ' ', at.p_apellidos) as atleta,
+                           c.nombre as articulo,
+                           a.codigo_articulo
+                    FROM asignaciones a
+                    INNER JOIN atletas at ON a.codigo_atleta = at.codigo_atleta
+                    INNER JOIN articulos_inventario e ON a.codigo_articulo = e.codigo_articulo
+                    INNER JOIN catalogo c ON e.id_catalogo = c.id_catalogo
+                    ORDER BY at.p_nombre ASC, a.fecha_asignacion DESC";
 
             $stmt = $conex->prepare($sql);
             $stmt->execute();
@@ -94,30 +87,28 @@ class ModeloAsignaciones extends Conexion
 
             $agrupado = [];
             foreach ($datos as $fila) {
-                $id = $fila['id_atleta'];
+                $id = $fila['codigo_atleta'];
                 if (!isset($agrupado[$id])) {
                     $agrupado[$id] = [
-                        'id_atleta' => $id,
+                        'codigo_atleta' => $id,
                         'nombre_completo' => $fila['atleta'],
-                        'doc_identidad' => $fila['doc_identidad'],
-                        'asignaciones' => []
+                        'asignaciones' => [] // Se removió doc_identidad por no existir en la tabla atletas
                     ];
                 }
                 $agrupado[$id]['asignaciones'][] = [
                     'id_asignacion' => $fila['id_asignacion'],
-                    'id_equipamiento' => $fila['id_equipamiento'],
+                    'codigo_articulo' => $fila['codigo_articulo'],
                     'articulo' => $fila['articulo'],
                     'fecha_vista' => $fila['fecha_vista'],
                     'fecha_real' => $fila['fecha_real'],
-                    'estatus' => $fila['estatus_asignacion'],
-                    'anulado' => $fila['anulado']
+                    'estatus' => $fila['estatus_asignacion']
                 ];
             }
 
             return ['accion' => 'consultar', 'datos' => array_values($agrupado)];
         } catch (Exception $e) {
             logs('Asignaciones', $e->getMessage(), 'Modelo_Consultar');
-            return ['accion' => 'error', 'codigo' => 'ERR_BD'];
+            return ['accion' => 'error', 'codigo' => 'ERR_BD', 'mensaje' => $e->getMessage()];
         } finally {
             $conex = null;
         }
@@ -130,22 +121,26 @@ class ModeloAsignaciones extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if (!$this->verificarExistencia('id_atleta', $this->id_atleta, 'atletas', null)) {
+            // Corrección: Validar usando la columna 'codigo_atleta'
+            if (!$this->verificarExistencia('codigo_atleta', $this->codigo_atleta, 'atletas', null)) {
                 return ['accion' => 'error', 'codigo' => 'ERR_ATLETA_NO_EXISTE'];
             }
 
-            $stmtCheck = $conex->prepare("SELECT estatus FROM equipamientos WHERE id_equipamiento = ? FOR UPDATE");
-            $stmtCheck->execute([$this->id_equipamiento]);
+            // Validar existencia y disponibilidad en artículos_inventario
+            $stmtCheck = $conex->prepare("SELECT estatus FROM articulos_inventario WHERE codigo_articulo = ? FOR UPDATE");
+            $stmtCheck->execute([$this->codigo_articulo]);
             $estadoEquipo = $stmtCheck->fetchColumn();
 
             if ($estadoEquipo === false) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_EXISTE'];
             if ($estadoEquipo != 1) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_OCUPADO'];
 
-            $sqlInsert = "INSERT INTO asignaciones (id_atleta, id_equipamiento, fecha_asignacion, estatus, anulado) VALUES (?, ?, ?, 1, 0)";
+            // Insertar asignación activa (estatus = 1)
+            $sqlInsert = "INSERT INTO asignaciones (codigo_atleta, codigo_articulo, fecha_asignacion, estatus) VALUES (?, ?, ?, 1)";
             $stmtInsert = $conex->prepare($sqlInsert);
-            $stmtInsert->execute([$this->id_atleta, $this->id_equipamiento, $this->fecha_asignacion]);
+            $stmtInsert->execute([$this->codigo_atleta, $this->codigo_articulo, $this->fecha_asignacion]);
 
-            $this->objEquipamientos->CambiarEstatus($this->id_equipamiento, 2, $conex);
+            // Cambiar estatus del artículo a "En Uso" (2)
+            $this->objArticulos->CambiarEstatus($this->codigo_articulo, 2, $conex);
 
             $conex->commit();
             return ['accion' => 'exito', 'mensaje' => 'Asignación procesada.'];
@@ -169,21 +164,22 @@ class ModeloAsignaciones extends Conexion
                 return ['accion' => 'error', 'codigo' => 'ERR_NO_EXISTE'];
             }
 
-            $stmtOld = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
+            $stmtOld = $conex->prepare("SELECT codigo_articulo FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
             $stmtOld->execute([$this->id_asignacion]);
             $viejoEquipo = $stmtOld->fetchColumn();
 
-            if ($viejoEquipo != $this->id_equipamiento) {
-                $stmtCheck = $conex->prepare("SELECT estatus FROM equipamientos WHERE id_equipamiento = ? FOR UPDATE");
-                $stmtCheck->execute([$this->id_equipamiento]);
+            // Si cambiaron el artículo, liberamos el viejo y ocupamos el nuevo
+            if ($viejoEquipo != $this->codigo_articulo) {
+                $stmtCheck = $conex->prepare("SELECT estatus FROM articulos_inventario WHERE codigo_articulo = ? FOR UPDATE");
+                $stmtCheck->execute([$this->codigo_articulo]);
                 if ($stmtCheck->fetchColumn() != 1) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_DISPONIBLE'];
 
-                $this->objEquipamientos->CambiarEstatus($viejoEquipo, 1, $conex);
-                $this->objEquipamientos->CambiarEstatus($this->id_equipamiento, 2, $conex);
+                $this->objArticulos->CambiarEstatus($viejoEquipo, 1, $conex); // Libera el viejo
+                $this->objArticulos->CambiarEstatus($this->codigo_articulo, 2, $conex); // Ocupa el nuevo
             }
 
-            $sqlUpdate = "UPDATE asignaciones SET id_atleta = ?, id_equipamiento = ?, fecha_asignacion = ? WHERE id_asignacion = ?";
-            $conex->prepare($sqlUpdate)->execute([$this->id_atleta, $this->id_equipamiento, $this->fecha_asignacion, $this->id_asignacion]);
+            $sqlUpdate = "UPDATE asignaciones SET codigo_atleta = ?, codigo_articulo = ?, fecha_asignacion = ? WHERE id_asignacion = ?";
+            $conex->prepare($sqlUpdate)->execute([$this->codigo_atleta, $this->codigo_articulo, $this->fecha_asignacion, $this->id_asignacion]);
 
             $conex->commit();
             return ['accion' => 'exito', 'mensaje' => 'Modificación exitosa.'];
@@ -207,16 +203,17 @@ class ModeloAsignaciones extends Conexion
                 return ['accion' => 'error', 'codigo' => 'ERR_NO_EXISTE'];
             }
 
-            // Buscamos el equipo real asignado en la BD antes de cambiar nada
-            $stmtCheck = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
+            $stmtCheck = $conex->prepare("SELECT codigo_articulo FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
             $stmtCheck->execute([$this->id_asignacion]);
-            $id_equipo_actual = $stmtCheck->fetchColumn();
+            $codigo_articulo_actual = $stmtCheck->fetchColumn();
 
-            $stmtAnular = $conex->prepare("UPDATE asignaciones SET anulado = 1, estatus = 0 WHERE id_asignacion = ?");
+            // Cambiar el estatus de la asignación a inactivo (0)
+            $stmtAnular = $conex->prepare("UPDATE asignaciones SET estatus = 0 WHERE id_asignacion = ?");
             $stmtAnular->execute([$this->id_asignacion]);
 
-            if ($id_equipo_actual !== false) {
-                $this->objEquipamientos->CambiarEstatus($id_equipo_actual, 1, $conex);
+            // Liberamos el artículo (estatus = 1)
+            if ($codigo_articulo_actual !== false) {
+                $this->objArticulos->CambiarEstatus($codigo_articulo_actual, 1, $conex);
             }
 
             $conex->commit();
@@ -233,7 +230,6 @@ class ModeloAsignaciones extends Conexion
     public function CambiarEstatusAsignacion($id_asignacion, $nuevo_estatus, $conex = null): bool
     {
         $c = $conex ?? $this->conex();
-
         try {
             $sql = "UPDATE asignaciones SET estatus = :estatus WHERE id_asignacion = :id";
             $stmt = $c->prepare($sql);
@@ -241,7 +237,6 @@ class ModeloAsignaciones extends Conexion
                 ':estatus' => $nuevo_estatus,
                 ':id'      => $id_asignacion
             ]);
-
             return true;
         } catch (Exception $e) {
             logs('Asignaciones', $e->getMessage(), 'Modelo_CambiarEstatusAsignacion');
@@ -254,19 +249,14 @@ class ModeloAsignaciones extends Conexion
         if (!empty($datos['id_asignacion']) && !preg_match('/^[0-9]+$/', $datos['id_asignacion'])) {
             throw new Exception('ID de asignación inválido.');
         }
-        if (!empty($datos['id_atleta']) && !preg_match('/^[0-9]+$/', $datos['id_atleta'])) {
+        if (!empty($datos['codigo_atleta']) && !preg_match('/^[0-9]+$/', $datos['codigo_atleta'])) {
             throw new Exception('Atleta inválido.');
         }
-        if (!empty($datos['id_equipamiento']) && !preg_match('/^[0-9]+$/', $datos['id_equipamiento'])) {
-            throw new Exception('Equipamiento inválido.');
+        if (!empty($datos['codigo_articulo']) && !preg_match('/^[0-9]+$/', $datos['codigo_articulo'])) {
+            throw new Exception('Artículo inválido.');
         }
-        if (!empty($datos['fecha_asignacion']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $datos['fecha_asignacion'])) {
+        if (!empty($datos['fecha_asignacion']) && !preg_match('/^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2})?)?$/', $datos['fecha_asignacion'])) {
             throw new Exception('Formato de fecha inválido.');
-        }
-
-        $motivo = isset($datos['motivo_anulacion']) ? trim($datos['motivo_anulacion']) : (isset($datos['motivo']) ? trim($datos['motivo']) : '');
-        if (!empty($motivo) && strlen($motivo) < 5) {
-            throw new Exception('El motivo debe tener al menos 5 letras.');
         }
     }
 }

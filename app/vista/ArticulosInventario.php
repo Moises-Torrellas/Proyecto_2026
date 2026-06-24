@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
     <?php include('complementos/head.php'); ?>
-    <title>Equipamientos</title>
+    <title>Inventario de Artículos</title>
 </head>
 
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
@@ -17,14 +17,14 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina" id="titulo">Equipamientos</h2>
+                            <h2 class="titulo_pagina" id="titulo">Inventario de Artículos</h2>
                         </div>
                         <div class="contenedor_busqueda">
                             <input type="text" placeholder="Buscar..." autocomplete="off" id="busqueda">
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <button class="btn btn_azul" id="btn_nuevo">Nuevo Equipamiento</button>
+                            <button class="btn btn_azul" id="btn_nuevo">Nuevo Artículo</button>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
@@ -33,7 +33,7 @@
 <?php } ?>
 
     <?php if (empty($registro)) { ?>
-        <div class="listado_vacio"><p>No hay equipamientos registrados.</p></div>
+        <div class="listado_vacio"><p>No hay artículos registrados en el inventario.</p></div>
     <?php } else { 
         foreach ($registro as $grupo) { ?>
             <div class="listado_contenedor_grupal">
@@ -60,13 +60,11 @@
                     </div>
                 </div>
 
-                <!-- Detalle Acordeón con los cambios visuales para Modo Oscuro/Claro -->
                 <div class="listado_detalle_oculto" style="display:none;">
                     <div class="detalle_expandido_container" style="padding: 15px;">
                         
                         <div class="lista_sub_items">
                             <?php foreach ($grupo['piezas'] as $pieza) { 
-                                // Lógica de semáforo de Estatus
                                 if ($pieza['estatus'] == 1) {
                                     $clase = 'estatus_v'; $txt = 'Disponible';
                                 } elseif ($pieza['estatus'] == 2) {
@@ -75,7 +73,6 @@
                                     $clase = 'estatus_r'; $txt = 'Inactivo';
                                 }
 
-                                // Lógica de semáforo de Condición Físico
                                 $claseCondicion = 'estatus_v';
                                 if ($pieza['nivel_estado'] == 2) {
                                     $claseCondicion = 'estatus_a';
@@ -85,7 +82,7 @@
                             ?>
                                 <div class="sub_item_fila">
                                     <div class="sub_item_info">
-                                        <span class="sub_item_titulo"><?= htmlspecialchars($grupo['articulo']) ?></span>
+                                        <span class="sub_item_titulo">Código: <?= htmlspecialchars($pieza['codigo_club']) ?></span>
                                     </div>
                                     <div class="sub_item_bloque_metricas_horizontal" style="display: flex; flex-direction: row; gap: 15px; align-items: center; flex-wrap: nowrap; justify-content: flex-end;">
                                         <div class="metrica_item">
@@ -99,12 +96,12 @@
                                     </div>
                                     <div class="sub_item_acciones" onclick="event.stopPropagation();">
                                         <?php if (!empty($permisos['modificar'])) { ?>
-                                            <button class="btn_t cbt_v" onclick="editar(<?= $pieza['id_equipamiento'] ?>, <?= $grupo['id_catalogo'] ?>, <?= $pieza['id_estado'] ?>)" data-tippy-content="Modificar">
+                                            <button class="btn_t cbt_v" onclick="editar(<?= $pieza['codigo_articulo'] ?>, <?= $grupo['id_catalogo'] ?>, <?= $pieza['id_estado'] ?>)" data-tippy-content="Modificar">
                                                 <i class="fi fi-sr-pencil"></i>
                                             </button>
                                         <?php } ?>
                                         <?php if (!empty($permisos['eliminar'])) { ?>
-                                            <button class="btn_t cbt_r" onclick="eliminar(<?= $pieza['id_equipamiento'] ?>)" data-tippy-content="Eliminar">
+                                            <button class="btn_t cbt_r" onclick="eliminar(<?= $pieza['codigo_articulo'] ?>)" data-tippy-content="Eliminar">
                                                 <i class="fi fi-sr-trash"></i>
                                             </button>
                                         <?php } ?>
@@ -126,16 +123,15 @@
         </div>
     </section>
 
-    <!-- Modal Formulario -->
     <section class="contenedor_modal" id="contenedor_modal">
         <div class="modal modal_mediano ocultar" id="modal">
             <div class="cabecera_modal">
-                <h2 class="titulo_modal" id="titulo_modal">Registrar Equipamiento</h2>
+                <h2 class="titulo_modal" id="titulo_modal">Registrar Artículo</h2>
                 <a type="button" class="cerrar_modal" id="cerrar_modal">&times;</a>
             </div>
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
-                    <input type="hidden" id="id_equipamiento" name="id_equipamiento">
+                    <input type="hidden" id="codigo_articulo" name="codigo_articulo">
                     
                     <div class="row">
                         <div class="colum">
@@ -168,7 +164,7 @@
     </section>
     
     <script src="js/main.js"></script>
-    <script src="js/equipamientos.js"></script>
+    <script src="js/articulosinventario.js"></script>
 </body>
 </html>
 <?php } ?>

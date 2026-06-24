@@ -1,28 +1,22 @@
 <?php
 
-use App\modelo\ModeloCatalogos;
-use App\modelo\ModeloCategoriaEquipamiento;
-use App\modelo\ModeloPosiciones;
+use App\modelo\ModeloCatalogo;
+use App\modelo\ModeloCategoriaCatalogo;
 use App\servicios\GenerarReporte;
 
-// 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
-// 2. Configuración del módulo
-$id_modulo = _MD_CATALOGO_; // Asegúrate de usar la constante correcta de tu sistema
-
-// 3. Procesar permisos
+$id_modulo = _MD_CATALOGO_; 
 $permisos = procesarPermisos($id_modulo, $bitacora ?? null);
 
-// 4. Lógica de despacho
-$nombreClaseModelo = 'App\modelo\ModeloCatalogos';
+$nombreClaseModelo = 'App\modelo\ModeloCatalogo';
 
 if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
     exit();
 }
 
-$objModelo = new ModeloCatalogos();
+$objModelo = new ModeloCatalogo();
 
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudCatalogo($objModelo, $id_modulo, $bitacora ?? null, $permisos);
@@ -55,7 +49,7 @@ function manejarSolicitudCatalogo($obj, $id_modulo, $bitacoraObj, array $permiso
                 if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar catálogos.');
                 consultar($obj, $permisos);
                 break;
-            case 'MultiConsulta': // <-- NUEVA ACCIÓN UNIFICADA
+            case 'MultiConsulta':
                 if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar catálogos.');
                 MultiConsulta();
                 break;
@@ -83,14 +77,10 @@ function manejarSolicitudCatalogo($obj, $id_modulo, $bitacoraObj, array $permiso
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        logs('Catalogos', $e->getMessage(), 'Controlador_ManejarSolicitud');
+        logs('Catalogo', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
-
-/**
- * --- LÓGICA DE ACCIONES ---
- */
 
 function consultar($obj, $permisos): void
 {
@@ -98,26 +88,21 @@ function consultar($obj, $permisos): void
     $respuesta = $obj->Consultar($filtro);
     $registro = $respuesta['datos'] ?? [];
     $solo_lista = true;
-    include(__DIR__ . '/../vista/Catalogos.php'); 
+    include(__DIR__ . '/../vista/Catalogo.php'); 
 }
 
 function MultiConsulta(): void 
 {
     try {
-        $modeloPos = new ModeloPosiciones();
-        $modeloCat = new ModeloCategoriaEquipamiento();
-
-        $posRespuesta = $modeloPos->Consultar();
+        $modeloCat = new ModeloCategoriaCatalogo();
         $catRespuesta = $modeloCat->Consultar();
 
-        // Armamos el JSON con la estructura unificada
         echo json_encode([
             'accion'     => 'MultiConsulta',
-            'posiciones' => $posRespuesta['datos'] ?? [],
             'categorias' => $catRespuesta['datos'] ?? []
         ]);
     } catch (Exception $e) {
-        logs('Catalogos', $e->getMessage(), 'Controlador_MultiConsulta');
+        logs('Catalogo', $e->getMessage(), 'Controlador_MultiConsulta');
         echo json_encode(['accion' => 'error', 'mensaje' => 'Error al inicializar los catálogos del módulo.']);
     }
 }
@@ -125,11 +110,11 @@ function MultiConsulta(): void
 function buscar($obj): void
 {
     try {
-        validar_requeridos(['id']);
+        validar_requeridos(['id_catalogo']);
 
         $datos = [
-            'id' => $_POST['id'],
-            'accion' => 'buscar'
+            'id_catalogo' => $_POST['id_catalogo'],
+            'accion'      => 'buscar'
         ];
         echo json_encode($obj->procesarDatos($datos));
     } catch (Exception $e) {
@@ -146,7 +131,6 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $datos = [
             'nombre'       => $_POST['nombre'],
             'id_categoria' => $_POST['id_categoria'],
-            'id_posicion'  => $_POST['id_posicion'] ?? null,
             'stock_minimo' => $_POST['stock_minimo'],
             'talla'        => $_POST['talla'] ?? null,
             'accion'       => 'incluir'
@@ -169,14 +153,13 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $requeridos = ['id', 'nombre', 'id_categoria', 'stock_minimo'];
+        $requeridos = ['id_catalogo', 'nombre', 'id_categoria', 'stock_minimo'];
         validar_requeridos($requeridos);
 
         $datos = [
-            'id'           => $_POST['id'],
+            'id_catalogo'  => $_POST['id_catalogo'],
             'nombre'       => $_POST['nombre'],
             'id_categoria' => $_POST['id_categoria'],
-            'id_posicion'  => $_POST['id_posicion'] ?? null,
             'stock_minimo' => $_POST['stock_minimo'],
             'talla'        => $_POST['talla'] ?? null,
             'accion'       => 'modificar'
@@ -185,7 +168,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó artículo en catálogo ID: " . $_POST['id']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó artículo en catálogo ID: " . $_POST['id_catalogo']);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Catálogo modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = 'Ocurrió un error inesperado en la modificación.';
@@ -200,16 +183,16 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id']);
+        validar_requeridos(['id_catalogo']);
 
         $datos = [
-            'id' => $_POST['id'],
-            'accion' => 'eliminar'
+            'id_catalogo' => $_POST['id_catalogo'],
+            'accion'      => 'eliminar'
         ];
 
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el artículo del catálogo ID: " . $_POST['id']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el artículo del catálogo ID: " . $_POST['id_catalogo']);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Artículo eliminado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = $resultado['codigo'] ?? 'Error al eliminar. Verifica dependencias.';
@@ -231,11 +214,6 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             $datosFiltro['id_categoria'] = $_POST['id_categoria'];
         }
 
-        if (!empty($_POST['id_posicion'])) {
-            $validacionesReporte['id_posicion'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Posición inválida.'];
-            $datosFiltro['id_posicion'] = $_POST['id_posicion'];
-        }
-        // NUEVO: Atrapamos la talla para el reporte
         if (!empty($_POST['talla'])) {
             $validacionesReporte['talla'] = ['regla' => '/^[a-zA-Z0-9\s\-\/]{1,10}$/', 'mensaje' => 'Talla inválida.'];
             $datosFiltro['talla'] = $_POST['talla'];
