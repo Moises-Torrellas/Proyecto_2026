@@ -66,15 +66,15 @@
                 <li class="nav_identificador">Inventario</li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_)) : ?>
-                        <a type="button" href="ArticulosInventario" class="opciones"><i class="opciones_i" data-lucide="boxes"></i> Articulos Inventario</a>
+                        <a type="button" href="ArticulosInventario" class="opciones"><i class="opciones_i" data-lucide="boxes"></i> Inventario de Artículos</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_CATALOGO_)) : ?>
-                        <a type="button" href="Catalogo" class="opciones"><i class="opciones_i" data-lucide="clipboard-pen-line"></i> Catalogo</a>
+                        <a type="button" href="Catalogo" class="opciones"><i class="opciones_i" data-lucide="clipboard-pen-line"></i> Catálogo</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_CATEGORIA_CAT_)) : ?>
-                        <a type="button" href="CategoriaCatalogo" class="opciones"><i class="opciones_i" data-lucide="layers-plus"></i> Categoría de Catalogo</a>
+                        <a type="button" href="CategoriaCatalogo" class="opciones"><i class="opciones_i" data-lucide="layers-plus"></i> Categorías de Catálogo</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_ESTADO_FISICO_)) : ?>
