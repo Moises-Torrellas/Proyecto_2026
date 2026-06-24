@@ -1,36 +1,30 @@
 <?php
 
-use App\modelo\ModeloCalidad;
+use App\modelo\ModeloEstadoFisico;
 
-// 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
-// 2. Configuración del módulo (Corregido al ID de Categorías)
-$id_modulo = _MD_CALIDAD_;
+$id_modulo = _MD_ESTADO_FISICO_;
 
-// 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora);
 
-// 4. Lógica de despacho (Router interno)
-$nombreClaseModelo = 'App\modelo\ModeloCalidad';
+$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+
+$nombreClaseModelo = 'App\modelo\ModeloEstadoFisico';
 
 if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
     exit();
 }
 
-$objModelo = new ModeloCalidad();
+$objModelo = new ModeloEstadoFisico();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitud($objModelo, $id_modulo, $bitacora, $permisos);
+    manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
+    registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Estado Físico');
     cargarVista($pagina);
 }
 
-/**
- * --- FUNCIONES DEL CONTROLADOR ---
- */
 
 function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
@@ -48,19 +42,19 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 consultar($obj);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar calidad.');
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar el estado físico.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar calidad.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar el estado físico.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar calidad.');
+                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar el estado físico.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar calidad.');
+                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar el estado físico.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
 
@@ -68,7 +62,7 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 throw new Exception('Acción no permitida.');
         }
     } catch (Exception $e) {
-        logs('Calidad', $e->getMessage(), 'Controlador_ManejarSolicitud');
+        logs('EstadoFisico', $e->getMessage(), 'Controlador_ManejarSolicitud');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -83,18 +77,18 @@ function consultar($obj): void
 function buscar($obj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
+        $validaciones = ['id_estado' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
         validar_datos($validaciones);
 
         $datos = [
-            'id' => $_POST['id'],
+            'id_estado' => $_POST['id_estado'],
             'accion' => 'buscar'
         ];
 
         $resultado = $obj->procesarDatos($datos);
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('EstadoEquipamiento', $e->getMessage(), 'Controlador_Buscar');
+        logs('EstadoFisico', $e->getMessage(), 'Controlador_Buscar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -103,31 +97,31 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $validaciones = [
-            'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre de Calidad inválida.'],
-            'nivel' => ['regla' => '/^[0-9]{1}$/', 'mensaje' => 'Nivel inválido. Debe ser un número.'],
+            'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre de Estado Físico inválido.'],
+            'nivel_estado' => ['regla' => '/^[0-9]{1}$/', 'mensaje' => 'Nivel inválido. Debe ser un número.'],
         ];
 
         validar_datos($validaciones);
         
-        if ($_POST['nivel'] > 3 || $_POST['nivel'] < 1) {
-            throw new Exception('No es un nivel valido.');
+        if ($_POST['nivel_estado'] > 3 || $_POST['nivel_estado'] < 1) {
+            throw new Exception('No es un nivel válido.');
         }
 
         $datos = [
-            'nombre'     => $_POST['nombre'],
-            'nivel' => $_POST['nivel']
+            'nombre'       => $_POST['nombre'],
+            'nivel_estado' => $_POST['nivel_estado']
         ];
         $datos['accion'] = 'incluir';
 
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró la calidad: " . $_POST['nombre']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró el estado físico: " . $_POST['nombre']);
         }
 
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('EstadoEquipamiento', $e->getMessage(), 'Controlador_Incluir');
+        logs('EstadoFisico', $e->getMessage(), 'Controlador_Incluir');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
@@ -136,55 +130,55 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $validaciones = [
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre'   => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre de categoría inválido.'],
-            'nivel' => ['regla' => '/^[0-9]{1}$/', 'mensaje' => 'Nivel inválido. Debe ser un número.'],
+            'id_estado'    => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
+            'nombre'       => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre de estado físico inválido.'],
+            'nivel_estado' => ['regla' => '/^[0-9]{1}$/', 'mensaje' => 'Nivel inválido. Debe ser un número.'],
         ];
 
         validar_datos($validaciones);
 
-        
-        if ($_POST['nivel'] > 3 || $_POST['nivel'] < 1) {
-            throw new Exception('No es un nivel valido.');
+        if ($_POST['nivel_estado'] > 3 || $_POST['nivel_estado'] < 1) {
+            throw new Exception('No es un nivel válido.');
         }
 
         $datos = [
-            'id' => $_POST['id'],
-            'nombre'     => $_POST['nombre'],
-            'nivel' => $_POST['nivel']
+            'id_estado'    => $_POST['id_estado'],
+            'nombre'       => $_POST['nombre'],
+            'nivel_estado' => $_POST['nivel_estado']
         ];
         $datos['accion'] = 'modificar';
 
         $resultado = $obj->procesarDatos($datos);
 
-        if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-            registrarBitacora($bitacoraObj, $id_modulo, "modificó la calidad: " . $_POST['nombre']);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') { // Ajustado a 'modificar' según el return del modelo
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el estado físico: " . $_POST['nombre']);
         }
 
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('EstadoEquipamiento', $e->getMessage(), 'Controlador_Modificar');
+        logs('EstadoFisico', $e->getMessage(), 'Controlador_Modificar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
+
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = ['id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
+        $validaciones = ['id_estado' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
         validar_datos($validaciones);
 
         $datos = [
-            'id' => $_POST['id'],
+            'id_estado' => $_POST['id_estado'],
             'accion' => 'eliminar'
         ];
 
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'eliminar') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó la Calidad: " . $_POST['id']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el Estado Físico: " . $_POST['id_estado']);
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('EstadoEquipamiento', $e->getMessage(), 'Controlador_Eliminar');
+        logs('EstadoFisico', $e->getMessage(), 'Controlador_Eliminar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

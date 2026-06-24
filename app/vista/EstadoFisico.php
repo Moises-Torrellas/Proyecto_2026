@@ -3,7 +3,7 @@
 
 <head>
     <?php include('complementos/head.php'); ?>
-    <title>Calidad</title>
+    <title>Estado Físico</title>
 </head>
 
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
@@ -17,14 +17,14 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina" id="titulo">Calidad</h2>
+                            <h2 class="titulo_pagina" id="titulo">Estado Físico</h2>
                         </div>
                         <div class="contenedor_busqueda">
-                            <input type="text" placeholder="Buscar..." autocomplete="off" id="busqueda">
+                            <input type="text" placeholder="Buscar estado..." autocomplete="off" id="busqueda">
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <button class="btn btn_azul" id="incluir">Nueva Calidad</button>
+                            <button class="btn btn_azul" id="incluir">Nuevo Estado Físico</button>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
@@ -45,7 +45,7 @@
             </div>
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
-                    <input type="hidden" id="id" name="id">
+                    <input type="hidden" id="id_estado" name="id_estado">
                     
                     <div class="row">
                         <div class="colum">
@@ -57,13 +57,13 @@
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <select name="nivel" id="nivel" class="formulario select">
-                                    <option value="1" selected>Buena Calidad</option>
-                                    <option value="2" selected>Media Calidad</option>
-                                    <option value="3" selected>Mala Calidad</option>
+                                <select name="nivel_estado" id="nivel_estado" class="formulario select">
+                                    <option value="1" selected>Buen Estado (Disponible)</option>
+                                    <option value="2">Desgaste Medio (En Uso/Mantenimiento)</option>
+                                    <option value="3">Mal Estado (Inactivo/Dañado)</option>
                                 </select>
-                                <label for="nivel" class="titulo_formulario">Nivel de Calidad</label>
-                                <span class="mensaje" id="nivel_span"></span>
+                                <label for="nivel_estado" class="titulo_formulario">Nivel de Condición</label>
+                                <span class="mensaje" id="nivel_estado_span"></span>
                             </div>
                         </div>
                     </div>
@@ -78,7 +78,8 @@
         </div>
     </section>
     <script src="js/main.js"></script>
-    <script src="js/calidad.js"></script>
+    <script src="js/estado_fisico.js"></script>
+    <?php include('complementos/mensajeError.php'); ?>
 </body>
 
 </html>

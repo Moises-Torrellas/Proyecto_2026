@@ -28,19 +28,20 @@ function busqueda() {
 $(document).ready(function () {
     inicializarPaginador(); 
     MultiConsulta();
+    consultar();
     
     if (typeof Validacion === 'function') {
         Validacion("fecha_asignacion", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "btn_guardar");
     }
 
-    $('#id_atleta').select2({
+    $('#codigo_atleta').select2({
         placeholder: "Seleccione un atleta...",
         allowClear: true,
         dropdownParent: $('.contenedor_modal')
     });
     
-    $('#id_equipamiento').select2({
-        placeholder: "Seleccione una pieza...",
+    $('#codigo_articulo').select2({
+        placeholder: "Seleccione un artículo...",
         allowClear: true,
         dropdownParent: $('.contenedor_modal')
     });
@@ -73,8 +74,8 @@ $(document).ready(function () {
         let hoy = new Date().toISOString().split('T')[0];
         $('#fecha_asignacion').val(hoy);
         
-        $('#id_atleta').val(null).trigger('change');
-        $('#id_equipamiento').val(null).trigger('change');
+        $('#codigo_atleta').val(null).trigger('change');
+        $('#codigo_articulo').val(null).trigger('change');
         
         abrirModal(); 
     });
@@ -85,7 +86,7 @@ $(document).ready(function () {
 
     $('#ayuda').on('click', function () {
         const pasos = [
-            { element: '#busqueda', popover: { title: 'Búsqueda', description: 'Aquí puedes buscar por nombre de atleta o CI.', position: 'bottom' } },
+            { element: '#busqueda', popover: { title: 'Búsqueda', description: 'Aquí puedes buscar por nombre de atleta.', position: 'bottom' } },
             { element: '#btn_nuevo', popover: { title: 'Nueva Asignación', description: 'Registra un préstamo de equipo.', position: 'bottom' } },
             { element: '#generar', popover: { title: 'Generar Reporte', description: 'Descarga un archivo PDF de las asignaciones.', position: 'left' } },
             { element: '#resultadoconsulta', popover: { title: 'Lista Agrupada', description: 'Haz clic en cualquier atleta para ver sus detalles.', position: 'top' } }
@@ -98,12 +99,12 @@ $(document).ready(function () {
 
 function validarEnvio(accion) {
     if (accion === "incluir" || accion === "modificar") {
-        if ($('#id_atleta').val() == "" || $('#id_atleta').val() == null) {
+        if ($('#codigo_atleta').val() == "" || $('#codigo_atleta').val() == null) {
             muestraMensaje("error", 2000, "Validación", "Debe seleccionar un atleta.");
             return false;
         }
-        if ($('#id_equipamiento').val() == "" || $('#id_equipamiento').val() == null) {
-            muestraMensaje("error", 2000, "Validación", "Debe seleccionar una pieza de equipamiento.");
+        if ($('#codigo_articulo').val() == "" || $('#codigo_articulo').val() == null) {
+            muestraMensaje("error", 2000, "Validación", "Debe seleccionar un artículo del inventario.");
             return false;
         }
         if ($('#fecha_asignacion').val() == "") {
@@ -114,57 +115,63 @@ function validarEnvio(accion) {
     return true;
 }
 
-function editar(id_asignacion, id_atleta, id_equipamiento, fecha) {
+function editar(id_asignacion, codigo_atleta, codigo_articulo, fecha) {
     limpia();
     $("#f")[0].reset();
     $("#titulo_modal").text("Modificar Asignación");
     $("#btn_guardar").text("Guardar Cambios").data("accion", "modificar");
     
+    let fechaLimpia = fecha.split(' ')[0];
+
     $("#id_asignacion").val(id_asignacion);
-    $("#fecha_asignacion").val(fecha);
-    $("#id_atleta").val(id_atleta).trigger('change');
+    $("#fecha_asignacion").val(fechaLimpia);
+    $("#codigo_atleta").val(codigo_atleta).trigger('change');
     
-    if ($(`#id_equipamiento option[value='${id_equipamiento}']`).length === 0) {
-        $("#id_equipamiento").append(new Option("Equipo Actual (Mantenido)", id_equipamiento, true, true));
+    if ($(`#codigo_articulo option[value='${codigo_articulo}']`).length === 0) {
+        $("#codigo_articulo").append(new Option("Artículo Actual (Mantenido)", codigo_articulo, true, true));
     }
-    $("#id_equipamiento").val(id_equipamiento).trigger('change');
+    $("#codigo_articulo").val(codigo_articulo).trigger('change');
     
     abrirModal();
 }
 
-function anular(id_asignacion, id_equipamiento) {
-    confirmarAnulacion('¿Está seguro que quiere anular esta asignación?', function (motivo) {
-        if (motivo !== false) { 
-            if (motivo.trim().length < 5) {
-                muestraMensaje("error", 3000, "Validación", "El motivo debe tener al menos 5 letras.");
-                return;
-            }
+function anular(id_asignacion, codigo_articulo) {
+    confirmar('¿Está seguro que quiere anular esta asignación y liberar el artículo?', function (confirmado) {
+        if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'anular');
             datos.append('id_asignacion', id_asignacion);
-            datos.append('id_equipamiento', id_equipamiento);
-            datos.append('motivo_anulacion', motivo); 
+            datos.append('codigo_articulo', codigo_articulo);
             enviaAjax(datos);
         }
     });
 }
 
 function poblarCombos(atletas, equipos) {
-    let comboAtleta = $("#id_atleta");
-    let comboEquipo = $("#id_equipamiento");
+    let comboAtleta = $("#codigo_atleta");
+    let comboEquipo = $("#codigo_articulo");
     
     comboAtleta.find('option:not(:first)').remove();
     comboEquipo.find('option:not(:first)').remove();
 
     if (atletas && atletas.length > 0) {
         atletas.forEach(a => {
-            if(a.estatus == 1) comboAtleta.append(`<option value="${a.id_atleta}">${a.nombres} ${a.apellidos} (CI: ${a.doc_identidad})</option>`);
+            // Ajustado para leer correctamente las propiedades físicas de tu tabla Atletas
+            let idAtletaVal = a.codigo_atleta || a.id_atleta;
+            let pNombre = a.p_nombre || a.nombres || '';
+            let pApellido = a.p_apellidos || a.apellidos || '';
+            
+            if(a.estatus == 1) {
+                comboAtleta.append(`<option value="${idAtletaVal}">${pNombre} ${pApellido} (Código: ${idAtletaVal})</option>`);
+            }
         });
     }
 
     if (equipos && equipos.length > 0) {
         equipos.forEach(e => {
-            comboEquipo.append(`<option value="${e.id_equipamiento}">${e.articulo}</option>`);
+            let nombreMostrar = e.nombre_catalogo || e.articulo || e.nombre || ("Artículo " + e.codigo_articulo);
+            let codigoClub = e.codigo_club ? ` | Cód: ${e.codigo_club}` : "";
+            comboEquipo.append(`<option value="${e.codigo_articulo}">${nombreMostrar}${codigoClub}</option>`);
         });
     }
 
@@ -177,7 +184,7 @@ function crearConsulta(htmlRecibido) {
     contenedor.html(htmlRecibido);
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
-    if (typeof inicializarPaginador === 'function') inicializarPaginador(); // Ejecuta tu paginador del sistema nativamente
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
     if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 

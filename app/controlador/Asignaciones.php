@@ -1,7 +1,8 @@
 <?php
+
 use App\modelo\ModeloAsignaciones;
 use App\modelo\ModeloAtletas;
-use App\modelo\ModeloEquipamientos;
+use App\modelo\ModeloArticulosInventario;
 
 require_once __DIR__ . '/Base.php';
 
@@ -24,7 +25,7 @@ if (comprobarAjax() && !empty($_POST)) {
     
     $error_bd = '';
     if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
-        $error_bd = ($respuesta['codigo'] == 'ERR_BD') ? 'Error al conectar con la base de datos.' : '';
+        $error_bd = !empty($respuesta['mensaje']) ? $respuesta['mensaje'] : 'Error al conectar con la base de datos.';
     }
 
     $registro = $respuesta['datos'] ?? [];
@@ -81,10 +82,10 @@ function consultar($obj, $permisos): void {
 function MultiConsulta(): void {
     try {
         $modeloAtletas = new ModeloAtletas();
-        $modeloEquip = new ModeloEquipamientos();
+        $modeloArticulos = new ModeloArticulosInventario(); 
 
         $respAtletas = $modeloAtletas->Consultar(); 
-        $respEquip = $modeloEquip->ConsultarEquiposLibres();
+        $respEquip = $modeloArticulos->ConsultarArticulosLibres(); 
 
         echo json_encode([
             'accion'  => 'MultiConsulta',
@@ -98,20 +99,25 @@ function MultiConsulta(): void {
 
 function incluir($obj, $id_modulo, $bitacoraObj): void {
     try {
-        validar_requeridos(['id_atleta', 'id_equipamiento', 'fecha_asignacion']);
+        validar_requeridos(['codigo_atleta', 'codigo_articulo', 'fecha_asignacion']);
 
-        $datos = ['accion' => 'incluir', 'id_atleta' => $_POST['id_atleta'], 'id_equipamiento' => $_POST['id_equipamiento'], 'fecha_asignacion' => $_POST['fecha_asignacion']];
+        $datos = [
+            'accion'           => 'incluir', 
+            'codigo_atleta'    => $_POST['codigo_atleta'], 
+            'codigo_articulo'  => $_POST['codigo_articulo'], 
+            'fecha_asignacion' => $_POST['fecha_asignacion']
+        ];
         
-        $obj->setEquipamientos(new ModeloEquipamientos());
+        $obj->setArticulos(new ModeloArticulosInventario());
         
         $resultado = $obj->ProcesarDatos($datos);
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Asignó el equipo ID: " . $datos['id_equipamiento']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Asignó el artículo ID: " . $datos['codigo_articulo']);
             $resultado = array('accion' => 'exito', 'mensaje' => 'Asignación procesada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                VALIDATION    => 'El equipo seleccionado ya no está disponible.',
+                VALIDATION    => 'El artículo seleccionado ya no está disponible.',
                 DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
                 default       => 'Ocurrió un error inesperado al procesar la asignación.'
             };
@@ -125,11 +131,17 @@ function incluir($obj, $id_modulo, $bitacoraObj): void {
 
 function modificar($obj, $id_modulo, $bitacoraObj): void {
     try {
-        validar_requeridos(['id_asignacion', 'id_atleta', 'id_equipamiento', 'fecha_asignacion']);
+        validar_requeridos(['id_asignacion', 'codigo_atleta', 'codigo_articulo', 'fecha_asignacion']);
 
-        $datos = ['accion' => 'modificar', 'id_asignacion' => $_POST['id_asignacion'], 'id_atleta' => $_POST['id_atleta'], 'id_equipamiento' => $_POST['id_equipamiento'], 'fecha_asignacion' => $_POST['fecha_asignacion']];
+        $datos = [
+            'accion'           => 'modificar', 
+            'id_asignacion'    => $_POST['id_asignacion'], 
+            'codigo_atleta'    => $_POST['codigo_atleta'], 
+            'codigo_articulo'  => $_POST['codigo_articulo'], 
+            'fecha_asignacion' => $_POST['fecha_asignacion']
+        ];
         
-        $obj->setEquipamientos(new ModeloEquipamientos());
+        $obj->setArticulos(new ModeloArticulosInventario());
         
         $resultado = $obj->ProcesarDatos($datos);
         
@@ -139,7 +151,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void {
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID    => 'La asignación original no fue encontrada.',
-                VALIDATION    => 'El nuevo equipo seleccionado no está disponible.',
+                VALIDATION    => 'El nuevo artículo seleccionado no está disponible.',
                 DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
                 default       => 'Ocurrió un error inesperado al modificar.'
             };
@@ -153,13 +165,15 @@ function modificar($obj, $id_modulo, $bitacoraObj): void {
 
 function anular($obj, $id_modulo, $bitacoraObj): void {
     try {
-        validar_requeridos(['id_asignacion', 'id_equipamiento']);
-        
-        $motivo = trim(filter_var($_POST['motivo_anulacion'] ?? ($_POST['motivo'] ?? ''), FILTER_SANITIZE_SPECIAL_CHARS));
+        validar_requeridos(['id_asignacion', 'codigo_articulo']);
 
-        $datos = ['accion' => 'anular', 'id_asignacion' => $_POST['id_asignacion'], 'id_equipamiento' => $_POST['id_equipamiento'], 'motivo_anulacion' => $motivo];
+        $datos = [
+            'accion'          => 'anular', 
+            'id_asignacion'   => $_POST['id_asignacion'], 
+            'codigo_articulo' => $_POST['codigo_articulo']
+        ];
         
-        $obj->setEquipamientos(new ModeloEquipamientos());
+        $obj->setArticulos(new ModeloArticulosInventario());
         
         $resultado = $obj->ProcesarDatos($datos);
         

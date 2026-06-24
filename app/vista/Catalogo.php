@@ -19,10 +19,6 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                     <div class="listado_col_datos">
                         <div class="listado_dato_grupo">
-                            <small>Posición</small>
-                            <span><?= !empty($dato['posicion_nombre']) ? htmlspecialchars($dato['posicion_nombre']) : 'N/A' ?></span>
-                        </div>
-                        <div class="listado_dato_grupo">
                             <small>Talla</small>
                             <span><?= !empty($dato['talla']) ? htmlspecialchars($dato['talla']) : 'N/A' ?></span>
                         </div>
@@ -49,11 +45,11 @@ if (isset($solo_lista) && $solo_lista === true) :
         exit(); ?>
 <?php endif; ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <?php include('complementos/head.php'); ?>
-    <title>Catálogo de Equipamientos</title>
+    <title>Catálogo de Artículos</title>
 </head>
 
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
@@ -103,10 +99,6 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                                             <div class="listado_col_datos">
                                                 <div class="listado_dato_grupo">
-                                                    <small>Posición</small>
-                                                    <span><?= !empty($dato['posicion_nombre']) ? htmlspecialchars($dato['posicion_nombre']) : 'N/A' ?></span>
-                                                </div>
-                                                <div class="listado_dato_grupo">
                                                     <small>Talla</small>
                                                     <span><?= !empty($dato['talla']) ? htmlspecialchars($dato['talla']) : 'N/A' ?></span>
                                                 </div>
@@ -145,7 +137,7 @@ if (isset($solo_lista) && $solo_lista === true) :
             </div>
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
-                    <input type="hidden" id="id" name="id">
+                    <input type="hidden" id="id_catalogo" name="id_catalogo">
                     
                     <div class="row">
                         <div class="colum">
@@ -173,17 +165,6 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <span class="mensaje" id="stock_minimo_spam"></span>
                             </div>
                         </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="id_posicion" id="id_posicion" class="formulario select">
-                                </select>
-                                <label for="id_posicion" class="titulo_formulario">Posición (Opcional)</label>
-                                <span class="mensaje" id="id_posicion_span"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="talla" name="talla">

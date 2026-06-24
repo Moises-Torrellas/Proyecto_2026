@@ -4,9 +4,9 @@ namespace App\modelo;
 
 use Exception;
 
-class ModeloCategoriaEquipamiento extends Conexion
+class ModeloCategoriaCatalogo extends Conexion
 {
-    private $id;
+    private $id_categoria; // Ajustado a id_categoria
     private $nombre;
     private $descripcion;
 
@@ -14,7 +14,7 @@ class ModeloCategoriaEquipamiento extends Conexion
     {
         parent::__construct();
         $this->campoWhitelist = [
-            'id' => 'id_categoria',
+            'id_categoria' => 'id_categoria', // Ajustado a id_categoria
             'nombre' => 'nombre'
         ];
         $this->llavePrimaria = 'id_categoria';
@@ -26,14 +26,17 @@ class ModeloCategoriaEquipamiento extends Conexion
             throw new Exception('No se proporcionaron datos para procesar.');
         }
         $this->ValidarExpresiones($datos);
-        $this->id = $datos['id'] ?? null;
-        $this->nombre = mb_strtoupper(trim($datos['nombre'] ?? ''), "UTF-8");
+        
+        $this->id_categoria = $datos['id_categoria'] ?? null; // Ajustado
+        $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->descripcion = $datos['descripcion'] ?? null;
-           $accion = $datos['accion'] ?? null;
+        
+        $accion = $datos['accion'] ?? null;
+        
         return match ($accion) {
             'incluir'   => $this->Incluir(),
             'eliminar'  => $this->Eliminar(),
-            'buscar' => $this->Buscar(),
+            'buscar'    => $this->Buscar(),
             'modificar' => $this->Modificar(),
             default => throw new Exception('La accion no es valida')
         };
@@ -43,39 +46,30 @@ class ModeloCategoriaEquipamiento extends Conexion
     {
         try {
             $conex = $this->conex();
-            $params = []; // Unificamos el nombre de la variable
+            $params = []; 
 
-            // 1. Iniciamos la sentencia con WHERE 1=1 para concatenar AND tranquilamente
             $sentencia = "SELECT * FROM categoria_catalogo WHERE 1=1";
 
-            // 2. BUSCADOR GENERAL (Por nombre de categoría)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
-                $sentencia .= " AND 
-                nombre LIKE :f1
-                ";
+                $sentencia .= " AND nombre LIKE :f1";
                 $params[':f1'] = $p;
             }
 
-            // 3. FILTROS ESPECÍFICOS (Si vienen del Modal o propiedades del objeto)
             if (!empty($this->nombre)) {
                 $sentencia .= " AND nombre LIKE :nombre";
                 $params[':nombre'] = trim($this->nombre) . "%";
             }
 
-            // 4. Orden (Asegúrate de usar una columna que exista, como id_categorias)
             $sentencia .= " ORDER BY id_categoria ASC";
 
             $stmt = $conex->prepare($sentencia);
-
-            // IMPORTANTE: Pasar los parámetros al execute
             $stmt->execute($params);
-
             $datos = $stmt->fetchAll();
 
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
-        logs('CategoriaEquipamiento', $e->getMessage(), 'Modelo_Consultar');
+            logs('CategoriaCatalogo', $e->getMessage(), 'Modelo_Consultar');
             return array('accion' => 'error', 'mensaje' => 'Error al listar: ' . $e->getMessage());
         } finally {
             $conex = NULL;
@@ -86,7 +80,7 @@ class ModeloCategoriaEquipamiento extends Conexion
     {
         try {
             if ($this->verificarExistencia('nombre', $this->nombre, 'categoria_catalogo', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'Ya existe una categoria equipamiento registrada con este nombre.');
+                return array('accion' => 'error', 'mensaje' => 'Ya existe una categoría registrada con este nombre.');
             }
 
             $conex = $this->conex();
@@ -96,21 +90,22 @@ class ModeloCategoriaEquipamiento extends Conexion
             $stmt->bindParam(':descripcion', $this->descripcion);
             $stmt->execute();
 
-            return array('accion' => 'incluir', 'mensaje' => 'Categoria equipamiento registrada exitosamente.');
+            return array('accion' => 'incluir', 'mensaje' => 'Categoría registrada exitosamente.');
         } catch (Exception $e) {
-            logs('CategoriaEquipamiento', $e->getMessage(), 'Modelo');
+            logs('CategoriaCatalogo', $e->getMessage(), 'Modelo_Incluir');
             return array('accion' => 'error', 'mensaje' => 'Error al incluir: ' . $e->getMessage());
         } finally {
             $conex = NULL;
         }
-    }                                                      
+    }                                              
 
     private function Modificar(): array
     {
         try {
-           if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'categoria_catalogo', NULL)) {
+            // Ajustado a id_categoria
+            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id_categoria, 'categoria_catalogo', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'categoria_catalogo', NULL)) {
-                    return array('accion' => 'error', 'mensaje' => 'Ya existe otra categoria registrada con este nombre.');
+                    return array('accion' => 'error', 'mensaje' => 'Ya existe otra categoría registrada con este nombre.');
                 }
             }
             $conex = $this->conex();
@@ -121,12 +116,12 @@ class ModeloCategoriaEquipamiento extends Conexion
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':descripcion', $this->descripcion);
-            $stmt->bindParam(':id_categoria', $this->id);
+            $stmt->bindParam(':id_categoria', $this->id_categoria); // Ajustado
             $stmt->execute();
 
-            return array('accion' => 'modificar', 'mensaje' => 'Categoria equipamiento modificada exitosamente.');
+            return array('accion' => 'modificar', 'mensaje' => 'Categoría modificada exitosamente.');
         } catch (Exception $e) {
-            logs('CategoriaEquipamiento', $e->getMessage(), 'Modelo');
+            logs('CategoriaCatalogo', $e->getMessage(), 'Modelo_Modificar');
             return array('accion' => 'error', 'mensaje' => 'Error al modificar: ' . $e->getMessage());
         } finally {
             $conex = NULL;
@@ -137,42 +132,43 @@ class ModeloCategoriaEquipamiento extends Conexion
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM categoria_catalogo WHERE id_categoria = :id";
+            $sentencia = "SELECT * FROM categoria_catalogo WHERE id_categoria = :id_categoria"; // Ajustado
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':id_categoria', $this->id_categoria); // Ajustado
             $stmt->execute();
             $datos = $stmt->fetchAll();
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
-            logs('CategoriaEquipamiento', $e->getMessage(), 'Modelo');
+            logs('CategoriaCatalogo', $e->getMessage(), 'Modelo_Buscar');
             return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
     }
-private function Eliminar(): array
+
+    private function Eliminar(): array
     {
         try {
-            // CORRECCIÓN 1: Volvemos a usar 'id' genérico como lo espera tu ModeloBase
-            if (!$this->verificarExistencia('id', $this->id, 'categoria_catalogo', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'La categoría equipamiento no existe.');
+            // CORRECCIÓN 1: Ajustado a id_categoria
+            if (!$this->verificarExistencia('id_categoria', $this->id_categoria, 'categoria_catalogo', NULL)) {
+                return array('accion' => 'error', 'mensaje' => 'La categoría no existe.');
             }
             
-            // CORRECCIÓN 2: Aquí también usamos 'id' (Asegúrate de que la tabla 'atletas' exista)
-            if ($this->verificarExistencia('id', $this->id, 'catalogos', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'No se puede eliminar: la categoría tiene catalogos asociados.');
+            // CORRECCIÓN 2: Ajustado a la tabla catalogo según el diagrama
+            if ($this->verificarExistencia('id_categoria', $this->id_categoria, 'catalogo', NULL)) {
+                return array('accion' => 'error', 'mensaje' => 'No se puede eliminar: la categoría tiene artículos del catálogo asociados.');
             }
 
             $conex = $this->conex();
-            $sentencia = "DELETE FROM categoria_catalogo WHERE id_categoria = :id";
+            $sentencia = "DELETE FROM categoria_catalogo WHERE id_categoria = :id_categoria"; // Ajustado
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':id_categoria', $this->id_categoria); // Ajustado
             $stmt->execute();
             
-            return array('accion' => 'eliminar', 'mensaje' => 'Categoría equipamiento eliminada exitosamente.');
+            return array('accion' => 'eliminar', 'mensaje' => 'Categoría eliminada exitosamente.');
         } catch (Exception $e) {
-            logs('CategoriaEquipamiento', $e->getMessage(), 'Modelo');
-            return array('accion' => 'error', 'mensaje' => 'Hubo un error al eliminar la categoría equipamiento.');
+            logs('CategoriaCatalogo', $e->getMessage(), 'Modelo_Eliminar');
+            return array('accion' => 'error', 'mensaje' => 'Hubo un error al eliminar la categoría.');
         } finally {
             $conex = NULL;
         }
@@ -180,14 +176,15 @@ private function Eliminar(): array
     
     private function ValidarExpresiones(array $datos): void
     {
-        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
+        // Ajustado a id_categoria
+        if (!empty($datos['id_categoria']) && !preg_match('/^[0-9]+$/', $datos['id_categoria'])) {
             throw new Exception('Id inválido.');
         }
         if (!empty($datos['nombre']) && !preg_match('/^[a-zA-Z0-9\-\s]{2,30}$/', $datos['nombre'])) {
-            throw new Exception('Nombre de categoría equipamiento inválido.');
+            throw new Exception('Nombre de categoría inválido.');
         }
         if (!empty($datos['descripcion']) && !preg_match('/^[a-zA-Z0-9\-\s]{2,30}$/', $datos['descripcion'])) {
-            throw new Exception('Descripcion inválida.');
+            throw new Exception('Descripción inválida.');
         }
     }
-} 
+}
