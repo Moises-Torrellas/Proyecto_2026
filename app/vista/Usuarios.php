@@ -70,7 +70,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="detalle_card_icon"><i data-lucide="calendar"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Ultimo Ingreso</label>
-                                    <span><?= !empty($dato['ultimo_ingreso']) ? date('d/m/Y h:i A', strtotime($dato['ultimo_ingreso'])) : 'Sin registros' ?></span>
+                                    <span><?= !empty($dato['ultimo_ingreso']) ? date('d/m/Y h:i A', strtotime($dato['ultimo_ingreso'])) : 'Sin Ingresos Al Sistema' ?></span>
                                 </div>
                             </div>
                         </div>
@@ -188,7 +188,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                                         <div class="detalle_card_icon"><i data-lucide="calendar"></i></div>
                                                         <div class="detalle_card_txt">
                                                             <label>Ultimo Ingreso</label>
-                                                            <span><?= !empty($dato['ultimo_ingreso']) ? date('d/m/Y h:i A', strtotime($dato['ultimo_ingreso'])) : 'Sin registros' ?></span>
+                                                            <span><?= !empty($dato['ultimo_ingreso']) ? date('d/m/Y h:i A', strtotime($dato['ultimo_ingreso'])) : 'Sin Ingresos Al Sistema' ?></span>
                                                         </div>
                                                     </div>
                                                 </div>

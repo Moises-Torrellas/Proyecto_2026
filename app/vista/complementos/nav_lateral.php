@@ -137,7 +137,7 @@
                 <li class="nav_opciones">
                     <a type="button" href="Usuarios" class="opciones"><i class="opciones_i" data-lucide="users"></i> Usuarios</a>
                     <a type="button" href="Roles" class="opciones"><i class="opciones_i" data-lucide="user-lock"></i> Roles</a>
-                    <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="user-key"></i> Permisos</a>
+                    <a type="button" href="Permisos" class="opciones"><i class="opciones_i" data-lucide="user-key"></i> Permisos</a>
                     <a type="button" href="Modulos" class="opciones"><i class="opciones_i" data-lucide="component"></i> Modulos</a>
                     <a type="button" href="Bitacora" class="opciones "><i class="opciones_i" data-lucide="notebook"></i> Bitacora</a>
                     <a type="button" href="Respaldo" class="opciones "><i class="opciones_i" data-lucide="server-cog"></i> Mantenimiento BD</a>

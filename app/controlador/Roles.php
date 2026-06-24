@@ -24,15 +24,17 @@ $objModelo = new ModeloRoles();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudRoles($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
+    registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
-    
+
     $error_bd = '';
     if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
         $error_bd = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : '';
+    } else {
+        $registro = $respuesta['datos'] ?? [];
     }
-    
-    $variables = ['permisos' => $permisos, 'error_bd' => $error_bd];
+
+    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
     cargarVista($pagina, $variables);
 }
 
@@ -53,7 +55,7 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
         // Validaciones de permisos centralizadas en el switch
         switch ($accion) {
             case 'consultar':
-                consultarRolesData($obj);
+                consultarRolesData($obj, $permisos);
                 break;
             case 'buscar':
                 if (!$permisos['modificar']) throw new Exception('No tiene permisos para buscar roles.');
@@ -91,14 +93,25 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
     }
 }
 
-function consultarRolesData($obj): void
+function consultarRolesData($obj, $permisos): void
 {
-    $filtro['filtro'] = $_POST['filtro'] ?? '';
-    $respuesta = $obj->Consultar($filtro);
-    if(isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] ='Error al listar los representantes';
+    try {
+        $filtro['filtro'] = $_POST['filtro'] ?? '';
+        $respuesta = $obj->Consultar($filtro);
+
+        if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+            $mensajeError = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : $respuesta['mensaje'];
+            echo json_encode(['accion' => 'error', 'mensaje' => $mensajeError]);
+            return;
+        }
+
+        $registro = $respuesta['datos'] ?? [];
+        $solo_lista = true;
+        include(__DIR__ . '/../vista/Roles.php');
+    } catch (throwable $e) {
+        logs('Representantes', $e->getMessage(), 'Controlador_Consultar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
-    echo json_encode($respuesta);
 }
 
 
@@ -118,7 +131,8 @@ function buscarRolesData($obj): void
     }
 }
 
-function CargarPermisos($obj) : void{
+function CargarPermisos($obj): void
+{
     try {
         validar_requeridos(['id']);
         $idsProtegidos = [1, 2];
@@ -136,10 +150,15 @@ function CargarPermisos($obj) : void{
 function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['nombre']);
+        $requeridos = ['nombre'];
+        if (!empty($_POST['descripcion'])) {
+            $requeridos[] = 'descripcion';
+        }
+        validar_requeridos($requeridos);
 
         $datos = [
             'nombre' => $_POST['nombre'],
+            'descripcion'   => $_POST['descripcion'],
             'accion' => 'incluir'
         ];
 
@@ -165,12 +184,17 @@ function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
 function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['nombre', 'id']);
+        $requeridos = ['nombre','id'];
+        if (!empty($_POST['descripcion'])) {
+            $requeridos[] = 'descripcion';
+        }
+        validar_requeridos($requeridos);
 
         $datos = [
-            'id'             => $_POST['id'],
-            'nombre'         => $_POST['nombre'],
-            'accion'         => 'modificar'
+            'nombre' => $_POST['nombre'],
+            'descripcion'   => $_POST['descripcion'],
+            'id' => $_POST['id'],
+            'accion' => 'modificar'
         ];
 
         $resultado = $obj->procesarDatos($datos);
@@ -181,6 +205,7 @@ function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un rol registrado con este nombre.',
+                INVALID_ID => 'No existe el rol que intenta modificar.',
                 ASSOCIATES  => 'Uno de Los modulos que intenta registrar no existe o esta restringido.',
                 default          => 'Ocurrió un error inesperado en el registro del rol.'
             };

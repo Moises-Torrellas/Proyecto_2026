@@ -21,7 +21,7 @@ if (!class_exists($nombreClaseModelo)) {
 
 $objModelo = new ModeloUsuarios();
 
-if (/* comprobarAjax() && */!empty($_POST)) {
+if (comprobarAjax() &&!empty($_POST)) {
     manejarSolicitudUsuarios($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
     registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
@@ -44,10 +44,10 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
     // Centralizamos la variable global de permisos aquí
 
     try {
-        /* $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
             throw new Exception('Error de seguridad: Token inválido o expirado.');
-        } */
+        }
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
@@ -62,7 +62,7 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 break;
 
             case 'incluir':
-                //if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar usuarios.');
+                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar usuarios.');
                 incluirUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
 
