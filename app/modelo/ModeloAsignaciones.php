@@ -66,17 +66,24 @@ class ModeloAsignaciones extends Conexion
         try {
             $conex = $this->conex();
 
-            // Consulta corregida usando p_nombre, p_apellidos y codigo_atleta
+            // Consulta blindada con la lógica de identidad de Atletas
             $sql = "SELECT a.id_asignacion, 
                            DATE_FORMAT(a.fecha_asignacion, '%d/%m/%Y %H:%i') as fecha_vista,
                            a.fecha_asignacion as fecha_real,
                            a.estatus as estatus_asignacion,
                            a.codigo_atleta,
                            CONCAT(at.p_nombre, ' ', at.p_apellidos) as atleta,
+                           CASE 
+                               WHEN ia.numero_doc IS NOT NULL AND ia.numero_doc <> '' THEN ia.numero_doc
+                               ELSE CONCAT('R-', r.cedula)
+                           END AS doc_identidad,
                            c.nombre as articulo,
                            a.codigo_articulo
                     FROM asignaciones a
                     INNER JOIN atletas at ON a.codigo_atleta = at.codigo_atleta
+                    LEFT JOIN identidad_atleta ia ON at.codigo_atleta = ia.codigo_atleta
+                    LEFT JOIN atleta_representante ar ON at.codigo_atleta = ar.codigo_atleta
+                    LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
                     INNER JOIN articulos_inventario e ON a.codigo_articulo = e.codigo_articulo
                     INNER JOIN catalogo c ON e.id_catalogo = c.id_catalogo
                     ORDER BY at.p_nombre ASC, a.fecha_asignacion DESC";
@@ -92,7 +99,8 @@ class ModeloAsignaciones extends Conexion
                     $agrupado[$id] = [
                         'codigo_atleta' => $id,
                         'nombre_completo' => $fila['atleta'],
-                        'asignaciones' => [] // Se removió doc_identidad por no existir en la tabla atletas
+                        'doc_identidad' => $fila['doc_identidad'] ?? 'Sin CI', // Aquí guardamos la cédula
+                        'asignaciones' => []
                     ];
                 }
                 $agrupado[$id]['asignaciones'][] = [
@@ -113,7 +121,6 @@ class ModeloAsignaciones extends Conexion
             $conex = null;
         }
     }
-
     private function IncluirAsignacion(): array
     {
         $conex = null;

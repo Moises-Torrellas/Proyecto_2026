@@ -82,10 +82,10 @@ function consultar($obj, $permisos): void {
 function MultiConsulta(): void {
     try {
         $modeloAtletas = new ModeloAtletas();
-        $modeloArticulos = new ModeloArticulosInventario(); 
-
-        $respAtletas = $modeloAtletas->Consultar(); 
-        $respEquip = $modeloArticulos->ConsultarArticulosLibres(); 
+        $modeloArticulos = new ModeloArticulosInventario();
+        
+        $respAtletas = $modeloAtletas->ConsultarAtletas(); 
+        $respEquip = $modeloArticulos->ConsultarArticulosLibres();
 
         echo json_encode([
             'accion'  => 'MultiConsulta',

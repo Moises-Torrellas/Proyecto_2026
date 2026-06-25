@@ -26,7 +26,7 @@
                         </div>
                         <div class="listado_info_base">
                             <span class="listado_titulo"><?= htmlspecialchars($atleta['nombre_completo']) ?></span>
-                            <span class="listado_subtitulo">Código Atleta: <?= htmlspecialchars($atleta['codigo_atleta']) ?></span>
+                            <span class="listado_subtitulo">CI: <?= htmlspecialchars($atleta['doc_identidad']) ?></span>
                         </div>
                     </div>
 

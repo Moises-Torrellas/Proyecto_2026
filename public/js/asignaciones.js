@@ -154,23 +154,32 @@ function poblarCombos(atletas, equipos) {
     comboAtleta.find('option:not(:first)').remove();
     comboEquipo.find('option:not(:first)').remove();
 
+    // 1. Llenado del select de Atletas
     if (atletas && atletas.length > 0) {
         atletas.forEach(a => {
-            // Ajustado para leer correctamente las propiedades físicas de tu tabla Atletas
-            let idAtletaVal = a.codigo_atleta || a.id_atleta;
-            let pNombre = a.p_nombre || a.nombres || '';
-            let pApellido = a.p_apellidos || a.apellidos || '';
+            let primerNombre = a.p_nombre || '';
+            let primerApellido = a.p_apellidos || '';
+            let cedula = a.documento_identidad || 'N/A'; 
+            let categoria = a.categoria || 'Sin Categoría'; 
             
-            if(a.estatus == 1) {
-                comboAtleta.append(`<option value="${idAtletaVal}">${pNombre} ${pApellido} (Código: ${idAtletaVal})</option>`);
-            }
+            let textoMostrar = `${primerNombre} ${primerApellido} - CI: ${cedula} - ${categoria}`;
+            let idValue = a.codigo_atleta || a.id_atleta;
+            comboAtleta.append(`<option value="${idValue}">${textoMostrar}</option>`);
         });
     }
 
-    if (equipos && equipos.length > 0) {
+    // 2. Llenado del select de Equipamiento (¡Aquí está el cambio!)
+if (equipos && equipos.length > 0) {
+        console.log("Datos de equipos recibidos del servidor:", equipos); // Esto imprimirá el contenido real en la consola
+        
         equipos.forEach(e => {
             let nombreMostrar = e.nombre_catalogo || e.articulo || e.nombre || ("Artículo " + e.codigo_articulo);
-            let codigoClub = e.codigo_club ? ` | Cód: ${e.codigo_club}` : "";
+            
+            // CAMBIO DE DIAGNÓSTICO: Si e.codigo_club no existe o está vacío, mostrará un aviso explícito
+            let codigoClub = (e.codigo_club && e.codigo_club.trim() !== "") 
+                ? ` - ${e.codigo_club}` 
+                : " - (Sin código en BD)";
+            
             comboEquipo.append(`<option value="${e.codigo_articulo}">${nombreMostrar}${codigoClub}</option>`);
         });
     }
@@ -178,7 +187,6 @@ function poblarCombos(atletas, equipos) {
     comboAtleta.trigger('change');
     comboEquipo.trigger('change');
 }
-
 function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
     contenedor.html(htmlRecibido);
