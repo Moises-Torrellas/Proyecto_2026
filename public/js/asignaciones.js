@@ -26,9 +26,9 @@ function busqueda() {
 }
 
 $(document).ready(function () {
-    inicializarPaginador(); 
-    MultiConsulta();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador(); 
     consultar();
+    MultiConsulta();
     
     if (typeof Validacion === 'function') {
         Validacion("fecha_asignacion", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "btn_guardar");
@@ -49,15 +49,31 @@ $(document).ready(function () {
     $('#btn_guardar').on('click', function () {
         let accion = $(this).data("accion");
         
-        if (validarEnvio(accion)) {
-            let textoConfirmacion = accion === "incluir" 
-                ? '¿Está seguro que quiere registrar esta asignación?' 
-                : '¿Está seguro que quiere modificar esta asignación?';
+        if (accion === "incluir" || accion === "modificar") {
+            if (validarEnvio(accion)) {
+                let textoConfirmacion = accion === "incluir" 
+                    ? '¿Está seguro que quiere registrar esta asignación?' 
+                    : '¿Está seguro que quiere modificar esta asignación?';
 
-            confirmar(textoConfirmacion, function (confirmado) {
+                confirmar(textoConfirmacion, function (confirmado) {
+                    if (confirmado) {
+                        var datos = new FormData($('#f')[0]);
+                        datos.append('accion', accion);
+                        enviaAjax(datos);
+                    }
+                });
+            }
+        }
+        // NUEVA ESTRUCTURA: Procesar la acción de generar reporte desde el modal
+        else if (accion === "generar") {
+            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
                 if (confirmado) {
+                    if (typeof abrirAlertaEspara === 'function') {
+                        abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                    }
                     var datos = new FormData($('#f')[0]);
-                    datos.append('accion', accion);
+                    datos.append('accion', 'generar');
+                    datos.append('filtro', $('#busqueda').val());
                     enviaAjax(datos);
                 }
             });
@@ -76,12 +92,30 @@ $(document).ready(function () {
         
         $('#codigo_atleta').val(null).trigger('change');
         $('#codigo_articulo').val(null).trigger('change');
+
+        // Asegurar visibilidad de campos de inserción y ocultar los de reportes
+        $('#row_atleta').show();
+        $('#col_articulo').show();
+        $('#col_fecha_fin').hide();
+        $('#row_anulados').hide();
         
         abrirModal(); 
     });
 
-    $('#generar').on('click', function () {
-        window.open('?url=Reportes/Asignaciones', '_blank'); 
+    // NUEVA ESTRUCTURA: Configuración del botón para abrir criterios de Reporte
+    $("#generar").on("click", function () {
+        limpia();
+        $("#btn_guardar").data("accion", "generar");
+        $("#btn_guardar").text("Generar PDF");
+        $("#titulo_modal").text("Generar Reporte");
+
+        // Ocultamos elementos de registro, mostramos selectores de rango y filtros del reporte
+        $('#row_atleta').hide();
+        $('#col_articulo').hide();
+        $('#col_fecha_fin').show();
+        $('#row_anulados').show();
+
+        abrirModal();
     });
 
     $('#ayuda').on('click', function () {
@@ -132,6 +166,12 @@ function editar(id_asignacion, codigo_atleta, codigo_articulo, fecha) {
     }
     $("#codigo_articulo").val(codigo_articulo).trigger('change');
     
+    // Configuración visual de edición
+    $('#row_atleta').show();
+    $('#col_articulo').show();
+    $('#col_fecha_fin').hide();
+    $('#row_anulados').hide();
+
     abrirModal();
 }
 
@@ -154,7 +194,6 @@ function poblarCombos(atletas, equipos) {
     comboAtleta.find('option:not(:first)').remove();
     comboEquipo.find('option:not(:first)').remove();
 
-    // 1. Llenado del select de Atletas
     if (atletas && atletas.length > 0) {
         atletas.forEach(a => {
             let primerNombre = a.p_nombre || '';
@@ -168,18 +207,10 @@ function poblarCombos(atletas, equipos) {
         });
     }
 
-    // 2. Llenado del select de Equipamiento (¡Aquí está el cambio!)
-if (equipos && equipos.length > 0) {
-        console.log("Datos de equipos recibidos del servidor:", equipos); // Esto imprimirá el contenido real en la consola
-        
+    if (equipos && equipos.length > 0) {
         equipos.forEach(e => {
             let nombreMostrar = e.nombre_catalogo || e.articulo || e.nombre || ("Artículo " + e.codigo_articulo);
-            
-            // CAMBIO DE DIAGNÓSTICO: Si e.codigo_club no existe o está vacío, mostrará un aviso explícito
-            let codigoClub = (e.codigo_club && e.codigo_club.trim() !== "") 
-                ? ` - ${e.codigo_club}` 
-                : " - (Sin código en BD)";
-            
+            let codigoClub = (e.codigo_club && e.codigo_club.trim() !== "") ? ` - ${e.codigo_club}` : " - (Sin código en BD)";
             comboEquipo.append(`<option value="${e.codigo_articulo}">${nombreMostrar}${codigoClub}</option>`);
         });
     }
@@ -187,6 +218,7 @@ if (equipos && equipos.length > 0) {
     comboAtleta.trigger('change');
     comboEquipo.trigger('change');
 }
+
 function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
     contenedor.html(htmlRecibido);
@@ -219,21 +251,38 @@ function enviaAjax(datos) {
             try {
                 var lee = typeof respuesta === 'object' ? respuesta : JSON.parse(respuesta.substring(respuesta.indexOf('{')));
 
-                if (lee.accion == "MultiConsulta") {
+                // NUEVA ESTRUCTURA: Interceptar la respuesta de generación de PDF
+                if (lee.accion === "reporte") {
+                    if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
+                    cerrarModal();
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
+                } 
+                else if (lee.accion == "MultiConsulta") {
                     poblarCombos(lee.atletas, lee.equipos);
-                } else if (lee.accion == "incluir" || lee.accion == "modificar" || lee.accion == "exito") {
+                } else if (lee.accion == "incluir" || lee.accion == "modificar" || lee.accion == "exito" || lee.accion == "anular") {
                     consultar();
                     MultiConsulta();
                     cerrarModal();
                     muestraMensaje("success", 2000, "Operación Exitosa", lee.mensaje);
                 } else if (lee.accion == "error") {
+                    if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
                     muestraMensaje("error", 3000, "Error", lee.mensaje || lee.codigo);
                 }
             } catch (e) {
                 console.error("Error procesando JSON", e, respuesta);
+                if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
             }
         },
         error: function (request, status, err) {
+            if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
             muestraMensaje("error", 2000, "Error", "ERROR: " + err);
         }
     });

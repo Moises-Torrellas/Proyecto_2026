@@ -12,6 +12,14 @@ class ModeloAsignaciones extends Conexion
     private $codigo_articulo;
     private $fecha_asignacion;
     private $estatus;
+    
+    // Variables para los filtros de búsqueda y reportes
+    private $filtro;
+    private $fecha_inicio;
+    private $fecha_fin;
+    private $mostrar_inactivos;
+    private $accion_actual; // Para saber si estamos listando normal o generando reporte
+
     private $objArticulos; // Instancia del modelo ArticulosInventario
 
     public function __construct()
@@ -23,7 +31,10 @@ class ModeloAsignaciones extends Conexion
             'codigo_atleta'    => 'codigo_atleta',
             'codigo_articulo'  => 'codigo_articulo',
             'fecha_asignacion' => 'fecha_asignacion',
-            'estatus'          => 'estatus'
+            'estatus'          => 'estatus',
+            'filtro'           => 'filtro',
+            'fecha_f'          => 'fecha_f',
+            'anulados'         => 'anulados'
         ];
 
         $this->llavePrimaria = 'id_asignacion';
@@ -43,16 +54,25 @@ class ModeloAsignaciones extends Conexion
 
         $this->ValidarExpresiones($datos);
 
+        $accion = $datos['accion'] ?? null;
+        $this->accion_actual = $accion;
+
+        // Mapeo de datos principales
         $this->id_asignacion    = $datos['id_asignacion'] ?? null;
         $this->codigo_atleta    = $datos['codigo_atleta'] ?? null;
         $this->codigo_articulo  = $datos['codigo_articulo'] ?? null;
         $this->fecha_asignacion = $datos['fecha_asignacion'] ?? null;
         $this->estatus          = $datos['estatus'] ?? null;
 
-        $accion = $datos['accion'] ?? null;
+        // Mapeo de filtros para reportes/búsquedas
+        $this->filtro            = $datos['filtro'] ?? '';
+        $this->fecha_inicio      = $datos['fecha_asignacion'] ?? ''; // En reportes, la fecha inicio viaja por aquí
+        $this->fecha_fin         = $datos['fecha_f'] ?? '';
+        $this->mostrar_inactivos = $datos['anulados'] ?? 0;
 
         return match ($accion) {
             'consultar' => $this->ConsultarAsignaciones(),
+            'generar'   => $this->ConsultarAsignaciones(), // Reutilizamos la consulta con los filtros aplicados
             'incluir'   => $this->IncluirAsignacion(),
             'modificar' => $this->ModificarAsignacion(),
             'anular'    => $this->AnularAsignacion(),
@@ -66,7 +86,7 @@ class ModeloAsignaciones extends Conexion
         try {
             $conex = $this->conex();
 
-            // Consulta blindada con la lógica de identidad de Atletas
+            // Construcción dinámica de la consulta SQL (WHERE 1=1 permite ir sumando "AND" fácilmente)
             $sql = "SELECT a.id_asignacion, 
                            DATE_FORMAT(a.fecha_asignacion, '%d/%m/%Y %H:%i') as fecha_vista,
                            a.fecha_asignacion as fecha_real,
@@ -78,6 +98,7 @@ class ModeloAsignaciones extends Conexion
                                ELSE CONCAT('R-', r.cedula)
                            END AS doc_identidad,
                            c.nombre as articulo,
+                           e.codigo_club,
                            a.codigo_articulo
                     FROM asignaciones a
                     INNER JOIN atletas at ON a.codigo_atleta = at.codigo_atleta
@@ -86,12 +107,48 @@ class ModeloAsignaciones extends Conexion
                     LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
                     INNER JOIN articulos_inventario e ON a.codigo_articulo = e.codigo_articulo
                     INNER JOIN catalogo c ON e.id_catalogo = c.id_catalogo
-                    ORDER BY at.p_nombre ASC, a.fecha_asignacion DESC";
+                    WHERE 1=1";
+
+            // 1. Filtro del buscador rápido superior
+            if (!empty($this->filtro)) {
+                $sql .= " AND (at.p_nombre LIKE :filtro OR at.p_apellidos LIKE :filtro OR ia.numero_doc LIKE :filtro OR c.nombre LIKE :filtro)";
+            }
+
+            // 2. Filtros del Modal de Reportes
+            if (!empty($this->codigo_atleta)) {
+                $sql .= " AND a.codigo_atleta = :codigo_atleta";
+            }
+            if (!empty($this->codigo_articulo)) {
+                $sql .= " AND a.codigo_articulo = :codigo_articulo";
+            }
+            if (!empty($this->fecha_inicio) && !empty($this->fecha_fin)) {
+                $sql .= " AND DATE(a.fecha_asignacion) BETWEEN :fecha_inicio AND :fecha_fin";
+            } else if (!empty($this->fecha_inicio)) {
+                $sql .= " AND DATE(a.fecha_asignacion) >= :fecha_inicio";
+            } else if (!empty($this->fecha_fin)) {
+                $sql .= " AND DATE(a.fecha_asignacion) <= :fecha_fin";
+            }
+
+            // 3. Filtrar inactivos (Solo si estamos en el modal de reporte y NO marcaron la casilla de inactivos)
+            if ($this->accion_actual === 'generar' && empty($this->mostrar_inactivos)) {
+                $sql .= " AND a.estatus = 1";
+            }
+
+            $sql .= " ORDER BY at.p_nombre ASC, a.fecha_asignacion DESC";
 
             $stmt = $conex->prepare($sql);
+
+            // Inyección de parámetros (Bindeo seguro)
+            if (!empty($this->filtro)) $stmt->bindValue(':filtro', '%' . $this->filtro . '%');
+            if (!empty($this->codigo_atleta)) $stmt->bindValue(':codigo_atleta', $this->codigo_atleta);
+            if (!empty($this->codigo_articulo)) $stmt->bindValue(':codigo_articulo', $this->codigo_articulo);
+            if (!empty($this->fecha_inicio)) $stmt->bindValue(':fecha_inicio', $this->fecha_inicio);
+            if (!empty($this->fecha_fin)) $stmt->bindValue(':fecha_fin', $this->fecha_fin);
+
             $stmt->execute();
             $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Agrupación de datos para la vista de acordeón / tablas de reporte
             $agrupado = [];
             foreach ($datos as $fila) {
                 $id = $fila['codigo_atleta'];
@@ -99,7 +156,7 @@ class ModeloAsignaciones extends Conexion
                     $agrupado[$id] = [
                         'codigo_atleta' => $id,
                         'nombre_completo' => $fila['atleta'],
-                        'doc_identidad' => $fila['doc_identidad'] ?? 'Sin CI', // Aquí guardamos la cédula
+                        'doc_identidad' => $fila['doc_identidad'] ?? 'Sin CI',
                         'asignaciones' => []
                     ];
                 }
@@ -107,6 +164,7 @@ class ModeloAsignaciones extends Conexion
                     'id_asignacion' => $fila['id_asignacion'],
                     'codigo_articulo' => $fila['codigo_articulo'],
                     'articulo' => $fila['articulo'],
+                    'codigo_club' => $fila['codigo_club'],
                     'fecha_vista' => $fila['fecha_vista'],
                     'fecha_real' => $fila['fecha_real'],
                     'estatus' => $fila['estatus_asignacion']
@@ -121,6 +179,7 @@ class ModeloAsignaciones extends Conexion
             $conex = null;
         }
     }
+
     private function IncluirAsignacion(): array
     {
         $conex = null;
@@ -128,12 +187,10 @@ class ModeloAsignaciones extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            // Corrección: Validar usando la columna 'codigo_atleta'
             if (!$this->verificarExistencia('codigo_atleta', $this->codigo_atleta, 'atletas', null)) {
                 return ['accion' => 'error', 'codigo' => 'ERR_ATLETA_NO_EXISTE'];
             }
 
-            // Validar existencia y disponibilidad en artículos_inventario
             $stmtCheck = $conex->prepare("SELECT estatus FROM articulos_inventario WHERE codigo_articulo = ? FOR UPDATE");
             $stmtCheck->execute([$this->codigo_articulo]);
             $estadoEquipo = $stmtCheck->fetchColumn();
@@ -141,12 +198,10 @@ class ModeloAsignaciones extends Conexion
             if ($estadoEquipo === false) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_EXISTE'];
             if ($estadoEquipo != 1) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_OCUPADO'];
 
-            // Insertar asignación activa (estatus = 1)
             $sqlInsert = "INSERT INTO asignaciones (codigo_atleta, codigo_articulo, fecha_asignacion, estatus) VALUES (?, ?, ?, 1)";
             $stmtInsert = $conex->prepare($sqlInsert);
             $stmtInsert->execute([$this->codigo_atleta, $this->codigo_articulo, $this->fecha_asignacion]);
 
-            // Cambiar estatus del artículo a "En Uso" (2)
             $this->objArticulos->CambiarEstatus($this->codigo_articulo, 2, $conex);
 
             $conex->commit();
@@ -175,7 +230,6 @@ class ModeloAsignaciones extends Conexion
             $stmtOld->execute([$this->id_asignacion]);
             $viejoEquipo = $stmtOld->fetchColumn();
 
-            // Si cambiaron el artículo, liberamos el viejo y ocupamos el nuevo
             if ($viejoEquipo != $this->codigo_articulo) {
                 $stmtCheck = $conex->prepare("SELECT estatus FROM articulos_inventario WHERE codigo_articulo = ? FOR UPDATE");
                 $stmtCheck->execute([$this->codigo_articulo]);
@@ -214,11 +268,9 @@ class ModeloAsignaciones extends Conexion
             $stmtCheck->execute([$this->id_asignacion]);
             $codigo_articulo_actual = $stmtCheck->fetchColumn();
 
-            // Cambiar el estatus de la asignación a inactivo (0)
             $stmtAnular = $conex->prepare("UPDATE asignaciones SET estatus = 0 WHERE id_asignacion = ?");
             $stmtAnular->execute([$this->id_asignacion]);
 
-            // Liberamos el artículo (estatus = 1)
             if ($codigo_articulo_actual !== false) {
                 $this->objArticulos->CambiarEstatus($codigo_articulo_actual, 1, $conex);
             }
@@ -264,6 +316,9 @@ class ModeloAsignaciones extends Conexion
         }
         if (!empty($datos['fecha_asignacion']) && !preg_match('/^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2})?)?$/', $datos['fecha_asignacion'])) {
             throw new Exception('Formato de fecha inválido.');
+        }
+        if (!empty($datos['fecha_f']) && !preg_match('/^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2})?)?$/', $datos['fecha_f'])) {
+            throw new Exception('Formato de fecha de fin inválido.');
         }
     }
 }
