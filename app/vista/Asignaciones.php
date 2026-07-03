@@ -26,7 +26,7 @@
                         </div>
                         <div class="listado_info_base">
                             <span class="listado_titulo"><?= htmlspecialchars($atleta['nombre_completo']) ?></span>
-                            <span class="listado_subtitulo">Código Atleta: <?= htmlspecialchars($atleta['codigo_atleta']) ?></span>
+                            <span class="listado_subtitulo">CI: <?= htmlspecialchars($atleta['doc_identidad']) ?></span>
                         </div>
                     </div>
 
@@ -61,7 +61,7 @@
 
                         <div class="lista_sub_items">
                             <?php foreach ($atleta['asignaciones'] as $asignacion) :
-                                // Lógica de estados simplificada
+                                // Lógica de estados restaurada a tu vista original
                                 $esActivo = false;
                                 if ($asignacion['estatus'] == 0) {
                                     $textoEstatus = 'Inactiva / Devuelta';
@@ -154,7 +154,9 @@
                         </div>
 
                         <div class="botones">
-                            <button class="btn btn_azul" id="btn_nuevo">Nueva Asignación</button>
+                            <?php if (!empty($permisos['registrar'])) : ?>
+                                <button class="btn btn_azul" id="btn_nuevo">Nueva Asignación</button>
+                            <?php endif; ?>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                         </div>
                     </div>
@@ -178,7 +180,7 @@
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id_asignacion" name="id_asignacion">
 
-                    <div class="row">
+                    <div class="row" id="row_atleta">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select class="formulario select2" id="codigo_atleta" name="codigo_atleta" required>
@@ -190,7 +192,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="colum">
+                        <div class="colum" id="col_articulo">
                             <div class="caja_formulario">
                                 <select class="formulario select2" id="codigo_articulo" name="codigo_articulo" required>
                                     <option value="" selected disabled>Seleccione un artículo...</option>
@@ -198,10 +200,32 @@
                                 <label for="codigo_articulo" class="titulo_formulario">Artículo del Inventario</label>
                             </div>
                         </div>
+
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="date" class="formulario" id="fecha_asignacion" name="fecha_asignacion" required>
-                                <label for="fecha_asignacion" class="titulo_formulario">Fecha de Asignación</label>
+                                <label for="fecha_asignacion" id="lbl_fecha" class="titulo_formulario">Fecha de Asignación</label>
+                            </div>
+                        </div>
+
+                        <!-- Columna de Fecha Fin Oculta (Solo para el reporte) -->
+                        <div class="colum" id="col_fecha_fin" style="display: none;">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_f" name="fecha_f">
+                                <label for="fecha_f" class="titulo_formulario">Fecha Fin</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fila de Checkbox Oculta (Solo para el reporte) -->
+                    <div class="row" id="row_anulados" style="display: none;">
+                        <div class="colum">
+                            <div class="caja_formulario" style="text-align: center;">
+                                <label class="titulo_formulario">Incluir Asignaciones Inactivas o Devueltas en el Reporte</label>
+                                <label class="checkbox-container" style="justify-content: center; margin-top: 10px;">
+                                    <input type="checkbox" id="anulados" name="anulados" class="checkbox" value="1">
+                                    <span class="custom-checkbox"></span>
+                                </label>
                             </div>
                         </div>
                     </div>

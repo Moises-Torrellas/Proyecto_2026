@@ -4,6 +4,20 @@ $(document).ready(function () {
     cargarCombos();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
     
+    // Inicializar Select2 para el Catálogo
+    $('#id_catalogo').select2({
+        placeholder: "Seleccione un artículo...",
+        allowClear: true,
+        dropdownParent: $('.contenedor_modal')
+    });
+    
+    // Inicializar Select2 para el Estado Físico
+    $('#id_estado').select2({
+        placeholder: "Seleccione un estado...",
+        allowClear: true,
+        dropdownParent: $('.contenedor_modal')
+    });
+
     $('#busqueda').off('keyup').on('keyup', function () {
         clearTimeout(timerBusqueda);
         let val = $(this).val();
@@ -38,7 +52,6 @@ $(document).ready(function () {
     });
 
     $('#generar').on('click', function () {
-        // Ajusta la ruta a como la manejes en tu enrutador
         window.open('?url=Reportes/ArticulosInventario', '_blank'); 
     });
 
@@ -146,4 +159,17 @@ function enviaAjax(datos) {
             }
         }
     });
+}
+
+function toggleDetalles(elemento) {
+    $(elemento).next('.listado_detalle_oculto').slideToggle();
+    $(elemento).find('.icono_flecha_detalle').toggleClass('rotar_flecha');
+}
+
+function limpia() {
+    if($('#f')[0]) $('#f')[0].reset();
+    // Limpia los buscadores select2 y regresa al estado placeholder
+    $('.select2').val(null).trigger('change');
+    $("#btn_guardar").attr("data-accion", "incluir");
+    $("#btn_guardar").text("Guardar");
 }
