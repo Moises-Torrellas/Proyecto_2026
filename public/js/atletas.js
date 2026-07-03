@@ -107,19 +107,19 @@ $(document).ready(function () {
     $('#representante').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
-        dropdownParent: $('.contenedor_modal'),
+        dropdownParent: $('#contenedor_modal'),
     });
 
     $('#posicion').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
-        dropdownParent: $('.contenedor_modal'),
+        dropdownParent: $('#contenedor_modal'),
     });
 
     $('#categoria').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
-        dropdownParent: $('.contenedor_modal'),
+        dropdownParent: $('#contenedor_modal'),
     });
 
     $("#incluir").on("click", function () {

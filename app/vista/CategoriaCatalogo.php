@@ -3,7 +3,7 @@
 
 <head>
     <?php include('complementos/head.php'); ?>
-    <title>Categorías del Catálogo</title>
+    <title>Categorías de Catálogo</title>
 </head>
 
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
@@ -17,7 +17,7 @@
                 <div class="contenedor_funciones">
                     <div class="contenedor_opciones">
                         <div class="contenedor_titulo">
-                            <h2 class="titulo_pagina" id="titulo">Categorías del Catálogo</h2>
+                            <h2 class="titulo_pagina" id="titulo">Categorías de Catálogo</h2>
                         </div>
                         <div class="contenedor_busqueda">
                             <input type="text" placeholder="Buscar categoría..." autocomplete="off" id="busqueda">

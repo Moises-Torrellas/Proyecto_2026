@@ -18,10 +18,10 @@ function busqueda() {
 }
 
 $(document).ready(function () {
-    consultar();
+    inicializarPaginador();
 
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
-
+    Validacion("descripcion", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/, "Solo letras entre 3 y 100 caracteres", "proceso");
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
         if (accion == "incluir") {
@@ -170,6 +170,11 @@ function validarEnvio() {
         muestraMensaje("error", 2000, "Error", "Solo puede ingresar letra, Maximo 30 caracteres");
         return false;
     }
+    else if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/,
+        $('#descripcion'), $("#descripcion_spam"), "Solo letras entre 3 y 100 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Tiene que ingresar una descripcion valida");
+        return false;
+    }
     else if (accion === "permisos") {
         return true;
     }
@@ -249,6 +254,7 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Rol");
     $('#id').val(datos[0].id_rol);
     $('#nombre').val(datos[0].nombre_rol);
+    $('#descripcion').val(datos[0].descripcion);
     $('#row_nombre').show();
     $('#row_modulo').hide();
     $('#row_modulo').hide();
@@ -294,39 +300,16 @@ function CargarPermisos(id){
     enviaAjax(datos);
 }
 
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
-    } else {
-        datos.forEach(dato => {
-            let registro = `
-                <div class="listado_contenedor_grupal" style="cursor: auto;">
-                    <div class="listado_item">
-                    <div class="listado_col_datos">
-                        <div class="listado_dato_grupo">
-                            <small>Nombre</small>
-                            <span>${dato.nombre_rol}</span>
-                        </div>
-                    </div>
+    // Inyectamos directamente el bloque HTML estructurado que procesó el servidor
+    contenedor.html(htmlRecibido);
 
-                    <div class="listado_col_acciones">
-                        <button class="btn_t cbt_m" onclick="CargarPermisos(${dato.id_rol})" data-tippy-content="Permisos"><i class="fi fi-sr-user-permissions"></i></button>
-                        <button class="btn_t cbt_v" onclick="buscar(${dato.id_rol})" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                        <button class="btn_t cbt_r" onclick="eliminar(${dato.id_rol})" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                    </div>
-                </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-
+    // Reactivamos las librerías visuales y los comportamientos estéticos
     if (typeof lucide !== 'undefined') lucide.createIcons();
-    inicializarPaginador();
-    tippy('[data-tippy-content]', { theme: 'light' });
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function escapeHTML(texto) {
@@ -355,12 +338,14 @@ function enviaAjax(datos) {
         },
         timeout: 120000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                }
-                else if (lee.accion == "buscar") {
+                
+                if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }
                 else if (lee.accion == "CargarPermisos") {

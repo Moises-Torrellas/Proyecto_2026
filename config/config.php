@@ -1,6 +1,6 @@
 <?php
 /* Base de Datos */
-define('_DB_NAME_SG_', 'bds');
+define('_DB_NAME_SG_', 'bds2');
 define('_DB_HOST_SG_', 'localhost');
 define('_DB_USER_SG_', 'root');
 define('_DB_PASS_SG_', '');

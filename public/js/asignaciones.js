@@ -37,13 +37,13 @@ $(document).ready(function () {
     $('#codigo_atleta').select2({
         placeholder: "Seleccione un atleta...",
         allowClear: true,
-        dropdownParent: $('.contenedor_modal')
+        dropdownParent: $('#contenedor_modal')
     });
     
     $('#codigo_articulo').select2({
         placeholder: "Seleccione un artículo...",
         allowClear: true,
-        dropdownParent: $('.contenedor_modal')
+        dropdownParent: $('#contenedor_modal')
     });
 
     $('#btn_guardar').on('click', function () {

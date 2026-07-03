@@ -366,13 +366,15 @@ function inicializarPaginador() {
 
 
 function muestraMensaje(icono, tiempo, titulo, mensaje) {
-    Swal.fire({
+    // ¡Este return es obligatorio para que funcione el .then()!
+    return Swal.fire({
         icon: icono,
         title: titulo,
         html: mensaje,
         showConfirmButton: true,
         confirmButtonText: 'Entendido',
         confirmButtonColor: (icono === 'error') ? "#d30000" : "#00a200",
+        timer: tiempo, 
         customClass: {
             popup: "mi-popup",
             title: "mi-titulo",

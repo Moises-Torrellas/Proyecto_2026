@@ -199,14 +199,14 @@ class ModeloUsuarios extends Conexion
                             `apellidoUsuario` = :apellido,
                             `foto` = :foto,
                             `telefonoUsuario` = :telefono,
-                            `contraseña` = :contra,
+                            `pass_hash` = :contra,
                             `correo` = :correo,
                             `id_rol` = :rol,
                             `estatus` = 1 
                             WHERE cedulaUsuario = :cedula";
             } else {
                 $sql = "INSERT INTO `usuarios`
-                            (`cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`,`foto`, `telefonoUsuario`, `contraseña`,`correo`, `id_rol`, `estatus`) 
+                            (`cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`,`foto`, `telefonoUsuario`, `pass_hash`,`correo`, `id_rol`, `estatus`) 
                             VALUES 
                             (:cedula, :nombre, :apellido,:foto, :telefono, :contra, :correo, :rol, 1)";
             }
@@ -228,14 +228,14 @@ class ModeloUsuarios extends Conexion
                 ? $conex->query("SELECT idUsuario FROM usuarios WHERE cedulaUsuario = '{$this->cedula}'")->fetchColumn()
                 : $conex->lastInsertId();
 
-            $stmtDel = $conex->prepare("DELETE FROM permisos_usuarios WHERE idUsuario = :idUsuario");
+           /*  $stmtDel = $conex->prepare("DELETE FROM permisos_usuarios WHERE idUsuario = :idUsuario");
             $stmtDel->execute([':idUsuario' => $idUsuario]);
 
             $sqlCopy = "INSERT INTO permisos_usuarios (idUsuario, id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros)
                         SELECT :idUsuario, id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros
                         FROM permisos_roles WHERE id_rol = :idRol";
             $stmtCopy = $conex->prepare($sqlCopy);
-            $stmtCopy->execute([':idUsuario' => $idUsuario, ':idRol' => $this->rol]);
+            $stmtCopy->execute([':idUsuario' => $idUsuario, ':idRol' => $this->rol]); */
 
             $conex->commit();
             return ['accion' => 'exito'];
@@ -303,7 +303,7 @@ class ModeloUsuarios extends Conexion
                         `id_rol` = :rol";
 
             if ($this->actualizar_contraseña) {
-                $sql .= ", `contraseña` = :contra";
+                $sql .= ", `pass_hash` = :contra";
             }
 
             $sql .= " WHERE idUsuario = :id";

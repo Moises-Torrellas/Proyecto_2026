@@ -250,7 +250,7 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
     datos.forEach(dato => {
         let textoMostrar = "";
         if (idSelect === 'id_atleta' && campo1 && campo2 && campo3 && campo4) {
-            textoMostrar = `${escapeHTML(dato[campo1])} ${escapeHTML(dato[campo2])} - ${escapeHTML(dato[campo3])}/${escapeHTML(dato[campo4])}`;
+            textoMostrar = `${escapeHTML(dato[campo1])} ${escapeHTML(dato[campo2])} - ${escapeHTML(dato[campo3])} / ${escapeHTML(dato[campo4])}`;
         } else if (idSelect === 'id_concepto' && campo1 && campo2) {
             textoMostrar = `${escapeHTML(dato[campo1])} - ${dato[campo2]}`;
         }

@@ -44,6 +44,7 @@ if (isset($solo_lista) && $solo_lista === true) :
     <?php endif;
         exit(); ?>
 <?php endif; ?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -184,7 +185,7 @@ if (isset($solo_lista) && $solo_lista === true) :
         </div>
     </section>
     <script src="js/main.js"></script>
-    <script src="js/catalogos.js?v=<?= time(); ?>"></script>
+    <script src="js/catalogo.js"></script>
     <?php include('complementos/mensajeError.php'); ?>
 </body>
 

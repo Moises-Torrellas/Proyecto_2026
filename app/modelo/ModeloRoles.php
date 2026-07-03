@@ -8,6 +8,7 @@ class ModeloRoles extends Conexion
 {
     private int $id;
     private string $nombre;
+    private string $descripcion;
     private array $id_modulo;
     private array $c_ingresar;
     private array $c_registrar;
@@ -37,6 +38,7 @@ class ModeloRoles extends Conexion
 
         $this->id = $datos['id'] ?? 0;
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
+        $this->descripcion = mb_convert_case(trim($datos['descripcion'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $accion = $datos['accion'] ?? null;
 
         $this->id_modulo   = $datos['id_modulo']   ?? [];
@@ -96,7 +98,7 @@ class ModeloRoles extends Conexion
     {
         try {
             $conex = $this->conexSG();
-            $sentencia = 'SELECT nombre_rol, id_rol FROM `roles` WHERE id_rol = :id;';
+            $sentencia = 'SELECT nombre_rol, id_rol, descripcion FROM `roles` WHERE id_rol = :id;';
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
@@ -147,6 +149,7 @@ class ModeloRoles extends Conexion
                     throw new Exception(ASSOCIATES);
                 }
             }
+
             $idsProtegidos = [1, 2, 3, 4, 5, 8];
             if (!empty(array_intersect($this->id_modulo, $idsProtegidos))) {
                 throw new Exception(ASSOCIATES);
@@ -159,10 +162,24 @@ class ModeloRoles extends Conexion
                 throw new Exception(DUPLICATE_NAME);
             }
 
+            // 1. Definimos los arreglos base (lo que siempre es obligatorio)
+            $campos     = ['nombre_rol'];
+            $marcadores = [':nombre'];
+            $params     = [':nombre' => $this->nombre];
 
-            $sql = 'INSERT INTO `roles`(`nombre_rol`, `estatus`) VALUES (:nombre, 1)';
+            // 2. Evaluamos los campos opcionales
+            if (!empty($this->descripcion)) {
+                $campos[]               = 'descripcion';
+                $marcadores[]           = ':descripcion';
+                $params[':descripcion'] = $this->descripcion;
+            }
+
+            // 3. Construimos el string SQL usando implode
+            $sql = 'INSERT INTO `roles` (`' . implode('`, `', $campos) . '`) VALUES (' . implode(', ', $marcadores) . ')';
+
+            // 4. Preparamos y ejecutamos
             $stmt = $conex->prepare($sql);
-            $stmt->execute([':nombre' => $this->nombre]);
+            $stmt->execute($params);
 
             $conex->commit();
             return ['accion' => 'exito'];
@@ -178,38 +195,52 @@ class ModeloRoles extends Conexion
     }
 
     private function Modificar()
-    {
-        try {
-            $conex = null;
-            $conex = $this->conexSG();
-            $conex->beginTransaction();
+{
+    try {
+        $conex = null;
+        $conex = $this->conexSG();
+        $conex->beginTransaction();
 
-            if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'roles', 1, 'sg', true)) {
-                if ($this->verificarExistencia('nombre', $this->nombre, 'roles', 1, 'sg', bloquear: true)) {
-                    throw new Exception(DUPLICATE_NAME);
-                }
-            }
-            $sql = 'UPDATE `roles` SET `nombre_rol`=:nombre WHERE id_rol=:id';
-            $stmt = $conex->prepare($sql);
-            $parametros = [
-                ':id' => $this->id,
-                ':nombre' => $this->nombre
-            ];
-            $stmt->execute($parametros);
-
-            $conex->commit();
-            return ['accion' => 'exito'];
-        } catch (Exception $e) {
-            if ($conex && $conex->inTransaction()) {
-                $conex->rollBack();
-            }
-            logs('Roles', $e->getMessage(), 'Modelo_Modificar');
-            return ['accion' => 'error', 'codigo' => $e->getMessage()];
-        } finally {
-            $conex = null;
+        if (!$this->verificarExistencia('nombre', $this->nombre, 'roles', 1, 'sg', bloquear: true)) {
+                throw new Exception(INVALID_ID);
         }
-    }
+        if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'roles', 1, 'sg', bloquear:true)) {
+            if ($this->verificarExistencia('nombre', $this->nombre, 'roles', 1, 'sg', bloquear: true)) {
+                throw new Exception(DUPLICATE_NAME);
+            }
+        }
 
+        $setCampos  = ['`nombre_rol` = :nombre'];
+        $parametros = [
+            ':id'     => $this->id,
+            ':nombre' => $this->nombre
+        ];
+
+        if (!empty($this->descripcion)) {
+            $setCampos[] = '`descripcion` = :descripcion';
+            $parametros[':descripcion'] = $this->descripcion;
+        }
+
+        // 3. Construimos el string SQL dinámicamente usando implode
+        $sql = 'UPDATE `roles` SET ' . implode(', ', $setCampos) . ' WHERE `id_rol` = :id';
+        
+        // 4. Preparamos y ejecutamos
+        $stmt = $conex->prepare($sql);
+        $stmt->execute($parametros);
+
+        $conex->commit();
+        return ['accion' => 'exito'];
+        
+    } catch (Exception $e) {
+        if ($conex && $conex->inTransaction()) {
+            $conex->rollBack();
+        }
+        logs('Roles', $e->getMessage(), 'Modelo_Modificar');
+        return ['accion' => 'error', 'codigo' => $e->getMessage()];
+    } finally {
+        $conex = null;
+    }
+}
     private function GuardarPermisos()
     {
         try {

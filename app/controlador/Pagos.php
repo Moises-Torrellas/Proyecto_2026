@@ -4,6 +4,7 @@ use App\modelo\ModeloPagos;
 use App\modelo\ModeloCuentasCobrar;
 use App\modelo\ModeloMonedas;
 use App\modelo\ModeloMetodosPago;
+use App\modelo\ModeloTasaCambios;
 
 use App\servicios\GenerarReporte;
 
@@ -70,9 +71,9 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (!$permisos['registrar']) throw new Exception('No tienes permisos.');
                 registrar_vuelto($obj, $id_modulo, $bitacoraObj);
                 break;
-            case 'consultarTasa':
+            /* case 'consultarTasa':
                 consultarTasa($obj);
-                break;
+                break; */
             case 'generar':
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
@@ -88,20 +89,22 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 /**
  * --- LÓGICA DE ACCIONES ---
  */
-function consultarTasa($obj): void
+/* function consultarTasa($obj): void
 {
     try {
         $moneda_base = isset($_POST['moneda_base']) ? strtoupper(trim($_POST['moneda_base'])) : 'USD';
         $moneda_pago = isset($_POST['moneda_pago']) ? strtoupper(trim($_POST['moneda_pago'])) : 'VES';
+        
+        $objTasa = new ModeloTasaCambios();
 
-        $tasa = $obj->obtenerTasa($moneda_base, $moneda_pago);
+        $tasa = $objTasa->obtenerTasa($moneda_base, $moneda_pago);
 
         echo json_encode(['accion' => 'consultarTasa', 'exito' => true, 'tasa' => $tasa]);
     } catch (Exception $e) {
         logs('Pagos', $e->getMessage(), 'Controlador_consultarTasa');
         echo json_encode(['accion' => 'consultarTasa', 'exito' => false, 'mensaje' => $e->getMessage()]);
     }
-}
+} */
 
 function consultar($obj, $permisos): void
 {
@@ -188,9 +191,9 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             }
         }
 
-        $obj->setCuentas(new ModeloCuentasCobrar());
-        //$obj->setMetodos(new ModeloMetodosPago());
         $obj->setMonedas(new ModeloMonedas());
+        $obj->setCuentas(new ModeloCuentasCobrar());
+        $obj->setTasa(new ModeloTasaCambios());
 
         $datos['accion'] = 'incluir';
         $resultado = $obj->ProcesarDatos($datos);

@@ -21,7 +21,7 @@ class ModeloCuentasCobrar extends Conexion
             'id' => 'codigo_cargo',
             'id_cobrar' => 'codigo_cargo',
             'id_concepto' => 'codigo_concepto',
-            'id_atleta' => 'codigo_atleta', 
+            'id_atleta' => 'codigo_atleta',
             'estatus' => 'estatus'
         ];
         $this->llavePrimaria = 'codigo_cargo';
@@ -35,12 +35,11 @@ class ModeloCuentasCobrar extends Conexion
 
         $this->codigo_cargo = $datos['id'] ?? null;
         $this->codigo_concepto = $datos['id_concepto'] ?? null;
-        $this->codigo_atleta = $datos['id_atleta'] ?? null; 
+        $this->codigo_atleta = $datos['id_atleta'] ?? null;
         $this->monto_total = $datos['monto_total'] ?? 0;
 
         $this->fecha_emision = !empty($datos['fecha_emision']) ? $datos['fecha_emision'] : date('Y-m-d');
-
-        $this->estatus = $this->normalizarEstatus($datos['estatus'] ?? 1);
+        $this->estatus = $datos['estatus'] ?? null;
 
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
@@ -84,7 +83,7 @@ class ModeloCuentasCobrar extends Conexion
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('CuentasCobrar', $e->getMessage(), 'Modelo_Consultar');
-            return array('accion' => 'error' );
+            return array('accion' => 'error');
         } finally {
             $conex = NULL;
         }
@@ -95,29 +94,37 @@ class ModeloCuentasCobrar extends Conexion
         try {
             $conex = $this->conex();
 
+            // Se añadió: (c.monto_total - IFNULL(pagos.total_abonado, 0)) AS monto_pendiente
             $sentencia = "SELECT 
                 c.codigo_cargo,
                 a.p_nombre, 
                 a.p_apellidos, 
                 co.nombre AS concepto, 
                 c.fecha_emision, 
-                c.monto_total,
+                (c.monto_total - IFNULL(pagos.total_abonado, 0)) AS monto_total,
                 m.simbolo AS simbolo_moneda
-                    FROM 
-                        cargos c
-                    INNER JOIN 
-                        atletas a ON c.codigo_atleta = a.codigo_atleta
-                    INNER JOIN 
-                        conceptos co ON c.codigo_concepto = co.codigo_concepto
-                    INNER JOIN 
-                        monedas m ON m.base = 1
-                    WHERE 
-                        c.estatus = 1;";
+            FROM 
+                cargos c
+            INNER JOIN 
+                atletas a ON c.codigo_atleta = a.codigo_atleta
+            INNER JOIN 
+                conceptos co ON c.codigo_concepto = co.codigo_concepto
+            INNER JOIN 
+                monedas m ON m.base = 1
+            LEFT JOIN (
+                SELECT dp.codigo_cargo, SUM(dp.monto_abonado) AS total_abonado 
+                FROM detalles_pagos dp
+                INNER JOIN pagos p ON dp.codigo_pago = p.codigo_pago
+                WHERE p.estatus = 1  -- AQUÍ ESTÁ EL CAMBIO CLAVE
+                GROUP BY dp.codigo_cargo
+            ) AS pagos ON c.codigo_cargo = pagos.codigo_cargo
+            WHERE 
+                c.estatus = 1;";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute();
             $datos = $stmt->fetchAll();
-            
+
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('CuentasCobrar', $e->getMessage(), 'Modelo_Buscar');
@@ -133,16 +140,12 @@ class ModeloCuentasCobrar extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            $this->estatus = 1;
-
             if (!$this->verificarExistencia('id_concepto', $this->codigo_concepto, 'conceptos', NULL, bloquear: true)) {
                 throw new Exception("El concepto de cobro seleccionado no existe.");
             }
 
-            $codigo_moneda = $this->obtenerMonedaBaseId($conex);
-
-            $sentencia = "INSERT INTO cargos (`codigo_concepto`, `codigo_atleta`, `monto_total`, `fecha_emision`, `estatus`) 
-                          VALUES (:codigo_concepto, :codigo_atleta, :monto_total, :fecha_emision, :estatus)";
+            $sentencia = "INSERT INTO cargos (`codigo_concepto`, `codigo_atleta`, `monto_total`, `fecha_emision`) 
+                          VALUES (:codigo_concepto, :codigo_atleta, :monto_total, :fecha_emision)";
 
             $stmt = $conex->prepare($sentencia);
 
@@ -158,16 +161,14 @@ class ModeloCuentasCobrar extends Conexion
 
                 $stmt->bindParam(':codigo_concepto', $this->codigo_concepto);
                 $stmt->bindParam(':codigo_atleta', $id_atleta);
-                $stmt->bindParam(':monto_total', $this->monto_total); 
+                $stmt->bindParam(':monto_total', $this->monto_total);
                 $stmt->bindParam(':fecha_emision', $this->fecha_emision);
-                $stmt->bindParam(':estatus', $this->estatus);
 
                 $stmt->execute();
             }
 
             $conex->commit();
             return array('accion' => 'exito');
-
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();
@@ -235,7 +236,7 @@ class ModeloCuentasCobrar extends Conexion
             $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
             $stmt->execute();
             $datos = $stmt->fetchAll();
-            
+
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('CuentasCobrar', $e->getMessage(), 'Modelo_Buscar');
@@ -328,21 +329,6 @@ class ModeloCuentasCobrar extends Conexion
         return (int) $id;
     }
 
-    private function normalizarEstatus($estatus): int
-    {
-        if (is_numeric($estatus)) {
-            return (int) $estatus;
-        }
-
-        $texto = mb_convert_case(trim((string) $estatus), MB_CASE_TITLE, 'UTF-8');
-        return match ($texto) {
-            'Pendiente', 'Abonado' => 1,
-            'Pagado' => 2,
-            'Anulado' => 3,
-            default => 1,
-        };
-    }
-
     public function ModificarEstatus(int $id, int $estatus, ?\PDO $conexExterna = null): bool
     {
         $transaccionPropia = false;
@@ -355,7 +341,6 @@ class ModeloCuentasCobrar extends Conexion
                 $transaccionPropia = true;
             }
 
-            // Removido monto_pendiente ya que no existe en cargos
             $sentencia = "UPDATE cargos SET estatus = :estatus WHERE codigo_cargo = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $id);

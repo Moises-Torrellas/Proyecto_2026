@@ -2,10 +2,9 @@
 
 namespace App\modelo;
 
-use App\modelo\ModeloBase;
 use Exception;
 
-class ModeloRepresentantes extends ModeloBase
+class ModeloRepresentantes extends Conexion
 {
     private $id;
     private $cedula;

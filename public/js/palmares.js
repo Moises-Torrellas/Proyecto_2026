@@ -69,6 +69,10 @@ $(document).ready(function () {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
+                        let tipo = $('#tipo_palmares').val();
+                        let idTorneo = (tipo === 'individual') ? $('#torneo_ind').val() : $('#torneo_grp').val();
+                        datos.append('torneo', idTorneo);
+
                         enviaAjax(datos);
                     }
                 });
@@ -242,10 +246,10 @@ function abrirModalPalmares(tipo) {
 function abrirModalReporte(tipo) {
     limpia(); // Limpia campos
     $('#tipo_palmares').val(tipo); // Guardamos el tipo para saber qué filtrar
-    
+
     // Ocultamos reportes (ya no existe, pero por seguridad) y mostramos la sección correspondiente
     $('#seccion_reportes').hide();
-    
+
     if (tipo === 'individual') {
         $('#titulo_modal').text('Reporte Palmarés Individual');
         $('#seccion_individual').show();
@@ -255,10 +259,10 @@ function abrirModalReporte(tipo) {
         $('#seccion_individual').hide();
         $('#seccion_grupal').show();
     }
-    
+
     // Cambiamos el comportamiento del botón de proceso
     $('#proceso').text('Generar Reporte').data('accion', 'generar');
-    
+
     // Deshabilitamos validaciones de registro si es necesario o simplemente lo abrimos
     abrirModal();
 }
@@ -274,7 +278,7 @@ function buscar(id, tipo) {
 function llenarModal(data, tipo) {
     limpia();
     $('#tipo_palmares').val(tipo);
-    $('#id').val(data.id_individual || data.id_grupal);
+    $('#id').val(data.codigo_individual || data.codigo_grupal);
     $('#seccion_reportes').hide();
 
     if (tipo === 'individual') {
@@ -406,29 +410,35 @@ function enviaAjax(datos) {
                     construirSelect('premio_grp', premiosGrp, 'id_premio', 'nombre');
                 }
                 else if (lee.accion === "incluir") {
-                    let tipoListado = lee.tipo_palmares === 'individual' ? 'consultarIndividual' : 'consultarGrupal';
-                    let d = new FormData(); d.append('accion', tipoListado);
-                    enviaAjax(d); // Recargar lista respectiva
-
                     limpia();
-                    muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                     cerrarModal();
+
+                    // Usamos .then() para esperar a que se cierre el mensaje
+                    muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje).then(() => {
+                        let tipoListado = lee.tipo_palmares === 'individual' ? 'consultarIndividual' : 'consultarGrupal';
+                        let d = new FormData();
+                        d.append('accion', tipoListado);
+                        enviaAjax(d); // La tabla se recarga de forma segura aquí
+                    });
                 }
                 else if (lee.accion === "eliminar") {
-                    let tipoListado = lee.tipo_palmares === 'individual' ? 'consultarIndividual' : 'consultarGrupal';
-                    let d = new FormData(); d.append('accion', tipoListado);
-                    enviaAjax(d); // Recargar lista respectiva
-
-                    muestraMensaje("success", 2000, "Retiro Exitoso", lee.mensaje);
+                    muestraMensaje("success", 2000, "Retiro Exitoso", lee.mensaje).then(() => {
+                        let tipoListado = lee.tipo_palmares === 'individual' ? 'consultarIndividual' : 'consultarGrupal';
+                        let d = new FormData();
+                        d.append('accion', tipoListado);
+                        enviaAjax(d);
+                    });
                 }
                 else if (lee.accion === "modificar") {
-                    let tipoListado = lee.tipo_palmares === 'individual' ? 'consultarIndividual' : 'consultarGrupal';
-                    let d = new FormData(); d.append('accion', tipoListado);
-                    enviaAjax(d); // Recargar lista respectiva
-
                     limpia();
                     cerrarModal();
-                    muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
+
+                    muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje).then(() => {
+                        let tipoListado = lee.tipo_palmares === 'individual' ? 'consultarIndividual' : 'consultarGrupal';
+                        let d = new FormData();
+                        d.append('accion', tipoListado);
+                        enviaAjax(d);
+                    });
                 }
                 else if (lee.accion === "buscar") {
                     if (lee.datos.length > 0) {

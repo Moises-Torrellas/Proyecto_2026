@@ -21,6 +21,25 @@ SET time_zone = "+00:00";
 -- Base de datos: `cannibalsbd2`
 --
 
+DELIMITER $$
+--
+-- Funciones
+--
+DROP FUNCTION IF EXISTS `ObtenerMontoAbonado`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `ObtenerMontoAbonado` (`p_codigo_cargo` INT) RETURNS DECIMAL(10,2) READS SQL DATA BEGIN
+    DECLARE total DECIMAL(10,2);
+    
+    SELECT COALESCE(SUM(dp.monto_abonado), 0.00) INTO total
+    FROM detalles_pagos dp
+    INNER JOIN pagos p ON dp.codigo_pago = p.codigo_pago
+    WHERE dp.codigo_cargo = p_codigo_cargo 
+    AND p.estatus = 1;
+    
+    RETURN total;
+END$$
+
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -88,7 +107,8 @@ CREATE TABLE `atletas` (
 --
 
 INSERT INTO `atletas` (`codigo_atleta`, `p_nombre`, `s_nombre`, `p_apellidos`, `s_apellidos`, `genero`, `fecha_nac`, `foto`) VALUES
-(2, 'Moises', 'Jesus', 'Torrellas', '', 'H', '2002-07-25', 'atleta_2002-07-25_1782057957.png');
+(2, 'Moises', 'Jesus', 'Torrellas', '', 'H', '2002-07-25', 'atleta_2002-07-25_1782057957.png'),
+(3, 'Maria', 'Jose', 'Perez', 'Perez', 'M', '2019-02-22', 'atleta_2019-02-22_1782258564.png');
 
 -- --------------------------------------------------------
 
@@ -101,6 +121,13 @@ CREATE TABLE `atleta_representante` (
   `codigo_atleta` int(11) NOT NULL,
   `codigo_representante` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `atleta_representante`
+--
+
+INSERT INTO `atleta_representante` (`codigo_at_re`, `codigo_atleta`, `codigo_representante`) VALUES
+(2, 3, 2);
 
 -- --------------------------------------------------------
 
@@ -239,9 +266,23 @@ CREATE TABLE `detalles_pagos` (
   `codigo_detalles_pagos` int(11) NOT NULL,
   `codigo_pago` int(11) NOT NULL,
   `codigo_cargo` int(11) NOT NULL,
-  `monto_abonado` decimal(10,0) NOT NULL,
-  `tasa_cambio` decimal(10,0) NOT NULL
+  `monto_abonado` decimal(10,2) NOT NULL,
+  `tasa_cambio` decimal(10,4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `detalles_pagos`
+--
+
+INSERT INTO `detalles_pagos` (`codigo_detalles_pagos`, `codigo_pago`, `codigo_cargo`, `monto_abonado`, `tasa_cambio`) VALUES
+(8, 15, 1, 30.00, 1.0000),
+(9, 15, 2, 25.00, 1.0000),
+(10, 17, 1, 30.00, 1.0000),
+(11, 17, 2, 25.00, 1.0000),
+(12, 17, 4, 25.00, 1.0000),
+(13, 18, 5, 25.00, 1.0000),
+(14, 19, 1, 30.00, 1.0000),
+(15, 20, 1, 30.00, 1.0000);
 
 -- --------------------------------------------------------
 
@@ -351,7 +392,8 @@ INSERT INTO `inscripciones` (`codigo_inscripcion`, `codigo_atleta`, `codigo_cate
 (2, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
 (3, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
 (4, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
-(5, 2, 7, 1, 12, 90, 185, '2026-06-21', 1);
+(5, 2, 7, 1, 12, 90, 185, '2026-06-21', 1),
+(6, 3, 2, 1, 34, 60, 150, '2026-06-23', 1);
 
 -- --------------------------------------------------------
 
@@ -398,11 +440,22 @@ CREATE TABLE `pagos` (
   `codigo_pago` int(11) NOT NULL,
   `codigo_metodo` int(11) NOT NULL,
   `codigo_moneda` int(11) NOT NULL,
-  `monto_pago` decimal(10,0) NOT NULL,
+  `monto_pago` decimal(10,2) NOT NULL,
   `fecha` date NOT NULL,
   `referencia` varchar(255) NOT NULL,
   `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `pagos`
+--
+
+INSERT INTO `pagos` (`codigo_pago`, `codigo_metodo`, `codigo_moneda`, `monto_pago`, `fecha`, `referencia`, `estatus`) VALUES
+(15, 2, 2, 55.00, '2026-06-23', '3232', 2),
+(17, 2, 2, 80.00, '2026-06-23', '1212', 2),
+(18, 2, 2, 25.00, '2026-06-23', '1222', 1),
+(19, 2, 2, 40.00, '2026-06-23', '3333', 2),
+(20, 2, 2, 40.00, '2026-06-23', '1212', 1);
 
 -- --------------------------------------------------------
 
@@ -411,10 +464,17 @@ CREATE TABLE `pagos` (
 --
 
 CREATE TABLE `palmares_grupal` (
-  `id_grupal` int(11) NOT NULL,
+  `codigo_grupal` int(11) NOT NULL,
   `codigo_participacion` int(11) NOT NULL,
   `codigo_premio` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `palmares_grupal`
+--
+
+INSERT INTO `palmares_grupal` (`codigo_grupal`, `codigo_participacion`, `codigo_premio`) VALUES
+(2, 1, 2);
 
 -- --------------------------------------------------------
 
@@ -427,6 +487,13 @@ CREATE TABLE `palmares_individual` (
   `codigo_premio` int(11) NOT NULL,
   `codigo_dtll_prtc` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `palmares_individual`
+--
+
+INSERT INTO `palmares_individual` (`codigo_individual`, `codigo_premio`, `codigo_dtll_prtc`) VALUES
+(2, 3, 2);
 
 -- --------------------------------------------------------
 
@@ -770,7 +837,7 @@ ALTER TABLE `pagos`
 -- Indices de la tabla `palmares_grupal`
 --
 ALTER TABLE `palmares_grupal`
-  ADD PRIMARY KEY (`id_grupal`),
+  ADD PRIMARY KEY (`codigo_grupal`),
   ADD KEY `codigo_premio` (`codigo_premio`),
   ADD KEY `codigo_participacion` (`codigo_participacion`);
 
@@ -857,13 +924,13 @@ ALTER TABLE `asignaciones`
 -- AUTO_INCREMENT de la tabla `atletas`
 --
 ALTER TABLE `atletas`
-  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `atleta_representante`
 --
 ALTER TABLE `atleta_representante`
-  MODIFY `codigo_at_re` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `codigo_at_re` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `cargos`
@@ -911,7 +978,7 @@ ALTER TABLE `detalles_equipos`
 -- AUTO_INCREMENT de la tabla `detalles_pagos`
 --
 ALTER TABLE `detalles_pagos`
-  MODIFY `codigo_detalles_pagos` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_detalles_pagos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_participacion`
@@ -947,7 +1014,7 @@ ALTER TABLE `identidad_atleta`
 -- AUTO_INCREMENT de la tabla `inscripciones`
 --
 ALTER TABLE `inscripciones`
-  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `metodos_pago`
@@ -965,19 +1032,19 @@ ALTER TABLE `monedas`
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `codigo_pago` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT de la tabla `palmares_grupal`
 --
 ALTER TABLE `palmares_grupal`
-  MODIFY `id_grupal` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_grupal` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `palmares_individual`
 --
 ALTER TABLE `palmares_individual`
-  MODIFY `codigo_individual` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_individual` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `participaciones`
