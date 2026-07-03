@@ -10,7 +10,7 @@ class ModeloArticulosInventario extends Conexion
     public function __construct()
     {
         parent::__construct();
-        $this->campoWhitelist = ['id_catalogo', 'id_estado', 'estatus'];
+        $this->campoWhitelist = ['id_catalogo', 'id_estado', 'codigo_club', 'estatus'];
         $this->llavePrimaria = 'codigo_articulo';
     }
 
@@ -48,8 +48,8 @@ class ModeloArticulosInventario extends Conexion
             $siguiente = (int)$resultado['max_num'] + 1;
         }
 
-        // Formateamos para que tenga ceros a la izquierda (ej. CL-001)
-        return 'CL-' . str_pad((string)$siguiente, 3, '0', STR_PAD_LEFT);
+        // Formateamos para que tenga ceros a la izquierda (ej. CL-0001)
+        return 'CL-' . str_pad((string)$siguiente, 4, '0', STR_PAD_LEFT);
     }
 
     private function ConsultarAgrupado(): array
@@ -181,11 +181,12 @@ class ModeloArticulosInventario extends Conexion
         }
     }
 
-    public function ConsultarArticulosLibres(): array { 
+public function ConsultarArticulosLibres(): array { 
         $conex = null;
         try {
             $conex = $this->conex();
-            $sql = "SELECT e.codigo_articulo, IFNULL(c.nombre, 'Artículo sin registrar') as articulo FROM articulos_inventario e LEFT JOIN catalogo c ON e.id_catalogo = c.id_catalogo WHERE e.estatus = 1";
+            // ¡AQUÍ ESTÁ EL CAMBIO! Se agregó e.codigo_club a la consulta
+            $sql = "SELECT e.codigo_articulo, e.codigo_club, IFNULL(c.nombre, 'Artículo sin registrar') as articulo FROM articulos_inventario e LEFT JOIN catalogo c ON e.id_catalogo = c.id_catalogo WHERE e.estatus = 1";
             $articulos = $conex->query($sql)->fetchAll(PDO::FETCH_ASSOC);
             return ['accion' => 'exito', 'datos' => $articulos];
         } catch (Exception $e) {

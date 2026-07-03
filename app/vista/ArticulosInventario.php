@@ -144,7 +144,7 @@
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <select class="formulario" id="id_estado" name="id_estado" required>
+                                <select class="formulario select2" id="id_estado" name="id_estado" required>
                                     <option value="" selected disabled>Seleccione un estado...</option>
                                 </select>
                                 <label for="id_estado" class="titulo_formulario">Condición / Estado Físico</label>
