@@ -15,7 +15,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_ATLETAS_;
 
 //Procesar permisos 
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, '');
 
 $nombreClaseModelo = 'App\modelo\ModeloAtletas';
 

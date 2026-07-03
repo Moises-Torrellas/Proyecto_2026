@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_BITACORA_;
 
 // 3. Procesar permisos (esto llena la variable global $permisosGenerales)
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, '');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloBitacora';

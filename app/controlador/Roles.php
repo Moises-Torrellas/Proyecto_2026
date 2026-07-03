@@ -1,6 +1,7 @@
 <?php
 
 use App\modelo\ModeloRoles;
+use App\modelo\ModeloPermisos;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -9,7 +10,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_ROLES_;
 
 // 3. Procesar permisos (Ahora retorna un array en lugar de usar global)
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, '');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloRoles';
@@ -72,7 +73,7 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
                 modificarRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'guardar_permisos':
-                if (!$permisos['modificar']) throw new Exception('No tiene permisos para modificar permisos.');
+                //if (!$permisos['modificar']) throw new Exception('No tiene permisos para modificar permisos.');
                 guardarPermisosData($obj);
                 break;
             case 'eliminar':
@@ -80,8 +81,8 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
                 eliminarRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'CargarPermisos':
-                if (!$permisos['otros']) throw new Exception('No tiene permisos para modificar permisos.');
-                CargarPermisos($obj);
+                //if (!$permisos['otros']) throw new Exception('No tiene permisos para modificar permisos.');
+                CargarPermisos();
                 break;
 
             default:
@@ -131,7 +132,7 @@ function buscarRolesData($obj): void
     }
 }
 
-function CargarPermisos($obj): void
+function CargarPermisos(): void
 {
     try {
         validar_requeridos(['id']);
@@ -139,8 +140,10 @@ function CargarPermisos($obj): void
         if (in_array($_POST['id'], $idsProtegidos)) {
             throw new Exception('Los permisos de este rol no pueden ser modificados');
         }
+        $obj = new \App\modelo\ModeloRoles();
         $resultado = $obj->CargarPermisos($_POST['id']);
-        echo json_encode($resultado);
+        $respuesta = ['datos' => $resultado['datos'], 'accion' => 'CargarPermisos'];
+        echo json_encode($respuesta);
     } catch (Exception $e) {
         logs('Roles', $e->getMessage(), 'Controlador_Buscar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
@@ -224,26 +227,15 @@ function guardarPermisosData($obj): void
 
         $datos = [
             'id'             => $_POST['id'],
-            'accion'         => 'guardar_permisos'
+            'accion'         => 'guardar_permisos',
+            'permisos'       => $_POST['permisos'] ?? [] // Array of id_permiso => 1
         ];
-
-        if (isset($_POST['id_modulo']) && is_array($_POST['id_modulo'])) {
-            $datos['id_modulo'] = $_POST['id_modulo'];
-        } else {
-            throw new Exception('Debe seleccionar al menos un módulo.');
-        }
-
-        foreach (['check_ingresar' => 'c_ingresar', 'check_registrar' => 'c_registrar', 'check_modificar' => 'c_modificar', 'check_eliminar' => 'c_eliminar', 'check_reporte' => 'c_reporte', 'check_otros' => 'c_otros'] as $postKey => $dataKey) {
-            if (isset($_POST[$postKey]) && !empty($_POST[$postKey])) {
-                $datos[$dataKey] = $_POST[$postKey];
-            }
-        }
 
         $resultado = $obj->procesarDatos($datos);
         if ($resultado['accion'] === 'exito') {
             echo json_encode(['accion' => 'guardar_permisos', 'mensaje' => 'Permisos guardados correctamente.']);
         } else {
-            throw new Exception($resultado['codigo']);
+            throw new Exception($resultado['codigo'] ?? 'Ocurrió un error al guardar los permisos.');
         }
     } catch (Exception $e) {
         logs('Roles', $e->getMessage(), 'Controlador_GuardarPermisos');

@@ -10,7 +10,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_POSICIONES_;
 
 //Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, 'ingresar_posiciones');
 
 //Comprobar si el modelo existe
 $nombreClaseModelo = 'App\modelo\ModeloPosiciones';

@@ -19,13 +19,7 @@ class ModeloUsuarios extends Conexion
     private $bloqueo;
 
     private $actualizar_contraseña = false;
-
-    private $c_ingresar;
-    private $c_registrar;
-    private $c_modificar;
-    private $c_eliminar;
-    private $c_reporte;
-    private $c_otros;
+    private $permisos_seleccionados = [];
 
     private $obj_roles;
 
@@ -68,12 +62,7 @@ class ModeloUsuarios extends Conexion
             $this->actualizar_contraseña = true;
         }
 
-        $this->c_ingresar  = $datos['c_ingresar']  ?? [];
-        $this->c_registrar = $datos['c_registrar'] ?? [];
-        $this->c_modificar = $datos['c_modificar'] ?? [];
-        $this->c_eliminar  = $datos['c_eliminar']  ?? [];
-        $this->c_reporte   = $datos['c_reporte']   ?? [];
-        $this->c_otros     = $datos['c_otros']     ?? [];
+        $this->permisos_seleccionados = $datos['permisos'] ?? [];
 
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
@@ -228,7 +217,8 @@ class ModeloUsuarios extends Conexion
                 ? $conex->query("SELECT idUsuario FROM usuarios WHERE cedulaUsuario = '{$this->cedula}'")->fetchColumn()
                 : $conex->lastInsertId();
 
-           /*  $stmtDel = $conex->prepare("DELETE FROM permisos_usuarios WHERE idUsuario = :idUsuario");
+            // Comentado para no usar la vieja tabla permisos_usuarios
+            /*  $stmtDel = $conex->prepare("DELETE FROM permisos_usuarios WHERE idUsuario = :idUsuario");
             $stmtDel->execute([':idUsuario' => $idUsuario]);
 
             $sqlCopy = "INSERT INTO permisos_usuarios (idUsuario, id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros)
@@ -323,14 +313,9 @@ class ModeloUsuarios extends Conexion
             $stmt->execute();
 
             if ($rolActual != $this->rol) {
-                $stmtDel = $conex->prepare("DELETE FROM permisos_usuarios WHERE idUsuario = :idUsuario");
+                // Remove exceptions and change role
+                $stmtDel = $conex->prepare("DELETE FROM excepciones WHERE idUsuario = :idUsuario");
                 $stmtDel->execute([':idUsuario' => $this->id]);
-
-                $sqlCopy = "INSERT INTO permisos_usuarios (idUsuario, id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros)
-                            SELECT :idUsuario, id_modulo, ingresar, registrar, eliminar, modificar, reporte, otros
-                            FROM permisos_roles WHERE id_rol = :idRol";
-                $stmtCopy = $conex->prepare($sqlCopy);
-                $stmtCopy->execute([':idUsuario' => $this->id, ':idRol' => $this->rol]);
             }
 
             $conex->commit();
@@ -367,7 +352,7 @@ class ModeloUsuarios extends Conexion
             $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
             $stmt->execute();
 
-            $stmtDel = $conex->prepare("DELETE FROM permisos_usuarios WHERE idUsuario = :idUsuario");
+            $stmtDel = $conex->prepare("DELETE FROM excepciones WHERE idUsuario = :idUsuario");
             $stmtDel->execute([':idUsuario' => $this->id]);
 
 
@@ -402,7 +387,11 @@ class ModeloUsuarios extends Conexion
 
             $nuevoEstado = ($this->bloqueo == 1) ? 2 : 1;
 
-            $sql = "UPDATE `usuarios` SET `bloqueo` = :estado WHERE idUsuario = :id";
+            $sql = "UPDATE `usuarios` SET `bloqueo` = :estado";
+            if ($nuevoEstado == 1) {
+                $sql .= ", `intentos_fallidos` = 0";
+            }
+            $sql .= " WHERE idUsuario = :id";
             $stmt = $conex->prepare($sql);
 
             $stmt->execute([
@@ -455,21 +444,28 @@ class ModeloUsuarios extends Conexion
     {
         try {
             $conex = $this->conexSG();
-            $sentencia = 'SELECT :id1 AS idUsuario, 
-                                (SELECT id_rol FROM usuarios WHERE idUsuario = :id3) AS id_rol,
-                                m.id_modulo, m.nombre_modulo, 
-                                COALESCE(MAX(pu.ingresar), 0) AS ingresar, COALESCE(MAX(pu.registrar), 0) AS registrar, 
-                                COALESCE(MAX(pu.eliminar), 0) AS eliminar, COALESCE(MAX(pu.modificar), 0) AS modificar, 
-                                COALESCE(MAX(pu.reporte), 0) AS reporte, COALESCE(MAX(pu.otros), 0) AS otros 
-                        FROM modulo m 
-                        LEFT JOIN permisos_usuarios pu ON m.id_modulo = pu.id_modulo AND pu.idUsuario = :id2 
+            $sentencia = 'SELECT 
+                            :id1 AS idUsuario, 
+                            (SELECT id_rol FROM usuarios WHERE idUsuario = :id2) AS id_rol,
+                            m.id_modulo, m.nombre_modulo, m.icono, m.estatus AS estatus_modulo,
+                            p.id_permiso, p.nombre AS nombre_permiso, p.descripcion, p.clave,
+                            CASE 
+                                WHEN e.id_permiso IS NOT NULL THEN e.tipo
+                                WHEN pr.id_permiso_rol IS NOT NULL THEN 1 
+                                ELSE 0 
+                            END AS asignado,
+                            CASE WHEN e.id_excepcion IS NOT NULL THEN e.tipo ELSE 2 END AS excepcion
+                        FROM modulos m
+                        INNER JOIN permisos p ON p.id_modulo = m.id_modulo
+                        LEFT JOIN permisos_rol pr ON pr.id_permiso = p.id_permiso AND pr.id_rol = (SELECT id_rol FROM usuarios WHERE idUsuario = :id3)
+                        LEFT JOIN excepciones e ON e.id_permiso = p.id_permiso AND e.id_usuario = :id4
                         WHERE m.id_modulo NOT IN (4, 5, 8, 1, 2, 3, 99)
-                        GROUP BY m.id_modulo, m.nombre_modulo
-                        ORDER BY m.id_modulo ASC';
+                        ORDER BY m.id_modulo ASC, p.id_permiso ASC';
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id1', $this->id);
             $stmt->bindParam(':id2', $this->id);
             $stmt->bindParam(':id3', $this->id);
+            $stmt->bindParam(':id4', $this->id);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             $resultado = array('accion' => 'CargarPermisosUsuario', 'datos' => $datos);
@@ -487,38 +483,42 @@ class ModeloUsuarios extends Conexion
             $conex = $this->conexSG();
             $conex->beginTransaction();
 
-            $sql = 'DELETE FROM `permisos_usuarios` WHERE `idUsuario` = :id';
+            // Clear old exceptions
+            $sql = 'DELETE FROM `excepciones` WHERE `id_usuario` = :id';
             $stmt = $conex->prepare($sql);
             $stmt->execute([':id' => $this->id]);
 
-            $sql = 'INSERT INTO `permisos_usuarios`(`idUsuario`, `id_modulo`, `ingresar`, `registrar`, `eliminar`, `modificar`, `reporte`, `otros`) 
-                    VALUES (:idUsuario,:id_modulo,:ingresar,:registrar,:eliminar,:modificar,:reporte,:otros)';
-            $stmt = $conex->prepare($sql);
+            // Get permissions from user's role
+            $sqlRol = "SELECT id_permiso FROM permisos_rol WHERE id_rol = (SELECT id_rol FROM usuarios WHERE idUsuario = :id)";
+            $stmtRol = $conex->prepare($sqlRol);
+            $stmtRol->execute([':id' => $this->id]);
+            $permisos_rol = $stmtRol->fetchAll(\PDO::FETCH_COLUMN);
 
-            // Fetch all valid module ids first
-            $sqlModulos = 'SELECT id_modulo FROM modulo WHERE id_modulo NOT IN (4, 5, 8, 1, 2, 3, 99)';
-            $stmtModulos = $conex->prepare($sqlModulos);
-            $stmtModulos->execute();
-            $modulosValidos = $stmtModulos->fetchAll(\PDO::FETCH_COLUMN);
+            // Get all possible permissions
+            $sqlAll = "SELECT id_permiso FROM permisos";
+            $stmtAll = $conex->query($sqlAll);
+            $todos_permisos = $stmtAll->fetchAll(\PDO::FETCH_COLUMN);
 
-            foreach ($modulosValidos as $modulo) {
-                $ing = isset($this->c_ingresar[$modulo]) ? 1 : 0;
-                $reg = isset($this->c_registrar[$modulo]) ? 1 : 0;
-                $eli = isset($this->c_eliminar[$modulo]) ? 1 : 0;
-                $mod = isset($this->c_modificar[$modulo]) ? 1 : 0;
-                $rep = isset($this->c_reporte[$modulo]) ? 1 : 0;
-                $otr = isset($this->c_otros[$modulo]) ? 1 : 0;
+            $sqlInsert = 'INSERT INTO `excepciones`(`id_usuario`, `id_permiso`, `tipo`) VALUES (:id_usuario, :id_permiso, :tipo)';
+            $stmtInsert = $conex->prepare($sqlInsert);
 
-                if ($ing || $reg || $eli || $mod || $rep || $otr) {
-                    $stmt->execute([
-                        ':idUsuario' => $this->id,
-                        ':id_modulo' => (int)$modulo,
-                        ':ingresar'  => $ing,
-                        ':registrar' => $reg,
-                        ':eliminar'  => $eli,
-                        ':modificar' => $mod,
-                        ':reporte'   => $rep,
-                        ':otros'     => $otr
+            foreach ($todos_permisos as $id_permiso) {
+                $tiene_rol = in_array($id_permiso, $permisos_rol);
+                $seleccionado = isset($this->permisos_seleccionados[$id_permiso]) && $this->permisos_seleccionados[$id_permiso] == 1;
+
+                if ($tiene_rol && !$seleccionado) {
+                    // Deny exception
+                    $stmtInsert->execute([
+                        ':id_usuario' => $this->id,
+                        ':id_permiso' => $id_permiso,
+                        ':tipo' => 0
+                    ]);
+                } elseif (!$tiene_rol && $seleccionado) {
+                    // Allow exception
+                    $stmtInsert->execute([
+                        ':id_usuario' => $this->id,
+                        ':id_permiso' => $id_permiso,
+                        ':tipo' => 1
                     ]);
                 }
             }

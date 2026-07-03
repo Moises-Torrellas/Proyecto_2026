@@ -12,7 +12,7 @@ require_once __DIR__ . '/Base.php';
 // Configuración del id del módulo
 $id_modulo = _MD_PARTICIPACIONES_;
 
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, '');
 
 $nombreClaseModelo = 'App\modelo\ModeloPosiciones';
 if (!class_exists($nombreClaseModelo)) {

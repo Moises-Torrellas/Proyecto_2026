@@ -6,7 +6,7 @@ use App\servicios\GenerarReporte;
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_REPRESENTANTES_;
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, '');
 
 $nombreClaseModelo = 'App\modelo\ModeloModulos';
 

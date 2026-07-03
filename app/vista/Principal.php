@@ -27,31 +27,31 @@
                     <div class="contenedor_panel">
                         <div class="cards">
                             <div class="card" style="border-bottom-color: #007bff;">
-                                <h3>ATLETAS REGISTRADOS</h3>
+                                <h3>ATLETAS ACTIVOS</h3>
                                 <div class="info_card">
                                     <i class="icon_card fi-br-hockey-stick-puck" style="color: #007bff; background-color: #007bff25;"></i>
-                                    <h1>50</h1>
+                                    <h1><?= htmlspecialchars($registro['activos'] ?? 0) ?></h1>
                                 </div>
                             </div>
                             <div class="card" style="border-bottom-color: #FF4040;">
-                                <h3>CUENTAS PENDIENTES</h3>
+                                <h3>CARGOS PENDIENTES</h3>
                                 <div class="info_card">
                                     <i class="icon_card fi fi-br-receipt" style="color: #FF4040; background-color: #FF404025;"></i>
-                                    <h1>15</h1>
+                                    <h1><?= htmlspecialchars($registro['cargos'] ?? 0) ?></h1>
                                 </div>
                             </div>
                             <div class="card" style="border-bottom-color: #28a745;">
                                 <h3>PARTICIPACIONES EN TORNEOS</h3>
                                 <div class="info_card">
                                     <i class="icon_card fi fi-br-trophy" style="color: #28a745; background-color: #28a74525;"></i>
-                                    <h1>15</h1>
+                                    <h1><?= htmlspecialchars($registro['torneos'] ?? 0) ?></h1>
                                 </div>
                             </div>
                             <div class="card" style="border-bottom-color: #ffc107;">
                                 <h3>EQUIPAMIENTOS ASIGNADOS</h3>
                                 <div class="info_card">
                                     <i class="icon_card fi fi-br-shield-plus" style="color: #ffc107; background-color: #ffc10725;"></i>
-                                    <h1>32</h1>
+                                    <h1><?= htmlspecialchars($registro['asignaciones'] ?? 0) ?></h1>
                                 </div>
                             </div>
                         </div>
@@ -79,7 +79,7 @@
 
                                 <!-- Gráfico 2: Resumen de Ingresos -->
                                 <div class="chart-container card_grafico">
-                                    <h4>Distribución de Atletas</h4>
+                                    <h4>Distribución de Atletas por Categoría</h4>
                                     <div style="position: relative; flex-grow: 1;">
                                         <canvas id="doughnutChart"></canvas>
                                     </div>

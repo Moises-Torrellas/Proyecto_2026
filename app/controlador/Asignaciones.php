@@ -7,7 +7,7 @@ use App\modelo\ModeloArticulosInventario;
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_ASIGNACIONES_; 
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, '');
 
 $nombreClaseModelo = 'App\modelo\ModeloAsignaciones';
 if (!class_exists($nombreClaseModelo)) {

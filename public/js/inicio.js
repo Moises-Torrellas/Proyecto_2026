@@ -71,7 +71,10 @@ function enviaAjax(datos) {
                         $("#contraseña").addClass("denegado");
                     }
                 } else if (lee.accion == "denegado") {
-                    muestraMensaje("error", 20000, "Error", lee.mensaje);
+                    muestraMensaje("error", 20000, "Acceso Denegado", lee.mensaje);
+                    limpia();
+                } else if (lee.accion == "bloqueado") {
+                    muestraMensaje("error", 20000, "Cuenta Bloqueada", lee.mensaje);
                     limpia();
                 } else if (lee.accion == "error") {
                     muestraMensaje("error", 20000, "Error", lee.mensaje);

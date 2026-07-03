@@ -10,20 +10,21 @@ class ModeloBitacora extends Conexion implements InterBitacora
 
     public function __construct() {}
 
-    public function RegistrarAccion($id_modulo, $accion, $id_usuario)
+    public function RegistrarAccion($id_modulo, $accion, $id_usuario, $datos_previos = '', $datos_nuevos = '', $entorno = '')
     {
         $conex = null;
         try{
             $conex = $this->conexSG();
             $conex->beginTransaction();
-            $sql = 'INSERT INTO `bitacora`(`id_modulo`, `acciones`, `fecha`, `hora`, `idUsuario`) 
-                            VALUES (:modulo,:accion,:fecha,:hora,:usuario)';
+            $sql = 'INSERT INTO `bitacora`(`id_modulo`, `acciones`, `datos_previos`, `datos_nuevos`, `entorno`, `fecha_hora`, `idUsuario`) 
+                            VALUES (:modulo,:accion,:datos_previos,:datos_nuevos,:entorno,NOW(),:usuario)';
             $stmt = $conex->prepare($sql);
             $parametros = [
                 ':modulo' => $id_modulo,
                 ':accion' => $accion,
-                ':fecha' => date('Y-m-d'),
-                ':hora' => date('H:i:s'),
+                ':datos_previos' => $datos_previos,
+                ':datos_nuevos' => $datos_nuevos,
+                ':entorno' => $entorno,
                 ':usuario' => $id_usuario
             ];
             $stmt->execute($parametros);
@@ -34,7 +35,11 @@ class ModeloBitacora extends Conexion implements InterBitacora
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
             }
-            logs('Bitacora', $e->getMessage(), 'Modelo_RegistrarAccion');
+            if (function_exists('logs')) {
+                logs('Bitacora', $e->getMessage(), 'Modelo_RegistrarAccion');
+            } else {
+                error_log('[' . date('Y-m-d H:i:s') . '] [Modelo_RegistrarAccion] ERROR: ' . $e->getMessage());
+            }
         }finally{
             $conex = null;
         }
@@ -54,11 +59,14 @@ class ModeloBitacora extends Conexion implements InterBitacora
                         u.cedulaUsuario,
                         m.nombre_modulo,
                         b.acciones,
-                        b.fecha,
-                        b.hora 
+                        b.datos_previos,
+                        b.datos_nuevos,
+                        b.entorno,
+                        DATE(b.fecha_hora) AS fecha,
+                        TIME(b.fecha_hora) AS hora 
                     FROM bitacora b
                     INNER JOIN usuarios u ON u.idUsuario = b.idUsuario
-                    INNER JOIN modulo m ON m.id_modulo = b.id_modulo
+                    INNER JOIN modulos m ON m.id_modulo = b.id_modulo
                     WHERE 1=1";
 
         // 2. BUSCADOR GENERAL (Filtra por nombre de usuario, cédula o acción)

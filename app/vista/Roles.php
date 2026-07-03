@@ -93,13 +93,13 @@ if (isset($solo_lista) && $solo_lista === true) :
                                                     <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
                                                         <button class="btn_t cbt_m" onclick="CargarPermisos(<?= $dato['id_rol'] ?>)" data-tippy-content="Permisos"><i class="fi fi-sr-user-permissions"></i></button>
 
-                                                        <?php if ($permisos['modificar']) : ?>
+                                                        <?php //if ($permisos['modificar']) : ?>
                                                             <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_rol'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                                        <?php endif; ?>
+                                                        <?php //endif; ?>
 
-                                                        <?php if ($permisos['eliminar']) : ?>
+                                                        <?php //if ($permisos['eliminar']) : ?>
                                                             <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_rol'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                                        <?php endif; ?>
+                                                        <?php //endif; ?>
                                                     </div>
                                                 </div>
                                             </div>
@@ -141,22 +141,11 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="row" id="row_permisos" style="display: none;">
                         <div class="colum colum_tabla_completa" style="padding: 0;">
                             <div id="tabla_permisos_container">
-                                <table id="tabla_permisos_ui">
-                                    <thead>
-                                        <tr>
-                                            <th>Módulo</th>
-                                            <th>Ingresar</th>
-                                            <th>Registrar</th>
-                                            <th>Modificar</th>
-                                            <th>Eliminar</th>
-                                            <th>Reportes</th>
-                                            <th>Otras Opciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tabla_permisos">
+                                <div id="tabla_permisos_ui">
+                                    <div id="tabla_permisos">
 
-                                    </tbody>
-                                </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

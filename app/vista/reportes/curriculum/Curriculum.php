@@ -404,6 +404,16 @@
                             <div class="info-value"><?= htmlspecialchars($atleta['nombre_posicion']) ?></div>
                         </div>
                         <div class="info-row">
+                            <div class="info-label">Dorsal:</div>
+                            <div class="info-value"><?= htmlspecialchars($atleta['dorsal'] ?? 'N/A') ?></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Medidas:</div>
+                            <div class="info-value">
+                                <?= htmlspecialchars($atleta['peso_kg'] ?? '0') ?> kg / <?= htmlspecialchars($atleta['estatura_cm'] ?? '0') ?> cm
+                            </div>
+                        </div>
+                        <div class="info-row">
                             <div class="info-label">Doc. Identidad:</div>
                             <div class="info-value"><?= htmlspecialchars($atleta['doc_identidad']) ?></div>
                         </div>

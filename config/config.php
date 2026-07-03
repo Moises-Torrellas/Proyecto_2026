@@ -54,6 +54,7 @@ const _MD_PARTICIPACIONES_ = 105;
 const _MD_RESPALDO_ = 106;
 const _MD_REPORTES_ = 107;
 const _MD_HISTORIAL_ = 108;
+const _MD_PERMISOS_ = 109;
 
 /* CODIGOS DE ERROR */
 const DUPLICATE_CEDULA = "001";

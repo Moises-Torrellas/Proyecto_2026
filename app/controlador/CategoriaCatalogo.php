@@ -5,7 +5,7 @@ use App\modelo\ModeloCategoriaCatalogo;
 require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_CATEGORIA_CAT_;
 
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, '');
 
 $nombreClaseModelo = 'App\modelo\ModeloCategoriaCatalogo'; // Ajustado
 

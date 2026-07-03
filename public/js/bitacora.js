@@ -91,6 +91,23 @@ function eliminar(id) {
 
 }
 
+function obtenerIconoModulo(nombreModulo) {
+    const iconos = {
+        'Usuarios': 'users',
+        'Roles': 'shield-check',
+        'Atletas': 'user',
+        'Representantes': 'users-round',
+        'Deportes': 'activity',
+        'Asignaciones': 'clipboard-list',
+        'Mensualidades': 'calendar-clock',
+        'Pagos': 'banknote',
+        'Bitacora': 'list',
+        'Mantenimiento': 'database',
+        'Reportes': 'file-bar-chart'
+    };
+    return iconos[nombreModulo] || 'box';
+}
+
 function crearConsulta(datos) {
     const contenedor = $('#resultadoconsulta');
     contenedor.empty();
@@ -99,8 +116,8 @@ function crearConsulta(datos) {
         contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
     } else {
         datos.forEach(dato => {
-            var fechaPartes = dato.fecha.split('-'); // ["2025", "05", "26"]
-            var fechaLocal = new Date(fechaPartes[0], fechaPartes[1] - 1, fechaPartes[2]); // Año, mes (0-index), día
+            var fechaPartes = dato.fecha.split('-');
+            var fechaLocal = new Date(fechaPartes[0], fechaPartes[1] - 1, fechaPartes[2]);
             var fechaFormateada = fechaLocal.toLocaleDateString('es-ES');
 
             var horaFormateada = new Date('1970-01-01T' + dato.hora).toLocaleTimeString('en-US', {
@@ -108,29 +125,74 @@ function crearConsulta(datos) {
                 minute: '2-digit',
                 hour12: true
             });
+
+            let icono = obtenerIconoModulo(dato.nombre_modulo);
+            let datosPrevios = dato.datos_previos && dato.datos_previos !== 'null' ? escapeHTML(dato.datos_previos) : 'No Aplica';
+            let datosNuevos = dato.datos_nuevos && dato.datos_nuevos !== 'null' ? escapeHTML(dato.datos_nuevos) : 'No Aplica';
+
+            let estatusClase = dato.acciones === 'exito' || dato.acciones.toLowerCase().includes('éxito') || dato.acciones.toLowerCase().includes('exito') ? 'estatus_v' : (dato.acciones.toLowerCase().includes('error') || dato.acciones.toLowerCase().includes('fallido') || dato.acciones.toLowerCase().includes('fracaso') ? 'estatus_r' : 'estatus_a');
+
             let registro = `
                 <div class="listado_contenedor_grupal">
                     <div class="listado_item" onclick="toggleDetalles(this)">
+                        <div class="listado_col_principal">
+                            <div class="listado_avatar_null"><i class="icon_con" data-lucide="${icono}"></i></div>
+                            <div class="listado_info_base">
+                                <span class="listado_titulo">
+                                    ${escapeHTML(dato.nombre_modulo)}
+                                </span>
+                            </div>
+                        </div>
+
                         <div class="listado_col_datos">
                             <div class="listado_dato_grupo">
                                 <small>Usuario</small>
-                                <span>${dato.nombreUsuario} ${dato.apellidoUsuario}</span>
+                                <span>${escapeHTML(dato.nombreUsuario)} ${escapeHTML(dato.apellidoUsuario)}</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Cedula</small>
-                                <span>${dato.cedulaUsuario}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Modulo</small>
-                                <span>${dato.nombre_modulo}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Accion</small>
+                                <small>Acción</small>
                                 <span>${escapeHTML(dato.acciones)}</span>
                             </div>
                             <div class="listado_dato_grupo">
-                                <small>Hora y Fecha</small>
-                                <span>${horaFormateada} ${fechaFormateada}</span>
+                                <small>Fecha y Hora</small>
+                                <span>${fechaFormateada} ${horaFormateada}</span>
+                            </div>
+                        </div>
+
+                        <div class="listado_col_acciones">
+                            <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                        </div>
+                    </div>
+
+                    <div class="listado_detalle_oculto">
+                        <div class="detalle_expandido_container">
+                            <h4 class="titulo_des">Detalles de la Acción:</h4>
+                            <div class="detalle_fila">
+                                <div class="detalle_card" style="width: 100%;">
+                                    <div class="detalle_card_icon"><i data-lucide="info"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Información Adicional</label>
+                                        <span>Cédula: <b>${escapeHTML(dato.cedulaUsuario)}</b></span>
+                                        <span>Entorno: <b>${escapeHTML(dato.entorno || 'N/A')}</b></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <h4 class="titulo_des">Cambios Realizados:</h4>
+                            <div class="detalle_fila">
+                                <div class="detalle_card" style="width: 100%;">
+                                    <div class="detalle_card_icon"><i data-lucide="history"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Datos Previos</label>
+                                        <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555;">${datosPrevios}</span>
+                                    </div>
+                                </div>
+                                <div class="detalle_card" style="width: 100%;">
+                                    <div class="detalle_card_icon"><i data-lucide="file-diff"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Datos Nuevos</label>
+                                        <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745;">${datosNuevos}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

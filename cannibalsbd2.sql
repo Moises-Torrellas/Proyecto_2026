@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 24-06-2026 a las 06:10:41
+-- Tiempo de generación: 03-07-2026 a las 22:17:31
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -53,7 +53,7 @@ CREATE TABLE `articulos_inventario` (
   `codigo_articulo` int(11) NOT NULL,
   `id_estado` int(11) NOT NULL,
   `id_catalogo` int(11) NOT NULL,
-  `codigo_club` int(11) NOT NULL,
+  `codigo_club` varchar(20) NOT NULL,
   `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
@@ -62,9 +62,9 @@ CREATE TABLE `articulos_inventario` (
 --
 
 INSERT INTO `articulos_inventario` (`codigo_articulo`, `id_estado`, `id_catalogo`, `codigo_club`, `estatus`) VALUES
-(1, 1, 1, 0, 2),
-(2, 1, 1, 0, 1),
-(3, 1, 1, 0, 1);
+(1, 1, 1, '0', 2),
+(2, 1, 1, '0', 1),
+(3, 1, 1, '0', 1);
 
 -- --------------------------------------------------------
 
@@ -155,7 +155,7 @@ CREATE TABLE `cargos` (
 --
 
 INSERT INTO `cargos` (`codigo_cargo`, `codigo_concepto`, `codigo_atleta`, `monto_total`, `fecha_emision`, `estatus`) VALUES
-(1, 1, 2, 30.00, '2026-06-22', 2),
+(1, 1, 2, 30.00, '2026-06-22', 1),
 (2, 2, 2, 25.00, '2026-06-23', 1),
 (3, 3, 2, 25.00, '2026-06-23', 3),
 (4, 3, 2, 25.00, '2026-06-23', 1),
@@ -362,7 +362,7 @@ CREATE TABLE `devoluciones` (
   `id_asignacion` int(11) NOT NULL,
   `id_estado` int(11) NOT NULL,
   `fecha_devolucion` date NOT NULL,
-  `observación` varchar(255) DEFAULT NULL
+  `observacion` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- --------------------------------------------------------
@@ -452,7 +452,8 @@ INSERT INTO `inscripciones` (`codigo_inscripcion`, `codigo_atleta`, `codigo_cate
 (3, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
 (4, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
 (5, 2, 7, 1, 12, 90, 185, '2026-06-21', 1),
-(6, 3, 2, 1, 34, 60, 150, '2026-06-23', 1);
+(6, 3, 2, 1, 34, 60, 150, '2026-06-23', 2),
+(7, 3, 2, 1, 34, 60, 150, '2026-06-27', 1);
 
 -- --------------------------------------------------------
 
@@ -496,8 +497,8 @@ CREATE TABLE `monedas` (
 --
 
 INSERT INTO `monedas` (`codigo_moneda`, `nombre`, `abreviatura`, `simbolo`, `base`, `estatus`) VALUES
-(1, 'Bolivar', 'VES', 'Bs', 2, 1),
-(2, 'Dolar', 'USD', '$', 1, 1);
+(1, 'Bolivar', 'VES', 'Bs', 1, 1),
+(2, 'Dolar', 'USD', '$', 2, 1);
 
 -- --------------------------------------------------------
 
@@ -525,7 +526,7 @@ INSERT INTO `pagos` (`codigo_pago`, `codigo_metodo`, `codigo_moneda`, `monto_pag
 (17, 2, 2, 80.00, '2026-06-23', '1212', 2),
 (18, 2, 2, 25.00, '2026-06-23', '1222', 1),
 (19, 2, 2, 40.00, '2026-06-23', '3333', 2),
-(20, 2, 2, 40.00, '2026-06-23', '1212', 1);
+(20, 2, 2, 40.00, '2026-06-23', '1212', 2);
 
 -- --------------------------------------------------------
 
@@ -675,7 +676,8 @@ CREATE TABLE `retiros` (
 INSERT INTO `retiros` (`codigo_retiro`, `codigo_inscripcion`, `fecha_retiro`, `motivo`) VALUES
 (2, 2, '2026-06-21', 'viaje largo'),
 (3, 3, '2026-06-21', 'no le gusto el hockey'),
-(4, 4, '2026-06-21', 'falta de pago');
+(4, 4, '2026-06-21', 'falta de pago'),
+(5, 6, '2026-06-27', 'Viaje Largo');
 
 -- --------------------------------------------------------
 
@@ -720,7 +722,7 @@ CREATE TABLE `torneos` (
 --
 
 INSERT INTO `torneos` (`codigo_torneo`, `nombre`, `fecha_inicio`, `fecha_fin`, `ubicacion`, `estatus`) VALUES
-(1, 'BARQUISIMETO 2026', '2026-06-22', '2026-06-26', 'Barquisimeto', 1);
+(1, 'BARQUISIMETO 2026', '2026-06-22', '2026-06-24', 'Barquisimeto', 1);
 
 -- --------------------------------------------------------
 
@@ -1203,7 +1205,7 @@ ALTER TABLE `identidad_atleta`
 -- AUTO_INCREMENT de la tabla `inscripciones`
 --
 ALTER TABLE `inscripciones`
-  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `metodos_pago`
@@ -1263,7 +1265,7 @@ ALTER TABLE `representantes`
 -- AUTO_INCREMENT de la tabla `retiros`
 --
 ALTER TABLE `retiros`
-  MODIFY `codigo_retiro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `codigo_retiro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `tasa_cambios`

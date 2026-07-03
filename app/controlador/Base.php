@@ -1,82 +1,31 @@
 <?php
-function procesarPermisos(int $id_modulo, $bitacora = null, bool $soloValidar = false): array
+// Añadimos un segundo parámetro: $clave_acceso
+function procesarPermisos(int $id_modulo, string $clave_acceso = '', bool $soloValidar = false): array
 {
     $nivelUsuario = $_SESSION['nivel_rol'] ?? 99;
 
-    if ($nivelUsuario === 1) {
-        return [
-            'ingresar'  => true,
-            'registrar' => true,
-            'modificar' => true,
-            'eliminar'  => true,
-            'reporte'   => true,
-            'otros'     => true
-        ];
-    }
-
+    // Bloqueo estricto para Nivel 2 (Módulos prohibidos)
     $modulosProhibidos = [_MD_USUARIOS_, _MD_ROLES_, _MD_BITACORA_];
     if ($nivelUsuario === 2 && in_array($id_modulo, $modulosProhibidos)) {
         if ($soloValidar) return []; 
-        
-        $_SESSION['alerta'] = [
-            'icono'   => 'error',
-            'titulo'  => 'Acceso denegado',
-            'mensaje' => 'No tienes permisos asignados para este módulo.'
-        ];
-        header("Location:"."Principal");
+        $_SESSION['alerta'] = ['icono' => 'error', 'titulo' => 'Acceso denegado', 'mensaje' => 'No tienes permisos.'];
+        header("Location: Principal");
         exit();
     }
 
-    if ($nivelUsuario === 2) {
+    // 1. Extraemos SOLO la caja de permisos de este módulo específico
+    $permisos = $_SESSION['permisos'][$id_modulo] ?? [];
 
-        return [
-            'ingresar'  => true,
-            'registrar' => true,
-            'modificar' => true,
-            'eliminar'  => true,
-            'reporte'   => true,
-            'otros'     => true
-        ];
-    }
-
-    if (isset($_SESSION['permisos'][$id_modulo])) {
-        $p = $_SESSION['permisos'][$id_modulo];
-
-        if (!isset($p['ingresar']) || !$p['ingresar']) {
-            if ($soloValidar) return [];
-            
-            $_SESSION['alerta'] = [
-                'icono'   => 'error',
-                'titulo'  => 'Acceso denegado',
-                'mensaje' => 'No tienes permitido ingresar a este módulo.'
-            ];
-            header("Location:"."Principal");
-            exit();
-        }
-
-        $permisos = [
-            'ingresar'  => (bool)$p['ingresar'],
-            'registrar' => (isset($p['registrar']) && $p['registrar']),
-            'modificar' => (isset($p['modificar']) && $p['modificar']),
-            'eliminar'  => (isset($p['eliminar']) && $p['eliminar']),
-            'reporte'   => (isset($p['reporte']) && $p['reporte']),
-            'otros'     => (isset($p['otros']) && $p['otros'])
-        ];
-
-        return $permisos;
-    } else {
+    // 2. Validamos dinámicamente con la clave que nos mandó el controlador
+    if (empty($permisos[$clave_acceso]) && $nivelUsuario !== 2 && $nivelUsuario !== 1) {
         if ($soloValidar) return [];
-        
-        $_SESSION['alerta'] = [
-            'icono'   => 'error',
-            'titulo'  => 'Acceso denegado',
-            'mensaje' => 'No tienes permisos asignados para este módulo.'
-        ];
-        header("Location:"."Principal");
+        $_SESSION['alerta'] = ['icono' => 'error', 'titulo' => 'Acceso denegado', 'mensaje' => 'No puedes entrar.'];
+        header("Location: Principal");
         exit();
     }
-}
 
+    return $permisos;
+}
 function cargarVista(string $pagina,array $datos = []): void
 {   
     
@@ -101,10 +50,11 @@ function comprobarAjax(): bool
 /**
  * Registra una acción en la bitácora.
  */
-function registrarBitacora($bitacora, int $id_modulo, string $mensaje): void
+function registrarBitacora($bitacora, int $id_modulo, string $mensaje, string $datos_previos = '', string $datos_nuevos = ''): void
 {
     if (isset($_SESSION['id']) && $bitacora !== null) {
-        $bitacora->RegistrarAccion($id_modulo, $mensaje, $_SESSION['id']);
+        $entorno = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
+        $bitacora->RegistrarAccion($id_modulo, $mensaje, $_SESSION['id'], $datos_previos, $datos_nuevos, $entorno);
     }
 }
 

@@ -108,12 +108,12 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']) : ?>
+                            <?php //if ($permisos['registrar']) : ?>
                                 <button class="btn btn_azul" id="incluir">Nuevo Usuario</button>
-                            <?php endif; ?>
-                            <?php if ($permisos['reporte']) : ?>
+                            <?php //endif; ?>
+                            <?php //if ($permisos['reporte']) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
-                            <?php endif; ?>
+                            <?php //endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
@@ -161,21 +161,21 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                    <?php if (isset($permisos['otros']) && $permisos['otros']) : ?>
+                                                    <?php //if (isset($permisos['otros']) && $permisos['otros']) : ?>
                                                         <button class="btn_t cbt_m" onclick="CargarPermisos(<?= $dato['idUsuario'] ?>)"><i class="fi fi-sr-user-permissions"></i></button>
-                                                    <?php endif; ?>
+                                                    <?php //endif; ?>
 
-                                                    <?php if (isset($permisos['modificar']) && $permisos['modificar']) : ?>
+                                                    <?php //if (isset($permisos['modificar']) && $permisos['modificar']) : ?>
                                                         <button class="btn_t cbt_v" onclick="buscar(<?= $dato['idUsuario'] ?>)"><i class="fi fi-sr-pencil"></i></button>
-                                                    <?php endif; ?>
+                                                    <?php //endif; ?>
 
-                                                    <?php if (isset($permisos['eliminar']) && $permisos['eliminar']) : ?>
+                                                    <?php //if (isset($permisos['eliminar']) && $permisos['eliminar']) : ?>
                                                         <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['idUsuario'] ?>)"><i class="fi fi-sr-trash-xmark"></i></button>
-                                                    <?php endif; ?>
+                                                    <?php //endif; ?>
 
-                                                    <?php if (isset($permisos['otros']) && $permisos['otros']) : ?>
+                                                    <?php //if (isset($permisos['otros']) && $permisos['otros']) : ?>
                                                         <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['idUsuario'] ?>, <?= $dato['bloqueo'] ?>, this)"><i class="fi <?= $icon ?>"></i></button>
-                                                    <?php endif; ?>
+                                                    <?php //endif; ?>
                                                 </div>
                                                 <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                                             </div>
@@ -295,22 +295,11 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="row" id="row_permisos" style="display: none;">
                         <div class="colum colum_tabla_completa" style="padding: 0;">
                             <div id="tabla_permisos_container">
-                                <table id="tabla_permisos_ui">
-                                    <thead>
-                                        <tr>
-                                            <th>Módulo</th>
-                                            <th>Ingresar</th>
-                                            <th>Registrar</th>
-                                            <th>Modificar</th>
-                                            <th>Eliminar</th>
-                                            <th>Reportes</th>
-                                            <th>Otras Opciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tabla_permisos">
+                                <div id="tabla_permisos_ui">
+                                    <div id="tabla_permisos">
 
-                                    </tbody>
-                                </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
