@@ -3,10 +3,11 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 05-07-2026 a las 03:48:00
+-- Tiempo de generación: 05-07-2026 a las 03:54:52
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
+SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -1418,6 +1419,7 @@ ALTER TABLE `vueltos`
   ADD CONSTRAINT `vueltos_ibfk_1` FOREIGN KEY (`codigo_pago`) REFERENCES `pagos` (`codigo_pago`),
   ADD CONSTRAINT `vueltos_ibfk_2` FOREIGN KEY (`codigo_moneda`) REFERENCES `monedas` (`codigo_moneda`),
   ADD CONSTRAINT `vueltos_ibfk_3` FOREIGN KEY (`codigo_metodo`) REFERENCES `metodos_pago` (`codigo_metodo`);
+SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
