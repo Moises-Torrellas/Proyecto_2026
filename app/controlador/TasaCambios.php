@@ -4,7 +4,7 @@ use App\modelo\ModeloTasaCambios;
 
 require_once __DIR__ . '/Base.php';
 
-$id_modulo = _MD_METODOS_; // TODO: Verificar si necesitamos un ID especifico, por ahora reusamos uno comun o lo omitimos de los permisos estrictos
+$id_modulo = _MD_TASA_; // TODO: Verificar si necesitamos un ID especifico, por ahora reusamos uno comun o lo omitimos de los permisos estrictos
 
 $permisos = procesarPermisos($id_modulo, 'ingresar_tasa');
 

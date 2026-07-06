@@ -8,8 +8,12 @@ use PDO;
 
 class ModeloNotificaciones extends Conexion
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
 
-    public function registrarYNotificar(int $idUsuario, string $titulo, string $mensaje, string $tipo): bool
+    public function registrarYNotificar(int $idUsuario, string $titulo, string $mensaje, int $tipo): bool
     {
         try {
             $conex = $this->conexSG();
@@ -21,19 +25,9 @@ class ModeloNotificaciones extends Conexion
             $stmt->bindValue(':id_usuario', $idUsuario, PDO::PARAM_INT);
             $stmt->bindValue(':titulo', $titulo);
             $stmt->bindValue(':mensaje', $mensaje);
-            $stmt->bindValue(':tipo', $tipo);
+            $stmt->bindValue(':tipo', $tipo, PDO::PARAM_INT);
             $stmt->execute();
 
-            // 2. Preparar transmisión en vivo
-            $payload = [
-                'id_usuario' => $idUsuario,
-                'titulo'     => $titulo,
-                'mensaje'    => $mensaje,
-                'tipo'       => $tipo,
-                'fecha'      => date('d-m-Y h:i A')
-            ];
-
-            $this->dispararWebSocket($payload);
             return true;
         } catch (Exception $e) {
             if (function_exists('logs')) {
@@ -51,7 +45,7 @@ class ModeloNotificaciones extends Conexion
             $conex = $this->conexSG();
 
             // Traemos las notificaciones ordenadas para que las más recientes salgan primero
-            $sql = "SELECT id_notificacion, titulo, mensaje, tipo, creado_en 
+            $sql = "SELECT id_notificacion, titulo, mensaje, tipo, creado_en, estatus 
                 FROM notificaciones 
                 WHERE id_usuario = :id_usuario 
                 ORDER BY creado_en DESC 
@@ -70,72 +64,34 @@ class ModeloNotificaciones extends Conexion
         }
     }
 
-    private function dispararWebSocket(array $data)
-    {
-        $fp = @fsockopen("localhost", 8080, $errno, $errstr, 2);
-        if (!$fp) return;
 
-        $sessionName = session_name();
-        $sessionId = session_id();
-        $cookie = "Cookie: {$sessionName}={$sessionId}\r\n";
-
-        // 1. Handshake HTTP
-        $key = base64_encode(random_bytes(16));
-        $header = "GET / HTTP/1.1\r\n" .
-                  "Host: localhost:8080\r\n" .
-                  "Upgrade: websocket\r\n" .
-                  "Connection: Upgrade\r\n" .
-                  "Sec-WebSocket-Key: $key\r\n" .
-                  "Sec-WebSocket-Version: 13\r\n" .
-                  $cookie . "\r\n";
-        fwrite($fp, $header);
-        
-        // Leer respuesta de Ratchet para confirmar el upgrade
-        stream_set_timeout($fp, 1);
-        fread($fp, 1024);
-
-        // 2. Empaquetar y enmascarar el JSON (RFC 6455)
-        $payload = json_encode($data, JSON_INVALID_UTF8_SUBSTITUTE);
-        if ($payload === false) {
-            fclose($fp);
-            return;
-        }
-        $len = strlen($payload);
-        $frame = chr(129); // 0x81: Fin + Text Frame
-
-        if ($len <= 125) {
-            $frame .= chr($len | 128); // 128 = enmascarado
-        } elseif ($len < 65536) {
-            $frame .= chr(126 | 128) . pack('n', $len);
-        } else {
-            fclose($fp);
-            return; // Muy grande
-        }
-
-        $mask = random_bytes(4);
-        $frame .= $mask;
-        for ($i = 0; $i < $len; $i++) {
-            $frame .= $payload[$i] ^ $mask[$i % 4];
-        }
-
-        // 3. Enviar y cerrar
-        fwrite($fp, $frame);
-        
-        // Frame de cierre
-        fwrite($fp, chr(136) . chr(128) . random_bytes(4));
-        fclose($fp);
-    }
 
     public function verificarChequeoDeHoy(): bool
     {
         $conex = $this->conexSG();
         $sql = "SELECT COUNT(*) FROM notificaciones 
                 WHERE DATE(creado_en) = CURDATE() 
-                AND tipo IN ('cumpleaños', 'torneo', 'cuentas')";
+                AND tipo IN (1, 2, 3)";
         $stmt = $conex->query($sql);
         if (!$stmt) {
             return false;
         }
         return (int)$stmt->fetchColumn() > 0;
+    }
+
+    public function marcarComoVisto(int $id_notificacion): bool
+    {
+        try {
+            $conex = $this->conexSG();
+            $sql = "UPDATE notificaciones SET estatus = 2 WHERE id_notificacion = :id";
+            $stmt = $conex->prepare($sql);
+            $stmt->bindValue(':id', $id_notificacion, \PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (\Exception $e) {
+            if (function_exists('logs')) {
+                logs('Notificaciones', $e->getMessage(), 'Modelo_MarcarComoVisto');
+            }
+            return false;
+        }
     }
 }

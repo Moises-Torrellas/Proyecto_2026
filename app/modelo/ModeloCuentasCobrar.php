@@ -363,4 +363,44 @@ class ModeloCuentasCobrar extends Conexion
             }
         }
     }
+
+    public function ConsultarAtrasados(): array
+    {
+        try {
+            $conex = $this->conex();
+            $sentencia = "SELECT 
+                c.codigo_cargo,
+                a.p_nombre, 
+                a.p_apellidos, 
+                co.nombre AS concepto, 
+                c.fecha_emision, 
+                (c.monto_total - IFNULL(pagos.total_abonado, 0)) AS monto_pendiente
+            FROM 
+                cargos c
+            INNER JOIN 
+                atletas a ON c.codigo_atleta = a.codigo_atleta
+            INNER JOIN 
+                conceptos co ON c.codigo_concepto = co.codigo_concepto
+            LEFT JOIN (
+                SELECT dp.codigo_cargo, SUM(dp.monto_abonado) AS total_abonado 
+                FROM detalles_pagos dp
+                INNER JOIN pagos p ON dp.codigo_pago = p.codigo_pago
+                WHERE p.estatus = 1
+                GROUP BY dp.codigo_cargo
+            ) AS pagos ON c.codigo_cargo = pagos.codigo_cargo
+            WHERE 
+                c.estatus = 1 
+                AND c.fecha_emision < CURDATE()
+            HAVING monto_pendiente > 0;";
+
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            logs('CuentasCobrar', $e->getMessage(), 'Modelo_ConsultarAtrasados');
+            return [];
+        } finally {
+            $conex = NULL;
+        }
+    }
 }

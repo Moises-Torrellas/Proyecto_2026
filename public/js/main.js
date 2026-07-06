@@ -649,24 +649,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const btnNoti = document.getElementById("noti");
     const contenedorNoti = document.getElementById("contenedor_notificaciones");
 
-    // ==========================================
-    // 1. CONEXIÓN AL WEBSOCKET (EN TIEMPO REAL)
-    // ==========================================
-    const ws = new WebSocket("ws://localhost:8080");
-
-    ws.onmessage = function (event) {
-        const payload = JSON.parse(event.data);
-
-        // Renderizar el mensaje mini superior nativo con Lucide Icons
-        renderizarNotificacionSuperior(payload.titulo, payload.mensaje, payload.tipo);
-
-        // Incrementar el indicador numérico sobre tu campana
-        actualizarContadorBadge();
-    };
-
-    ws.onclose = function () {
-        console.warn("Conexión de notificaciones caída. Operando en modo pasivo (BD).");
-    };
+    // Mostrar notificaciones automáticas al iniciar
+    mostrarNotificacionesAutomaticas();
 
     // ==========================================
     // 2. INTERACCIÓN DEL PANEL DESPLEGABLE FLOTANTE
@@ -693,6 +677,31 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
+function mostrarNotificacionesAutomaticas() {
+    fetch('Notificaciones')
+        .then(response => response.json())
+        .then(respuesta => {
+            if (respuesta.accion === 'consultar' && respuesta.datos && respuesta.datos.length > 0) {
+                let unreadCount = 0;
+                respuesta.datos.forEach(noti => {
+                    if (noti.estatus == 1) {
+                        unreadCount++;
+                        // Mostrar como popup automáticamente
+                        renderizarNotificacionSuperior(noti.titulo, noti.mensaje, noti.tipo);
+                    }
+                });
+
+                // Actualizar el badge según la cantidad de no leídas
+                const badge = document.getElementById("campana-notificaciones-badge");
+                if (badge && unreadCount > 0) {
+                    badge.textContent = unreadCount;
+                    badge.classList.remove("ocultar");
+                }
+            }
+        })
+        .catch(err => console.error("Error al cargar historial automático:", err));
+}
+
 // ==========================================
 // 3. CONSULTA AL CONTROLADOR (URL AMIGABLE .HTACCESS)
 // ==========================================
@@ -712,15 +721,21 @@ function cargarNotificacionesEnPanel() {
                     let iconName = "info";
                     let iconClass = "icon_noti_info";
 
-                    if (noti.tipo === "cumpleaños") {
+                    if (noti.tipo == 1) { // 1 = Cumpleaños
                         iconName = "cake";
                         iconClass = "icon_noti_info";
-                    } else if (noti.tipo === "torneo") {
+                    } else if (noti.tipo == 3) { // 3 = Torneos
                         iconName = "trophy";
                         iconClass = "icon_noti_success";
-                    } else if (noti.tipo === "cuenta_cobrar") {
+                    } else if (noti.tipo == 2) { // 2 = Cargos Atrasados
                         iconName = "credit-card";
                         iconClass = "icon_noti_info";
+                    }
+
+                    // Boton de marcar como visto solo si estatus es 1
+                    let btnVisto = "";
+                    if (noti.estatus == 1) {
+                        btnVisto = `<button class="btn_marcar_visto" data-id="${noti.id_notificacion}" style="margin-top: 5px; cursor: pointer; padding: 2px 8px; border: none; border-radius: 4px; background: #3b82f6; color: white; font-size: 12px;">Marcar como visto</button>`;
                     }
 
                     const itemHTML = `
@@ -732,6 +747,7 @@ function cargarNotificacionesEnPanel() {
                                 <h3 class="noti_titulo">${noti.titulo}</h3>
                                 <p class="noti_mensaje">${noti.mensaje}</p>
                                 <span class="noti_tiempo">${noti.creado_en}</span>
+                                ${btnVisto}
                             </div>
                         </li>
                     `;
@@ -743,10 +759,55 @@ function cargarNotificacionesEnPanel() {
 
                 // Reiniciar el badge numérico visual del botón
                 const badge = document.getElementById("campana-notificaciones-badge");
+                let unreadPanel = 0;
+                respuesta.datos.forEach(noti => {
+                    if (noti.estatus == 1) unreadPanel++;
+                });
+
                 if (badge) {
-                    badge.textContent = "0";
-                    badge.classList.add("ocultar");
+                    if (unreadPanel > 0) {
+                        badge.textContent = unreadPanel;
+                        badge.classList.remove("ocultar");
+                    } else {
+                        badge.textContent = "0";
+                        badge.classList.add("ocultar");
+                    }
                 }
+
+                // Asignar eventos a los botones de "Marcar como visto"
+                document.querySelectorAll(".btn_marcar_visto").forEach(btn => {
+                    btn.addEventListener("click", function() {
+                        const idNoti = this.getAttribute("data-id");
+                        const formData = new FormData();
+                        formData.append("accion", "marcar_visto");
+                        formData.append("id_notificacion", idNoti);
+
+                        fetch("Notificaciones", {
+                            method: "POST",
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.accion === "marcar_visto" && data.exito) {
+                                // Ocultar el boton
+                                this.style.display = "none";
+                                // Decrementar badge
+                                const badge = document.getElementById("campana-notificaciones-badge");
+                                if (badge) {
+                                    let current = parseInt(badge.textContent) || 0;
+                                    current--;
+                                    if (current > 0) {
+                                        badge.textContent = current;
+                                    } else {
+                                        badge.textContent = "0";
+                                        badge.classList.add("ocultar");
+                                    }
+                                }
+                            }
+                        })
+                        .catch(err => console.error("Error marcando visto:", err));
+                    });
+                });
 
             } else {
                 listaUl.innerHTML = `<li class="item_noti"><p class="noti_mensaje" style="padding: 10px; text-align: center; width: 100%;">No tienes notificaciones por ahora.</p></li>`;
@@ -762,9 +823,9 @@ function renderizarNotificacionSuperior(titulo, mensaje, tipo) {
     let nombreIcono = "bell";
     let colorIcono = "#3085d6";
 
-    if (tipo === "cumpleaños") { nombreIcono = "cake"; colorIcono = "#ec4899"; }
-    else if (tipo === "torneo") { nombreIcono = "trophy"; colorIcono = "#eab308"; }
-    else if (tipo === "cuenta_cobrar") { nombreIcono = "credit-card"; colorIcono = "#ef4444"; }
+    if (tipo == 1) { nombreIcono = "cake"; colorIcono = "#ec4899"; }
+    else if (tipo == 3) { nombreIcono = "trophy"; colorIcono = "#eab308"; }
+    else if (tipo == 2) { nombreIcono = "credit-card"; colorIcono = "#ef4444"; }
 
     const contenidoHTML = `
         <div style="display: flex; align-items: center; gap: 10px; text-align: left;">
@@ -808,7 +869,7 @@ function muestraNoti(titulo, tiempo) {
             title: "mi-titulo"
         }
     });
-    Toast.fire({ title: titulo });
+    Toast.fire({ html: titulo });
 }
 
 // Función global para manejar imágenes rotas de atletas

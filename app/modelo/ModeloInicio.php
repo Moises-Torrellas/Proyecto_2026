@@ -111,6 +111,18 @@ class ModeloInicio extends Conexion
 
             $modeloUsuarios = new ModeloUsuarios();
             $modeloUsuarios->registrarUltimoIngreso((int)$resultado['idUsuario']);
+
+            // Ejecutar la validación de notificaciones diarias
+            if (class_exists('App\servicios\verificarEvento')) {
+                $verificador = new \App\servicios\verificarEvento();
+                $verificador->procesar();
+            } else {
+                // Instanciarlo requiriendo el archivo si no lo cargó el autoload
+                require_once __DIR__ . '/../servicios/verificarEvento.php';
+                $verificador = new \App\servicios\verificarEvento();
+                $verificador->procesar();
+            }
+
             return [
                 'accion' => 'inicio',
                 'resultado' => 1,
