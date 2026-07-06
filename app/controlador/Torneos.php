@@ -25,7 +25,10 @@ if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudTorneos($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
     registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
 
 /**
@@ -80,12 +83,11 @@ function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    
-    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] = 'Error al listar los torneos.';
-    }
-    
-    echo json_encode($respuesta);
+
+    $registro = $respuesta['datos'] ?? [];
+    $solo_lista = true;
+
+    include(__DIR__ . '/../vista/Torneos.php');
 }
 
 function buscar($obj): void

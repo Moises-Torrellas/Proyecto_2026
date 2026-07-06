@@ -23,10 +23,10 @@
             };
             ?>
 
-            <?php if ($puedeVer(_MD_ATLETAS_, 'ingresar_atleta') || $puedeVer(_MD_REPRESENTANTES_, 'ingresar_representantes') || $puedeVer(_MD_POSICIONES_, 'ingresar_posicion') || $puedeVer(_MD_CATEGORIAS_,'')) : ?>
+            <?php if ($puedeVer(_MD_ATLETAS_, 'ingresar_atleta') || $puedeVer(_MD_REPRESENTANTES_, 'ingresar_representantes') || $puedeVer(_MD_POSICIONES_, 'ingresar_posicion') || $puedeVer(_MD_CATEGORIAS_,'ingresar_categorias')) : ?>
                 <li class="nav_identificador">Administracion</li>
                 <li class="nav_opciones">
-                    <?php if ($puedeVer(_MD_ATLETAS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_ATLETAS_,'ingresar_atleta')) : ?>
                         <a type="button" href="Atletas" class="opciones"><i class="opciones_i" data-lucide="circle-star"></i> Atletas</a>
                     <?php endif; ?>
 
@@ -34,7 +34,7 @@
                         <a type="button" href="Representantes" class="opciones "><i class="opciones_i" data-lucide="user-star"></i> Representantes</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_POSICIONES_,'')) : ?>
+                    <?php if ($puedeVer(_MD_POSICIONES_,'ingresar_posiciones')) : ?>
                         <a type="button" href="Posiciones" class="opciones "><i class="opciones_i" data-lucide="land-plot"></i> Posiciones</a>
                     <?php endif; ?>
 

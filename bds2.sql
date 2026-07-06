@@ -3,11 +3,10 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 06-07-2026 a las 03:40:39
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Tiempo de generación: 07-07-2026 a las 00:27:03
+-- Versión del servidor: 10.4.28-MariaDB
+-- Versión de PHP: 8.2.4
 
-SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -21,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `bds2`
 --
+CREATE DATABASE IF NOT EXISTS `bds2` DEFAULT CHARACTER SET utf8 COLLATE utf8_spanish_ci;
+USE `bds2`;
 
 -- --------------------------------------------------------
 
@@ -28,6 +29,7 @@ SET time_zone = "+00:00";
 -- Estructura de tabla para la tabla `bitacora`
 --
 
+DROP TABLE IF EXISTS `bitacora`;
 CREATE TABLE `bitacora` (
   `id_bitacora` int(11) NOT NULL,
   `id_modulo` int(11) NOT NULL,
@@ -39,170 +41,13 @@ CREATE TABLE `bitacora` (
   `idUsuario` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
---
--- Volcado de datos para la tabla `bitacora`
---
-
-INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `datos_previos`, `datos_nuevos`, `entorno`, `fecha_hora`, `idUsuario`) VALUES
-(1, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 20:54:16', 1),
-(2, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 20:54:32', 1),
-(3, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 20:57:34', 1),
-(4, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 20:57:44', 1),
-(5, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 20:57:57', 1),
-(6, 9, 'Modificó al representante: 13197214 Jessica Colmenarez', '{\"cedula\":\"13197214\",\"nacionalidad\":\"V\",\"nombre\":\"Jessica\",\"apellido\":\"Colmenarez\",\"telefono\":\"0232-1334423\",\"direccion\":\"El Tocuyo\"}', '{\"cedula\":\"13197214\",\"nacionalidad\":\"V\",\"nombre\":\"Jessica\",\"apellido\":\"Colmenarez\",\"telefono\":\"0232-1334423\",\"direccion\":\"El Tocuyo\"}', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 20:58:00', 1),
-(7, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 20:58:18', 1),
-(8, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 20:58:37', 1),
-(9, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 20:58:53', 1),
-(10, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:18:00', 1),
-(11, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:19:07', 1),
-(12, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:20:45', 1),
-(13, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:23:08', 1),
-(14, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:23:17', 1),
-(15, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:23:44', 1),
-(16, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:23:54', 1),
-(17, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:24:02', 1),
-(18, 1, 'Modifico permisos al usuario: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:24:09', 1),
-(19, 1, 'Modifico permisos al usuario: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:24:15', 1),
-(20, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:24:17', 1),
-(21, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:25:20', 1),
-(22, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:27:37', 1),
-(23, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:27:47', 1),
-(24, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:27:52', 1),
-(25, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:27:58', 1),
-(26, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:28:04', 1),
-(27, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:28:35', 1),
-(28, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:32:34', 1),
-(29, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:37:40', 1),
-(30, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:37:54', 3),
-(31, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:38:05', 3),
-(32, 4, 'Usuario bloqueado por exceder límite de intentos', '', '', '', '2026-06-29 21:38:51', 3),
-(33, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:39:06', 1),
-(34, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:39:13', 1),
-(35, 1, 'Desbloqueo al usuario: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:39:18', 1),
-(36, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:39:24', 1),
-(37, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:39:36', 3),
-(38, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-06-29 21:39:45', 3),
-(39, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:32:04', 1),
-(40, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:34:18', 1),
-(41, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:34:21', 1),
-(42, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:35:15', 1),
-(43, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:42:16', 1),
-(44, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:42:52', 1),
-(45, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:43:33', 1),
-(46, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:43:42', 1),
-(47, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:45:18', 1),
-(48, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:45:41', 1),
-(49, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:45:45', 1),
-(50, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:46:06', 1),
-(51, 9, 'Modificó al representante: 13197214 Jessica Colmenarez', '{\"cedula\":\"13197214\",\"nacionalidad\":\"V\",\"nombre\":\"Jessica\",\"apellido\":\"Colmenarez\",\"telefono\":\"0232-1334423\",\"direccion\":\"El Tocuyo\"}', '{\"cedula\":\"13197214\",\"nacionalidad\":\"V\",\"nombre\":\"Jessica\",\"apellido\":\"Colmenarez\",\"telefono\":\"0232-1334423\",\"direccion\":\"El Tocuyo\"}', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:46:38', 3),
-(52, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:46:53', 3),
-(53, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:52:49', 1),
-(54, 1, 'Modifico permisos al usuario: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:53:00', 1),
-(55, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:53:03', 1),
-(56, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-02 23:53:24', 1),
-(57, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 00:00:20', 3),
-(58, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 00:00:45', 1),
-(59, 1, 'Modifico permisos al usuario: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 00:00:58', 1),
-(60, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 00:01:10', 1),
-(61, 1, 'Modifico permisos al usuario: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 00:03:37', 1),
-(62, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 00:03:43', 1),
-(63, 9, 'Generó reporte de representantes.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 00:04:12', 3),
-(64, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 00:04:22', 3),
-(65, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:02:50', 1),
-(66, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:04:33', 1),
-(67, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:04:36', 1),
-(68, 20, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:05:48', 1),
-(69, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:08:56', 1),
-(70, 10, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:08:59', 1),
-(71, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:02', 1),
-(72, 12, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:06', 1),
-(73, 13, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:08', 1),
-(74, 14, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:13', 1),
-(75, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:15', 1),
-(76, 102, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:22', 1),
-(77, 14, 'Ingreso al Modulo de Tasas de Cambio', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:25', 1),
-(78, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:27', 1),
-(79, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:35', 1),
-(80, 16, 'Ingreso al Modulo de Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:37', 1),
-(81, 103, 'Ingreso al Modulo Categoría Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:41', 1),
-(82, 14, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:44', 1),
-(83, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:47', 1),
-(84, 102, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:49', 1),
-(85, 14, 'Ingreso al Modulo de Tasas de Cambio', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:51', 1),
-(86, 19, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:09:54', 1),
-(87, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:10:00', 1),
-(88, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:13:41', 1),
-(89, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:14:09', 1),
-(90, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:14:16', 1),
-(91, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:17:14', 1),
-(92, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:20:12', 1),
-(93, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:45:49', 1),
-(94, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:46:03', 1),
-(95, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:46:19', 1),
-(96, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:46:58', 1),
-(97, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:47:15', 1),
-(98, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:49:46', 1),
-(99, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:49:53', 1),
-(100, 2, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:51:07', 1),
-(101, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 17:53:45', 1),
-(102, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 19:52:47', 1),
-(103, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:00:14', 1),
-(104, 10, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:01:00', 1),
-(105, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:01:16', 1),
-(106, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:03:11', 1),
-(107, 102, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:03:19', 1),
-(108, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:03:28', 1),
-(109, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:12:20', 1),
-(110, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 00:50:54', 1),
-(111, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 00:50:58', 1),
-(112, 14, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 00:51:01', 1),
-(113, 13, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 00:51:03', 1),
-(114, 12, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 00:51:06', 1),
-(115, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:03:44', 1),
-(116, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:04:08', 1),
-(117, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:07:26', 1),
-(118, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:09:56', 1),
-(119, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:12:23', 1),
-(120, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:13:18', 1),
-(121, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:22:11', 1),
-(122, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:29:02', 1),
-(123, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:41:40', 1),
-(124, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:42:00', 1),
-(125, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:44:30', 1),
-(126, 12, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:45:49', 1),
-(127, 13, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:45:52', 1),
-(128, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:46:00', 1),
-(129, 16, 'Ingreso al Modulo de Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:46:06', 1),
-(130, 103, 'Ingreso al Modulo Categoría Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:46:10', 1),
-(131, 104, 'Ingreso al Modulo de Estado Físico', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:46:13', 1),
-(132, 17, 'Ingreso al Modulo de Asignaciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:46:16', 1),
-(133, 19, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 22:12:15', 1),
-(134, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 22:12:25', 1),
-(135, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 00:40:52', 1),
-(136, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 00:52:22', 1),
-(137, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 00:53:12', 1),
-(138, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 00:54:50', 1),
-(139, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:10:39', 1),
-(140, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:10:45', 1),
-(141, 19, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:10:49', 1),
-(142, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:10:55', 1),
-(143, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:11:25', 1),
-(144, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:18:56', 1),
-(145, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:19:04', 1),
-(146, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:22:33', 1),
-(147, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:25:29', 1),
-(148, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:26:17', 1),
-(149, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:26:23', 1),
-(150, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:36:14', 1),
-(151, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:37:04', 1),
-(152, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:37:19', 1);
-
 -- --------------------------------------------------------
 
 --
 -- Estructura de tabla para la tabla `excepciones`
 --
 
+DROP TABLE IF EXISTS `excepciones`;
 CREATE TABLE `excepciones` (
   `id_excepcion` int(11) NOT NULL,
   `id_permiso` int(11) NOT NULL,
@@ -225,6 +70,7 @@ INSERT INTO `excepciones` (`id_excepcion`, `id_permiso`, `id_usuario`, `tipo`) V
 -- Estructura de tabla para la tabla `modulos`
 --
 
+DROP TABLE IF EXISTS `modulos`;
 CREATE TABLE `modulos` (
   `id_modulo` int(11) NOT NULL,
   `nombre_modulo` varchar(50) NOT NULL,
@@ -247,7 +93,7 @@ INSERT INTO `modulos` (`id_modulo`, `nombre_modulo`, `descripcion`, `icono`, `es
 (9, 'Representantes', 'Gestión de representantes', 'user-star', 1),
 (10, 'Posiciones', 'Gestión de posiciones', 'land-plot', 1),
 (11, 'Categorias', 'Gestión de categorías deportivas', 'bring-to-front', 1),
-(12, 'Cuentas por Cobrar', 'Gestión de cuentas por cobrar', 'hand-coins', 1),
+(12, 'Cargos', 'Gestión de cargos', 'hand-coins', 1),
 (13, 'Pagos', 'Gestión de pagos', 'banknote', 1),
 (14, 'Metodos de Pago', 'Gestión de métodos de pago', 'wallet', 1),
 (15, 'Equipamientos', 'Gestión de equipamiento', 'boxes', 1),
@@ -259,17 +105,18 @@ INSERT INTO `modulos` (`id_modulo`, `nombre_modulo`, `descripcion`, `icono`, `es
 (21, 'Premios', 'Gestión de premios', 'award', 1),
 (22, 'Palmares', 'Gestión de palmarés', 'trophy', 1),
 (23, 'Estadisticas', 'Gestión de estadísticas', 'chart-area', 1),
-(99, 'IA', 'Módulo de Inteligencia Artificial', 'component', 1),
+(99, 'IA', 'Módulo de Inteligencia Artificial', 'bot-message-square', 1),
 (100, 'Atletas', 'Gestión de atletas', 'circle-star', 1),
-(101, 'Conceptos de Cuentas', 'Definición de conceptos contables', 'receipt', 1),
+(101, 'Conceptos de Cargos', 'Definición de conceptos contables', 'receipt', 1),
 (102, 'Monedas', 'Gestión de tipos de moneda', 'coins', 1),
 (103, 'Categoria de Equipamiento', 'Gestión de categorías de equipo', 'layers-plus', 1),
 (104, 'Calidad', 'Gestión de control de calidad', 'badge-check', 1),
 (105, 'Participaciones', 'Gestión de participaciones', 'shield-check', 1),
 (106, 'Respaldo BD', 'Gestión de respaldos de base de datos', 'server-cog', 1),
 (107, 'Reportes', 'Generación de reportes', 'chart-column-stacked', 1),
-(108, 'Historial Deportivo', 'Registro de historial deportivo', 'book-user', 1),
-(109, 'Permisos', 'Gestionar los permisos de los usuarios', 'user-key', 1);
+(109, 'Permisos', 'Gestionar los permisos de los usuarios', 'user-key', 1),
+(110, 'Tasa de Cambio', 'Gestionar las tasa de cambios', 'arrow-left-right', 1),
+(112, 'Modulos', 'Gestion de modulos del sistema', 'component', 1);
 
 -- --------------------------------------------------------
 
@@ -277,6 +124,7 @@ INSERT INTO `modulos` (`id_modulo`, `nombre_modulo`, `descripcion`, `icono`, `es
 -- Estructura de tabla para la tabla `notificaciones`
 --
 
+DROP TABLE IF EXISTS `notificaciones`;
 CREATE TABLE `notificaciones` (
   `id_notificacion` int(11) NOT NULL,
   `id_usuario` int(11) NOT NULL,
@@ -293,10 +141,11 @@ CREATE TABLE `notificaciones` (
 -- Estructura de tabla para la tabla `permisos`
 --
 
+DROP TABLE IF EXISTS `permisos`;
 CREATE TABLE `permisos` (
   `id_permiso` int(11) NOT NULL,
   `id_modulo` int(11) NOT NULL,
-  `nombre` varchar(30) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
   `clave` varchar(50) NOT NULL,
   `descripcion` varchar(100) NOT NULL DEFAULT 'Sin Descripción ',
   `estatus` tinyint(4) NOT NULL DEFAULT 1
@@ -309,30 +158,66 @@ CREATE TABLE `permisos` (
 INSERT INTO `permisos` (`id_permiso`, `id_modulo`, `nombre`, `clave`, `descripcion`, `estatus`) VALUES
 (1, 100, 'Registrar Atleta', 'incluir_atleta', 'Permitir El Registro Del Atleta En El Club', 1),
 (2, 100, 'Retirar Atleta', 'retirar_atleta', 'Sin Descripción ', 1),
-(3, 100, 'Ingresar Atletas', 'ingresar_atleta', 'Poder Ingresar Al Modulo De Atletas', 1),
+(3, 100, 'Ingresar A Atletas', 'ingresar_atleta', 'Poder Ingresar Al Modulo De Atletas', 1),
 (4, 9, 'Registrar Representante', 'registrar_representante', 'Sin Descripción ', 1),
 (5, 9, 'Modificar Representante', 'modificar_representante', 'Permitir La Modificacion De Un Representante Ya Ex', 1),
 (6, 9, 'Eliminar Representante', 'eliminar_representante', 'Permitir La Modificacion De Un Representante Ya Ex', 1),
 (7, 9, 'Ingresar A Representantes', 'ingresar_representantes', 'Permitir El Ingreso Al Modulo De Representantes', 1),
-(8, 9, 'Generar Reporte', 'generar_representante', 'Permitir Generar Un Reporte Sobre Los Representant', 1),
+(8, 9, 'Generar Reporte De Representantes', 'generar_representante', 'Permitir Generar Un Reporte Sobre Los Representant', 1),
 (9, 109, 'Ingresar A Permisos', 'ingresar_permisos', 'Permitir El Ingreso Al Modulo De Permisos', 1),
 (10, 109, 'Registrar Permisos', 'registrar_permisos', 'Permitir El Registro De Un Nuevo Permiso', 1),
 (11, 109, 'Modificar Permisos', 'modificar_permisos', 'Permitir La Modificacion De Los Permisos', 1),
 (12, 109, 'Bloquear Permisos', 'bloquear_permisos', 'Permitir El Bloque De Los Permisos Para Que No Pueda Ser Accesible Por Ningun Usuario', 1),
 (13, 10, 'Ingresar A Posiciones', 'ingresar_posiciones', 'Sin Descripción ', 1),
-(14, 11, 'Ingresar A Categorias', 'ingresar_categorias', 'Ingreso A Categorias', 1),
-(15, 11, 'Registrar Categorias', 'registrar_categoria', 'Sin Descripción ', 1),
-(16, 11, 'Modificar Categorias', 'modificar_categoria', 'Sin Descripción ', 1),
-(17, 11, 'Eliminar Categorias', 'eliminar_categoria', 'Sin Descripción ', 1),
-(18, 11, 'Generar Reportar', 'generar_categoria', 'Sin Descripción ', 1),
-(19, 19, 'Ingresar A Torneos', 'ingresar_torneos', 'Permiso Para Poder Ingresar A Torneos', 1),
-(20, 19, 'Registrar Torneo', 'registrar_torneo', 'Registrar Los Torneos', 1),
-(21, 19, 'Modificar Torneo', 'modificar_torneo', 'Modificar Los Torneos Registrados', 1),
-(22, 19, 'Eliminar Torneo', 'eliminar_torneo', 'Eliminar Los Torneos Registrados', 1),
-(23, 101, 'Ingresar A Conceptos', 'ingresar_conceptos', 'Sin Descripción ', 1),
-(24, 101, 'Registrar Conceptos', 'registrar_concepto', 'Sin Descripción ', 1),
-(25, 101, 'Modificar Conceptos', 'modificar_concepto', 'Sin Descripción ', 1),
-(26, 101, 'Eliminar Conceptos', 'eliminar_concepto', 'Sin Descripción', 1);
+(14, 100, 'Modificar Atletas', 'modificar_atleta', 'Sin Descripción ', 1),
+(15, 100, 'Generar Corriculum', 'curriculum_atleta', 'Sin Descripción ', 1),
+(16, 100, 'Generar Reporte De Atletas', 'generar_atletas', 'Sin Descripción', 1),
+(17, 100, 'Reinscribir Atletas', 'reinscribir_atleta', 'Sin Descripción ', 1),
+(18, 10, 'Registrar Posiciones', 'registrar_posicion', 'Sin Descripción ', 1),
+(19, 10, 'Eliminar Posiciones', 'eliminar_posicion', 'Sin Descripción ', 1),
+(20, 10, 'Modificar Posiciones', 'modificar_posicion', 'Sin Descripción ', 1),
+(21, 10, 'Generar Reporte De Posiciones', 'generar_posiciones', 'Sin Descripción ', 1),
+(22, 12, 'Ingresar A Cargos', 'ingresar_cargo', 'Sin Descripción ', 1),
+(23, 12, 'Registrar Cargos', 'registrar_cargo', 'Sin Descripción ', 1),
+(24, 12, 'Modificar Cargos', 'modificar_cargo', 'Sin Descripción ', 1),
+(25, 12, 'Anular Cargos', 'anular_cargo', 'Sin Descripción', 1),
+(26, 12, 'Generar Reporte De Cargos', 'generar_cargo', 'Sin Descripción ', 1),
+(27, 13, 'Ingresar A Pagos', 'ingresar_pago', 'Sin Descripción ', 1),
+(28, 13, 'Registrar Pagos', 'registrar_pago', 'Sin Descripción ', 1),
+(29, 13, 'Anular Pagos', 'anular_pago', 'Sin Descripción ', 1),
+(30, 13, 'Generar Reporte De Pagos', 'generar_pago', 'Sin Descripción ', 1),
+(31, 14, 'Ingresar A Metodos De Pago', 'ingresar_metodop', 'Sin Descripción ', 1),
+(32, 14, 'Registrar Metodos De Pago', 'registrar_metodosp', 'Sin Descripción ', 1),
+(33, 14, 'Modificar Metodo De Pago', 'modificar_metodop', 'Sin Descripción ', 1),
+(34, 14, 'Eliminar Metodos De Pago', 'eliminar_metodop', 'Sin Descripción ', 1),
+(35, 14, 'Bloquear Metodos De Pago', 'bloquear_metodop', 'Sin Descripción ', 1),
+(36, 14, 'Generar Reportes De Metodos De Pago', 'generar_metodop', 'Sin Descripción ', 1),
+(37, 102, 'Ingresar A Monedas', 'ingresar_moneda', 'Sin Descripción ', 1),
+(38, 102, 'Registrar Monedas', 'registrar_moneda', 'Sin Descripción ', 1),
+(39, 102, 'Modificar Monedas', 'modificar_moneda', 'Sin Descripción ', 1),
+(40, 102, 'Eliminar Monedas', 'elimina_moneda', 'Sin Descripción ', 1),
+(41, 102, 'Bloquear Monedas', 'bloquear_moneda', 'Sin Descripción ', 1),
+(42, 102, 'Asignar Moneda Base', 'asignar_moneda', 'Sin Descripción ', 1),
+(43, 102, 'Generar Reportes De Moneda', 'generar_moneda', 'Sin Descripción ', 1),
+(44, 110, 'Ingresar A Tasa De Cambio', 'ingresar_tasa', 'Permitir El Ingreso Al Modulo De Tasa De Cambio', 1),
+(45, 110, 'Sincronizar Tasa De Cambio', 'sincronizar_tasa', 'Permitir Sincronizar La Tasa De Cambio Del Dia De Forma Automatica', 1),
+(46, 110, 'Registrar Tasa De Cambio', 'registrar_tasa', 'Permitir El Registro De Una Tasa Personalizada', 1),
+(47, 11, 'Ingresar A Categorias', 'ingresar_categorias', 'Ingreso A Categorias', 1),
+(48, 11, 'Registrar Categorias', 'registrar_categoria', 'Sin Descripción ', 1),
+(49, 11, 'Modificar Categorias', 'modificar_categoria', 'Sin Descripción ', 1),
+(50, 11, 'Eliminar Categorias', 'eliminar_categoria', 'Sin Descripción ', 1),
+(51, 11, 'Generar Reportar', 'generar_categoria', 'Sin Descripción ', 1),
+(52, 19, 'Ingresar A Torneos', 'ingresar_torneos', 'Permiso Para Poder Ingresar A Torneos', 1),
+(53, 19, 'Registrar Torneo', 'registrar_torneo', 'Registrar Los Torneos', 1),
+(54, 19, 'Modificar Torneo', 'modificar_torneo', 'Modificar Los Torneos Registrados', 1),
+(55, 19, 'Eliminar Torneo', 'eliminar_torneo', 'Eliminar Los Torneos Registrados', 1),
+(56, 101, 'Ingresar A Conceptos', 'ingresar_conceptos', 'Sin Descripción ', 1),
+(57, 101, 'Registrar Conceptos', 'registrar_concepto', 'Sin Descripción ', 1),
+(58, 101, 'Modificar Conceptos', 'modificar_concepto', 'Sin Descripción ', 1),
+(59, 101, 'Eliminar Conceptos', 'eliminar_concepto', 'Sin Descripción', 1),
+(60, 101, 'Generar Reporte De Conceptos De Cargo', 'generar_concepto', 'Sin Descripción ', 1),
+(61, 19, 'Generar Reportes De Torneos', 'generar_torneos', 'Sin Descripción ', 1),
+(62, 101, 'Bloquear Concepto', 'bloquear_concepto', 'Sin Descripción ', 1);
 
 -- --------------------------------------------------------
 
@@ -340,6 +225,7 @@ INSERT INTO `permisos` (`id_permiso`, `id_modulo`, `nombre`, `clave`, `descripci
 -- Estructura de tabla para la tabla `permisos_rol`
 --
 
+DROP TABLE IF EXISTS `permisos_rol`;
 CREATE TABLE `permisos_rol` (
   `id_permiso_rol` int(11) NOT NULL,
   `id_permiso` int(11) NOT NULL,
@@ -363,6 +249,7 @@ INSERT INTO `permisos_rol` (`id_permiso_rol`, `id_permiso`, `id_rol`) VALUES
 -- Estructura de tabla para la tabla `respaldos`
 --
 
+DROP TABLE IF EXISTS `respaldos`;
 CREATE TABLE `respaldos` (
   `id_respaldo` int(11) NOT NULL,
   `id_usuario` int(11) DEFAULT NULL,
@@ -377,6 +264,7 @@ CREATE TABLE `respaldos` (
 -- Estructura de tabla para la tabla `roles`
 --
 
+DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `id_rol` int(11) NOT NULL,
   `nombre_rol` varchar(35) NOT NULL,
@@ -399,6 +287,7 @@ INSERT INTO `roles` (`id_rol`, `nombre_rol`, `descripcion`, `nivel_rol`, `estatu
 -- Estructura de tabla para la tabla `usuarios`
 --
 
+DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE `usuarios` (
   `idUsuario` int(11) NOT NULL,
   `cedulaUsuario` varchar(10) NOT NULL,
@@ -420,8 +309,8 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `foto`, `telefonoUsuario`, `pass_hash`, `correo`, `id_rol`, `ultimo_ingreso`, `intentos_fallidos`, `estatus`, `bloqueo`) VALUES
-(1, '12345678', 'Admin', 'Admin', 'default.png', '1234-5678909', '$2y$10$jIi5Y2TlNk61pSslaz3QW.aBfFfqF0vT1aVSA5sjCDNvVpV/YiAMm', 'admin@gmail.com', 1, '2026-07-05 20:54:37', 0, 1, 1),
-(3, '29506932', 'Moises', 'Torrellas', 'default.png', '0023-2323232', '$2y$10$5iUNe57cdVOn3lV23254OOyB3S0GEiqfeXgsPFUtaF/ZQ/kp8YlNS', 'moitcj@gmail.com', 4, '2026-07-02 20:03:59', 0, 1, 1);
+(1, '12345678', 'Admin', 'Admin', 'default.png', '1234-5678909', '$2y$10$jIi5Y2TlNk61pSslaz3QW.aBfFfqF0vT1aVSA5sjCDNvVpV/YiAMm', 'admin@gmail.com', 1, '2026-07-06 18:02:56', 0, 1, 1),
+(3, '29506932', 'Moises', 'Torrellas', 'default.png', '0023-2323232', '$2y$10$5iUNe57cdVOn3lV23254OOyB3S0GEiqfeXgsPFUtaF/ZQ/kp8YlNS', 'moitcj@gmail.com', 4, '2026-07-05 19:23:52', 0, 1, 1);
 
 --
 -- Índices para tablas volcadas
@@ -500,7 +389,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=153;
+  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `excepciones`
@@ -512,7 +401,7 @@ ALTER TABLE `excepciones`
 -- AUTO_INCREMENT de la tabla `modulos`
 --
 ALTER TABLE `modulos`
-  MODIFY `id_modulo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=110;
+  MODIFY `id_modulo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
 
 --
 -- AUTO_INCREMENT de la tabla `notificaciones`
@@ -524,7 +413,7 @@ ALTER TABLE `notificaciones`
 -- AUTO_INCREMENT de la tabla `permisos`
 --
 ALTER TABLE `permisos`
-  MODIFY `id_permiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id_permiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos_rol`
@@ -598,7 +487,6 @@ ALTER TABLE `respaldos`
 --
 ALTER TABLE `usuarios`
   ADD CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`);
-SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

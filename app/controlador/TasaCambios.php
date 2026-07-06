@@ -45,18 +45,18 @@ function manejarSolicitudTasaCambios($obj, $id_modulo, $bitacoraObj, array $perm
 
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos.');
+                if (empty($permisos['ingresar_tasa'])) throw new Exception('No tienes permisos.');
                 consultar($obj, $permisos);
                 break;
             case 'consultarM':
                 consultarM($obj);
                 break;
             case 'sincronizar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos.');
+                if (empty($permisos['sincronizar_tasa'])) throw new Exception('No tienes permisos.');
                 sincronizar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'registrar':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos.');
+                if (empty($permisos['registrar_tasa'])) throw new Exception('No tienes permisos.');
                 registrar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

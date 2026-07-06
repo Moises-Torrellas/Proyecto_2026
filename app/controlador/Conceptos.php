@@ -74,7 +74,7 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'estatus':
-                if (empty($permisos['modificar_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de pago.');
+                if (empty($permisos['bloquear_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de pago.');
                 cambiarEstatus($obj, $id_modulo, $bitacoraObj);
                 break;
 

@@ -1,3 +1,55 @@
+<?php if (isset($solo_lista) && $solo_lista === true) :
+    if (empty($registro)) : ?>
+        <div class="listado_vacio">
+            <p>No se encontraron torneos registrados</p>
+        </div>
+        <?php else :
+        foreach ($registro as $dato) : ?>
+            <div class="listado_contenedor_grupal">
+                <div class="listado_item" onclick="toggleDetalles(this)">
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Torneo</small>
+                            <span class="listado_resaltado"><?= htmlspecialchars($dato['nombre']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Fecha Inicio</small>
+                            <span><?= htmlspecialchars($dato['fecha_inicio']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Fecha Fin</small>
+                            <span><?= htmlspecialchars($dato['fecha_fin']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Ubicación</small>
+                            <span><?= htmlspecialchars($dato['ubicacion']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Estatus</small>
+                            <?php if ($dato['estatus'] == 1) : ?>
+                                <span class="estatus_v">Activo</span>
+                            <?php else : ?>
+                                <span class="estatus_r">Finalizado</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                            <?php if (!empty($permisos['modificar_torneo'])) : ?>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_torneo'] ?>)" title="Modificar" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                            <?php endif; ?>
+                            <?php if (!empty($permisos['eliminar_torneo'])) : ?>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_torneo'] ?>)" title="Eliminar" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    <?php exit(); ?>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -25,16 +77,65 @@
                         </div>
                         <div class="botones">
                             <?php if (!empty($permisos['registrar_torneo'])) : ?>
-                            <button class="btn btn_azul" id="incluir">Nuevo Torneo</button>
+                                <button class="btn btn_azul" id="incluir">Nuevo Torneo</button>
                             <?php endif; ?>
-                            <?php if (!empty($permisos['generar_reporte'])) : ?>
-                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php if (!empty($permisos['generar_torneos'])) : ?>
+                                <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-                            </div>
+                            <?php if (empty($registro)) : ?>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron torneos registrados</p>
+                                </div>
+                                <?php else :
+                                foreach ($registro as $dato) : ?>
+                                    <div class="listado_contenedor_grupal">
+                                        <div class="listado_item" onclick="toggleDetalles(this)">
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo">
+                                                    <small>Torneo</small>
+                                                    <span class="listado_resaltado"><?= htmlspecialchars($dato['nombre']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Fecha Inicio</small>
+                                                    <span><?= htmlspecialchars($dato['fecha_inicio']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Fecha Fin</small>
+                                                    <span><?= htmlspecialchars($dato['fecha_fin']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Ubicación</small>
+                                                    <span><?= htmlspecialchars($dato['ubicacion']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Estatus</small>
+                                                    <?php if ($dato['estatus'] == 1) : ?>
+                                                        <span class="estatus_v">Activo</span>
+                                                    <?php else : ?>
+                                                        <span class="estatus_r">Finalizado</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_acciones">
+                                                <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                                    <?php if (!empty($permisos['modificar_torneo'])) : ?>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_torneo'] ?>)" title="Modificar" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($permisos['eliminar_torneo'])) : ?>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_torneo'] ?>)" title="Eliminar" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
                 </div>
@@ -51,7 +152,7 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="codigo_torneo" name="codigo_torneo">
-                    
+
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
@@ -110,7 +211,7 @@
             </div>
         </div>
     </section>
-    
+
     <script src="js/main.js"></script>
     <script src="js/torneos.js"></script>
     <?php include('complementos/mensajeError.php'); ?>
