@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 05-07-2026 a las 03:47:06
--- Versión del servidor: 10.4.28-MariaDB
--- Versión de PHP: 8.2.4
+-- Tiempo de generación: 06-07-2026 a las 03:40:39
+-- Versión del servidor: 10.4.32-MariaDB
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `bds2`
 --
-CREATE DATABASE IF NOT EXISTS `bds2` DEFAULT CHARACTER SET utf8 COLLATE utf8_spanish_ci;
-USE `bds2`;
 
 -- --------------------------------------------------------
 
@@ -29,7 +27,6 @@ USE `bds2`;
 -- Estructura de tabla para la tabla `bitacora`
 --
 
-DROP TABLE IF EXISTS `bitacora`;
 CREATE TABLE `bitacora` (
   `id_bitacora` int(11) NOT NULL,
   `id_modulo` int(11) NOT NULL,
@@ -155,8 +152,49 @@ INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `datos_previos`,
 (107, 102, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:03:19', 1),
 (108, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:03:28', 1),
 (109, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:12:20', 1),
-(110, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:24:19', 1),
-(111, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-03 20:26:29', 1);
+(110, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 00:50:54', 1),
+(111, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 00:50:58', 1),
+(112, 14, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 00:51:01', 1),
+(113, 13, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 00:51:03', 1),
+(114, 12, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 00:51:06', 1),
+(115, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:03:44', 1),
+(116, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:04:08', 1),
+(117, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:07:26', 1),
+(118, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:09:56', 1),
+(119, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:12:23', 1),
+(120, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:13:18', 1),
+(121, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:22:11', 1),
+(122, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:29:02', 1),
+(123, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:41:40', 1),
+(124, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:42:00', 1),
+(125, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:44:30', 1),
+(126, 12, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:45:49', 1),
+(127, 13, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:45:52', 1),
+(128, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:46:00', 1),
+(129, 16, 'Ingreso al Modulo de Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:46:06', 1),
+(130, 103, 'Ingreso al Modulo Categoría Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:46:10', 1),
+(131, 104, 'Ingreso al Modulo de Estado Físico', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:46:13', 1),
+(132, 17, 'Ingreso al Modulo de Asignaciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 02:46:16', 1),
+(133, 19, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 22:12:15', 1),
+(134, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-05 22:12:25', 1),
+(135, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 00:40:52', 1),
+(136, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 00:52:22', 1),
+(137, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 00:53:12', 1),
+(138, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 00:54:50', 1),
+(139, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:10:39', 1),
+(140, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:10:45', 1),
+(141, 19, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:10:49', 1),
+(142, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:10:55', 1),
+(143, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:11:25', 1),
+(144, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:18:56', 1),
+(145, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:19:04', 1),
+(146, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:22:33', 1),
+(147, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:25:29', 1),
+(148, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:26:17', 1),
+(149, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:26:23', 1),
+(150, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:36:14', 1),
+(151, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:37:04', 1),
+(152, 101, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-06 01:37:19', 1);
 
 -- --------------------------------------------------------
 
@@ -164,7 +202,6 @@ INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `datos_previos`,
 -- Estructura de tabla para la tabla `excepciones`
 --
 
-DROP TABLE IF EXISTS `excepciones`;
 CREATE TABLE `excepciones` (
   `id_excepcion` int(11) NOT NULL,
   `id_permiso` int(11) NOT NULL,
@@ -187,7 +224,6 @@ INSERT INTO `excepciones` (`id_excepcion`, `id_permiso`, `id_usuario`, `tipo`) V
 -- Estructura de tabla para la tabla `modulos`
 --
 
-DROP TABLE IF EXISTS `modulos`;
 CREATE TABLE `modulos` (
   `id_modulo` int(11) NOT NULL,
   `nombre_modulo` varchar(50) NOT NULL,
@@ -240,7 +276,6 @@ INSERT INTO `modulos` (`id_modulo`, `nombre_modulo`, `descripcion`, `icono`, `es
 -- Estructura de tabla para la tabla `notificaciones`
 --
 
-DROP TABLE IF EXISTS `notificaciones`;
 CREATE TABLE `notificaciones` (
   `id_notificacion` int(11) NOT NULL,
   `id_usuario` int(11) NOT NULL,
@@ -257,7 +292,6 @@ CREATE TABLE `notificaciones` (
 -- Estructura de tabla para la tabla `permisos`
 --
 
-DROP TABLE IF EXISTS `permisos`;
 CREATE TABLE `permisos` (
   `id_permiso` int(11) NOT NULL,
   `id_modulo` int(11) NOT NULL,
@@ -284,7 +318,20 @@ INSERT INTO `permisos` (`id_permiso`, `id_modulo`, `nombre`, `clave`, `descripci
 (10, 109, 'Registrar Permisos', 'registrar_permisos', 'Permitir El Registro De Un Nuevo Permiso', 1),
 (11, 109, 'Modificar Permisos', 'modificar_permisos', 'Permitir La Modificacion De Los Permisos', 1),
 (12, 109, 'Bloquear Permisos', 'bloquear_permisos', 'Permitir El Bloque De Los Permisos Para Que No Pueda Ser Accesible Por Ningun Usuario', 1),
-(13, 10, 'Ingresar A Posiciones', 'ingresar_posiciones', 'Sin Descripción ', 1);
+(13, 10, 'Ingresar A Posiciones', 'ingresar_posiciones', 'Sin Descripción ', 1),
+(14, 11, 'Ingresar A Categorias', 'ingresar_categorias', 'Ingreso A Categorias', 1),
+(15, 11, 'Registrar Categorias', 'registrar_categoria', 'Sin Descripción ', 1),
+(16, 11, 'Modificar Categorias', 'modificar_categoria', 'Sin Descripción ', 1),
+(17, 11, 'Eliminar Categorias', 'eliminar_categoria', 'Sin Descripción ', 1),
+(18, 11, 'Generar Reportar', 'generar_categoria', 'Sin Descripción ', 1),
+(19, 19, 'Ingresar A Torneos', 'ingresar_torneos', 'Permiso Para Poder Ingresar A Torneos', 1),
+(20, 19, 'Registrar Torneo', 'registrar_torneo', 'Registrar Los Torneos', 1),
+(21, 19, 'Modificar Torneo', 'modificar_torneo', 'Modificar Los Torneos Registrados', 1),
+(22, 19, 'Eliminar Torneo', 'eliminar_torneo', 'Eliminar Los Torneos Registrados', 1),
+(23, 101, 'Ingresar A Conceptos', 'ingresar_conceptos', 'Sin Descripción ', 1),
+(24, 101, 'Registrar Conceptos', 'registrar_concepto', 'Sin Descripción ', 1),
+(25, 101, 'Modificar Conceptos', 'modificar_concepto', 'Sin Descripción ', 1),
+(26, 101, 'Eliminar Conceptos', 'eliminar_concepto', 'Sin Descripción', 1);
 
 -- --------------------------------------------------------
 
@@ -292,7 +339,6 @@ INSERT INTO `permisos` (`id_permiso`, `id_modulo`, `nombre`, `clave`, `descripci
 -- Estructura de tabla para la tabla `permisos_rol`
 --
 
-DROP TABLE IF EXISTS `permisos_rol`;
 CREATE TABLE `permisos_rol` (
   `id_permiso_rol` int(11) NOT NULL,
   `id_permiso` int(11) NOT NULL,
@@ -316,7 +362,6 @@ INSERT INTO `permisos_rol` (`id_permiso_rol`, `id_permiso`, `id_rol`) VALUES
 -- Estructura de tabla para la tabla `respaldos`
 --
 
-DROP TABLE IF EXISTS `respaldos`;
 CREATE TABLE `respaldos` (
   `id_respaldo` int(11) NOT NULL,
   `id_usuario` int(11) DEFAULT NULL,
@@ -331,7 +376,6 @@ CREATE TABLE `respaldos` (
 -- Estructura de tabla para la tabla `roles`
 --
 
-DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `id_rol` int(11) NOT NULL,
   `nombre_rol` varchar(35) NOT NULL,
@@ -354,7 +398,6 @@ INSERT INTO `roles` (`id_rol`, `nombre_rol`, `descripcion`, `nivel_rol`, `estatu
 -- Estructura de tabla para la tabla `usuarios`
 --
 
-DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE `usuarios` (
   `idUsuario` int(11) NOT NULL,
   `cedulaUsuario` varchar(10) NOT NULL,
@@ -376,7 +419,7 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `foto`, `telefonoUsuario`, `pass_hash`, `correo`, `id_rol`, `ultimo_ingreso`, `intentos_fallidos`, `estatus`, `bloqueo`) VALUES
-(1, '12345678', 'Admin', 'Admin', 'default.png', '1234-5678909', '$2y$10$jIi5Y2TlNk61pSslaz3QW.aBfFfqF0vT1aVSA5sjCDNvVpV/YiAMm', 'admin@gmail.com', 1, '2026-07-03 15:52:37', 0, 1, 1),
+(1, '12345678', 'Admin', 'Admin', 'default.png', '1234-5678909', '$2y$10$jIi5Y2TlNk61pSslaz3QW.aBfFfqF0vT1aVSA5sjCDNvVpV/YiAMm', 'admin@gmail.com', 1, '2026-07-05 20:54:37', 0, 1, 1),
 (3, '29506932', 'Moises', 'Torrellas', 'default.png', '0023-2323232', '$2y$10$5iUNe57cdVOn3lV23254OOyB3S0GEiqfeXgsPFUtaF/ZQ/kp8YlNS', 'moitcj@gmail.com', 4, '2026-07-02 20:03:59', 0, 1, 1);
 
 --
@@ -456,7 +499,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
+  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=153;
 
 --
 -- AUTO_INCREMENT de la tabla `excepciones`
@@ -480,7 +523,7 @@ ALTER TABLE `notificaciones`
 -- AUTO_INCREMENT de la tabla `permisos`
 --
 ALTER TABLE `permisos`
-  MODIFY `id_permiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id_permiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos_rol`
