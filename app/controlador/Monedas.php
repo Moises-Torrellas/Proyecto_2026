@@ -11,7 +11,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_MONEDAS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_moneda');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloMonedas';
@@ -46,31 +46,31 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar Monedas.');
+                if (empty(['ingresar_moneda'])) throw new Exception('No tienes permisos para consultar Monedas.');
                 consultar($obj, $permisos);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar Monedas.');
+                if (empty(['registrar_moneda'])) throw new Exception('No tienes permisos para registrar Monedas.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Monedas.');
+                if (empty(['modificar_moneda'])) throw new Exception('No tienes permisos para modificar Monedas.');
                 buscar($obj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Monedas.');
+                if (empty(['modificar_moneda'])) throw new Exception('No tienes permisos para modificar Monedas.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar Monedas.');
+                if (empty(['elimina_moneda'])) throw new Exception('No tienes permisos para eliminar Monedas.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'bloquear':
-                if (!$permisos['otros']) throw new Exception('No tienes permisos para bloquear Monedas.');
+                if (empty(['bloquear_moneda'])) throw new Exception('No tienes permisos para bloquear Monedas.');
                 bloquear($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'select':
-                if (!$permisos['otros']) throw new Exception('No tienes permisos para selecionar la Moneda base.');
+                if (empty(['asignar_moneda'])) throw new Exception('No tienes permisos para selecionar la Moneda base.');
                 select($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

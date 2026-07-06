@@ -12,7 +12,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_CUENTAS_;   
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_cargo');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloCuentasCobrar';
@@ -57,35 +57,35 @@ function manejarSolicitudCuentasCobrar($obj, $id_modulo, $bitacoraObj, array $pe
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
+                if (empty($permisos['ingresar_cargo'])) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
                 consultar($obj, $permisos);
                 break;
             case 'consultarA':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
+                if (empty($permisos['ingresar_cargo'])) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
                 consultarA();
                 break;
             case 'consultarCo':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
+                if (empty($permisos['ingresar_cargo'])) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
                 consultarCo();
                 break;
             case 'consultarMoneda':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
+                if (empty($permisos['ingresar_cargo'])) throw new Exception('No tienes permisos para consultar cuentas por cobrar.');
                 consultarMoneda();
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar cuentas por cobrar.');
+                if (empty($permisos['modificar_cargo'])) throw new Exception('No tienes permisos para modificar cuentas por cobrar.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar cuentas por cobrar.');
+                if (empty($permisos['registrar_cargo'])) throw new Exception('No tienes permisos para registrar cuentas por cobrar.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar cuentas por cobrar.');
+                if (empty($permisos['anular_cargo'])) throw new Exception('No tienes permisos para eliminar cuentas por cobrar.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar cuentas por cobrar.');
+                if (empty($permisos['modificar_cargo'])) throw new Exception('No tienes permisos para modificar cuentas por cobrar.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
 

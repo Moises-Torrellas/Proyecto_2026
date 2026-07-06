@@ -30,7 +30,6 @@ class ModeloTasaCambios extends Conexion
             throw new Exception('No se proporcionaron datos para procesar.');
         }
 
-        // Se captura el código de la tasa para la eliminación
         $this->codigo_tasa = $datos['id'] ?? null;
         $this->codigo_moneda = $datos['codigo_moneda'] ?? null;
         $this->fecha = $datos['fecha'] ?? date('Y-m-d');
@@ -41,38 +40,9 @@ class ModeloTasaCambios extends Conexion
         return match ($accion) {
             'registrar' => $this->Registrar(),
             'sincronizar' => $this->Sincronizar(),
-            'eliminar' => $this->Eliminar(), // <-- Nueva acción
             default => throw new Exception('La accion no es valida')
         };
     }
-    private function Eliminar(): array
-    {
-        try {
-            if (!$this->codigo_tasa) {
-                throw new Exception("ID de tasa no válido para eliminar.");
-            }
-
-            $conex = $this->conex();
-            $conex->beginTransaction();
-
-            $sentencia = "DELETE FROM tasa_cambios WHERE codigo_tasa = :codigo_tasa";
-            $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':codigo_tasa', $this->codigo_tasa, PDO::PARAM_INT);
-            $stmt->execute();
-
-            $conex->commit();
-            return array('accion' => 'exito', 'mensaje' => 'Tasa de cambio eliminada exitosamente.');
-        } catch (Exception $e) {
-            if ($conex && $conex->inTransaction()) {
-                $conex->rollback();
-            }
-            logs('TasaCambios', $e->getMessage(), 'Modelo_Eliminar');
-            return array('accion' => 'error', 'mensaje' => 'Error al eliminar la tasa de cambio.');
-        } finally {
-            $conex = NULL;
-        }
-    }
-
     public function Consultar(): array
     {
         try {

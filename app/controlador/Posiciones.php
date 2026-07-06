@@ -51,27 +51,27 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar posiciones.');
+                if (empty($permisos['ingresar_posiciones'])) throw new Exception('No tienes permisos para consultar posiciones.');
                 consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar posiciones.');
+                if (empty($permisos['modificar_posicion'])) throw new Exception('No tienes permisos para modificar posiciones.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar posiciones.');
+                if (empty($permisos['registrar_posicion'])) throw new Exception('No tienes permisos para registrar posiciones.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar posiciones.');
+                if (empty($permisos['eliminar_posicion'])) throw new Exception('No tienes permisos para eliminar posiciones.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar posiciones.');
+                if (empty($permisos['modificar_posicion'])) throw new Exception('No tienes permisos para modificar posiciones.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'generar':
-                if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar un reporte de posiciones.');
+                if (empty($permisos['generar_posiciones'])) throw new Exception('No tienes permisos para generar un reporte de posiciones.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
 

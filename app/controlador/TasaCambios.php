@@ -6,7 +6,7 @@ require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_METODOS_; // TODO: Verificar si necesitamos un ID especifico, por ahora reusamos uno comun o lo omitimos de los permisos estrictos
 
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_tasa');
 
 $nombreClaseModelo = 'App\modelo\ModeloTasaCambios';
 
@@ -58,10 +58,6 @@ function manejarSolicitudTasaCambios($obj, $id_modulo, $bitacoraObj, array $perm
             case 'registrar':
                 if (!$permisos['registrar']) throw new Exception('No tienes permisos.');
                 registrar($obj, $id_modulo, $bitacoraObj);
-                break;
-            case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos.');
-                eliminarTasa($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
                 throw new Exception('Acción no permitida.');
@@ -127,22 +123,4 @@ function registrar($obj, $id_modulo, $bitacoraObj): void
     }
 }
 
-function eliminarTasa($obj, $id_modulo, $bitacoraObj): void
-{
-    try {
-        validar_requeridos(['id']);
-        $datos = [
-            'id' => $_POST['id'],
-            'accion' => 'eliminar'
-        ];
 
-        $resultado = $obj->procesarDatos($datos);
-        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó registro de tasa de cambio ID: " . $_POST['id']);
-        }
-        echo json_encode($resultado);
-    } catch (Exception $e) {
-        logs('TasaCambios', $e->getMessage(), 'Controlador_Eliminar');
-        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
-    }
-}

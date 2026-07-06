@@ -15,7 +15,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_PAGOS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_pago');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloPagos';
@@ -53,28 +53,30 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar pagos.');
+                if (empty($permisos['ingresar_pago'])) throw new Exception('No tienes permisos para consultar pagos.');
                 consultar($obj, $permisos);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar pagos.');
+                if (empty($permisos['registrar_pago'])) throw new Exception('No tienes permisos para registrar pagos.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para anular pagos.');
+                if (empty($permisos['anular_pago'])) throw new Exception('No tienes permisos para anular pagos.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'MultiConsulta':
+                if (empty($permisos['ingresar_pago'])) throw new Exception('No tienes permisos para consultar pagos.');
                 MultiConsulta();
                 break;
             case 'registrar_vuelto':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos.');
+                if (empty($permisos['registrar_pago'])) throw new Exception('No tienes permisos.');
                 registrar_vuelto($obj, $id_modulo, $bitacoraObj);
                 break;
             /* case 'consultarTasa':
                 consultarTasa($obj);
                 break; */
             case 'generar':
+                if (empty($permisos['generar_pago']))
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

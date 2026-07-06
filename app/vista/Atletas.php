@@ -65,22 +65,22 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                            <?php if ($permisos['modificar']) : ?>
+                            <?php if (!empty($permisos['modificar_atleta'])) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Modificar">
                                     <i class="fi fi-sr-pencil"></i>
                                 </button>
                             <?php endif; ?>
-                            <?php if ($dato['estatus'] == 1 && $permisos['eliminar']) : ?>
+                            <?php if ($dato['estatus'] == 1 && !empty($permisos['retirar_atleta'])) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Retirar">
                                     <i class="fi fi-sr-cross-circle"></i>
                                 </button>
                             <?php endif; ?>
-                            <?php if ($dato['estatus'] == 2 && $permisos['modificar']) : ?>
+                            <?php if ($dato['estatus'] == 2 && !empty($permisos['reinscribir_atleta'])) : ?>
                                 <button id="cbt_re" class="btn_t cbt_m" onclick="buscarReinscribir(<?= $dato['id_atleta'] ?>)" data-tippy-content="Re-Inscribir">
                                     <i class="fi fi-sr-rotate-right"></i>
                                 </button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']) : ?>
+                            <?php if (!empty($permisos['curriculum_atleta'])) : ?>
                                 <button id="cbt_sec" class="btn_t cbt_sec" onclick="GenerarCurriculum(<?= $dato['id_atleta'] ?>)" data-tippy-content="Generar Currículum">
                                     <i class="fi fi-sr-clipboard-user"></i>
                                 </button>
@@ -228,10 +228,10 @@ endif;
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']) : ?>
+                            <?php if (!empty($permisos['incluir_atleta'])) : ?>
                                 <button class="btn btn_azul" id="incluir">Nuevo Atleta</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']) : ?>
+                            <?php if (!empty($permisos['generar_atletas'])) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -303,22 +303,22 @@ endif;
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                    <?php if ($permisos['modificar']) : ?>
+                                                    <?php if (!empty($permisos['modificar_atleta'])) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Modificar">
                                                             <i class="fi fi-sr-pencil"></i>
                                                         </button>
                                                     <?php endif; ?>
-                                                    <?php if ($dato['estatus'] == 1 && $permisos['eliminar']) : ?>
+                                                    <?php if ($dato['estatus'] == 1 && !empty($permisos['retirar_atleta'])) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_atleta'] ?>)" data-tippy-content="Retirar">
                                                             <i class="fi fi-sr-cross-circle"></i>
                                                         </button>
                                                     <?php endif; ?>
-                                                    <?php if ($dato['estatus'] == 2 && $permisos['modificar']) : ?>
+                                                    <?php if ($dato['estatus'] == 2 && !empty($permisos['reinscribir_atleta'])) : ?>
                                                         <button id="cbt_re" class="btn_t cbt_m" onclick="buscarReinscribir(<?= $dato['id_atleta'] ?>)" data-tippy-content="Re-Inscribir">
                                                             <i class="fi fi-sr-rotate-right"></i>
                                                         </button>
                                                     <?php endif; ?>
-                                                    <?php if ($permisos['reporte']) : ?>
+                                                    <?php if (!empty($permisos['curriculum_atleta'])) : ?>
                                                         <button id="cbt_sec" class="btn_t cbt_sec" onclick="GenerarCurriculum(<?= $dato['id_atleta'] ?>)" data-tippy-content="Generar Currículum">
                                                             <i class="fi fi-sr-clipboard-user"></i>
                                                         </button>

@@ -21,7 +21,7 @@ if (isset($solo_lista) && $solo_lista === true) :
 
 
                 $botonesAccion = '';
-                if ($permisos['eliminar']) {
+                if (!empty($permisos['anular_pago'])) {
                     $botonesAccion = '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
                 }
             }
@@ -161,10 +161,10 @@ endif;
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']) : ?>
+                            <?php if (!empty($permisos['registrar_pago'])) : ?>
                             <button class="btn btn_azul" id="incluir">Nuevo Pago</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']) : ?>
+                            <?php if (!empty($permisos['generar_pago'])) : ?>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -193,7 +193,7 @@ endif;
 
 
                                         $botonesAccion = '';
-                                        if ($permisos['eliminar']) {
+                                        if (!empty($permisos['anular_pago'])) {
                                             $botonesAccion = '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
                                         }
                                     }

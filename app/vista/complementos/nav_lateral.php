@@ -44,18 +44,18 @@
                 </li>
             <?php endif; ?>
 
-            <?php if ($puedeVer(_MD_CUENTAS_,'') || $puedeVer(_MD_PAGOS_,'') || $puedeVer(_MD_METODOS_,'') || $puedeVer(_MD_CONCEPTOS_,'') || $puedeVer(_MD_MONEDAS_,'')) : ?>
+            <?php if ($puedeVer(_MD_CUENTAS_,'ingresar_cargo') || $puedeVer(_MD_PAGOS_,'ingresar_pago') || $puedeVer(_MD_METODOS_,'ingresar_metodop') || $puedeVer(_MD_CONCEPTOS_,'') || $puedeVer(_MD_MONEDAS_,'')) : ?>
                 <li class="nav_identificador">Cobranzas</li>
                 <li class="nav_opciones">
-                    <?php if ($puedeVer(_MD_CUENTAS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_CUENTAS_,'ingresar_cargo')) : ?>
                         <a type="button" href="CuentasCobrar" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Cargos</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_PAGOS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_PAGOS_,'ingresar_pago')) : ?>
                         <a type="button" href="Pagos" class="opciones"><i class="opciones_i" data-lucide="banknote"></i> Pagos</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_METODOS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_METODOS_,'ingresar_metodop')) : ?>
                         <a type="button" href="MetodosPago" class="opciones"><i class="opciones_i" data-lucide="wallet"></i> Metodos de Pago</a>
                     <?php endif; ?>
 

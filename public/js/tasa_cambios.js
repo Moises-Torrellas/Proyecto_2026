@@ -95,16 +95,6 @@ function construirSelect(idSelect, datos, campoId, campo1) {
     });
 }
 
-function eliminar(id) {
-    confirmar('¿Desea eliminar esta tasa de cambio?', function (confirmado) {
-        if (confirmado) {
-            var datos = new FormData();
-            datos.append('id', id);
-            datos.append('accion', 'eliminar');
-            enviaAjax(datos);
-        }
-    });
-}
 
 var token = $('meta[name="csrf-token"]').attr('content');
 
