@@ -38,7 +38,7 @@
                         <a type="button" href="Posiciones" class="opciones "><i class="opciones_i" data-lucide="land-plot"></i> Posiciones</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_CATEGORIAS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_CATEGORIAS_,'ingresar_categorias')) : ?>
                         <a type="button" href="Categorias" class="opciones "><i class="opciones_i" data-lucide="bring-to-front"></i> Categorías</a>
                     <?php endif; ?>
                 </li>
@@ -59,7 +59,7 @@
                         <a type="button" href="MetodosPago" class="opciones"><i class="opciones_i" data-lucide="wallet"></i> Metodos de Pago</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_CONCEPTOS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_CONCEPTOS_,'ingresar_conceptos')) : ?>
                         <a type="button" href="Conceptos" class="opciones"><i class="opciones_i" data-lucide="receipt"></i> Conceptos de Cargos</a>
                     <?php endif; ?>
 
@@ -102,7 +102,7 @@
             <?php if ($puedeVer(_MD_TORNEOS_,'') || $puedeVer(_MD_EQUIPOS_,'') || $puedeVer(_MD_PARTICIPACIONES_,'')) : ?>
                 <li class="nav_identificador">Competencias</li>
                 <li class="nav_opciones">
-                    <?php if ($puedeVer(_MD_TORNEOS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_TORNEOS_,'ingresar_torneos')) : ?>
                         <a type="button" href="Torneos" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Torneos</a>
                     <?php endif; ?>
 
