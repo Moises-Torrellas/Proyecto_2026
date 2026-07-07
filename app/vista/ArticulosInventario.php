@@ -24,8 +24,12 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
+                            <?php if (!empty($permisos['registrar_articulo'])) : ?>
                             <button class="btn btn_azul" id="btn_nuevo">Nuevo Artículo</button>
+                            <?php endif; ?>
+                            <?php if (!empty($permisos['generar_articulo'])) : ?>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
@@ -95,12 +99,12 @@
                                         </div>
                                     </div>
                                     <div class="sub_item_acciones" onclick="event.stopPropagation();">
-                                        <?php if (!empty($permisos['modificar'])) { ?>
+                                        <?php if (!empty($permisos['modificar_articulo'])) { ?>
                                             <button class="btn_t cbt_v" onclick="editar(<?= $pieza['codigo_articulo'] ?>, <?= $grupo['id_catalogo'] ?>, <?= $pieza['id_estado'] ?>)" data-tippy-content="Modificar">
                                                 <i class="fi fi-sr-pencil"></i>
                                             </button>
                                         <?php } ?>
-                                        <?php if (!empty($permisos['eliminar'])) { ?>
+                                        <?php if (!empty($permisos['eliminar_articulo'])) { ?>
                                             <button class="btn_t cbt_r" onclick="eliminar(<?= $pieza['codigo_articulo'] ?>)" data-tippy-content="Eliminar">
                                                 <i class="fi fi-sr-trash"></i>
                                             </button>

@@ -5,7 +5,7 @@ require_once __DIR__ . '/Base.php';
 
 // Actualiza esta constante en tu archivo global si es necesario
 $id_modulo = _MD_ARTICULOS_INVENTARIO_;
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_articulos');
 
 $nombreClaseModelo = 'App\modelo\ModeloArticulosInventario';
 
@@ -38,16 +38,17 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
 
         switch ($accion) {
             case 'consultar':
+                if (empty($permisos['ingresar_articulos'])) throw new Exception('No tienes permisos para consultar los artículos.');
                 $respuesta = $obj->ProcesarDatos(['accion' => 'consultar']);
                 $registro = $respuesta['datos'] ?? [];
                 $solo_lista = true;
-                include(__DIR__ . '/../vista/ArticulosInventario.php'); // Asegúrate de renombrar el archivo de la vista
+                include(__DIR__ . '/../vista/ArticulosInventario.php'); 
                 break;
             case 'cargar_combos':
                 echo json_encode($obj->ProcesarDatos(['accion' => 'cargar_combos']));
                 break;
             case 'incluir':
-                if (empty($permisos['registrar'])) throw new Exception('Sin permisos.');
+                if (empty($permisos['registrar_articulo'])) throw new Exception('Sin permisos.');
                 if (!is_numeric($_POST['id_catalogo']) || !is_numeric($_POST['id_estado'])) throw new Exception('Datos inválidos.');
                 
                 $resultado = $obj->ProcesarDatos([
@@ -62,7 +63,7 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
                 echo json_encode($resultado);
                 break;
             case 'modificar':
-                if (empty($permisos['modificar'])) throw new Exception('Sin permisos.');
+                if (empty($permisos['modificar_articulo'])) throw new Exception('Sin permisos.');
                 if (!is_numeric($_POST['codigo_articulo'])) throw new Exception('ID Inválido.');
                 
                 $resultado = $obj->ProcesarDatos([
@@ -78,7 +79,7 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
                 echo json_encode($resultado);
                 break;
             case 'eliminar':
-                if (empty($permisos['eliminar'])) throw new Exception('Sin permisos.');
+                if (empty($permisos['eliminar_articulo'])) throw new Exception('Sin permisos.');
                 
                 $resultado = $obj->ProcesarDatos(['accion' => 'eliminar', 'codigo_articulo' => $_POST['codigo_articulo']]);
                 

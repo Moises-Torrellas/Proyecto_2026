@@ -5,7 +5,7 @@ use App\modelo\ModeloCategoriaCatalogo;
 require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_CATEGORIA_CAT_;
 
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_catcatalogos');
 
 $nombreClaseModelo = 'App\modelo\ModeloCategoriaCatalogo'; // Ajustado
 
@@ -40,22 +40,23 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+             if (empty($permisos['ingresar_catcatalogos'])) throw new Exception('No tienes permisos para consultar categorias.');
+                consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar categorías.');
-                buscar($obj);
+                if (empty($permisos['modificar_catcatalogo'])) throw new Exception('No tienes permisos para modificar categorías.');
+                buscar($obj,$permisos);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar categorías.');
+                if (empty($permisos['registrar_catcatalogo'])) throw new Exception('No tienes permisos para registrar categorías.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar categorías.');
+                if (empty($permisos['eliminar_catcatalogo'])) throw new Exception('No tienes permisos para eliminar categorías.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar categorías.');
+                if (empty($permisos['modificar_catcatalogo'])) throw new Exception('No tienes permisos para modificar categorías.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
 
@@ -72,14 +73,14 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
  * Acciones específicas
  */
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
     echo json_encode($respuesta);
 }
 
-function buscar($obj): void
+function buscar($obj, $permisos): void
 {
     try {
         // Ajustado a id_categoria
