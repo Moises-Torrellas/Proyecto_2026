@@ -185,15 +185,11 @@
                         $id++; 
                         $observacion = !empty(trim($r['observacion'])) ? htmlspecialchars($r['observacion']) : 'Sin observaciones';
                         
-                        // Variables exactas del modelo, añadiendo el atleta
+                        // Variables exactas del modelo
                         $articulo = htmlspecialchars($r['articulo_nombre']);
                         $atleta = htmlspecialchars($r['atleta_nombre'] . ' ' . $r['atleta_apellido']);
                         $calidad = htmlspecialchars($r['calidad']);
                 ?>
-                foreach ($datos as $r) :
-                    $id++;
-                    $observacion = !empty(trim($r['observacion'])) ? htmlspecialchars($r['observacion']) : 'Sin observaciones';
-                    ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= $r['fecha_vista'] ?></td>

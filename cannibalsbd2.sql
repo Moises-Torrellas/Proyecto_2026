@@ -362,7 +362,7 @@ CREATE TABLE `devoluciones` (
   `id_asignacion` int(11) NOT NULL,
   `id_estado` int(11) NOT NULL,
   `fecha_devolucion` date NOT NULL,
-  `observación` varchar(255) DEFAULT NULL
+  `observacion` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- --------------------------------------------------------

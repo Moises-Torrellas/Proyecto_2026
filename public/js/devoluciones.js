@@ -1,6 +1,85 @@
+let paginaActual = 1;
+
+// --- LÓGICA DE BUSCADOR Y PAGINACIÓN ---
+function aplicarFiltroYPaginacion() {
+    let busquedaInput = $('#busqueda');
+    let selectRegistros = $('#cantidad_registros');
+    
+    // Validar si los elementos existen en la vista
+    if (!busquedaInput.length || !selectRegistros.length) return;
+
+    let busqueda = busquedaInput.val().toLowerCase();
+    let registrosPorPagina = parseInt(selectRegistros.val()) || 10;
+    let $registros = $('.listado_contenedor_grupal');
+    
+    // 1. Filtrado por texto
+    let $registrosFiltrados = $registros.filter(function() {
+        let texto = $(this).text().toLowerCase();
+        return texto.indexOf(busqueda) > -1;
+    });
+
+    $registros.hide(); // Ocultamos todos primero
+
+    let totalFiltrados = $registrosFiltrados.length;
+    let totalPaginas = Math.ceil(totalFiltrados / registrosPorPagina);
+
+    // Ajustar página si los filtros la dejan fuera de rango
+    if (paginaActual > totalPaginas && totalPaginas > 0) paginaActual = totalPaginas;
+    if (totalPaginas === 0) paginaActual = 1;
+
+    // 2. Paginación visual
+    let inicio = (paginaActual - 1) * registrosPorPagina;
+    let fin = inicio + registrosPorPagina;
+
+    $registrosFiltrados.slice(inicio, fin).show();
+
+    // 3. Actualización de textos informativos
+    let textoInicio = totalFiltrados > 0 ? inicio + 1 : 0;
+    let textoFin = fin > totalFiltrados ? totalFiltrados : fin;
+    $('#texto_registros').text(`Mostrando registros del ${textoInicio} al ${textoFin} de un total de ${totalFiltrados} registros`);
+
+    renderizarBotonesPaginacion(totalPaginas);
+}
+
+function renderizarBotonesPaginacion(totalPaginas) {
+    let $paginacion = $('#paginacion');
+    $paginacion.empty();
+
+    if (totalPaginas <= 1) return;
+
+    let btnPrev = `<button type="button" class="btn btn_t" ${paginaActual === 1 ? 'disabled' : ''} onclick="cambiarPagina(${paginaActual - 1})" style="margin: 0 2px;">Anterior</button>`;
+    $paginacion.append(btnPrev);
+
+    for (let i = 1; i <= totalPaginas; i++) {
+        let claseActiva = i === paginaActual ? 'btn_azul' : 'btn_t';
+        $paginacion.append(`<button type="button" class="btn ${claseActiva}" onclick="cambiarPagina(${i})" style="margin: 0 2px;">${i}</button>`);
+    }
+
+    let btnNext = `<button type="button" class="btn btn_t" ${paginaActual === totalPaginas ? 'disabled' : ''} onclick="cambiarPagina(${paginaActual + 1})" style="margin: 0 2px;">Siguiente</button>`;
+    $paginacion.append(btnNext);
+}
+
+window.cambiarPagina = function(pag) {
+    paginaActual = pag;
+    aplicarFiltroYPaginacion();
+};
+// --- FIN LÓGICA DE BUSCADOR Y PAGINACIÓN ---
+
 $(document).ready(function () {
-    if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    // Inicializar filtros al cargar la vista
+    aplicarFiltroYPaginacion();
     MultiConsulta();
+
+    // Eventos del buscador y selector
+    $(document).on('input', '#busqueda', function() {
+        paginaActual = 1;
+        aplicarFiltroYPaginacion();
+    });
+
+    $(document).on('change', '#cantidad_registros', function() {
+        paginaActual = 1;
+        aplicarFiltroYPaginacion();
+    });
 
     $("#ayuda").on("click", function() {
         if(typeof iniciarAyuda === 'function') {
@@ -94,7 +173,10 @@ function enviaAjax(datos) {
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
                 $('#resultadoconsulta').html(respuesta);
                 if (typeof lucide !== 'undefined') lucide.createIcons();
-                if (typeof inicializarPaginador === 'function') inicializarPaginador();
+                
+                // Reiniciar paginador tras la carga del DOM
+                aplicarFiltroYPaginacion(); 
+                
                 return;
             }
             try {
@@ -162,7 +244,6 @@ function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
 }
 
 function anular(id_devolucion) {
-    // Calling the global function from main.js
     confirmarAnulacion('¿Está seguro que quiere anular esta devolución?', function (motivo) {
         if (motivo !== false) {
             let datos = new FormData();

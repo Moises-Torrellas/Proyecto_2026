@@ -2,8 +2,8 @@
 
 use App\modelo\ModeloDevoluciones;
 use App\modelo\ModeloAsignaciones;
-use App\modelo\ModeloEquipamientos;
-use App\modelo\ModeloCalidad; 
+use App\modelo\ModeloArticulosInventario; 
+use App\modelo\ModeloEstadoFisico; 
 
 require_once __DIR__ . '/Base.php';
 
@@ -18,7 +18,7 @@ if (!class_exists($nombreClaseModelo)) {
 
 $objModelo = new ModeloDevoluciones();
 $objModelo->setAsignaciones(new ModeloAsignaciones());
-$objModelo->setEquipamientos(new ModeloEquipamientos());
+$objModelo->setEquipamientos(new ModeloArticulosInventario());
 
 $pagina = 'Devoluciones';
 
@@ -95,17 +95,17 @@ function consultar($obj, $permisos): void {
 function MultiConsulta(): void {
     try {
         $modeloAsignaciones = new ModeloAsignaciones();
-        $modeloEstado = new ModeloCalidad(); 
+        $modeloEstado = new ModeloEstadoFisico(); 
 
         $conex = $modeloAsignaciones->conex();
         $sql = "SELECT a.id_asignacion, a.estatus as estatus_asignacion,
-                       CONCAT(at.nombres, ' ', at.apellidos) as atleta,
+                       CONCAT(at.p_nombre, ' ', at.p_apellidos) as atleta,
                        c.nombre as articulo
                 FROM asignaciones a
-                INNER JOIN atletas at ON a.id_atleta = at.id_atleta
-                INNER JOIN equipamientos e ON a.id_equipamiento = e.id_equipamiento
-                INNER JOIN catalogos c ON e.id_catalogo = c.id_catalogo
-                WHERE a.anulado = 0 AND a.estatus = 1
+                INNER JOIN atletas at ON a.codigo_atleta = at.codigo_atleta
+                INNER JOIN articulos_inventario e ON a.codigo_articulo = e.codigo_articulo
+                INNER JOIN catalogo c ON e.id_catalogo = c.id_catalogo
+                WHERE a.estatus = 1
                 ORDER BY a.fecha_asignacion DESC";
         
         $stmt = $conex->prepare($sql);

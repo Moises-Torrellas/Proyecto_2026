@@ -28,6 +28,24 @@
                             <?php endif; ?>
                         </div>
                     </div>
+
+                    <div class="controles_tabla" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="registros_por_pagina">
+                            <label>Mostrar 
+                                <select id="cantidad_registros" class="formulario" style="width: auto; display: inline-block; padding: 5px;">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select> 
+                            registros</label>
+                        </div>
+                        <div class="buscador">
+                            <label>Buscar: 
+                                <input type="text" id="busqueda" class="formulario" placeholder="Buscar devolución..." style="width: auto; display: inline-block; padding: 5px;">
+                            </label>
+                        </div>
+                    </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
 <?php } ?>
@@ -41,7 +59,8 @@
         $totalRegistros = count($registro);
 
         foreach ($registro as $index => $dato):
-            $idAtleta = $dato['id_atleta'];
+            // MODIFICACIÓN DE ID: id_atleta -> codigo_atleta según esquema
+            $idAtleta = $dato['codigo_atleta'];
 
             // 1. DETECTAR CAMBIO DE ATLETA
             if ($idAtleta !== $atletaActual):
@@ -134,7 +153,15 @@
             <?php endif; ?>
 
         <?php endforeach; ?>
-    <?php endif; ?>
+        
+        <div class="paginacion_contenedor" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 10px;">
+            <div class="info_registros">
+                <span id="texto_registros">Mostrando registros del 1 al <?= $totalRegistros ?> de un total de <?= $totalRegistros ?> registros</span>
+            </div>
+            <div class="paginacion" id="paginacion">
+                </div>
+        </div>
+        <?php endif; ?>
 
 <?php if (!isset($solo_lista)) { ?>
                         </div>
