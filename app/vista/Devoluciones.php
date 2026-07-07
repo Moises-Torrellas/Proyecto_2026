@@ -18,16 +18,23 @@
                         <div class="contenedor_titulo">
                             <h2 class="titulo_pagina" id="titulo">Devoluciones</h2>
                         </div>
+                        
+                        <div class="contenedor_busqueda">
+                            <input type="text" placeholder="Buscar..." autocomplete="off" id="busqueda">
+                            <i class="fi fi-br-search icon_input"></i>
+                        </div>
+
                         <div class="botones">
-                            <?php if(!empty($permisos['registrar'])): ?>
+                            <?php if(!empty($permisos['registrar_devoluciones'])): ?>
                                 <button class="btn btn_azul" id="btn_nuevo">Nueva Devolución</button> 
                             <?php endif; ?>
                             
-                            <?php if (!empty($permisos['reporte'])): ?>
+                            <?php if (!empty($permisos['reporte_devoluciones'])): ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
                     </div>
+
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
 <?php } ?>
@@ -41,7 +48,7 @@
         $totalRegistros = count($registro);
 
         foreach ($registro as $index => $dato):
-            $idAtleta = $dato['id_atleta'];
+            $idAtleta = $dato['codigo_atleta'];
 
             // 1. DETECTAR CAMBIO DE ATLETA
             if ($idAtleta !== $atletaActual):
@@ -98,33 +105,33 @@
             if ($dato['nivel_estado'] >= 3) $claseEstatus = 'estatus_r';
 
             $botonesAccion = '';
-            if ($permisos['modificar']) {
+            if (!empty($permisos['modificar_devoluciones'])) {
                 $botonesAccion .= '<button class="btn_t cbt_v" onclick="editar(' . $dato['id_devolucion'] . ', ' . $dato['id_asignacion'] . ', ' . $dato['id_estado'] . ', \'' . $dato['fecha_devolucion'] . '\', \'' . htmlspecialchars($dato['observacion']) . '\')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
             }
-            if ($permisos['eliminar']) {
+            if (!empty($permisos['eliminar_devoluciones'])) {
                 $botonesAccion .= '<button class="btn_t cbt_r" onclick="anular(' . $dato['id_devolucion'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-trash"></i></button>';
             }
             ?>
-                            <div class="sub_item_fila">
-                                <div class="sub_item_info">
-                                    <span class="sub_item_titulo"><?= htmlspecialchars($dato['articulo_nombre']) ?></span>
-                                    <div class="sub_item_fechas">
-                                        <span>Devuelto: <?= $dato['fecha_vista'] ?></span>
-                                        <?php if (!empty(trim($dato['observacion']))) : ?>
-                                            <span>Obs: <?= htmlspecialchars($dato['observacion']) ?></span>
-                                        <?php endif; ?>
+                                <div class="sub_item_fila">
+                                    <div class="sub_item_info">
+                                        <span class="sub_item_titulo"><?= htmlspecialchars($dato['articulo_nombre']) ?></span>
+                                        <div class="sub_item_fechas">
+                                            <span>Devuelto: <?= $dato['fecha_vista'] ?></span>
+                                            <?php if (!empty(trim($dato['observacion']))) : ?>
+                                                <span>Obs: <?= htmlspecialchars($dato['observacion']) ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="sub_item_bloque_metricas_horizontal" style="display: flex; flex-direction: row; gap: 15px; align-items: center; flex-wrap: nowrap; justify-content: flex-end;">
+                                        <div class="metrica_item">
+                                            Condición de Entrega:
+                                            <strong class="<?= $claseEstatus ?>"><?= $dato['estado_fisico'] ?></strong>
+                                        </div>
+                                    </div>
+                                    <div class="sub_item_acciones" onclick="event.stopPropagation();">
+                                        <?= $botonesAccion ?>
                                     </div>
                                 </div>
-                                <div class="sub_item_bloque_metricas_horizontal" style="display: flex; flex-direction: row; gap: 15px; align-items: center; flex-wrap: nowrap; justify-content: flex-end;">
-                                    <div class="metrica_item">
-                                        Condición de Entrega:
-                                        <strong class="<?= $claseEstatus ?>"><?= $dato['calidad'] ?></strong>
-                                    </div>
-                                </div>
-                                <div class="sub_item_acciones" onclick="event.stopPropagation();">
-                                    <?= $botonesAccion ?>
-                                </div>
-                            </div>
 
             <?php if ($index === $totalRegistros - 1): ?>
                             </div>
@@ -134,12 +141,15 @@
             <?php endif; ?>
 
         <?php endforeach; ?>
+        
     <?php endif; ?>
 
 <?php if (!isset($solo_lista)) { ?>
                         </div>
                     </div>
+                    
                     <?php include('complementos/botonera.php'); ?>
+                    
                 </div>
             </div>
         </div>
@@ -170,9 +180,9 @@
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select class="formulario select2" id="id_estado" name="id_estado" required>
-                                    <option value="" selected disabled>Seleccione una calidad...</option>
+                                    <option value="" selected disabled>Seleccione un Estado Fisico...</option>
                                 </select>
-                                <label for="id_estado" class="titulo_formulario">Calidad</label>
+                                <label for="id_estado" class="titulo_formulario">Estado Fisico</label>
                             </div>
                         </div>
                         <div class="colum">
@@ -202,6 +212,7 @@
             </div>
         </div>
     </section>
+    
     <script src="js/main.js"></script>
     <script src="js/devoluciones.js"></script>
 </body>
