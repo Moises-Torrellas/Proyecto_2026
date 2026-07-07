@@ -19,8 +19,8 @@ function busqueda() {
 }
 
 $(document).ready(function () {
-    // 1. Cargar la tabla al iniciar
-    consultar();
+
+    inicializarPaginador();
 
     // 2. Validaciones en tiempo real para Categorías
     // Nombre: Letras, números, espacios y guiones (Ej: "U-12", "Sub 20")
@@ -130,43 +130,15 @@ function modificar(datos) {
     abrirModal();
 }
 
-function crearConsulta(datos) {
+
+
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
-
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron categorías registradas</p></div>');
-    } else {
-        datos.forEach(dato => {
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Categoría</small>
-                                <span style="font-weight: bold; color: #2ec135;">${escapeHTML(dato.nombre)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Descripción</small>
-                                <span>${escapeHTML(dato.descripcion)} </span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_categoria})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_categoria})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
+    contenedor.html(htmlRecibido);
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function escapeHTML(texto) {
@@ -197,13 +169,13 @@ function enviaAjax(datos) {
         },
         timeout: 120000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
-                
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } 
-                else if (lee.accion == "incluir") {
+                if (lee.accion == "incluir") {
                     consultar();
                     limpia();
                     cerrarModal(); // Agregado para que se cierre al guardar

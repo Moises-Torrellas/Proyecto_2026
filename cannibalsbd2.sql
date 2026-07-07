@@ -3,11 +3,10 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 06-07-2026 a las 03:40:25
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Tiempo de generación: 08-07-2026 a las 01:54:19
+-- Versión del servidor: 10.4.28-MariaDB
+-- Versión de PHP: 8.2.4
 
-SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -21,11 +20,14 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `cannibalsbd2`
 --
+CREATE DATABASE IF NOT EXISTS `cannibalsbd2` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;
+USE `cannibalsbd2`;
 
 DELIMITER $$
 --
 -- Funciones
 --
+DROP FUNCTION IF EXISTS `ObtenerMontoAbonado`$$
 CREATE DEFINER=`root`@`localhost` FUNCTION `ObtenerMontoAbonado` (`p_codigo_cargo` INT) RETURNS DECIMAL(10,2) READS SQL DATA BEGIN
     DECLARE total DECIMAL(10,2);
     
@@ -46,6 +48,7 @@ DELIMITER ;
 -- Estructura de tabla para la tabla `articulos_inventario`
 --
 
+DROP TABLE IF EXISTS `articulos_inventario`;
 CREATE TABLE `articulos_inventario` (
   `codigo_articulo` int(11) NOT NULL,
   `id_estado` int(11) NOT NULL,
@@ -59,9 +62,7 @@ CREATE TABLE `articulos_inventario` (
 --
 
 INSERT INTO `articulos_inventario` (`codigo_articulo`, `id_estado`, `id_catalogo`, `codigo_club`, `estatus`) VALUES
-(1, 1, 1, '0', 2),
-(2, 1, 1, '0', 1),
-(3, 1, 1, '0', 1);
+(4, 1, 1, 'CL-0001', 2);
 
 -- --------------------------------------------------------
 
@@ -69,6 +70,7 @@ INSERT INTO `articulos_inventario` (`codigo_articulo`, `id_estado`, `id_catalogo
 -- Estructura de tabla para la tabla `asignaciones`
 --
 
+DROP TABLE IF EXISTS `asignaciones`;
 CREATE TABLE `asignaciones` (
   `id_asignacion` int(11) NOT NULL,
   `codigo_atleta` int(11) NOT NULL,
@@ -82,7 +84,8 @@ CREATE TABLE `asignaciones` (
 --
 
 INSERT INTO `asignaciones` (`id_asignacion`, `codigo_atleta`, `codigo_articulo`, `fecha_asignacion`, `estatus`) VALUES
-(1, 2, 1, '2026-06-24', 1);
+(2, 2, 4, '2026-07-07', 0),
+(3, 3, 4, '2026-07-07', 1);
 
 -- --------------------------------------------------------
 
@@ -90,6 +93,7 @@ INSERT INTO `asignaciones` (`id_asignacion`, `codigo_atleta`, `codigo_articulo`,
 -- Estructura de tabla para la tabla `atletas`
 --
 
+DROP TABLE IF EXISTS `atletas`;
 CREATE TABLE `atletas` (
   `codigo_atleta` int(11) NOT NULL,
   `p_nombre` varchar(50) NOT NULL,
@@ -115,6 +119,7 @@ INSERT INTO `atletas` (`codigo_atleta`, `p_nombre`, `s_nombre`, `p_apellidos`, `
 -- Estructura de tabla para la tabla `atleta_representante`
 --
 
+DROP TABLE IF EXISTS `atleta_representante`;
 CREATE TABLE `atleta_representante` (
   `codigo_at_re` int(11) NOT NULL,
   `codigo_atleta` int(11) NOT NULL,
@@ -134,25 +139,25 @@ INSERT INTO `atleta_representante` (`codigo_at_re`, `codigo_atleta`, `codigo_rep
 -- Estructura de tabla para la tabla `cargos`
 --
 
+DROP TABLE IF EXISTS `cargos`;
 CREATE TABLE `cargos` (
   `codigo_cargo` int(11) NOT NULL,
   `codigo_concepto` int(11) NOT NULL,
   `codigo_atleta` int(11) NOT NULL,
   `monto_total` decimal(10,2) NOT NULL,
   `fecha_emision` date NOT NULL,
-  `estatus` tinyint(4) NOT NULL DEFAULT 1
+  `estatus` tinyint(4) NOT NULL DEFAULT 1,
+  `codigo_moneda` int(11) NOT NULL DEFAULT 2,
+  `multado` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
 -- Volcado de datos para la tabla `cargos`
 --
 
-INSERT INTO `cargos` (`codigo_cargo`, `codigo_concepto`, `codigo_atleta`, `monto_total`, `fecha_emision`, `estatus`) VALUES
-(1, 1, 2, 30.00, '2026-06-22', 1),
-(2, 2, 2, 25.00, '2026-06-23', 1),
-(3, 3, 2, 25.00, '2026-06-23', 3),
-(4, 3, 2, 25.00, '2026-06-23', 1),
-(5, 3, 3, 25.00, '2026-06-23', 2);
+INSERT INTO `cargos` (`codigo_cargo`, `codigo_concepto`, `codigo_atleta`, `monto_total`, `fecha_emision`, `estatus`, `codigo_moneda`, `multado`) VALUES
+(6, 1, 3, 30.00, '2026-07-06', 2, 2, 0),
+(7, 1, 2, 30.00, '2026-07-06', 1, 1, 0);
 
 -- --------------------------------------------------------
 
@@ -160,6 +165,7 @@ INSERT INTO `cargos` (`codigo_cargo`, `codigo_concepto`, `codigo_atleta`, `monto
 -- Estructura de tabla para la tabla `catalogo`
 --
 
+DROP TABLE IF EXISTS `catalogo`;
 CREATE TABLE `catalogo` (
   `id_catalogo` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
@@ -181,6 +187,7 @@ INSERT INTO `catalogo` (`id_catalogo`, `nombre`, `stock_minimo`, `Id_categoria`,
 -- Estructura de tabla para la tabla `categorias`
 --
 
+DROP TABLE IF EXISTS `categorias`;
 CREATE TABLE `categorias` (
   `codigo_categoria` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
@@ -207,6 +214,7 @@ INSERT INTO `categorias` (`codigo_categoria`, `nombre`, `edad_min`, `edad_max`) 
 -- Estructura de tabla para la tabla `categoria_catalogo`
 --
 
+DROP TABLE IF EXISTS `categoria_catalogo`;
 CREATE TABLE `categoria_catalogo` (
   `id_categoria` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
@@ -226,11 +234,12 @@ INSERT INTO `categoria_catalogo` (`id_categoria`, `nombre`, `descripcion`) VALUE
 -- Estructura de tabla para la tabla `conceptos`
 --
 
+DROP TABLE IF EXISTS `conceptos`;
 CREATE TABLE `conceptos` (
   `codigo_concepto` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
   `monto` decimal(10,0) NOT NULL,
-  `frecuencia` enum('A','M','L','U') NOT NULL,
+  `frecuencia` enum('A','M','L','U','T') NOT NULL,
   `dias_gracia` int(11) NOT NULL,
   `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
@@ -242,7 +251,8 @@ CREATE TABLE `conceptos` (
 INSERT INTO `conceptos` (`codigo_concepto`, `nombre`, `monto`, `frecuencia`, `dias_gracia`, `estatus`) VALUES
 (1, 'Mensualidad', 30, 'M', 5, 1),
 (2, 'Inscripcion', 25, 'A', 10, 1),
-(3, 'Viaticos', 25, 'L', 10, 1);
+(3, 'Viaticos', 25, 'L', 10, 1),
+(5, 'Multa Por Demora', 5, 'T', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -250,6 +260,7 @@ INSERT INTO `conceptos` (`codigo_concepto`, `nombre`, `monto`, `frecuencia`, `di
 -- Estructura de tabla para la tabla `contacto_atleta`
 --
 
+DROP TABLE IF EXISTS `contacto_atleta`;
 CREATE TABLE `contacto_atleta` (
   `codigo_atleta` int(11) NOT NULL,
   `direccion` varchar(255) NOT NULL,
@@ -269,6 +280,7 @@ INSERT INTO `contacto_atleta` (`codigo_atleta`, `direccion`, `telefono`) VALUES
 -- Estructura de tabla para la tabla `detalles_equipos`
 --
 
+DROP TABLE IF EXISTS `detalles_equipos`;
 CREATE TABLE `detalles_equipos` (
   `codigo_detalle` int(11) NOT NULL,
   `codigo_equipo` int(11) NOT NULL,
@@ -280,7 +292,7 @@ CREATE TABLE `detalles_equipos` (
 --
 
 INSERT INTO `detalles_equipos` (`codigo_detalle`, `codigo_equipo`, `codigo_atleta`) VALUES
-(2, 1, 2);
+(4, 1, 2);
 
 -- --------------------------------------------------------
 
@@ -288,6 +300,7 @@ INSERT INTO `detalles_equipos` (`codigo_detalle`, `codigo_equipo`, `codigo_atlet
 -- Estructura de tabla para la tabla `detalles_pagos`
 --
 
+DROP TABLE IF EXISTS `detalles_pagos`;
 CREATE TABLE `detalles_pagos` (
   `codigo_detalles_pagos` int(11) NOT NULL,
   `codigo_pago` int(11) NOT NULL,
@@ -301,14 +314,17 @@ CREATE TABLE `detalles_pagos` (
 --
 
 INSERT INTO `detalles_pagos` (`codigo_detalles_pagos`, `codigo_pago`, `codigo_cargo`, `monto_abonado`, `tasa_cambio`) VALUES
-(8, 15, 1, 30.00, 1.0000),
-(9, 15, 2, 25.00, 1.0000),
-(10, 17, 1, 30.00, 1.0000),
-(11, 17, 2, 25.00, 1.0000),
-(12, 17, 4, 25.00, 1.0000),
-(13, 18, 5, 25.00, 1.0000),
-(14, 19, 1, 30.00, 1.0000),
-(15, 20, 1, 30.00, 1.0000);
+(16, 22, 6, 30.00, 1.0000),
+(17, 23, 6, 30.00, 1.0000),
+(18, 24, 6, 30.00, 1.0000),
+(19, 25, 6, 30.00, 1.0000),
+(20, 26, 6, 30.00, 1.0000),
+(21, 27, 6, 30.00, 1.0000),
+(22, 28, 6, 30.00, 1.0000),
+(23, 29, 6, 0.05, 674.9305),
+(24, 30, 6, 30.00, 1.0000),
+(25, 31, 6, 30.00, 1.0000),
+(26, 32, 6, 30.00, 1.0000);
 
 -- --------------------------------------------------------
 
@@ -316,6 +332,7 @@ INSERT INTO `detalles_pagos` (`codigo_detalles_pagos`, `codigo_pago`, `codigo_ca
 -- Estructura de tabla para la tabla `detalles_participacion`
 --
 
+DROP TABLE IF EXISTS `detalles_participacion`;
 CREATE TABLE `detalles_participacion` (
   `codigo_dtll_prtc` int(11) NOT NULL,
   `codigo_participacion` int(11) NOT NULL,
@@ -341,6 +358,7 @@ INSERT INTO `detalles_participacion` (`codigo_dtll_prtc`, `codigo_participacion`
 -- Estructura de tabla para la tabla `devoluciones`
 --
 
+DROP TABLE IF EXISTS `devoluciones`;
 CREATE TABLE `devoluciones` (
   `id_devolucion` int(11) NOT NULL,
   `id_asignacion` int(11) NOT NULL,
@@ -349,12 +367,20 @@ CREATE TABLE `devoluciones` (
   `observacion` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `devoluciones`
+--
+
+INSERT INTO `devoluciones` (`id_devolucion`, `id_asignacion`, `id_estado`, `fecha_devolucion`, `observacion`) VALUES
+(1, 2, 1, '2026-07-07', '');
+
 -- --------------------------------------------------------
 
 --
 -- Estructura de tabla para la tabla `equipos`
 --
 
+DROP TABLE IF EXISTS `equipos`;
 CREATE TABLE `equipos` (
   `codigo_equipo` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL
@@ -373,6 +399,7 @@ INSERT INTO `equipos` (`codigo_equipo`, `nombre`) VALUES
 -- Estructura de tabla para la tabla `estado_fisico`
 --
 
+DROP TABLE IF EXISTS `estado_fisico`;
 CREATE TABLE `estado_fisico` (
   `id_estado` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
@@ -392,6 +419,7 @@ INSERT INTO `estado_fisico` (`id_estado`, `nombre`, `nivel_estado`) VALUES
 -- Estructura de tabla para la tabla `identidad_atleta`
 --
 
+DROP TABLE IF EXISTS `identidad_atleta`;
 CREATE TABLE `identidad_atleta` (
   `codigo_atleta` int(11) NOT NULL,
   `tipo_doc` enum('V','E','P') NOT NULL,
@@ -411,6 +439,7 @@ INSERT INTO `identidad_atleta` (`codigo_atleta`, `tipo_doc`, `numero_doc`) VALUE
 -- Estructura de tabla para la tabla `inscripciones`
 --
 
+DROP TABLE IF EXISTS `inscripciones`;
 CREATE TABLE `inscripciones` (
   `codigo_inscripcion` int(11) NOT NULL,
   `codigo_atleta` int(11) NOT NULL,
@@ -433,7 +462,8 @@ INSERT INTO `inscripciones` (`codigo_inscripcion`, `codigo_atleta`, `codigo_cate
 (4, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
 (5, 2, 7, 1, 12, 90, 185, '2026-06-21', 1),
 (6, 3, 2, 1, 34, 60, 150, '2026-06-23', 2),
-(7, 3, 2, 1, 34, 60, 150, '2026-06-27', 1);
+(7, 3, 2, 1, 34, 60, 150, '2026-06-27', 2),
+(8, 3, 2, 1, 34, 60, 150, '2026-07-06', 1);
 
 -- --------------------------------------------------------
 
@@ -441,6 +471,7 @@ INSERT INTO `inscripciones` (`codigo_inscripcion`, `codigo_atleta`, `codigo_cate
 -- Estructura de tabla para la tabla `metodos_pago`
 --
 
+DROP TABLE IF EXISTS `metodos_pago`;
 CREATE TABLE `metodos_pago` (
   `codigo_metodo` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
@@ -461,6 +492,7 @@ INSERT INTO `metodos_pago` (`codigo_metodo`, `nombre`, `nec_referencia`, `estatu
 -- Estructura de tabla para la tabla `monedas`
 --
 
+DROP TABLE IF EXISTS `monedas`;
 CREATE TABLE `monedas` (
   `codigo_moneda` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
@@ -484,6 +516,7 @@ INSERT INTO `monedas` (`codigo_moneda`, `nombre`, `abreviatura`, `simbolo`, `bas
 -- Estructura de tabla para la tabla `pagos`
 --
 
+DROP TABLE IF EXISTS `pagos`;
 CREATE TABLE `pagos` (
   `codigo_pago` int(11) NOT NULL,
   `codigo_metodo` int(11) NOT NULL,
@@ -499,11 +532,17 @@ CREATE TABLE `pagos` (
 --
 
 INSERT INTO `pagos` (`codigo_pago`, `codigo_metodo`, `codigo_moneda`, `monto_pago`, `fecha`, `referencia`, `estatus`) VALUES
-(15, 2, 2, 55.00, '2026-06-23', '3232', 2),
-(17, 2, 2, 80.00, '2026-06-23', '1212', 2),
-(18, 2, 2, 25.00, '2026-06-23', '1222', 1),
-(19, 2, 2, 40.00, '2026-06-23', '3333', 2),
-(20, 2, 2, 40.00, '2026-06-23', '1212', 2);
+(22, 2, 2, 32.00, '2026-07-06', '3434', 2),
+(23, 2, 2, 32.00, '2026-07-06', '2323', 2),
+(24, 2, 2, 30.00, '2026-07-06', '3434', 2),
+(25, 2, 2, 32.22, '2026-07-06', '2323', 2),
+(26, 2, 2, 32.22, '2026-07-06', '2323', 2),
+(27, 2, 2, 32.00, '2026-07-06', '2323', 2),
+(28, 2, 2, 32.00, '2026-07-06', '2323', 2),
+(29, 2, 1, 32.00, '2026-07-06', '2323', 2),
+(30, 2, 2, 32.00, '2026-07-06', '2323', 2),
+(31, 2, 2, 32.00, '2026-07-06', '2323', 2),
+(32, 2, 2, 32.00, '2026-07-06', '2323', 1);
 
 -- --------------------------------------------------------
 
@@ -511,6 +550,7 @@ INSERT INTO `pagos` (`codigo_pago`, `codigo_metodo`, `codigo_moneda`, `monto_pag
 -- Estructura de tabla para la tabla `palmares_grupal`
 --
 
+DROP TABLE IF EXISTS `palmares_grupal`;
 CREATE TABLE `palmares_grupal` (
   `codigo_grupal` int(11) NOT NULL,
   `codigo_participacion` int(11) NOT NULL,
@@ -530,6 +570,7 @@ INSERT INTO `palmares_grupal` (`codigo_grupal`, `codigo_participacion`, `codigo_
 -- Estructura de tabla para la tabla `palmares_individual`
 --
 
+DROP TABLE IF EXISTS `palmares_individual`;
 CREATE TABLE `palmares_individual` (
   `codigo_individual` int(11) NOT NULL,
   `codigo_premio` int(11) NOT NULL,
@@ -549,6 +590,7 @@ INSERT INTO `palmares_individual` (`codigo_individual`, `codigo_premio`, `codigo
 -- Estructura de tabla para la tabla `participaciones`
 --
 
+DROP TABLE IF EXISTS `participaciones`;
 CREATE TABLE `participaciones` (
   `codigo_participacion` int(11) NOT NULL,
   `codigo_torneo` int(11) NOT NULL,
@@ -568,6 +610,7 @@ INSERT INTO `participaciones` (`codigo_participacion`, `codigo_torneo`, `codigo_
 -- Estructura de tabla para la tabla `posiciones`
 --
 
+DROP TABLE IF EXISTS `posiciones`;
 CREATE TABLE `posiciones` (
   `codigo_posicion` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
@@ -588,6 +631,7 @@ INSERT INTO `posiciones` (`codigo_posicion`, `nombre`, `abreviatura`, `descripci
 -- Estructura de tabla para la tabla `premios`
 --
 
+DROP TABLE IF EXISTS `premios`;
 CREATE TABLE `premios` (
   `codigo_premio` int(11) NOT NULL,
   `tipo` enum('I','G') NOT NULL,
@@ -609,6 +653,7 @@ INSERT INTO `premios` (`codigo_premio`, `tipo`, `nombre`) VALUES
 -- Estructura de tabla para la tabla `representantes`
 --
 
+DROP TABLE IF EXISTS `representantes`;
 CREATE TABLE `representantes` (
   `codigo_representante` int(11) NOT NULL,
   `cedula` varchar(255) NOT NULL,
@@ -632,6 +677,7 @@ INSERT INTO `representantes` (`codigo_representante`, `cedula`, `telefono`, `dir
 -- Estructura de tabla para la tabla `retiros`
 --
 
+DROP TABLE IF EXISTS `retiros`;
 CREATE TABLE `retiros` (
   `codigo_retiro` int(11) NOT NULL,
   `codigo_inscripcion` int(11) NOT NULL,
@@ -647,7 +693,8 @@ INSERT INTO `retiros` (`codigo_retiro`, `codigo_inscripcion`, `fecha_retiro`, `m
 (2, 2, '2026-06-21', 'viaje largo'),
 (3, 3, '2026-06-21', 'no le gusto el hockey'),
 (4, 4, '2026-06-21', 'falta de pago'),
-(5, 6, '2026-06-27', 'Viaje Largo');
+(5, 6, '2026-06-27', 'Viaje Largo'),
+(6, 7, '2026-07-06', 'ASDASD');
 
 -- --------------------------------------------------------
 
@@ -655,20 +702,24 @@ INSERT INTO `retiros` (`codigo_retiro`, `codigo_inscripcion`, `fecha_retiro`, `m
 -- Estructura de tabla para la tabla `tasa_cambios`
 --
 
+DROP TABLE IF EXISTS `tasa_cambios`;
 CREATE TABLE `tasa_cambios` (
   `codigo_tasa` int(11) NOT NULL,
   `codigo_moneda` int(11) NOT NULL,
   `fecha` date NOT NULL,
-  `valor_tasa` varchar(255) NOT NULL
+  `valor_tasa` varchar(255) NOT NULL,
+  `tipo` enum('automatica','manual') NOT NULL DEFAULT 'manual'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
 -- Volcado de datos para la tabla `tasa_cambios`
 --
 
-INSERT INTO `tasa_cambios` (`codigo_tasa`, `codigo_moneda`, `fecha`, `valor_tasa`) VALUES
-(4, 1, '2026-06-23', '612.4332'),
-(5, 2, '2026-06-23', '1');
+INSERT INTO `tasa_cambios` (`codigo_tasa`, `codigo_moneda`, `fecha`, `valor_tasa`, `tipo`) VALUES
+(4, 1, '2026-06-23', '612.4332', 'manual'),
+(5, 2, '2026-06-23', '1', 'manual'),
+(6, 1, '2026-07-06', '1', 'automatica'),
+(7, 2, '2026-07-06', '1', 'automatica');
 
 -- --------------------------------------------------------
 
@@ -676,6 +727,7 @@ INSERT INTO `tasa_cambios` (`codigo_tasa`, `codigo_moneda`, `fecha`, `valor_tasa
 -- Estructura de tabla para la tabla `torneos`
 --
 
+DROP TABLE IF EXISTS `torneos`;
 CREATE TABLE `torneos` (
   `codigo_torneo` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
@@ -690,7 +742,8 @@ CREATE TABLE `torneos` (
 --
 
 INSERT INTO `torneos` (`codigo_torneo`, `nombre`, `fecha_inicio`, `fecha_fin`, `ubicacion`, `estatus`) VALUES
-(1, 'BARQUISIMETO 2026', '2026-06-22', '2026-06-24', 'Barquisimeto', 1);
+(1, 'BARQUISIMETO 2026', '2026-06-22', '2026-06-24', 'Barquisimeto', 1),
+(2, 'TOCUYO 2026', '2026-07-06', '2026-07-10', 'El Tocuyo Estado Lara', 1);
 
 -- --------------------------------------------------------
 
@@ -698,6 +751,7 @@ INSERT INTO `torneos` (`codigo_torneo`, `nombre`, `fecha_inicio`, `fecha_fin`, `
 -- Estructura Stand-in para la vista `vista_atletas`
 -- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_atletas`;
 CREATE TABLE `vista_atletas` (
 `id_atleta` int(11)
 ,`nombres` varchar(101)
@@ -740,6 +794,7 @@ CREATE TABLE `vista_atletas` (
 -- Estructura Stand-in para la vista `vista_cargos`
 -- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_cargos`;
 CREATE TABLE `vista_cargos` (
 `id_cobrar` int(11)
 ,`id_atleta` int(11)
@@ -767,11 +822,12 @@ CREATE TABLE `vista_cargos` (
 -- Estructura Stand-in para la vista `vista_pagos`
 -- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_pagos`;
 CREATE TABLE `vista_pagos` (
 `id_pago` int(11)
 ,`fecha_pago` date
 ,`monto_pagado` decimal(10,2)
-,`monto_vuelto` decimal(32,0)
+,`monto_vuelto` decimal(32,2)
 ,`referencia` varchar(255)
 ,`estatus` tinyint(4)
 ,`nombre_metodo_pago` varchar(255)
@@ -794,15 +850,25 @@ CREATE TABLE `vista_pagos` (
 -- Estructura de tabla para la tabla `vueltos`
 --
 
+DROP TABLE IF EXISTS `vueltos`;
 CREATE TABLE `vueltos` (
   `codigo_vuelto` int(11) NOT NULL,
   `codigo_metodo` int(11) NOT NULL,
   `codigo_pago` int(11) NOT NULL,
   `codigo_moneda` int(11) NOT NULL,
-  `monto_vuelto` decimal(10,0) NOT NULL,
+  `monto_vuelto` decimal(10,2) NOT NULL,
   `fecha_vuelto` date NOT NULL,
   `referencia` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `vueltos`
+--
+
+INSERT INTO `vueltos` (`codigo_vuelto`, `codigo_metodo`, `codigo_pago`, `codigo_moneda`, `monto_vuelto`, `fecha_vuelto`, `referencia`) VALUES
+(1, 2, 30, 2, 2.00, '2026-07-06', '2323'),
+(2, 2, 31, 2, 2.00, '2026-07-06', '23231'),
+(3, 2, 32, 2, 2.00, '2026-07-06', '23231');
 
 -- --------------------------------------------------------
 
@@ -811,7 +877,8 @@ CREATE TABLE `vueltos` (
 --
 DROP TABLE IF EXISTS `vista_atletas`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_atletas`  AS SELECT `a`.`codigo_atleta` AS `id_atleta`, concat(`a`.`p_nombre`,if(`a`.`s_nombre` is not null and `a`.`s_nombre` <> '',concat(' ',`a`.`s_nombre`),'')) AS `nombres`, concat(`a`.`p_apellidos`,if(`a`.`s_apellidos` is not null and `a`.`s_apellidos` <> '',concat(' ',`a`.`s_apellidos`),'')) AS `apellidos`, `a`.`p_nombre` AS `p_nombre`, `a`.`s_nombre` AS `s_nombre`, `a`.`p_apellidos` AS `p_apellidos`, `a`.`s_apellidos` AS `s_apellidos`, `a`.`genero` AS `genero`, `a`.`fecha_nac` AS `fecha_nac`, `a`.`foto` AS `foto`, `ia`.`numero_doc` AS `doc_identidad`, `ca`.`telefono` AS `telefono`, `ca`.`direccion` AS `direccion`, `r`.`codigo_representante` AS `id_representante`, `r`.`nombre` AS `nombre_rep`, `r`.`apellido` AS `apellido_rep`, `r`.`cedula` AS `cedula_rep`, `r`.`telefono` AS `telefono_rep`, `r`.`direccion` AS `direccion_rep`, `i`.`codigo_categoria` AS `id_categoria`, `c`.`nombre` AS `nombre_categoria`, `c`.`edad_min` AS `edad_min`, `c`.`edad_max` AS `edad_max`, `i`.`codigo_posicion` AS `id_posicion`, `p`.`nombre` AS `nombre_posicion`, `i`.`dorsal` AS `dorsal`, `i`.`peso_kg` AS `peso_kg`, `i`.`estatura_cm` AS `estatura_cm`, ifnull(`i`.`estatus`,1) AS `estatus`, `primer_ingreso`.`fecha_inscripcion` AS `fecha_ingreso`, CASE WHEN `primer_ingreso`.`codigo_inscripcion` <> `i`.`codigo_inscripcion` THEN `i`.`fecha_inscripcion` ELSE NULL END AS `fecha_reingreso`, `ret`.`fecha_retiro` AS `fecha_retiro`, `ret`.`motivo` AS `motivo_retiro` FROM ((((((((((((`atletas` `a` left join `identidad_atleta` `ia` on(`a`.`codigo_atleta` = `ia`.`codigo_atleta`)) left join `contacto_atleta` `ca` on(`a`.`codigo_atleta` = `ca`.`codigo_atleta`)) left join `atleta_representante` `ar` on(`a`.`codigo_atleta` = `ar`.`codigo_atleta`)) left join `representantes` `r` on(`ar`.`codigo_representante` = `r`.`codigo_representante`)) left join (select `inscripciones`.`codigo_atleta` AS `codigo_atleta`,max(`inscripciones`.`codigo_inscripcion`) AS `max_id` from `inscripciones` group by `inscripciones`.`codigo_atleta`) `max_i` on(`a`.`codigo_atleta` = `max_i`.`codigo_atleta`)) left join `inscripciones` `i` on(`max_i`.`max_id` = `i`.`codigo_inscripcion`)) left join `categorias` `c` on(`i`.`codigo_categoria` = `c`.`codigo_categoria`)) left join `posiciones` `p` on(`i`.`codigo_posicion` = `p`.`codigo_posicion`)) left join (select `inscripciones`.`codigo_atleta` AS `codigo_atleta`,min(`inscripciones`.`codigo_inscripcion`) AS `min_id` from `inscripciones` group by `inscripciones`.`codigo_atleta`) `min_i` on(`a`.`codigo_atleta` = `min_i`.`codigo_atleta`)) left join `inscripciones` `primer_ingreso` on(`min_i`.`min_id` = `primer_ingreso`.`codigo_inscripcion`)) left join (select `ins`.`codigo_atleta` AS `codigo_atleta`,max(`r`.`codigo_inscripcion`) AS `ultima_inscripcion_retirada` from (`retiros` `r` join `inscripciones` `ins` on(`r`.`codigo_inscripcion` = `ins`.`codigo_inscripcion`)) group by `ins`.`codigo_atleta`) `ultimo_retiro_id` on(`a`.`codigo_atleta` = `ultimo_retiro_id`.`codigo_atleta`)) left join `retiros` `ret` on(`ultimo_retiro_id`.`ultima_inscripcion_retirada` = `ret`.`codigo_inscripcion`)) ;
+DROP VIEW IF EXISTS `vista_atletas`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_atletas`  AS SELECT `a`.`codigo_atleta` AS `id_atleta`, concat(`a`.`p_nombre`,if(`a`.`s_nombre` is not null and `a`.`s_nombre` <> '',concat(' ',`a`.`s_nombre`),'')) AS `nombres`, concat(`a`.`p_apellidos`,if(`a`.`s_apellidos` is not null and `a`.`s_apellidos` <> '',concat(' ',`a`.`s_apellidos`),'')) AS `apellidos`, `a`.`p_nombre` AS `p_nombre`, `a`.`s_nombre` AS `s_nombre`, `a`.`p_apellidos` AS `p_apellidos`, `a`.`s_apellidos` AS `s_apellidos`, `a`.`genero` AS `genero`, `a`.`fecha_nac` AS `fecha_nac`, `a`.`foto` AS `foto`, `ia`.`numero_doc` AS `doc_identidad`, `ca`.`telefono` AS `telefono`, `ca`.`direccion` AS `direccion`, `r`.`codigo_representante` AS `id_representante`, `r`.`nombre` AS `nombre_rep`, `r`.`apellido` AS `apellido_rep`, `r`.`cedula` AS `cedula_rep`, `r`.`telefono` AS `telefono_rep`, `r`.`direccion` AS `direccion_rep`, `i`.`codigo_categoria` AS `id_categoria`, `c`.`nombre` AS `nombre_categoria`, `c`.`edad_min` AS `edad_min`, `c`.`edad_max` AS `edad_max`, `i`.`codigo_posicion` AS `id_posicion`, `p`.`nombre` AS `nombre_posicion`, `i`.`dorsal` AS `dorsal`, `i`.`peso_kg` AS `peso_kg`, `i`.`estatura_cm` AS `estatura_cm`, ifnull(`i`.`estatus`,1) AS `estatus`, `primer_ingreso`.`fecha_inscripcion` AS `fecha_ingreso`, CASE WHEN `primer_ingreso`.`codigo_inscripcion` <> `i`.`codigo_inscripcion` THEN `i`.`fecha_inscripcion` ELSE NULL END AS `fecha_reingreso`, `ret`.`fecha_retiro` AS `fecha_retiro`, `ret`.`motivo` AS `motivo_retiro` FROM ((((((((((((`atletas` `a` left join `identidad_atleta` `ia` on(`a`.`codigo_atleta` = `ia`.`codigo_atleta`)) left join `contacto_atleta` `ca` on(`a`.`codigo_atleta` = `ca`.`codigo_atleta`)) left join `atleta_representante` `ar` on(`a`.`codigo_atleta` = `ar`.`codigo_atleta`)) left join `representantes` `r` on(`ar`.`codigo_representante` = `r`.`codigo_representante`)) left join (select `inscripciones`.`codigo_atleta` AS `codigo_atleta`,max(`inscripciones`.`codigo_inscripcion`) AS `max_id` from `inscripciones` group by `inscripciones`.`codigo_atleta`) `max_i` on(`a`.`codigo_atleta` = `max_i`.`codigo_atleta`)) left join `inscripciones` `i` on(`max_i`.`max_id` = `i`.`codigo_inscripcion`)) left join `categorias` `c` on(`i`.`codigo_categoria` = `c`.`codigo_categoria`)) left join `posiciones` `p` on(`i`.`codigo_posicion` = `p`.`codigo_posicion`)) left join (select `inscripciones`.`codigo_atleta` AS `codigo_atleta`,min(`inscripciones`.`codigo_inscripcion`) AS `min_id` from `inscripciones` group by `inscripciones`.`codigo_atleta`) `min_i` on(`a`.`codigo_atleta` = `min_i`.`codigo_atleta`)) left join `inscripciones` `primer_ingreso` on(`min_i`.`min_id` = `primer_ingreso`.`codigo_inscripcion`)) left join (select `ins`.`codigo_atleta` AS `codigo_atleta`,max(`r`.`codigo_inscripcion`) AS `ultima_inscripcion_retirada` from (`retiros` `r` join `inscripciones` `ins` on(`r`.`codigo_inscripcion` = `ins`.`codigo_inscripcion`)) group by `ins`.`codigo_atleta`) `ultimo_retiro_id` on(`a`.`codigo_atleta` = `ultimo_retiro_id`.`codigo_atleta`)) left join `retiros` `ret` on(`ultimo_retiro_id`.`ultima_inscripcion_retirada` = `ret`.`codigo_inscripcion`)) ;
 
 -- --------------------------------------------------------
 
@@ -820,7 +887,8 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `vista_cargos`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_cargos`  AS SELECT `c`.`codigo_cargo` AS `id_cobrar`, `c`.`codigo_atleta` AS `id_atleta`, `c`.`codigo_concepto` AS `id_concepto`, `c`.`fecha_emision` AS `fecha_emision`, `c`.`fecha_emision`+ interval `co`.`dias_gracia` day AS `fecha_vencimiento`, `c`.`monto_total` AS `monto_total`, `c`.`monto_total` AS `monto_personalizado`, greatest(`c`.`monto_total` - coalesce(`abonos`.`total_abonado`,0),0) AS `monto_pendiente`, `c`.`estatus` AS `estatus`, CASE WHEN `c`.`estatus` = 3 THEN 'Anulado' WHEN `c`.`estatus` = 2 THEN 'Pagado' WHEN `c`.`estatus` = 1 THEN 'Pendiente' ELSE 'Abonado/Otro' END AS `estatus_texto`, `a`.`p_nombre` AS `atleta_nombre`, `a`.`p_apellidos` AS `atleta_apellido`, `co`.`nombre` AS `concepto_nombre`, `m`.`nombre` AS `moneda_nombre`, `m`.`simbolo` AS `moneda_simbolo`, `m`.`abreviatura` AS `moneda_abreviatura`, sum(case when `c`.`estatus` not in (2,3) then greatest(`c`.`monto_total` - coalesce(`abonos`.`total_abonado`,0),0) else 0 end) over ( partition by `c`.`codigo_atleta`,`m`.`codigo_moneda`) AS `deuda_moneda_atleta`, count(`c`.`codigo_cargo`) over ( partition by `c`.`codigo_atleta`) AS `total_facturas_atleta` FROM ((((`cargos` `c` join `atletas` `a` on(`c`.`codigo_atleta` = `a`.`codigo_atleta`)) join `conceptos` `co` on(`c`.`codigo_concepto` = `co`.`codigo_concepto`)) join `monedas` `m` on(`m`.`base` = 1)) left join (select `dp`.`codigo_cargo` AS `codigo_cargo`,sum(`dp`.`monto_abonado`) AS `total_abonado` from (`detalles_pagos` `dp` join `pagos` `p` on(`dp`.`codigo_pago` = `p`.`codigo_pago` and `p`.`estatus` = 1)) group by `dp`.`codigo_cargo`) `abonos` on(`abonos`.`codigo_cargo` = `c`.`codigo_cargo`)) ;
+DROP VIEW IF EXISTS `vista_cargos`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_cargos`  AS SELECT `c`.`codigo_cargo` AS `id_cobrar`, `c`.`codigo_atleta` AS `id_atleta`, `c`.`codigo_concepto` AS `id_concepto`, `c`.`fecha_emision` AS `fecha_emision`, `c`.`fecha_emision`+ interval `co`.`dias_gracia` day AS `fecha_vencimiento`, `c`.`monto_total` AS `monto_total`, `c`.`monto_total` AS `monto_personalizado`, greatest(`c`.`monto_total` - coalesce(`abonos`.`total_abonado`,0),0) AS `monto_pendiente`, `c`.`estatus` AS `estatus`, CASE WHEN `c`.`estatus` = 3 THEN 'Anulado' WHEN `c`.`estatus` = 2 THEN 'Pagado' WHEN `c`.`estatus` = 1 THEN 'Pendiente' ELSE 'Abonado/Otro' END AS `estatus_texto`, `a`.`p_nombre` AS `atleta_nombre`, `a`.`p_apellidos` AS `atleta_apellido`, `co`.`nombre` AS `concepto_nombre`, `m`.`nombre` AS `moneda_nombre`, `m`.`simbolo` AS `moneda_simbolo`, `m`.`abreviatura` AS `moneda_abreviatura`, sum(case when `c`.`estatus` not in (2,3) then greatest(`c`.`monto_total` - coalesce(`abonos`.`total_abonado`,0),0) else 0 end) over ( partition by `c`.`codigo_atleta`,`m`.`codigo_moneda`) AS `deuda_moneda_atleta`, count(`c`.`codigo_cargo`) over ( partition by `c`.`codigo_atleta`) AS `total_facturas_atleta` FROM ((((`cargos` `c` join `atletas` `a` on(`c`.`codigo_atleta` = `a`.`codigo_atleta`)) join `conceptos` `co` on(`c`.`codigo_concepto` = `co`.`codigo_concepto`)) join `monedas` `m` on(`m`.`codigo_moneda` = `c`.`codigo_moneda`)) left join (select `dp`.`codigo_cargo` AS `codigo_cargo`,sum(`dp`.`monto_abonado`) AS `total_abonado` from (`detalles_pagos` `dp` join `pagos` `p` on(`dp`.`codigo_pago` = `p`.`codigo_pago` and `p`.`estatus` = 1)) group by `dp`.`codigo_cargo`) `abonos` on(`abonos`.`codigo_cargo` = `c`.`codigo_cargo`)) ;
 
 -- --------------------------------------------------------
 
@@ -829,7 +897,8 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `vista_pagos`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_pagos`  AS SELECT `p`.`codigo_pago` AS `id_pago`, `p`.`fecha` AS `fecha_pago`, `p`.`monto_pago` AS `monto_pagado`, ifnull((select sum(`v`.`monto_vuelto`) from `vueltos` `v` where `v`.`codigo_pago` = `p`.`codigo_pago`),0) AS `monto_vuelto`, `p`.`referencia` AS `referencia`, `p`.`estatus` AS `estatus`, `mp`.`nombre` AS `nombre_metodo_pago`, `m`.`simbolo` AS `simbolo`, `m`.`abreviatura` AS `abre`, `m`.`nombre` AS `moneda`, `dp`.`codigo_detalles_pagos` AS `id_detalle_pago`, `dp`.`monto_abonado` AS `monto_abonado`, `dp`.`tasa_cambio` AS `tasa_cambio`, `con`.`nombre` AS `concepto_pago`, `a`.`p_nombre` AS `nombre_atleta`, `a`.`p_apellidos` AS `nombre_apellido`, `mb`.`simbolo` AS `simbolo_cuenta`, `mb`.`abreviatura` AS `abre_cuenta` FROM (((((((`pagos` `p` left join `metodos_pago` `mp` on(`p`.`codigo_metodo` = `mp`.`codigo_metodo`)) left join `monedas` `m` on(`p`.`codigo_moneda` = `m`.`codigo_moneda`)) left join `detalles_pagos` `dp` on(`p`.`codigo_pago` = `dp`.`codigo_pago`)) left join `cargos` `car` on(`dp`.`codigo_cargo` = `car`.`codigo_cargo`)) left join `conceptos` `con` on(`car`.`codigo_concepto` = `con`.`codigo_concepto`)) left join `atletas` `a` on(`car`.`codigo_atleta` = `a`.`codigo_atleta`)) join (select `monedas`.`simbolo` AS `simbolo`,`monedas`.`abreviatura` AS `abreviatura` from `monedas` where `monedas`.`base` = 1 limit 1) `mb`) ;
+DROP VIEW IF EXISTS `vista_pagos`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_pagos`  AS SELECT `p`.`codigo_pago` AS `id_pago`, `p`.`fecha` AS `fecha_pago`, `p`.`monto_pago` AS `monto_pagado`, ifnull((select sum(`v`.`monto_vuelto`) from `vueltos` `v` where `v`.`codigo_pago` = `p`.`codigo_pago`),0) AS `monto_vuelto`, `p`.`referencia` AS `referencia`, `p`.`estatus` AS `estatus`, `mp`.`nombre` AS `nombre_metodo_pago`, `m`.`simbolo` AS `simbolo`, `m`.`abreviatura` AS `abre`, `m`.`nombre` AS `moneda`, `dp`.`codigo_detalles_pagos` AS `id_detalle_pago`, `dp`.`monto_abonado` AS `monto_abonado`, `dp`.`tasa_cambio` AS `tasa_cambio`, `con`.`nombre` AS `concepto_pago`, `a`.`p_nombre` AS `nombre_atleta`, `a`.`p_apellidos` AS `nombre_apellido`, `mb`.`simbolo` AS `simbolo_cuenta`, `mb`.`abreviatura` AS `abre_cuenta` FROM (((((((`pagos` `p` left join `metodos_pago` `mp` on(`p`.`codigo_metodo` = `mp`.`codigo_metodo`)) left join `monedas` `m` on(`p`.`codigo_moneda` = `m`.`codigo_moneda`)) left join `detalles_pagos` `dp` on(`p`.`codigo_pago` = `dp`.`codigo_pago`)) left join `cargos` `car` on(`dp`.`codigo_cargo` = `car`.`codigo_cargo`)) left join `conceptos` `con` on(`car`.`codigo_concepto` = `con`.`codigo_concepto`)) left join `atletas` `a` on(`car`.`codigo_atleta` = `a`.`codigo_atleta`)) join (select `monedas`.`simbolo` AS `simbolo`,`monedas`.`abreviatura` AS `abreviatura` from `monedas` where `monedas`.`base` = 1 limit 1) `mb`) ;
 
 --
 -- Índices para tablas volcadas
@@ -872,7 +941,8 @@ ALTER TABLE `atleta_representante`
 ALTER TABLE `cargos`
   ADD PRIMARY KEY (`codigo_cargo`),
   ADD KEY `codigo_atleta` (`codigo_atleta`),
-  ADD KEY `codigo_concepto` (`codigo_concepto`);
+  ADD KEY `codigo_concepto` (`codigo_concepto`),
+  ADD KEY `cargos_ibfk_3` (`codigo_moneda`);
 
 --
 -- Indices de la tabla `catalogo`
@@ -1064,13 +1134,13 @@ ALTER TABLE `vueltos`
 -- AUTO_INCREMENT de la tabla `articulos_inventario`
 --
 ALTER TABLE `articulos_inventario`
-  MODIFY `codigo_articulo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `codigo_articulo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `asignaciones`
 --
 ALTER TABLE `asignaciones`
-  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `atletas`
@@ -1088,7 +1158,7 @@ ALTER TABLE `atleta_representante`
 -- AUTO_INCREMENT de la tabla `cargos`
 --
 ALTER TABLE `cargos`
-  MODIFY `codigo_cargo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `codigo_cargo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `catalogo`
@@ -1112,7 +1182,7 @@ ALTER TABLE `categoria_catalogo`
 -- AUTO_INCREMENT de la tabla `conceptos`
 --
 ALTER TABLE `conceptos`
-  MODIFY `codigo_concepto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `codigo_concepto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `contacto_atleta`
@@ -1124,13 +1194,13 @@ ALTER TABLE `contacto_atleta`
 -- AUTO_INCREMENT de la tabla `detalles_equipos`
 --
 ALTER TABLE `detalles_equipos`
-  MODIFY `codigo_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `codigo_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_pagos`
 --
 ALTER TABLE `detalles_pagos`
-  MODIFY `codigo_detalles_pagos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `codigo_detalles_pagos` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_participacion`
@@ -1142,7 +1212,7 @@ ALTER TABLE `detalles_participacion`
 -- AUTO_INCREMENT de la tabla `devoluciones`
 --
 ALTER TABLE `devoluciones`
-  MODIFY `id_devolucion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_devolucion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `equipos`
@@ -1166,7 +1236,7 @@ ALTER TABLE `identidad_atleta`
 -- AUTO_INCREMENT de la tabla `inscripciones`
 --
 ALTER TABLE `inscripciones`
-  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `metodos_pago`
@@ -1184,7 +1254,7 @@ ALTER TABLE `monedas`
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `codigo_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `codigo_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT de la tabla `palmares_grupal`
@@ -1226,25 +1296,25 @@ ALTER TABLE `representantes`
 -- AUTO_INCREMENT de la tabla `retiros`
 --
 ALTER TABLE `retiros`
-  MODIFY `codigo_retiro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `codigo_retiro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `tasa_cambios`
 --
 ALTER TABLE `tasa_cambios`
-  MODIFY `codigo_tasa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `codigo_tasa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `torneos`
 --
 ALTER TABLE `torneos`
-  MODIFY `codigo_torneo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `codigo_torneo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `vueltos`
 --
 ALTER TABLE `vueltos`
-  MODIFY `codigo_vuelto` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_vuelto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Restricciones para tablas volcadas
@@ -1276,7 +1346,8 @@ ALTER TABLE `atleta_representante`
 --
 ALTER TABLE `cargos`
   ADD CONSTRAINT `cargos_ibfk_1` FOREIGN KEY (`codigo_atleta`) REFERENCES `atletas` (`codigo_atleta`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `cargos_ibfk_2` FOREIGN KEY (`codigo_concepto`) REFERENCES `conceptos` (`codigo_concepto`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `cargos_ibfk_2` FOREIGN KEY (`codigo_concepto`) REFERENCES `conceptos` (`codigo_concepto`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `cargos_ibfk_3` FOREIGN KEY (`codigo_moneda`) REFERENCES `monedas` (`codigo_moneda`);
 
 --
 -- Filtros para la tabla `catalogo`
@@ -1379,7 +1450,6 @@ ALTER TABLE `vueltos`
   ADD CONSTRAINT `vueltos_ibfk_1` FOREIGN KEY (`codigo_pago`) REFERENCES `pagos` (`codigo_pago`),
   ADD CONSTRAINT `vueltos_ibfk_2` FOREIGN KEY (`codigo_moneda`) REFERENCES `monedas` (`codigo_moneda`),
   ADD CONSTRAINT `vueltos_ibfk_3` FOREIGN KEY (`codigo_metodo`) REFERENCES `metodos_pago` (`codigo_metodo`);
-SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

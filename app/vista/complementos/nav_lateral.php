@@ -44,7 +44,7 @@
                 </li>
             <?php endif; ?>
 
-            <?php if ($puedeVer(_MD_CUENTAS_, 'ingresar_cargo') || $puedeVer(_MD_PAGOS_, 'ingresar_pago') || $puedeVer(_MD_METODOS_, 'ingresar_metodop') || $puedeVer(_MD_CONCEPTOS_, '') || $puedeVer(_MD_MONEDAS_, '')) : ?>
+            <?php if ($puedeVer(_MD_CUENTAS_, 'ingresar_cargo') || $puedeVer(_MD_PAGOS_, 'ingresar_pago') || $puedeVer(_MD_METODOS_, 'ingresar_metodop') || $puedeVer(_MD_CONCEPTOS_, 'ingresar_conceptos') || $puedeVer(_MD_MONEDAS_, 'ingresar_moneda') || $puedeVer(_MD_TASA_, 'ingresar_tasa')) : ?>
                 <li class="nav_identificador">Cobranzas</li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_CUENTAS_, 'ingresar_cargo')) : ?>
@@ -63,37 +63,39 @@
                         <a type="button" href="Conceptos" class="opciones"><i class="opciones_i" data-lucide="receipt"></i> Conceptos de Cargos</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_MONEDAS_, '')) : ?>
+                    <?php if ($puedeVer(_MD_MONEDAS_, 'ingresar_moneda')) : ?>
                         <a type="button" href="Monedas" class="opciones"><i class="opciones_i" data-lucide="coins"></i> Monedas</a>
-                        <a type="button" href="TasaCambios" class="opciones"><i class="opciones_i" data-lucide="arrow-left-right"></i> Tasas de Cambio</a>
+                    <?php endif; ?>
+                    <?php if ($puedeVer(_MD_TASA_, 'ingresar_tasa')) : ?>
+                    <a type="button" href="TasaCambios" class="opciones"><i class="opciones_i" data-lucide="arrow-left-right"></i> Tasas de Cambio</a>
                     <?php endif; ?>
                 </li>
             <?php endif; ?>
 
-            <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_, '') || $puedeVer(_MD_CATALOGO_, '') || $puedeVer(_MD_CATEGORIA_CAT_, '') || $puedeVer(_MD_ESTADO_FISICO_, '') || $puedeVer(_MD_ASIGNACIONES_, '') || $puedeVer(_MD_DEVOLUCIONES_, '')) : ?>
+            <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_, 'ingresar_articulos') || $puedeVer(_MD_CATALOGO_, 'ingresar_catalogos') || $puedeVer(_MD_CATEGORIA_CAT_, 'ingresar_catcatalogos') || $puedeVer(_MD_ESTADO_FISICO_, 'ingresar_estfisico') || $puedeVer(_MD_ASIGNACIONES_, 'ingresar_asignaciones') || $puedeVer(_MD_DEVOLUCIONES_, 'ingresar_devoluciones')) : ?>
                 <li class="nav_identificador">Inventario</li>
                 <li class="nav_opciones">
-                    <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_,'ingresar_articulos')) : ?>
+                    <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_, 'ingresar_articulos')) : ?>
                         <a type="button" href="ArticulosInventario" class="opciones"><i class="opciones_i" data-lucide="boxes"></i> Inventario de Artículos</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_CATALOGO_,'ingresar_catalogos')) : ?>
+                    <?php if ($puedeVer(_MD_CATALOGO_, 'ingresar_catalogos')) : ?>
                         <a type="button" href="Catalogo" class="opciones"><i class="opciones_i" data-lucide="clipboard-pen-line"></i> Catálogo</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_CATEGORIA_CAT_,'ingresar_catcatalogos')) : ?>
+                    <?php if ($puedeVer(_MD_CATEGORIA_CAT_, 'ingresar_catcatalogos')) : ?>
                         <a type="button" href="CategoriaCatalogo" class="opciones"><i class="opciones_i" data-lucide="layers-plus"></i> Categorías de Catálogo</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_ESTADO_FISICO_,'ingresar_estfisico')) : ?>
+                    <?php if ($puedeVer(_MD_ESTADO_FISICO_, 'ingresar_estfisico')) : ?>
                         <a type="button" href="EstadoFisico" class="opciones"><i class="opciones_i" data-lucide="badge-check"></i> Estado Físico</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_ASIGNACIONES_,'ingresar_asignaciones')) : ?>
+                    <?php if ($puedeVer(_MD_ASIGNACIONES_, 'ingresar_asignaciones')) : ?>
                         <a type="button" href="Asignaciones" class="opciones"><i class="opciones_i" data-lucide="list-plus"></i> Asignaciones</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_DEVOLUCIONES_, '')) : ?>
+                    <?php if ($puedeVer(_MD_DEVOLUCIONES_, 'ingresar_devoluciones')) : ?>
                         <a type="button" href="Devoluciones" class="opciones"><i class="opciones_i" data-lucide="list-restart"></i> Devoluciones</a>
                     <?php endif; ?>
                 </li>

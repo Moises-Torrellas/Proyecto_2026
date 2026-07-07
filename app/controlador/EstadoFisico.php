@@ -21,8 +21,17 @@ $objModelo = new ModeloEstadoFisico();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Estado Físico');
-    cargarVista($pagina);
+    registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+
+    $error_bd = '';
+    if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        $error_bd = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : '';
+    }
+
+    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
+    cargarVista($pagina, $variables);
 }
 
 
@@ -39,7 +48,7 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                 if (empty($permisos['ingresar_estfisico'])) throw new Exception('No tienes permisos para ingresar a consultar el estado físico.');
+                if (empty($permisos['ingresar_estfisico'])) throw new Exception('No tienes permisos para ingresar a consultar el estado físico.');
                 consultar($obj, $permisos);
                 break;
             case 'buscar':
@@ -70,9 +79,23 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
 function consultar($obj, $permisos): void
 {
-    $filtro['filtro'] = $_POST['filtro'] ?? '';
-    $registros = $obj->consultar($filtro);
-    echo json_encode($registros);
+    try {
+        $filtro['filtro'] = $_POST['filtro'] ?? '';
+        $respuesta = $obj->Consultar($filtro);
+
+        if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+            $mensajeError = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : $respuesta['mensaje'];
+            echo json_encode(['accion' => 'error', 'mensaje' => $mensajeError]);
+            return;
+        }
+
+        $registro = $respuesta['datos'] ?? [];
+        $solo_lista = true;
+        include(__DIR__ . '/../vista/EstadoFisico.php');
+    } catch (throwable $e) {
+        logs('EstadoFisico', $e->getMessage(), 'Controlador_Consultar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
 }
 
 function buscar($obj, $permisos): void
@@ -103,7 +126,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         ];
 
         validar_datos($validaciones);
-        
+
         if ($_POST['nivel_estado'] > 3 || $_POST['nivel_estado'] < 1) {
             throw new Exception('No es un nivel válido.');
         }

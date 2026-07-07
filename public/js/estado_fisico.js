@@ -19,7 +19,7 @@ function busqueda() {
 }
 
 $(document).ready(function () {
-    consultar();
+    inicializarPaginador();
 
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
 
@@ -124,44 +124,13 @@ function modificar(datos) {
     abrirModal();
 }
 
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
-
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
-    } else {
-        datos.forEach(dato => {
-            var nivel = dato.nivel_estado == 1 ? "Buen Estado" : (dato.nivel_estado == 2 ? "Desgaste Medio" : "Mal Estado"); 
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Estado Físico</small>
-                                <span style="font-weight: bold; color: #2ec135;">${escapeHTML(dato.nombre)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Nivel De Condición</small>
-                                <span>${nivel}</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.id_estado})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.id_estado})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
+    contenedor.html(htmlRecibido);
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function escapeHTML(texto) {
@@ -189,13 +158,14 @@ function enviaAjax(datos) {
         },
         timeout: 120000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
                 
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } 
-                else if (lee.accion == "incluir") {
+                if (lee.accion == "incluir") {
                     consultar();
                     limpia();
                     cerrarModal(); 

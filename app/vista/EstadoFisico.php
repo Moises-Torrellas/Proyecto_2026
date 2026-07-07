@@ -1,3 +1,45 @@
+<?php
+if (isset($solo_lista) && $solo_lista === true) :
+    if (empty($registro)) : ?>
+        <div class="listado_vacio">
+            <p>No se encontraron registros</p>
+        </div>
+        <?php else :
+        foreach ($registro as $dato) :
+            // Lógica de nivel convertida de JS a PHP
+            $nivel = ($dato['nivel_estado'] == 1) ? "Buen Estado" : (($dato['nivel_estado'] == 2) ? "Desgaste Medio" : "Mal Estado");
+        ?>
+            <div class="listado_contenedor_grupal">
+                <div class="listado_item" onclick="toggleDetalles(this)">
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Estado Físico</small>
+                            <span style="font-weight: bold; color: #2ec135;"><?= htmlspecialchars($dato['nombre']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Nivel De Condición</small>
+                            <span><?= $nivel ?></span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                            <?php if (!empty($permisos['modificar_estfisico'])) : // Asegúrate de que este sea tu permiso real 
+                            ?>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_estado'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                            <?php endif; ?>
+                            <?php if (!empty($permisos['eliminar_estfisico'])) : // Asegúrate de que este sea tu permiso real 
+                            ?>
+                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_estado'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    <?php exit(); ?>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -25,15 +67,53 @@
                         </div>
                         <div class="botones">
                             <?php if (!empty($permisos['registrar_estfisico'])) : ?>
-                            <button class="btn btn_azul" id="incluir">Nuevo Estado Físico</button>
+                                <button class="btn btn_azul" id="incluir">Nuevo Estado Físico</button>
                             <?php endif; ?>
                             <?php if (!empty($permisos['generar_estfisico'])) : ?>
-                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                                <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
+                            <?php if (empty($registro)) : ?>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros</p>
+                                </div>
+                                <?php else :
+                                foreach ($registro as $dato) :
+                                    // Lógica de nivel convertida de JS a PHP
+                                    $nivel = ($dato['nivel_estado'] == 1) ? "Buen Estado" : (($dato['nivel_estado'] == 2) ? "Desgaste Medio" : "Mal Estado");
+                                ?>
+                                    <div class="listado_contenedor_grupal">
+                                        <div class="listado_item" onclick="toggleDetalles(this)">
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo">
+                                                    <small>Estado Físico</small>
+                                                    <span style="font-weight: bold; color: #2ec135;"><?= htmlspecialchars($dato['nombre']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Nivel De Condición</small>
+                                                    <span><?= $nivel ?></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_acciones">
+                                                <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                                    <?php if (!empty($permisos['modificar_estfisico'])) : // Asegúrate de que este sea tu permiso real 
+                                                    ?>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_estado'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($permisos['eliminar_estfisico'])) : // Asegúrate de que este sea tu permiso real 
+                                                    ?>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_estado'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
@@ -50,7 +130,7 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id_estado" name="id_estado">
-                    
+
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
