@@ -85,7 +85,7 @@
                         <a type="button" href="CategoriaCatalogo" class="opciones"><i class="opciones_i" data-lucide="layers-plus"></i> Categorías de Catálogo</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_ESTADO_FISICO_,'')) : ?>
+                    <?php if ($puedeVer(_MD_ESTADO_FISICO_,'ingresar_estfisico')) : ?>
                         <a type="button" href="EstadoFisico" class="opciones"><i class="opciones_i" data-lucide="badge-check"></i> Estado Físico</a>
                     <?php endif; ?>
 

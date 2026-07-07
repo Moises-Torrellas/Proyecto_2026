@@ -7,7 +7,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_ESTADO_FISICO_;
 
 
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_estfisico');
 
 $nombreClaseModelo = 'App\modelo\ModeloEstadoFisico';
 
@@ -39,22 +39,23 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                 if (empty($permisos['ingresar_estfisico'])) throw new Exception('No tienes permisos para ingresar a consultar el estado físico.');
+                consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar el estado físico.');
-                buscar($obj);
+                if (empty($permisos['modificar_estfisico'])) throw new Exception('No tienes permisos para modificar el estado físico.');
+                buscar($obj, $permisos);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar el estado físico.');
+                if (empty($permisos['registrar_estfisico'])) throw new Exception('No tienes permisos para registrar el estado físico.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar el estado físico.');
+                if (empty($permisos['eliminar_estfisico'])) throw new Exception('No tienes permisos para eliminar el estado físico.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar el estado físico.');
+                if (empty($permisos['modificar_estfisico'])) throw new Exception('No tienes permisos para modificar el estado físico.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
 
@@ -67,14 +68,14 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
     }
 }
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $registros = $obj->consultar($filtro);
     echo json_encode($registros);
 }
 
-function buscar($obj): void
+function buscar($obj, $permisos): void
 {
     try {
         $validaciones = ['id_estado' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.']];
