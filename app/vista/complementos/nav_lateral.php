@@ -23,10 +23,10 @@
             };
             ?>
 
-            <?php if ($puedeVer(_MD_ATLETAS_, 'ingresar_atleta') || $puedeVer(_MD_REPRESENTANTES_, 'ingresar_representantes') || $puedeVer(_MD_POSICIONES_, 'ingresar_posicion') || $puedeVer(_MD_CATEGORIAS_,'')) : ?>
+            <?php if ($puedeVer(_MD_ATLETAS_, 'ingresar_atleta') || $puedeVer(_MD_REPRESENTANTES_, 'ingresar_representantes') || $puedeVer(_MD_POSICIONES_, 'ingresar_posicion') || $puedeVer(_MD_CATEGORIAS_,'ingresar_categorias')) : ?>
                 <li class="nav_identificador">Administracion</li>
                 <li class="nav_opciones">
-                    <?php if ($puedeVer(_MD_ATLETAS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_ATLETAS_,'ingresar_atleta')) : ?>
                         <a type="button" href="Atletas" class="opciones"><i class="opciones_i" data-lucide="circle-star"></i> Atletas</a>
                     <?php endif; ?>
 
@@ -34,7 +34,7 @@
                         <a type="button" href="Representantes" class="opciones "><i class="opciones_i" data-lucide="user-star"></i> Representantes</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_POSICIONES_,'')) : ?>
+                    <?php if ($puedeVer(_MD_POSICIONES_,'ingresar_posiciones')) : ?>
                         <a type="button" href="Posiciones" class="opciones "><i class="opciones_i" data-lucide="land-plot"></i> Posiciones</a>
                     <?php endif; ?>
 
@@ -44,18 +44,18 @@
                 </li>
             <?php endif; ?>
 
-            <?php if ($puedeVer(_MD_CUENTAS_,'') || $puedeVer(_MD_PAGOS_,'') || $puedeVer(_MD_METODOS_,'') || $puedeVer(_MD_CONCEPTOS_,'') || $puedeVer(_MD_MONEDAS_,'')) : ?>
+            <?php if ($puedeVer(_MD_CUENTAS_,'ingresar_cargo') || $puedeVer(_MD_PAGOS_,'ingresar_pago') || $puedeVer(_MD_METODOS_,'ingresar_metodop') || $puedeVer(_MD_CONCEPTOS_,'') || $puedeVer(_MD_MONEDAS_,'')) : ?>
                 <li class="nav_identificador">Cobranzas</li>
                 <li class="nav_opciones">
-                    <?php if ($puedeVer(_MD_CUENTAS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_CUENTAS_,'ingresar_cargo')) : ?>
                         <a type="button" href="CuentasCobrar" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Cargos</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_PAGOS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_PAGOS_,'ingresar_pago')) : ?>
                         <a type="button" href="Pagos" class="opciones"><i class="opciones_i" data-lucide="banknote"></i> Pagos</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_METODOS_,'')) : ?>
+                    <?php if ($puedeVer(_MD_METODOS_,'ingresar_metodop')) : ?>
                         <a type="button" href="MetodosPago" class="opciones"><i class="opciones_i" data-lucide="wallet"></i> Metodos de Pago</a>
                     <?php endif; ?>
 
@@ -73,11 +73,11 @@
             <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_,'') || $puedeVer(_MD_CATALOGO_,'') || $puedeVer(_MD_CATEGORIA_CAT_,'') || $puedeVer(_MD_ESTADO_FISICO_,'') || $puedeVer(_MD_ASIGNACIONES_,'') || $puedeVer(_MD_DEVOLUCIONES_,'')) : ?>
                 <li class="nav_identificador">Inventario</li>
                 <li class="nav_opciones">
-                    <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_,'')) : ?>
+                    <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_,'ingresar_articulos')) : ?>
                         <a type="button" href="ArticulosInventario" class="opciones"><i class="opciones_i" data-lucide="boxes"></i> Inventario de Artículos</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_CATALOGO_,'')) : ?>
+                    <?php if ($puedeVer(_MD_CATALOGO_,'ingresar_catalogos')) : ?>
                         <a type="button" href="Catalogo" class="opciones"><i class="opciones_i" data-lucide="clipboard-pen-line"></i> Catálogo</a>
                     <?php endif; ?>
 
