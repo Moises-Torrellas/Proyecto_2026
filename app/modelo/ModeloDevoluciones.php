@@ -33,7 +33,7 @@ class ModeloDevoluciones extends Conexion
         $this->objAsignaciones = $asig; 
     }
     
-    public function setEquipamientos(ModeloEquipamientos $equip) { 
+    public function setEquipamientos(ModeloArticulosInventario $equip) { 
         $this->objEquipamientos = $equip; 
     }
 
@@ -60,21 +60,22 @@ class ModeloDevoluciones extends Conexion
         $conex = null;
         try {
             $conex = $this->conex();
+            
             $sql = "SELECT 
                         d.id_devolucion, 
                         DATE_FORMAT(d.fecha_devolucion, '%Y-%m-%d') as fecha_vista,
                         d.fecha_devolucion, d.id_asignacion, d.id_estado, d.observacion, 
-                        ee.nombre as calidad, ee.nivel_estado, at.id_atleta, at.nombres as atleta_nombre,
-                        at.apellidos as atleta_apellido, cat.nombre as articulo_nombre,
+                        ee.nombre as estado_fisico, ee.nivel_estado, at.codigo_atleta, at.p_nombre as atleta_nombre,
+                        at.p_apellidos as atleta_apellido, cat.nombre as articulo_nombre,
                         (SELECT COUNT(*) FROM devoluciones d2 
                          INNER JOIN asignaciones a2 ON d2.id_asignacion = a2.id_asignacion 
-                         WHERE a2.id_atleta = at.id_atleta) as total_devoluciones_atleta
+                         WHERE a2.codigo_atleta = at.codigo_atleta) as total_devoluciones_atleta
                     FROM devoluciones d
                     INNER JOIN asignaciones asig ON d.id_asignacion = asig.id_asignacion
-                    INNER JOIN atletas at ON asig.id_atleta = at.id_atleta
-                    INNER JOIN estado_equipamiento ee ON d.id_estado = ee.id_estado
-                    INNER JOIN equipamientos eq ON asig.id_equipamiento = eq.id_equipamiento
-                    INNER JOIN catalogos cat ON eq.id_catalogo = cat.id_catalogo
+                    INNER JOIN atletas at ON asig.codigo_atleta = at.codigo_atleta
+                    INNER JOIN estado_fisico ee ON d.id_estado = ee.id_estado
+                    INNER JOIN articulos_inventario eq ON asig.codigo_articulo = eq.codigo_articulo
+                    INNER JOIN catalogo cat ON eq.id_catalogo = cat.id_catalogo
                     WHERE 1=1 "; 
             
             $params = [];
@@ -82,7 +83,7 @@ class ModeloDevoluciones extends Conexion
             if (!empty($filtros['id_estado'])) { $sql .= " AND d.id_estado = ? "; $params[] = $filtros['id_estado']; }
             if (!empty($filtros['fecha_devolucion'])) { $sql .= " AND d.fecha_devolucion = ? "; $params[] = $filtros['fecha_devolucion']; }
             
-            $sql .= " ORDER BY at.id_atleta ASC, d.fecha_devolucion DESC";
+            $sql .= " ORDER BY at.codigo_atleta ASC, d.fecha_devolucion DESC";
 
             $stmt = $conex->prepare($sql);
             $stmt->execute($params);
@@ -93,20 +94,20 @@ class ModeloDevoluciones extends Conexion
     }
 
     // ====================================================================
-    // MÉTODOS DE VALIDACIÓN LÓGICA (Requisito Académico - Prog. Defensiva)
+    // MÉTODOS DE VALIDACIÓN LÓGICA
     // ====================================================================
 
     private function VerificarExistenciaAsignacion($id_asignacion, $conex): bool
     {
-        // Verifica si la asignación existe, no está anulada y sigue prestada (estatus 1)
-        $stmt = $conex->prepare("SELECT 1 FROM asignaciones WHERE id_asignacion = ? AND anulado = 0 AND estatus = 1");
+        // Verifica si la asignación existe y sigue prestada (estatus 1)
+        $stmt = $conex->prepare("SELECT 1 FROM asignaciones WHERE id_asignacion = ? AND estatus = 1");
         $stmt->execute([$id_asignacion]);
         return $stmt->fetchColumn() !== false; 
     }
 
     private function VerificarExistenciaDevolucion($id_devolucion, $conex): bool
     {
-        // Verifica si la devolución realmente existe en la base de datos antes de modificarla o anularla
+        // Verifica si la devolución realmente existe
         $stmt = $conex->prepare("SELECT 1 FROM devoluciones WHERE id_devolucion = ?");
         $stmt->execute([$id_devolucion]);
         return $stmt->fetchColumn() !== false; 
@@ -118,17 +119,15 @@ class ModeloDevoluciones extends Conexion
         try {
             $conex = $this->conex();
             
-            // 1. VALIDACIÓN LÓGICA: Verificar Existencia
             if (!$this->VerificarExistenciaAsignacion($this->id_asignacion, $conex)) {
                 throw new Exception("La asignación no existe, no es válida o ya fue devuelta.");
             }
 
-            // 2. TRANSACCIÓN
             $conex->beginTransaction();
 
-            $stmtAsig = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
+            $stmtAsig = $conex->prepare("SELECT codigo_articulo FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
             $stmtAsig->execute([$this->id_asignacion]);
-            $idEquipamiento = $stmtAsig->fetchColumn();
+            $codigoArticulo = $stmtAsig->fetchColumn();
 
             if ($this->objAsignaciones) {
                 $this->objAsignaciones->CambiarEstatusAsignacion($this->id_asignacion, 0, $conex);
@@ -136,8 +135,8 @@ class ModeloDevoluciones extends Conexion
                 $conex->prepare("UPDATE asignaciones SET estatus = 0 WHERE id_asignacion = ?")->execute([$this->id_asignacion]);
             }
 
-            $stmtEqUpd = $conex->prepare("UPDATE equipamientos SET estatus = 1, id_estados = ? WHERE id_equipamiento = ?");
-            $stmtEqUpd->execute([$this->id_estado, $idEquipamiento]);
+            $stmtEqUpd = $conex->prepare("UPDATE articulos_inventario SET estatus = 1, id_estado = ? WHERE codigo_articulo = ?");
+            $stmtEqUpd->execute([$this->id_estado, $codigoArticulo]);
 
             $stmtInsert = $conex->prepare("INSERT INTO devoluciones (id_asignacion, id_estado, fecha_devolucion, observacion) VALUES (?, ?, ?, ?)");
             $stmtInsert->execute([$this->id_asignacion, $this->id_estado, $this->fecha_devolucion, $this->observacion]);
@@ -161,27 +160,22 @@ class ModeloDevoluciones extends Conexion
         try {
             $conex = $this->conex();
 
-            // 1. VALIDACIÓN LÓGICA: Verificar Existencia
             if (!$this->VerificarExistenciaDevolucion($this->id_devolucion, $conex)) {
                 throw new Exception("El registro de devolución que intenta modificar no existe.");
             }
 
-            // 2. TRANSACCIÓN
             $conex->beginTransaction();
 
-            // Identificar qué equipo físico está asociado a esta devolución
-            $stmtEq = $conex->prepare("SELECT a.id_equipamiento, d.id_estado FROM devoluciones d INNER JOIN asignaciones a ON d.id_asignacion = a.id_asignacion WHERE d.id_devolucion = ? FOR UPDATE");
+            $stmtEq = $conex->prepare("SELECT a.codigo_articulo, d.id_estado FROM devoluciones d INNER JOIN asignaciones a ON d.id_asignacion = a.id_asignacion WHERE d.id_devolucion = ? FOR UPDATE");
             $stmtEq->execute([$this->id_devolucion]);
             $datosViejos = $stmtEq->fetch(PDO::FETCH_ASSOC);
 
-            // Modificamos el histórico de la devolución
             $stmtUpdate = $conex->prepare("UPDATE devoluciones SET fecha_devolucion = ?, id_estado = ?, observacion = ? WHERE id_devolucion = ?");
             $stmtUpdate->execute([$this->fecha_devolucion, $this->id_estado, $this->observacion, $this->id_devolucion]);
 
-            // Si cambiaron la "Calidad" (ej. de Bueno a Roto), actualizamos el equipo físico
             if ($datosViejos && $datosViejos['id_estado'] != $this->id_estado) {
-                $stmtEqUpd = $conex->prepare("UPDATE equipamientos SET id_estados = ? WHERE id_equipamiento = ?");
-                $stmtEqUpd->execute([$this->id_estado, $datosViejos['id_equipamiento']]);
+                $stmtEqUpd = $conex->prepare("UPDATE articulos_inventario SET id_estado = ? WHERE codigo_articulo = ?");
+                $stmtEqUpd->execute([$this->id_estado, $datosViejos['codigo_articulo']]);
             }
 
             $conex->commit();
@@ -202,21 +196,19 @@ class ModeloDevoluciones extends Conexion
         try {
             $conex = $this->conex();
             
-            // 1. VALIDACIÓN LÓGICA: Verificar Existencia
             if (!$this->VerificarExistenciaDevolucion($this->id_devolucion, $conex)) {
                 throw new Exception("El registro que intenta anular ya no existe en el sistema.");
             }
 
-            // 2. TRANSACCIÓN
             $conex->beginTransaction();
 
             $stmtAsig = $conex->prepare("SELECT id_asignacion FROM devoluciones WHERE id_devolucion = ? FOR UPDATE");
             $stmtAsig->execute([$this->id_devolucion]);
             $idAsig = $stmtAsig->fetchColumn();
 
-            $stmtEq = $conex->prepare("SELECT id_equipamiento FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
+            $stmtEq = $conex->prepare("SELECT codigo_articulo FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
             $stmtEq->execute([$idAsig]);
-            $idEq = $stmtEq->fetchColumn();
+            $codigoArticulo = $stmtEq->fetchColumn();
 
             $conex->prepare("DELETE FROM devoluciones WHERE id_devolucion = ?")->execute([$this->id_devolucion]);
 
@@ -226,7 +218,7 @@ class ModeloDevoluciones extends Conexion
                 $conex->prepare("UPDATE asignaciones SET estatus = 1 WHERE id_asignacion = ?")->execute([$idAsig]);
             }
 
-            $conex->prepare("UPDATE equipamientos SET estatus = 2 WHERE id_equipamiento = ?")->execute([$idEq]);
+            $conex->prepare("UPDATE articulos_inventario SET estatus = 2 WHERE codigo_articulo = ?")->execute([$codigoArticulo]);
 
             $conex->commit();
             return ['accion' => 'exito', 'mensaje' => 'Anulación procesada, equipo reasignado.'];
