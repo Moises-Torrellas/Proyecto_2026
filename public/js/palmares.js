@@ -220,11 +220,11 @@ function abrirModalPalmares(tipo) {
     $('#tipo_palmares').val(tipo);
     $('#id').val('');
 
-    // Resetear select2
-    $('#torneo_ind, #torneo_grp, #premio_ind, #premio_grp, #atleta, #equipo').val(null).trigger('change');
+   // 1. PRIMERO habilita los selects de torneo
+    $('#torneo_ind, #torneo_grp').prop('disabled', false);
 
-    // Ajustar visibilidad
-    $('#seccion_reportes').hide();
+    // 2. LUEGO resetea todos y dispara el change para que Select2 se entere de que ya están habilitados
+    $('#torneo_ind, #torneo_grp, #premio_ind, #premio_grp, #atleta, #equipo').val(null).trigger('change');
 
     if (tipo === 'individual') {
         $('#titulo_modal').text('Registrar Palmarés Individual');
@@ -286,15 +286,26 @@ function llenarModal(data, tipo) {
         $('#seccion_individual').show();
         $('#seccion_grupal').hide();
 
-        $('#torneo_ind').val(data.id_torneo).prop('disabled', true).trigger('change');
+        // 1. Primero habilitamos para que Select2 pueda aceptar el cambio
+        $('#torneo_ind').prop('disabled', false);
+        // 2. Asignamos el valor y disparamos el cambio
+        $('#torneo_ind').val(data.id_torneo).trigger('change');
+        // 3. Ahora que el valor está puesto, lo bloqueamos visualmente
+        $('#torneo_ind').prop('disabled', true);
+        
         $('#premio_ind').val(data.id_premio).trigger('change');
         $('#atleta').val(data.id_atleta).trigger('change');
+        
     } else {
+        // Haz lo mismo para el bloque grupal
         $('#titulo_modal').text('Modificar Palmarés Grupal');
         $('#seccion_individual').hide();
         $('#seccion_grupal').show();
 
-        $('#torneo_grp').val(data.id_torneo).prop('disabled', true).trigger('change');
+        $('#torneo_grp').prop('disabled', false);
+        $('#torneo_grp').val(data.id_torneo).trigger('change');
+        $('#torneo_grp').prop('disabled', true);
+
         $('#premio_grp').val(data.id_premio).trigger('change');
         $('#equipo').val(data.id_equipo).trigger('change');
     }
