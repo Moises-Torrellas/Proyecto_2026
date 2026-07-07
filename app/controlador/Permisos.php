@@ -7,10 +7,10 @@ use App\modelo\ModeloModulos;
 require_once __DIR__ . '/Base.php';
 
 // 2. Configuración del módulo
-$id_modulo = _MD_ROLES_;
+$id_modulo = _MD_PERMISOS_;
 
 // 3. Procesar permisos (Ahora retorna un array en lugar de usar global)
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, 'ingresar_permisos');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloPermisos';
@@ -55,25 +55,27 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         switch ($accion) {
             case 'consultar':
+                if (empty($permisos['ingresar_permisos'])) throw new Exception('No tiene permisos para consultar .');
                 consultarData($obj, $permisos);
                 break;
             case 'consultarModulos':
+                if (empty($permisos['ingresar_permisos'])) throw new Exception('No tiene permisos para consultar .');
                 consultarModulos();
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tiene permisos para buscar .');
+                if (empty($permisos['modificar_permisos'])) throw new Exception('No tiene permisos para buscar .');
                 buscarData($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tiene permisos para incluir .');
+                if (empty($permisos['registrar_permisos'])) throw new Exception('No tiene permisos para incluir .');
                 incluirData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tiene permisos para modificar .');
+                if (empty($permisos['modificar_permisos'])) throw new Exception('No tiene permisos para modificar .');
                 modificarData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'bloquear':
-                if (!$permisos['modificar']) throw new Exception('No tiene permisos para bloquear .');
+                if (empty($permisos['bloquear_permisos'])) throw new Exception('No tiene permisos para bloquear .');
                 bloquear($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

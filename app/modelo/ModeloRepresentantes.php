@@ -136,6 +136,15 @@ class ModeloRepresentantes extends Conexion
     private function Incluir(): array
     {
         $conex=null;
+        $datos_nuevos = [
+            'cedula' => $this->cedula,
+            'nacionalidad' => $this->nacionalidad,
+            'nombre' => $this->nombre,
+            'apellido' => $this->apellido,
+            'telefono' => $this->telefono,
+            'direccion' => $this->direccion
+        ];
+        
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
@@ -157,13 +166,13 @@ class ModeloRepresentantes extends Conexion
             $stmt->execute();
 
             $conex->commit();
-            return array('accion' => 'exito');
+            return array('accion' => 'exito', 'datos_previos' => '', 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();
             }
             logs('Representantes', $e->getMessage(), 'Modelo');
-            return array('accion' => 'error', 'codigo' => $e->getMessage());
+            return array('accion' => 'error', 'codigo' => $e->getMessage(), 'datos_previos' => '', 'datos_nuevos' => json_encode($datos_nuevos));
         } finally {
             $conex = NULL;
         }
@@ -172,8 +181,23 @@ class ModeloRepresentantes extends Conexion
     private function Modificar(): array
     {
         $conex=null;
+        $datos_previos = [];
+        $datos_nuevos = [
+            'cedula' => $this->cedula,
+            'nacionalidad' => $this->nacionalidad,
+            'nombre' => $this->nombre,
+            'apellido' => $this->apellido,
+            'telefono' => $this->telefono,
+            'direccion' => $this->direccion
+        ];
+        
         try {
             $conex = $this->conex();
+            
+            $stmtPrev = $conex->prepare("SELECT cedula, tipo_doc as nacionalidad, nombre, apellido, telefono, direccion FROM representantes WHERE codigo_representante = :id");
+            $stmtPrev->execute([':id' => $this->id]);
+            $datos_previos = $stmtPrev->fetch(\PDO::FETCH_ASSOC) ?: [];
+            
             $conex->beginTransaction();
 
             if (!$this->verificarExistenciaPropia('cedula', $this->cedula, $this->id, 'representantes', NULL, bloquear: true)) {
@@ -205,13 +229,13 @@ class ModeloRepresentantes extends Conexion
             $stmt->execute();
 
             $conex->commit();
-            return array('accion' => 'exito');
+            return array('accion' => 'exito', 'datos_previos' => json_encode($datos_previos), 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();
             }
             logs('Representantes', $e->getMessage(), 'Modelo_Modificar');
-            return array('accion' => 'error', 'codigo' => $e->getMessage());
+            return array('accion' => 'error', 'codigo' => $e->getMessage(), 'datos_previos' => json_encode($datos_previos), 'datos_nuevos' => json_encode($datos_nuevos));
         } finally {
             $conex = NULL;
         }
@@ -239,8 +263,15 @@ class ModeloRepresentantes extends Conexion
     private function Eliminar(): array
     {
         $conex=null;
+        $datos_previos = [];
         try {
             $conex = $this->conex();
+            
+            // Get previous data
+            $stmtPrev = $conex->prepare("SELECT cedula, tipo_doc as nacionalidad, nombre, apellido, telefono, direccion FROM representantes WHERE codigo_representante = :id");
+            $stmtPrev->execute([':id' => $this->id]);
+            $datos_previos = $stmtPrev->fetch(\PDO::FETCH_ASSOC) ?: [];
+            
             $conex->beginTransaction();
             if (!$this->verificarExistencia('id', $this->id, 'representantes', NULL, bloquear: true)) {
                 throw new Exception(INVALID_ID);
@@ -253,13 +284,13 @@ class ModeloRepresentantes extends Conexion
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
             $conex->commit();
-            return array('accion' => 'exito');
+            return array('accion' => 'exito', 'datos_previos' => json_encode($datos_previos), 'datos_nuevos' => '');
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();
             }
             logs('Representantes', $e->getMessage(), 'Modelo_Eliminar');
-            return array('accion' => 'error', 'codigo' => $e->getMessage());
+            return array('accion' => 'error', 'codigo' => $e->getMessage(), 'datos_previos' => json_encode($datos_previos), 'datos_nuevos' => '');
         } finally {
             $conex = NULL;
         }

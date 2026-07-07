@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_CONCEPTOS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, 'ingresar_conceptos');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloConceptos';
@@ -51,32 +51,32 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
-        // Seguridad centralizada
+        // Seguridad centralizada usando las claves exactas de tu Base de Datos
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar Concepto de pago.');
+                if (empty($permisos['ingresar_conceptos'])) throw new Exception('No tienes permisos para consultar Concepto de pago.');
                 consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Concepto de pago.');
+                if (empty($permisos['modificar_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de pago.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar Concepto de pago.');
+                if (empty($permisos['registrar_concepto'])) throw new Exception('No tienes permisos para registrar Concepto de pago.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar Concepto de pago.');
+                if (empty($permisos['eliminar_concepto'])) throw new Exception('No tienes permisos para eliminar Concepto de pago.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Concepto de pago.');
+                if (empty($permisos['modificar_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de pago.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'estatus':
-            if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar Concepto de pago.');
-            cambiarEstatus($obj, $id_modulo, $bitacoraObj);
-            break;
+                if (empty($permisos['bloquear_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de pago.');
+                cambiarEstatus($obj, $id_modulo, $bitacoraObj);
+                break;
 
             default:
                 throw new Exception('Acción no permitida.');

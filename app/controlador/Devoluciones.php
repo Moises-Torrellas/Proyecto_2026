@@ -8,7 +8,7 @@ use App\modelo\ModeloEstadoFisico;
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_DEVOLUCIONES_; 
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, '');
 
 $nombreClaseModelo = 'App\modelo\ModeloDevoluciones';
 if (!class_exists($nombreClaseModelo)) {
@@ -50,26 +50,26 @@ function manejarSolicitudDevolucion($obj, $id_modulo, $bitacoraObj, array $permi
 
         switch ($accion) {
             case 'consultar':
-                if (empty($permisos['ingresar'])) throw new Exception(VALIDATION);
+                if (empty($permisos['ingresar_devoluciones'])) throw new Exception(VALIDATION);
                 consultar($obj, $permisos);
                 break;
             case 'MultiConsulta':
                 MultiConsulta();
                 break;
             case 'incluir':
-                if (empty($permisos['registrar'])) throw new Exception(VALIDATION);
+                if (empty($permisos['registrar_devoluciones'])) throw new Exception(VALIDATION);
                 procesarFormulario($obj, 'incluir', $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (empty($permisos['modificar'])) throw new Exception(VALIDATION);
+                if (empty($permisos['modificar_devoluciones'])) throw new Exception(VALIDATION);
                 procesarFormulario($obj, 'modificar', $id_modulo, $bitacoraObj);
                 break;
             case 'anular':
-                if (empty($permisos['eliminar'])) throw new Exception(VALIDATION);
+                if (empty($permisos['eliminar_devoluciones'])) throw new Exception(VALIDATION);
                 anular($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'generar':
-                if (empty($permisos['reporte'])) throw new Exception(VALIDATION);
+                if (empty($permisos['reporte_devoluciones'])) throw new Exception(VALIDATION);
                 generarReporte($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

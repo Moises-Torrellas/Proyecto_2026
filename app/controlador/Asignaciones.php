@@ -3,11 +3,12 @@
 use App\modelo\ModeloAsignaciones;
 use App\modelo\ModeloAtletas;
 use App\modelo\ModeloArticulosInventario;
+use App\servicios\GenerarReporte; // <-- 1. Importamos el servicio de reportes
 
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_ASIGNACIONES_; 
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, '');
 
 $nombreClaseModelo = 'App\modelo\ModeloAsignaciones';
 if (!class_exists($nombreClaseModelo)) {
@@ -63,6 +64,10 @@ function manejarSolicitudAsignacion($obj, $id_modulo, $bitacoraObj, array $permi
                 if (empty($permisos['eliminar'])) throw new Exception('Sin permisos.');
                 anular($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar': // <-- 2. Agregamos el caso para generar el PDF
+                if (empty($permisos['ingresar'])) throw new Exception('Sin permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -82,10 +87,10 @@ function consultar($obj, $permisos): void {
 function MultiConsulta(): void {
     try {
         $modeloAtletas = new ModeloAtletas();
-        $modeloArticulos = new ModeloArticulosInventario(); 
-
-        $respAtletas = $modeloAtletas->Consultar(); 
-        $respEquip = $modeloArticulos->ConsultarArticulosLibres(); 
+        $modeloArticulos = new ModeloArticulosInventario();
+        
+        $respAtletas = $modeloAtletas->ConsultarAtletas(); 
+        $respEquip = $modeloArticulos->ConsultarArticulosLibres();
 
         echo json_encode([
             'accion'  => 'MultiConsulta',
@@ -190,5 +195,55 @@ function anular($obj, $id_modulo, $bitacoraObj): void {
     } catch (Exception $e) { 
         logs('Asignaciones', $e->getMessage(), 'Controlador_Anular');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]); 
+    }
+}
+
+// 3. Añadimos la función para procesar y devolver el reporte
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validacionesReporte = [];
+        $datosFiltro = ['accion' => 'consultar']; 
+
+        if (!empty($_POST['fecha'])) {
+            $validacionesReporte['fecha'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
+            $datosFiltro['fecha_asignacion'] = $_POST['fecha'];
+        }
+        if (!empty($_POST['fecha_f'])) {
+            $validacionesReporte['fecha_f'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
+            $datosFiltro['fecha_f'] = $_POST['fecha_f'];
+        }
+
+        if (!empty($validacionesReporte)) {
+            validar_datos($validacionesReporte);
+        }
+
+        // Ejecutamos la consulta para obtener los datos agrupados
+        $respuesta = $obj->ConsultarAsignaciones(); // Usamos directamente tu método actual que agrupa por atleta
+
+        if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'Ocurrió un error al consultar las asignaciones para el reporte.']);
+            exit();
+        }
+
+        $datos = $respuesta['datos'] ?? [];
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron asignaciones para generar el reporte.']);
+            exit();
+        }
+
+        $nombreVista = 'R_Asignaciones'; 
+        
+        $objG = new GenerarReporte();
+        $pdf = $objG->generarPDF($nombreVista, $datos, 'Asignaciones');
+        
+        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Asignaciones.");
+        }
+        
+        echo json_encode($pdf);
+    } catch (Exception $e) {
+        logs('Asignaciones', $e->getMessage(), 'Controlador_Generar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

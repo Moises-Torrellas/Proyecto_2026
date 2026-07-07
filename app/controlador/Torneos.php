@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_TORNEOS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, 'ingresar_torneos');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloTorneos';
@@ -25,7 +25,10 @@ if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudTorneos($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
     registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
-    cargarVista($pagina);
+    $respuesta = $objModelo->Consultar();
+    $registro = $respuesta['datos'] ?? [];
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
 
 /**
@@ -44,22 +47,23 @@ function manejarSolicitudTorneos($obj, $id_modulo, $bitacoraObj, array $permisos
 
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+            if (empty($permisos['ingresar_torneos'])) throw new Exception('No tienes permisos para consultar torneos.');
+                consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para buscar/modificar torneos.');
+                if (empty($permisos['modificar_torneo'])) throw new Exception('No tienes permisos para buscar/modificar torneos.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar torneos.');
+                if (empty($permisos['registrar_torneo'])) throw new Exception('No tienes permisos para registrar torneos.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar torneos.');
+                if (empty($permisos['eliminar_torneo'])) throw new Exception('No tienes permisos para eliminar torneos.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar torneos.');
+                if (empty($permisos['modificar_torneo'])) throw new Exception('No tienes permisos para modificar torneos.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
@@ -75,16 +79,15 @@ function manejarSolicitudTorneos($obj, $id_modulo, $bitacoraObj, array $permisos
  * --- LÓGICA DE ACCIONES ---
  */
 
-function consultar($obj): void
+function consultar($obj, $permisos): void
 {
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
-    
-    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] = 'Error al listar los torneos.';
-    }
-    
-    echo json_encode($respuesta);
+
+    $registro = $respuesta['datos'] ?? [];
+    $solo_lista = true;
+
+    include(__DIR__ . '/../vista/Torneos.php');
 }
 
 function buscar($obj): void

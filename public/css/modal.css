@@ -31,12 +31,15 @@
     display: grid;
     grid-template-rows: 80px auto;
 }
+
 .modal_grafico {
     width: 900px;
 }
+
 .modal_grande {
     width: 700px;
 }
+
 .cabecera_modal {
     grid-row: 1;
     display: grid;
@@ -78,6 +81,7 @@
     grid-row: 2;
     width: 100%;
     overflow: auto;
+    scrollbar-gutter: stable;
     display: grid;
     place-items: center;
 }
@@ -89,7 +93,7 @@
     gap: 20px;
 }
 
-.row-g{
+.row-g {
     width: 700px;
     height: 400px;
 }
@@ -448,32 +452,45 @@
     cursor: not-allowed;
 }
 
+#tabla_permisos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 5px;
+}
+
 #tabla_permisos_container {
-    width: 98%; 
-    max-width: 650px; 
-    overflow-x: hidden; 
-    overflow-y: auto;   
-    margin: 0 auto 20px auto;
-    border: 2px solid var(--borde-color); 
-    border-radius: 10px;
+    width: 98%;
+    max-width: 650px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin: 0;
+    padding: 10px;
+
 }
 
 #tabla_permisos_ui {
     width: 100%;
-    table-layout: fixed; /* Mantiene el control estricto de los anchos */
+    table-layout: fixed;
+    /* Mantiene el control estricto de los anchos */
     border-collapse: collapse;
 }
 
 /* MODIFICADO: Se añaden divisiones suaves horizontales y verticales */
 #tabla_permisos_ui th,
 #tabla_permisos_ui td {
-    padding: 10px 4px; /* Un pelín más de espacio vertical */
-    font-size: 0.9rem; /* Ajustado sutilmente para evitar desbordes */
+    padding: 10px 4px;
+    /* Un pelín más de espacio vertical */
+    font-size: 0.9rem;
+    /* Ajustado sutilmente para evitar desbordes */
     font-weight: 600;
     text-align: center;
-    word-wrap: break-word; 
-    border-bottom: 2px solid var(--borde-color); /* División horizontal clara */
-    border-right: 2px solid var(--borde-form);  /* División vertical clara */
+    word-wrap: break-word;
+    border-bottom: 2px solid var(--borde-color);
+    /* División horizontal clara */
+    border-right: 2px solid var(--borde-form);
+    /* División vertical clara */
 }
 
 /* NOTA: Si usas un tema oscuro, cambia 'rgba(0,0,0,0.08)' por 'rgba(255,255,255,0.08)' */
@@ -486,7 +503,8 @@
     background-color: var(--color-primario);
     text-align: center;
     border-bottom: none;
-    border-right: none; /* División más marcada para la cabecera */
+    border-right: none;
+    /* División más marcada para la cabecera */
 }
 
 /* Remueve la línea vertical sobrante en la última columna */
@@ -503,17 +521,20 @@
 /* MODIFICADO: Mayor ancho para módulos (40%) y reducción automática del resto */
 #tabla_permisos_ui th:first-child,
 #tabla_permisos_ui td:first-child {
-    width: 20%; /* Subió de 30% a 40% */
+    width: 20%;
+    /* Subió de 30% a 40% */
     text-align: center;
     font-weight: bold;
     font-size: .9rem;
-    padding-left: 12px; /* Margen interno para que el texto no pegue de la orilla */
+    padding-left: 12px;
+    /* Margen interno para que el texto no pegue de la orilla */
 }
 
 /* --- ESTILOS PARA SELECT MÚLTIPLE (Select2) --- */
 
 .colum_select_multiple {
-    width: 520px; /* Ancho para ocupar las dos columnas */
+    width: 520px;
+    /* Ancho para ocupar las dos columnas */
 }
 
 .colum_select_multiple .caja_formulario {
@@ -525,7 +546,7 @@
     border: 2px solid var(--borde-form);
     border-radius: 8px;
     background-color: var(--fondo-form);
-    min-height: 45px; 
+    min-height: 45px;
     padding: 2px 10px;
     transition: .2s ease-in;
     cursor: text;
@@ -539,7 +560,8 @@
 /* Opción Seleccionada (Píldora) */
 .colum_select_multiple .select2-container--default .select2-selection--multiple .select2-selection__choice {
     background-color: var(--color-primario);
-    color: #fff; /* Aseguramos que el texto sea blanco */
+    color: #fff;
+    /* Aseguramos que el texto sea blanco */
     border: none;
     border-radius: 5px;
     padding: 4px 8px;
@@ -552,7 +574,7 @@
 .colum_select_multiple .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
     color: #fff;
     margin-right: 8px;
-    border-right: 1px solid rgba(255,255,255,0.3);
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
     padding-right: 8px;
     font-weight: normal;
 }

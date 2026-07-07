@@ -6,7 +6,7 @@ use App\servicios\GenerarReporte;
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_REPRESENTANTES_;
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, 'ingresar_representantes');
 
 $nombreClaseModelo = 'App\modelo\ModeloRepresentantes';
 
@@ -20,7 +20,7 @@ $objModelo = new ModeloRepresentantes();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-    registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
+    //registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
 
     $registro = [];
@@ -47,27 +47,27 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar representantes.');
+                if (empty($permisos['ingresar_representantes'])) throw new Exception('No tienes permisos para consultar representantes.');
                 consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
+                if (empty($permisos['modificar_representante'])) throw new Exception('No tienes permisos para modificar representantes.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar representantes.');
+                if (empty($permisos['registrar_representante'])) throw new Exception('No tienes permisos para registrar representantes.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar representantes.');
+                if (empty($permisos['eliminar_representante'])) throw new Exception('No tienes permisos para eliminar representantes.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
+                if (empty($permisos['modificar_representante'])) throw new Exception('No tienes permisos para modificar representantes.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'generar':
-                if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar un reporte de los representantes.');
+                if (empty($permisos['generar_representante'])) throw new Exception('No tienes permisos para generar un reporte de los representantes.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
@@ -136,8 +136,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
 
+        $datos_previos = $resultado['datos_previos'] ?? '';
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró al representante: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró al representante: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido'], $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Representante registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             // Mantenemos el mapeo de errores de integridad de BD
@@ -147,6 +150,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en el registro.'
             };
+            registrarBitacora($bitacoraObj, $id_modulo, "Fallo al registrar al representante: " . $_POST['cedula'] . ' - ' . $resultado['mensaje'], $datos_previos, $datos_nuevos);
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
@@ -174,8 +178,11 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
 
+        $datos_previos = $resultado['datos_previos'] ?? '';
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico al representante: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó al representante: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido'], $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Representante modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -184,6 +191,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
+            registrarBitacora($bitacoraObj, $id_modulo, "Fallo al modificar al representante: " . $_POST['cedula'] . ' - ' . $resultado['mensaje'], $datos_previos, $datos_nuevos);
         }
 
         echo json_encode($resultado);
@@ -205,8 +213,11 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
 
+        $datos_previos = $resultado['datos_previos'] ?? '';
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino al representante: " . $_POST['id']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó al representante: " . $_POST['id'], $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Representante eliminado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -215,6 +226,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la eliminacion.'
             };
+            registrarBitacora($bitacoraObj, $id_modulo, "Fallo al eliminar al representante: " . $_POST['id'] . ' - ' . $resultado['mensaje'], $datos_previos, $datos_nuevos);
         }
         echo json_encode($resultado);
     } catch (Exception $e) {

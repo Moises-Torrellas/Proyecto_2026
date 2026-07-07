@@ -25,11 +25,11 @@
                         </div>
 
                         <div class="botones">
-                            <?php if($permisos['registrar']): ?>
+                            <?php if(!empty($permisos['registrar_devoluciones'])): ?>
                                 <button class="btn btn_azul" id="btn_nuevo">Nueva Devolución</button> 
                             <?php endif; ?>
                             
-                            <?php if ($permisos['reporte']): ?>
+                            <?php if (!empty($permisos['reporte_devoluciones'])): ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -105,10 +105,10 @@
             if ($dato['nivel_estado'] >= 3) $claseEstatus = 'estatus_r';
 
             $botonesAccion = '';
-            if ($permisos['modificar']) {
+            if (!empty($permisos['modificar_devoluciones'])) {
                 $botonesAccion .= '<button class="btn_t cbt_v" onclick="editar(' . $dato['id_devolucion'] . ', ' . $dato['id_asignacion'] . ', ' . $dato['id_estado'] . ', \'' . $dato['fecha_devolucion'] . '\', \'' . htmlspecialchars($dato['observacion']) . '\')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
             }
-            if ($permisos['eliminar']) {
+            if (!empty($permisos['eliminar_devoluciones'])) {
                 $botonesAccion .= '<button class="btn_t cbt_r" onclick="anular(' . $dato['id_devolucion'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-trash"></i></button>';
             }
             ?>

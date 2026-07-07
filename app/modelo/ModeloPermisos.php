@@ -39,7 +39,7 @@ class ModeloPermisos extends Conexion
         if (!empty($datos['modulo']) && !preg_match('/^[0-9]+$/', $datos['modulo'])) {
             throw new Exception('Id de módulo inválido.');
         }
-        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,50}$/', $datos['nombre'])) {
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,100}$/', $datos['nombre'])) {
             throw new Exception('Nombre inválido.');
         }
         if (!empty($datos['descripcion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,100}$/', $datos['descripcion'])) {

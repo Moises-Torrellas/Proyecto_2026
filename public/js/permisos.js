@@ -26,8 +26,8 @@ $(document).ready(function () {
     consultarModulos();
     inicializarPaginador();
 
-    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
-    Validacion("descripcion", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
+    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
+    Validacion("descripcion", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/, "Solo letras entre 3 y 30 caracteres");
     Validacion("clave", /^[a-z_]*$/, /^[a-z_]{5,50}$/, "Formato: accion_entidad (5-50 caracteres)", "proceso");
 
     $('#proceso').on('click', function () {
@@ -130,7 +130,7 @@ $(document).ready(function () {
 });
 
 function validarEnvio(proceso) {
-    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
+    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/,
         $('#nombre'), $("#nombre_spam"), "Solo letras entre 3 y 30 caracteres")) {
         muestraMensaje("error", 2000, "Error", "Solo puede ingresar letra, Maximo 30 caracteres");
         return false;
@@ -186,11 +186,7 @@ function modificar(datos) {
 
 function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-
-    // Inyectamos directamente el bloque HTML estructurado que procesó el servidor
     contenedor.html(htmlRecibido);
-
-    // Reactivamos las librerías visuales y los comportamientos estéticos
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
     if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });

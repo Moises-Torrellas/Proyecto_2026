@@ -7,7 +7,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_ESTADO_FISICO_;
 
 
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, '');
 
 $nombreClaseModelo = 'App\modelo\ModeloEstadoFisico';
 

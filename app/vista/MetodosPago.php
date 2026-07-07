@@ -3,7 +3,7 @@
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-    <?php else :
+        <?php else :
         foreach ($registro as $dato) :
             $txtReferencia = ($dato['nec_referencia'] == 1)  ? 'Sí' : 'No';
             $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
@@ -23,15 +23,15 @@
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <?php if ($permisos['modificar']) : ?>
+                            <?php if (!empty($permisos['modificar_metodop'])) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_metodo'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <?php endif; ?>
-                                <?php if ($permisos['eliminar']) : ?>
+                            <?php endif; ?>
+                            <?php if (!empty($permisos['eliminar_metodop'])) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_metodo'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                <?php endif; ?>
-                                <?php if ($permisos['otros']) : ?>
+                            <?php endif; ?>
+                            <?php if (!empty($permisos['bloquear_metodop'])) : ?>
                                 <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['codigo_metodo'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
-                                <?php endif; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -66,11 +66,11 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']) :?>
-                            <button class="btn btn_azul" id="incluir">Nuevo Metodo de Pago</button>
+                            <?php if (!empty($permisos['registrar_metodosp'])) : ?>
+                                <button class="btn btn_azul" id="incluir">Nuevo Metodo de Pago</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']) : ?>
-                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php if (!empty($permisos['generar_metodop'])) : ?>
+                                <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -80,7 +80,7 @@
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                            <?php else :
+                                <?php else :
                                 foreach ($registro as $dato) :
                                     $txtReferencia = ($dato['nec_referencia'] == 1)  ? 'Sí' : 'No';
                                     $icon = ($dato['estatus'] == 1) ? 'fi-sr-unlock' : 'fi-sr-lock';
@@ -100,15 +100,15 @@
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                        <?php if ($permisos['modificar']) : ?>
+                                                    <?php if (!empty($permisos['modificar_metodop'])) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_metodo'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                                        <?php endif; ?>
-                                                        <?php if ($permisos['eliminar']) : ?>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($permisos['eliminar_metodop'])) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_metodo'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                                        <?php endif; ?>
-                                                        <?php if ($permisos['otros']) : ?>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($permisos['bloquear_metodop'])) : ?>
                                                         <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['codigo_metodo'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
-                                                        <?php endif; ?>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>

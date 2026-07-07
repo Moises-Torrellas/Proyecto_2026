@@ -19,8 +19,7 @@ function busqueda() {
 }
 
 $(document).ready(function () {
-    // 1. Cargar la tabla al iniciar
-    consultar();
+    inicializarPaginador();
 
     // 2. Validaciones en tiempo real
     Validacion("nombre", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres", "proceso");
@@ -159,60 +158,16 @@ function modificar(datos) {
     abrirModal();
 }
 
-function crearConsulta(datos) {
+
+
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
 
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron torneos registrados</p></div>');
-    } else {
-        datos.forEach(dato => {
-            // Etiqueta visual para el estatus
-            let badgeEstatus = dato.estatus == 1 
-                ? '<span class="estatus_v">Activo</span>'
-                : '<span class="estatus_r">Finalizado</span>';
-
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo" style="width: 25%;">
-                                <small>Torneo</small>
-                                <span style="font-weight: bold; color: #00cc00;">${escapeHTML(dato.nombre)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Fecha Inicio</small>
-                                <span>${dato.fecha_inicio}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Fecha Fin</small>
-                                <span>${dato.fecha_fin}</span>
-                            </div>
-                            <div class="listado_dato_grupo" style="width: 30%;">
-                                <small>Ubicación</small>
-                                <span>${escapeHTML(dato.ubicacion)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Estatus</small>
-                                ${badgeEstatus}
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(${dato.codigo_torneo})" title="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(${dato.codigo_torneo})" title="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
+    contenedor.html(htmlRecibido);
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function escapeHTML(texto) {
@@ -243,13 +198,13 @@ function enviaAjax(datos) {
         },
         timeout: 120000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
-                
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                } 
-                else if (lee.accion == "incluir") {
+                if (lee.accion == "incluir") {
                     consultar();
                     limpia();
                     cerrarModal(); 

@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_METODOS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, 'ingresar_metodop');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloMetodosPago';
@@ -48,27 +48,27 @@ function manejarSolicitudMetodos_Pagos($obj, $id_modulo, $bitacoraObj, array $pe
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar el metodo de pago.');
+                if (empty($permisos['ingresar_metodop'])) throw new Exception('No tienes permisos para consultar el metodo de pago.');
                 consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar el metodo de pago.');
+                if (empty($permisos['modificar_metodop'])) throw new Exception('No tienes permisos para modificar el metodo de pago.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar el metodo de pago.');
+                if (empty($permisos['registrar_metodosp'])) throw new Exception('No tienes permisos para registrar el metodo de pago.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar el metodo de pago.');
+                if (empty($permisos['eliminar_metodop'])) throw new Exception('No tienes permisos para eliminar el metodo de pago.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar el metodo de pago.');
+                if (empty($permisos['modificar_metodop'])) throw new Exception('No tienes permisos para modificar el metodo de pago.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'bloquear':
-                if (!$permisos['otros']) throw new Exception('No tienes permisos para bloquear Metodos de pago.');
+                if (empty($permisos['bloquear_metodop'])) throw new Exception('No tienes permisos para bloquear Metodos de pago.');
                 bloquear($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

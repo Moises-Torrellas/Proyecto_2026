@@ -7,9 +7,10 @@ function manejarRuta($pagina): void
 
         $bitacora = new \App\modelo\ModeloBitacora();
 
-        // Registramos (Asegúrate que la constante _MD_Cerrar_ esté en tu config)
+        // Registramos
         if (isset($_SESSION['id'])) {
-           // $bitacora->RegistrarAccion(_MD_CERRAR_, "Cierre de sesión.", $_SESSION['id']);
+            $entorno = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
+            $bitacora->RegistrarAccion(1, "Cierre de sesión exitoso.", $_SESSION['id'], '', '', $entorno);
         }
         // Limpiamos la sesión de forma segura
         $_SESSION = [];

@@ -21,13 +21,6 @@
                             <span style="font-weight: bold; color: #2ec135;"><?= htmlspecialchars($dato['valor_tasa']) ?> <?= htmlspecialchars($dato['simbolo']) ?></span>
                         </div>
                     </div>
-                    <div class="listado_col_acciones">
-                        <div style="display:flex; gap:5px;">
-                            <?php if ($permisos['eliminar']) : ?>
-                                <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_tasa'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                            <?php endif; ?>
-                        </div>
-                    </div>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -57,8 +50,10 @@
                             <h2 class="titulo_pagina" id="titulo">Tasas de Cambio</h2>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']) : ?>
+                            <?php if (!empty($permisos['sincronizar_tasa'])) : ?>
                                 <button class="btn btn_verde" id="sincronizar_btn">Sincronizar Monto</button>
+                            <?php endif; ?>
+                            <?php if (!empty($permisos['registrar_tasa'])) : ?>
                                 <button class="btn btn_azul" id="actualizar_btn">Actualizar Monto Manual</button>
                             <?php endif; ?>
                         </div>
@@ -85,13 +80,6 @@
                                                 <div class="listado_dato_grupo">
                                                     <small>Tasa</small>
                                                     <span style="font-weight: bold; color: #2ec135;"><?= htmlspecialchars($dato['valor_tasa']) ?> <?= htmlspecialchars($dato['simbolo']) ?></span>
-                                                </div>
-                                            </div>
-                                            <div class="listado_col_acciones">
-                                                <div style="display:flex; gap:5px;">
-                                                    <?php if ($permisos['eliminar']) : ?>
-                                                        <button class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_tasa'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>

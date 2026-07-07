@@ -38,13 +38,13 @@
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                            <?php if ($permisos['modificar']) : ?>
+                            <?php if (!empty($permisos['modificar_concepto'])) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_concepto'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                             <?php endif; ?>
-                            <?php if ($permisos['eliminar']) : ?>
+                            <?php if (!empty($permisos['eliminar_concepto'])) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_concepto'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
-                            <?php if ($permisos['otros']) : ?>
+                            <?php if (!empty($permisos['bloquear_concepto'])) : ?>
                                 <button class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['codigo_concepto'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
                             <?php endif; ?>
                         </div>
@@ -81,9 +81,12 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <button class="btn btn_azul" id="incluir">Nuevo Concepto</button>
-
-                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php if (!empty($permisos['registrar_concepto'])) : ?>
+                                <button class="btn btn_azul" id="incluir">Nuevo Concepto</button>
+                            <?php endif; ?>
+                            <?php if (!empty($permisos['generar_concepto'])) : ?>
+                                <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
@@ -124,16 +127,18 @@
                                                     <span><?= $dias ?></span>
                                                 </div>
                                             </div>
-
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                    <?php if ($permisos['modificar']) : ?>
+                                                    <?php if (!empty($permisos['modificar_concepto'])) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_concepto'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                                     <?php endif; ?>
-                                                    <?php if ($permisos['eliminar']) : ?>
+
+                                                    <?php if (!empty($permisos['eliminar_concepto'])) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_concepto'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                     <?php endif; ?>
-                                                    <?php if ($permisos['otros']) : ?>
+
+                                                    <!-- Si no tienes un permiso "otros" en tu BD, puedes usar "modificar_concepto" para bloquear/desbloquear -->
+                                                    <?php if (!empty($permisos['bloquear_concepto'])) : ?>
                                                         <button class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['codigo_concepto'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
                                                     <?php endif; ?>
                                                 </div>

@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_USUARIOS_;
 
 // 3. Procesar permisos (esto llena la variable global $permisosGenerales)
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, '');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloUsuarios';
@@ -62,7 +62,7 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 break;
 
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar usuarios.');
+                //if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar usuarios.');
                 incluirUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
 
@@ -87,12 +87,12 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 break;
 
             case 'CargarPermisosUsuario':
-                if (!$permisos['otros']) throw new Exception('No tiene permisos para ver permisos de usuarios.');
+                //if (!$permisos['otros']) throw new Exception('No tiene permisos para ver permisos de usuarios.');
                 CargarPermisosUsuario($obj);
                 break;
 
             case 'guardar_permisos_usuario':
-                if (!$permisos['otros']) throw new Exception('No tiene permisos para modificar permisos de usuarios.');
+                //if (!$permisos['otros']) throw new Exception('No tiene permisos para modificar permisos de usuarios.');
                 guardarPermisosUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
 
@@ -335,23 +335,16 @@ function guardarPermisosUsuario($obj, $id_modulo, $bitacoraObj): void
 
         $datos = [
             'id'             => $_POST['id'],
-            'accion'         => 'guardar_permisos_usuario'
+            'accion'         => 'guardar_permisos_usuario',
+            'permisos'       => $_POST['permisos'] ?? [] // Array de id_permiso => 1
         ];
-
-        foreach (['check_ingresar' => 'c_ingresar', 'check_registrar' => 'c_registrar', 'check_modificar' => 'c_modificar', 'check_eliminar' => 'c_eliminar', 'check_reporte' => 'c_reporte', 'check_otros' => 'c_otros'] as $postKey => $dataKey) {
-            if (isset($_POST[$postKey]) && !empty($_POST[$postKey])) {
-                $datos[$dataKey] = $_POST[$postKey];
-            }
-        }
-
-
 
         $resultado = $obj->procesarDatos($datos);
         if ($resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Modifico permisos al usuario: " . $_POST['id']);
             echo json_encode(['accion' => 'guardar_permisos_usuario', 'mensaje' => 'Permisos guardados correctamente.']);
         } else {
-            throw new Exception($resultado['codigo']);
+            throw new Exception($resultado['codigo'] ?? 'Ocurrió un error al guardar los permisos del usuario.');
         }
     } catch (Exception $e) {
         logs('Usuarios', $e->getMessage(), 'Controlador_GuardarPermisosUsuario');

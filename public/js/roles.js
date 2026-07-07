@@ -81,7 +81,7 @@ $(document).ready(function () {
         $('#row_nombre').show();
         $('#row_permisos').hide();
         $('#proceso').show();
-        
+
         abrirModal();
     });
 
@@ -142,17 +142,17 @@ $(document).ready(function () {
     });
 
     // Auto-check logic
-    $('#tabla_permisos').on('change', '.checkbox', function() {
+    $('#tabla_permisos').on('change', '.checkbox', function () {
         var id = $(this).attr('id');
         var partes = id.split('_');
         if (partes.length >= 3) {
             var accion = partes[1];
             var idModulo = partes[2];
-            
+
             if (accion !== 'ingresar' && $(this).is(':checked')) {
                 $('#check_ingresar_' + idModulo).prop('checked', true);
             }
-            
+
             if (accion === 'ingresar' && !$(this).is(':checked')) {
                 $('#check_registrar_' + idModulo).prop('checked', false);
                 $('#check_modificar_' + idModulo).prop('checked', false);
@@ -188,7 +188,7 @@ function buscar(id) {
     enviaAjax(datos);
 }
 
-function generarFilaPermisos(dato) {
+/* function generarFilaPermisos(dato) {
     var ingresarChecked = dato.ingresar == 1 ? 'checked' : '';
     var registrarChecked = dato.registrar == 1 ? 'checked' : '';
     var modificarChecked = dato.modificar == 1 ? 'checked' : '';
@@ -244,7 +244,7 @@ function generarFilaPermisos(dato) {
                             </label>
                         </td>
                     </tr>`;
-}
+} */
 
 function modificar(datos) {
     limpia();
@@ -276,9 +276,89 @@ function mostrarPermisos(datos) {
     $('#row_permisos').show();
     $('#proceso').show();
 
-    datos.forEach(dato => {
-        $("#tabla_permisos").append(generarFilaPermisos(dato));
+    let moduloActual = null;
+    let htmlContent = '';
+
+    datos.forEach((dato, index) => {
+        let idModulo = dato.id_modulo;
+
+        // Si cambiamos de módulo, cerramos el anterior (si existía) y abrimos el nuevo contenedor
+        if (idModulo !== moduloActual) {
+            if (moduloActual !== null) {
+                htmlContent += `
+                            </div> </div> </div> </div> `;
+            }
+
+            moduloActual = idModulo;
+
+            // Contamos cuántos permisos totales pertenecen a este módulo en el array
+            let cantidadPermisos = datos.filter(d => d.id_modulo == idModulo).length;
+            let estatusModulo = parseInt(dato.estatus_modulo || 1);
+            let textoEstatus = (estatusModulo === 1) ? 'Activo' : 'Bloqueado';
+            let claseEstatus = (estatusModulo === 1) ? 'estatus_v' : 'estatus_r';
+
+            htmlContent += `
+            <div class="listado_contenedor_grupal">
+                <div class="listado_item" onclick="toggleDetalles(this)">
+                    <div class="listado_col_principal">
+                        <div class="listado_avatar_null"><i class="icon_con" data-lucide="${dato.icono || 'folder'}"></i></div>
+                        <div class="listado_info_base">
+                            <span class="listado_titulo">${escapeHTML(dato.nombre_modulo)}</span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Opciones Disponibles</small>
+                            <span>${cantidadPermisos} Opción(es)</span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                    </div>
+                </div>
+
+                <div class="listado_detalle_oculto">
+                    <div class="detalle_expandido_container" style="padding: 15px;">
+                        <div class="lista_sub_items">`;
+        }
+
+        // Evaluar si el permiso está asignado actualmente para marcar el checkbox
+        let permisoChecked = (dato.asignado == 1 || dato.estatus_permiso_rol == 1) ? 'checked' : '';
+
+        // Identificar de manera automática si es el permiso base/ingresar para las reglas de negocio
+        let nombreLower = dato.nombre_permiso.toLowerCase();
+        let claseTipo = (nombreLower.includes('ingresar') || nombreLower.includes('consultar') || nombreLower.includes('acceder') || nombreLower.includes('listar'))
+            ? 'permiso-acceso'
+            : 'permiso-accion';
+
+        // Inyección del sub-item limpio con el checkbox correspondiente
+        htmlContent += `
+        <div class="sub_item_fila">
+            <div class="sub_item_info" style="flex: 2;">
+                <span class="sub_item_titulo">${escapeHTML(dato.nombre_permiso)}</span>
+                <small style="display: block; color: #666; font-size: 0.85em; margin-top: 2px;">Descripción: ${escapeHTML(dato.descripcion || '')}</small>
+            </div>
+
+            <div class="sub_item_acciones">
+                <label class="checkbox-container">
+                    <input class="checkbox ${claseTipo}" type="checkbox" id="check_permiso_${dato.id_permiso}" name="permisos[${dato.id_permiso}]" value="1" ${permisoChecked}>
+                    <span class="custom-checkbox"></span>
+                </label>
+            </div>
+        </div>`;
     });
+
+    if (datos.length > 0) {
+        htmlContent += `
+                    </div> </div> </div> </div> `;
+    }
+
+    $("#tabla_permisos").html(htmlContent);
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
     abrirModal();
 }
 
@@ -293,7 +373,7 @@ function eliminar(id) {
     });
 }
 
-function CargarPermisos(id){
+function CargarPermisos(id) {
     var datos = new FormData();
     datos.append('accion', 'CargarPermisos');
     datos.append('id', id);
@@ -344,7 +424,7 @@ function enviaAjax(datos) {
             }
             try {
                 var lee = JSON.parse(respuesta);
-                
+
                 if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }

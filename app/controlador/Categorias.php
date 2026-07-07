@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_CATEGORIAS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, $bitacora);
+$permisos = procesarPermisos($id_modulo, 'ingresar_categorias');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloCategorias';
@@ -49,23 +49,23 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
 
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar categorias.');
+                if (empty($permisos['ingresar_categorias'])) throw new Exception('No tienes permisos para consultar categorias.');
                 consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para buscar/modificar categorías.');
+                if (empty($permisos['modificar_categoria'])) throw new Exception('No tienes permisos para buscar/modificar categorías.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar categorias.');
+                if (empty($permisos['registrar_categoria'])) throw new Exception('No tienes permisos para registrar categorias.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar categorías.');
+                if (empty($permisos['eliminar_categoria'])) throw new Exception('No tienes permisos para eliminar categorías.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar categorías.');
+                if (empty($permisos['modificar_categoria'])) throw new Exception('No tienes permisos para modificar categorías.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

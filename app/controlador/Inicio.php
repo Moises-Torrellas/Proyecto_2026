@@ -10,7 +10,7 @@ require_once(__DIR__ . "/Base.php");
 $id_modulo = _MD_INICIO_;
 
 if (isset($_SESSION['id'])) {
-    procesarPermisos($id_modulo, $bitacora ?? null);
+    procesarPermisos($id_modulo, '');
 }
 
 // 3. Lógica de despacho (Router)
@@ -83,23 +83,21 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         $_SESSION['rol']       = $respuesta['datos']['nombre_rol'];
         $_SESSION['nombre']    = $respuesta['datos']['nombreUsuario'];
         $_SESSION['apellido']  = $respuesta['datos']['apellidoUsuario'];
-        $_SESSION['nivel_rol'] = $respuesta['datos']['nivel_rol'];
+        $_SESSION['nivel_rol'] = (int)$respuesta['datos']['nivel_rol'];
         $_SESSION['foto']      = $respuesta['datos']['foto'];
         $permisosIndexados = [];
         if (isset($respuesta['permisos']) && is_array($respuesta['permisos'])) {
             foreach ($respuesta['permisos'] as $p) {
-                $permisosIndexados[$p['id_modulo']] = [
-                    'ingresar'  => (isset($p['ingresar']) && $p['ingresar'] == 1),
-                    'registrar' => (isset($p['registrar']) && $p['registrar'] == 1),
-                    'modificar' => (isset($p['modificar']) && $p['modificar'] == 1),
-                    'eliminar'  => (isset($p['eliminar']) && $p['eliminar'] == 1),
-                    'reporte'   => (isset($p['reporte']) && $p['reporte'] == 1),
-                    'otros'     => (isset($p['otros']) && $p['otros'] == 1),
-                ];
+                $idModulo = $p['id_modulo'];
+                if (!isset($permisosIndexados[$idModulo])) {
+                    $permisosIndexados[$idModulo] = [];
+                }
+                // Si la clave es 'ingresar' o 'registrar', se guardará como $permisosIndexados[2]['ingresar'] = true;
+                $permisosIndexados[$idModulo][$p['clave']] = true;
             }
         }
         $_SESSION['permisos'] = $permisosIndexados;
-        registrarBitacora($bitacoraObj, $id_modulo, 'Inicio de sesión exitoso');
+        //registrarBitacora($bitacoraObj, $id_modulo, 'Inicio de sesión exitoso');
 
         $respuestaFinal = [
             'accion'    => 'inicio',
@@ -113,6 +111,16 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
                 'accion' => 'error',
                 'resultado' => 500,
                 'mensaje' => 'Error: Servidor de base de datos no disponible.'
+            ];
+        } else if ($respuesta['accion'] == 'bloqueado') {
+            if ($bitacoraObj !== null && isset($respuesta['idUsuario'])) {
+                // Registro manual porque no hay sesión iniciada
+                $bitacoraObj->RegistrarAccion($id_modulo, 'Usuario bloqueado por exceder límite de intentos', $respuesta['idUsuario']);
+            }
+            $respuestaFinal = [
+                'accion'    => 'bloqueado',
+                'resultado' => 0,
+                'mensaje'   => $respuesta['mensaje']
             ];
         } else {
             $respuestaFinal = [

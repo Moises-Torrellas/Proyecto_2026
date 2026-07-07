@@ -78,10 +78,10 @@
                         $color = ($estatusPermiso === 1) ? 'cbt_g' : 'cbt_a';
 
                         $botonesAccion = '';
-                        if ($permisos['modificar']) {
+                        if (!empty($permisos['modificar_permisos'])) {
                             $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_permiso'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                         }
-                        if ($permisos['eliminar']) {
+                        if (!empty($permisos['bloquear_permisos'])) {
                             // Se asume que el cambio de estatus a inactivo funge como eliminar
                             $botonesAccion .= '<button class="btn_t ' . $color . '" onclick="bloquear(' . $dato['id_permiso'] . ','.$dato['estatus_permiso'].')" data-tippy-content="Bloquear"><i class="fi ' . $icon . '"></i></button>';
                         }
@@ -96,6 +96,7 @@
                                 <div class="sub_item_info" style="flex: 2;">
                                     <span class="sub_item_titulo"><?= htmlspecialchars($dato['nombre_permiso']) ?></span>
                                     <small style="display: block; color: #666; font-size: 0.85em; margin-top: 2px;">Descripción: <?= htmlspecialchars($dato['descripcion']) ?></small>
+                                    <small style="display: block; color: #666; font-size: 0.85em; margin-top: 2px;">Clave: <?= htmlspecialchars($dato['clave']) ?></small>
                                 </div>
 
                                 <div class="sub_item_centro">
@@ -143,7 +144,9 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
+                            <?php if (!empty($permisos['registrar_permisos'])) : ?>
                             <button class="btn btn_azul" id="incluir">Nuevo Permiso</button>
+                            <?php endif; ?> 
                         </div>
                     </div>
                     <div class="contenedor_resultados">
@@ -227,10 +230,10 @@
                                     $color = ($estatusPermiso === 1) ? 'cbt_g' : 'cbt_a';
 
                                     $botonesAccion = '';
-                                    if ($permisos['modificar']) {
+                                    if (!empty($permisos['modificar_permisos'])) {
                                         $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_permiso'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                                     }
-                                    if ($permisos['eliminar']) {
+                                    if (!empty($permisos['bloquear_permisos'])) {
                                         // Se asume que el cambio de estatus a inactivo funge como eliminar
                                         $botonesAccion .= '<button class="btn_t ' . $color . '" onclick="bloquear(' . $dato['id_permiso'] . ','.$dato['estatus_permiso'].')" data-tippy-content="Bloquear"><i class="fi ' . $icon . '"></i></button>';
                                     }
@@ -245,6 +248,7 @@
                         <div class="sub_item_info" style="flex: 2;">
                             <span class="sub_item_titulo"><?= htmlspecialchars($dato['nombre_permiso']) ?></span>
                             <small style="display: block; color: #666; font-size: 0.85em; margin-top: 2px;">Descripción: <?= htmlspecialchars($dato['descripcion']) ?></small>
+                            <small style="display: block; color: #666; font-size: 0.85em; margin-top: 2px;">Clave: <?= htmlspecialchars($dato['clave']) ?></small>
                         </div>
 
                         <div class="sub_item_centro">

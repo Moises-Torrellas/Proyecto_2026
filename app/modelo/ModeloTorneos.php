@@ -221,4 +221,21 @@ class ModeloTorneos extends Conexion
             throw new Exception('La fecha de inicio no puede ser mayor que la fecha de fin.');
         }
     }
+
+    public function ConsultarProximos(): array
+    {
+        try {
+            $conex = $this->conex();
+            // Torneos que inicien en 1 o 2 días.
+            $sentencia = "SELECT nombre, fecha_inicio FROM torneos WHERE estatus = 1 AND (fecha_inicio = CURDATE() + INTERVAL 1 DAY OR fecha_inicio = CURDATE() + INTERVAL 2 DAY)";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            logs('Torneos', $e->getMessage(), 'Modelo_ConsultarProximos');
+            return [];
+        } finally {
+            $conex = NULL;
+        }
+    }
 }

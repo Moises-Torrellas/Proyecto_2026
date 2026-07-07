@@ -9,13 +9,8 @@ class ModeloRoles extends Conexion
     private int $id;
     private string $nombre;
     private string $descripcion;
-    private array $id_modulo;
-    private array $c_ingresar;
-    private array $c_registrar;
-    private array $c_modificar;
-    private array $c_eliminar;
-    private array $c_reporte;
-    private array $c_otros;
+    private $objPermiso;
+    private array $permisos_seleccionados;
 
     public function __construct()
     {
@@ -39,16 +34,8 @@ class ModeloRoles extends Conexion
         $this->id = $datos['id'] ?? 0;
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->descripcion = mb_convert_case(trim($datos['descripcion'] ?? ''), MB_CASE_TITLE, "UTF-8");
+        $this->permisos_seleccionados = $datos['permisos'] ?? [];
         $accion = $datos['accion'] ?? null;
-
-        $this->id_modulo   = $datos['id_modulo']   ?? [];
-        $this->c_ingresar  = $datos['c_ingresar']  ?? [];
-        $this->c_registrar = $datos['c_registrar'] ?? [];
-        $this->c_modificar = $datos['c_modificar'] ?? [];
-        $this->c_eliminar  = $datos['c_eliminar']  ?? [];
-        $this->c_reporte   = $datos['c_reporte']   ?? [];
-        $this->c_otros     = $datos['c_otros']     ?? [];
-
 
         return match ($accion) {
             'incluir' => $this->Incluir(),
@@ -58,6 +45,10 @@ class ModeloRoles extends Conexion
             'guardar_permisos' => $this->GuardarPermisos(),
             default => throw new Exception("Acción no válida."),
         };
+    }
+
+    public function setPermiso(ModeloPermisos $permiso){
+        $this->objPermiso = $permiso;
     }
     public function consultar(array $filtro = []): array
     {
@@ -115,16 +106,17 @@ class ModeloRoles extends Conexion
     {
         try {
             $conex = $this->conexSG();
-            $sentencia = 'SELECT :id1 AS id_rol, (SELECT nombre_rol FROM roles WHERE id_rol = :id2) AS nombre_rol, 
-                                    m.id_modulo, m.nombre_modulo, 
-                                    COALESCE(MAX(pr.ingresar), 0) AS ingresar, COALESCE(MAX(pr.registrar), 0) AS registrar, 
-                                    COALESCE(MAX(pr.eliminar), 0) AS eliminar, COALESCE(MAX(pr.modificar), 0) AS modificar, 
-                                    COALESCE(MAX(pr.reporte), 0) AS reporte, COALESCE(MAX(pr.otros), 0) AS otros 
-                            FROM modulo m 
-                            LEFT JOIN permisos_roles pr ON m.id_modulo = pr.id_modulo AND pr.id_rol = :id3 
-                            WHERE m.id_modulo NOT IN (4, 5, 8, 1, 2, 3, 99)
-                            GROUP BY m.id_modulo, m.nombre_modulo
-                            ORDER BY m.id_modulo ASC';
+            $sentencia = 'SELECT 
+                            :id1 AS id_rol, 
+                            (SELECT nombre_rol FROM roles WHERE id_rol = :id2) AS nombre_rol, 
+                            m.id_modulo, m.nombre_modulo,m.icono, m.estatus AS estatus_modulo,
+                            p.id_permiso, p.nombre AS nombre_permiso, p.descripcion, p.clave,
+                            CASE WHEN pr.id_permiso_rol IS NOT NULL THEN 1 ELSE 0 END AS asignado
+                        FROM modulos m
+                        INNER JOIN permisos p ON p.id_modulo = m.id_modulo
+                        LEFT JOIN permisos_rol pr ON pr.id_permiso = p.id_permiso AND pr.id_rol = :id3
+                        WHERE m.id_modulo NOT IN (4, 5, 8, 1, 2, 3, 99)
+                        ORDER BY m.id_modulo ASC, p.id_permiso ASC';
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id1', $id);
             $stmt->bindParam(':id2', $id);
@@ -143,18 +135,6 @@ class ModeloRoles extends Conexion
     {
         try {
             $conex = null;
-
-            foreach ($this->id_modulo as $id) {
-                if (!$this->verificarExistencia('id_modulo', $id, 'modulo', NULL, 'sg')) {
-                    throw new Exception(ASSOCIATES);
-                }
-            }
-
-            $idsProtegidos = [1, 2, 3, 4, 5, 8];
-            if (!empty(array_intersect($this->id_modulo, $idsProtegidos))) {
-                throw new Exception(ASSOCIATES);
-            }
-
             $conex = $this->conexSG();
             $conex->beginTransaction();
 
@@ -201,7 +181,7 @@ class ModeloRoles extends Conexion
         $conex = $this->conexSG();
         $conex->beginTransaction();
 
-        if (!$this->verificarExistencia('nombre', $this->nombre, 'roles', 1, 'sg', bloquear: true)) {
+        if (!$this->verificarExistencia('id', $this->id, 'roles', 1, 'sg', bloquear: true)) {
                 throw new Exception(INVALID_ID);
         }
         if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'roles', 1, 'sg', bloquear:true)) {
@@ -243,46 +223,23 @@ class ModeloRoles extends Conexion
 }
     private function GuardarPermisos()
     {
+        $conex = null;
         try {
-            $conex = null;
-            foreach ($this->id_modulo as $id) {
-                if (!$this->verificarExistencia('id_modulo', $id, 'modulo', NULL, 'sg')) {
-                    throw new Exception(ASSOCIATES);
-                }
-            }
-            $idsProtegidos = [1, 2, 3, 4, 5, 8];
-            if (!empty(array_intersect($this->id_modulo, $idsProtegidos))) {
-                throw new Exception(ASSOCIATES);
-            }
             $conex = $this->conexSG();
             $conex->beginTransaction();
 
-            $sql = 'DELETE FROM `permisos_roles` WHERE `id_rol` = :id';
+            $sql = 'DELETE FROM `permisos_rol` WHERE `id_rol` = :id';
             $stmt = $conex->prepare($sql);
             $stmt->execute([':id' => $this->id]);
 
-            $sql = 'INSERT INTO `permisos_roles`(`id_rol`, `id_modulo`, `ingresar`, `registrar`, `eliminar`, `modificar`, `reporte`, `otros`) 
-                                VALUES (:id_rol,:id_modulo,:ingresar,:registrar,:eliminar,:modificar,:reporte,:otros)';
-            $stmt = $conex->prepare($sql);
+            $sqlInsert = 'INSERT INTO `permisos_rol` (`id_rol`, `id_permiso`) VALUES (:id_rol, :id_permiso)';
+            $stmtInsert = $conex->prepare($sqlInsert);
 
-            foreach ($this->id_modulo as $modulo) {
-                $ing = isset($this->c_ingresar[$modulo]) ? 1 : 0;
-                $reg = isset($this->c_registrar[$modulo]) ? 1 : 0;
-                $eli = isset($this->c_eliminar[$modulo]) ? 1 : 0;
-                $mod = isset($this->c_modificar[$modulo]) ? 1 : 0;
-                $rep = isset($this->c_reporte[$modulo]) ? 1 : 0;
-                $otr = isset($this->c_otros[$modulo]) ? 1 : 0;
-
-                if ($ing || $reg || $eli || $mod || $rep || $otr) {
-                    $stmt->execute([
-                        ':id_rol'    => $this->id,
-                        ':id_modulo' => (int)$modulo,
-                        ':ingresar'  => $ing,
-                        ':registrar' => $reg,
-                        ':eliminar'  => $eli,
-                        ':modificar' => $mod,
-                        ':reporte'   => $rep,
-                        ':otros'     => $otr
+            foreach ($this->permisos_seleccionados as $id_permiso => $valor) {
+                if ($valor == 1) {
+                    $stmtInsert->execute([
+                        ':id_rol' => $this->id,
+                        ':id_permiso' => (int)$id_permiso
                     ]);
                 }
             }
@@ -293,7 +250,7 @@ class ModeloRoles extends Conexion
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
             }
-            logs('Roles', $e->getMessage(), 'Modelo_Modificar');
+            logs('Roles', $e->getMessage(), 'Modelo_GuardarPermisos');
             return ['accion' => 'error', 'codigo' => $e->getMessage()];
         } finally {
             $conex = null;
@@ -344,14 +301,6 @@ class ModeloRoles extends Conexion
         if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', $datos['nombre'])) {
             throw new Exception('Nombre inválido.');
         }
-        foreach (['c_ingresar', 'c_registrar', 'c_modificar', 'c_eliminar', 'c_reporte', 'c_otros'] as $permiso) {
-            if (!empty($datos[$permiso])) {
-                foreach ($datos[$permiso] as $val) {
-                    if (!preg_match('/^[1]+$/', $val)) {
-                        throw new Exception("Valor de permiso $permiso inválido.");
-                    }
-                }
-            }
-        }
+        // Validacion de permisos dinámicos eliminada porque se parsean como enteros
     }
 }

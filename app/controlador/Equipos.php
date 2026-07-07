@@ -10,7 +10,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_EQUIPOS_;
 
 // 3. Procesar permisos
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, '');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloEquipos';

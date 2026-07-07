@@ -5,7 +5,7 @@ require_once __DIR__ . '/Base.php';
 
 // Actualiza esta constante en tu archivo global si es necesario
 $id_modulo = _MD_ARTICULOS_INVENTARIO_;
-$permisos = procesarPermisos($id_modulo, $bitacora ?? null);
+$permisos = procesarPermisos($id_modulo, '');
 
 $nombreClaseModelo = 'App\modelo\ModeloArticulosInventario';
 

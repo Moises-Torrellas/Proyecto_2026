@@ -25,10 +25,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                     </div>
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                <?php if ($permisos['modificar']) : ?>
+                                <?php if (!empty($permisos['modificar_posicion'])) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_posicion'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                 <?php endif; ?>
-                                <?php if ($permisos['eliminar']) : ?>
+                                <?php if (!empty($permisos['eliminar_posicion'])) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_posicion'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                 <?php endif; ?>
                         </div>
@@ -65,10 +65,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']) : ?>
+                            <?php if (!empty($permisos['registrar_posicion'])) : ?>
                                 <button class="btn btn_azul" id="incluir">Nueva Posicion</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']) : ?>
+                            <?php if (!empty($permisos['generar_posiciones'])) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -101,10 +101,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                                             </div>
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                        <?php if ($permisos['modificar']) : ?>
+                                                        <?php if (!empty($permisos['modificar_posicion'])) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_posicion'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                                         <?php endif; ?>
-                                                        <?php if ($permisos['eliminar']) : ?>
+                                                        <?php if (!empty($permisos['eliminar_posicion'])) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_posicion'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                         <?php endif; ?>
                                                 </div>
