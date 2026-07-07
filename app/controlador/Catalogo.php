@@ -7,7 +7,7 @@ use App\servicios\GenerarReporte;
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_CATALOGO_; 
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_catalogos');
 
 $nombreClaseModelo = 'App\modelo\ModeloCatalogo';
 
@@ -46,31 +46,31 @@ function manejarSolicitudCatalogo($obj, $id_modulo, $bitacoraObj, array $permiso
 
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar catálogos.');
+                if (empty($permisos['ingresar_catalogos'])) throw new Exception('No tienes permisos para consultar catálogos.');
                 consultar($obj, $permisos);
                 break;
             case 'MultiConsulta':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar catálogos.');
+                if (empty($permisos['ingresar_catalogos'])) throw new Exception('No tienes permisos para consultar catálogos.');
                 MultiConsulta();
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar catálogos.');
+                if (empty($permisos['modificar_catalogo'])) throw new Exception('No tienes permisos para modificar catálogos.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar catálogos.');
+                if (empty($permisos['registrar_catalogo'])) throw new Exception('No tienes permisos para registrar catálogos.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar catálogos.');
+                if (empty($permisos['eliminar_catalogo'])) throw new Exception('No tienes permisos para eliminar catálogos.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar catálogos.');
+                if (empty($permisos['modificar_catalogo'])) throw new Exception('No tienes permisos para modificar catálogos.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'generar':
-                if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar reportes.');
+                if (empty($permisos['generar_catalogo'])) throw new Exception('No tienes permisos para generar reportes.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

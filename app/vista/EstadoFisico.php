@@ -24,8 +24,12 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
+                            <?php if (!empty($permisos['registrar_estfisico'])) : ?>
                             <button class="btn btn_azul" id="incluir">Nuevo Estado Físico</button>
+                            <?php endif; ?>
+                            <?php if (!empty($permisos['generar_estfisico'])) : ?>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
