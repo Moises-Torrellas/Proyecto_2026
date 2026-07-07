@@ -95,12 +95,12 @@
 
                                     <div class="sub_item_acciones" onclick="event.stopPropagation();">
                                         <?php if ($esActivo) : ?>
-                                            <?php if (!empty($permisos['modificar'])) : ?>
+                                            <?php if (!empty($permisos['modificar_asignacion'])) : ?>
                                                 <button class="btn_t cbt_v" onclick="editar(<?= $asignacion['id_asignacion'] ?>, <?= $atleta['codigo_atleta'] ?>, <?= $asignacion['codigo_articulo'] ?>, '<?= $asignacion['fecha_real'] ?>')" data-tippy-content="Modificar">
                                                     <i class="fi fi-sr-pencil"></i>
                                                 </button>
                                             <?php endif; ?>
-                                            <?php if (!empty($permisos['eliminar'])) : ?>
+                                            <?php if (!empty($permisos['anular_asignacion'])) : ?>
                                                 <button class="btn_t cbt_r" onclick="anular(<?= $asignacion['id_asignacion'] ?>, <?= $asignacion['codigo_articulo'] ?>)" data-tippy-content="Anular / Liberar Equipo">
                                                     <i class="fi fi-sr-trash"></i>
                                                 </button>
@@ -154,10 +154,12 @@
                         </div>
 
                         <div class="botones">
-                            <?php if (!empty($permisos['registrar'])) : ?>
+                            <?php if (!empty($permisos['registrar_asignacion'])) : ?>
                                 <button class="btn btn_azul" id="btn_nuevo">Nueva Asignación</button>
                             <?php endif; ?>
+                            <?php if (!empty($permisos['generar_asignaciones'])) : ?>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">

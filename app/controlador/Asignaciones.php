@@ -3,12 +3,11 @@
 use App\modelo\ModeloAsignaciones;
 use App\modelo\ModeloAtletas;
 use App\modelo\ModeloArticulosInventario;
-use App\servicios\GenerarReporte; // <-- 1. Importamos el servicio de reportes
-
+use App\servicios\GenerarReporte; 
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_ASIGNACIONES_; 
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_asignaciones');
 
 $nombreClaseModelo = 'App\modelo\ModeloAsignaciones';
 if (!class_exists($nombreClaseModelo)) {
@@ -45,27 +44,27 @@ function manejarSolicitudAsignacion($obj, $id_modulo, $bitacoraObj, array $permi
 
         switch ($accion) {
             case 'consultar':
-                if (empty($permisos['ingresar'])) throw new Exception('Sin permisos.');
+                if (empty($permisos['ingresar_asignaciones'])) throw new Exception('Sin permisos.');
                 consultar($obj, $permisos);
                 break;
             case 'MultiConsulta':
-                if (empty($permisos['ingresar'])) throw new Exception('Sin permisos.');
+                if (empty($permisos['ingresar_asignaciones'])) throw new Exception('Sin permisos.');
                 MultiConsulta();
                 break;
             case 'incluir':
-                if (empty($permisos['registrar'])) throw new Exception('Sin permisos.');
+                if (empty($permisos['registrar_asignacion'])) throw new Exception('Sin permisos.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (empty($permisos['modificar'])) throw new Exception('Sin permisos.');
+                if (empty($permisos['modificar_asignacion'])) throw new Exception('Sin permisos.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'anular':
-                if (empty($permisos['eliminar'])) throw new Exception('Sin permisos.');
+                if (empty($permisos['anular_asignacion'])) throw new Exception('Sin permisos.');
                 anular($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'generar': // <-- 2. Agregamos el caso para generar el PDF
-                if (empty($permisos['ingresar'])) throw new Exception('Sin permisos para generar reportes.');
+                if (empty($permisos['generar_asignaciones'])) throw new Exception('Sin permisos para generar reportes.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

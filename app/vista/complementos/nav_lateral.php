@@ -81,7 +81,7 @@
                         <a type="button" href="Catalogo" class="opciones"><i class="opciones_i" data-lucide="clipboard-pen-line"></i> Catálogo</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_CATEGORIA_CAT_,'')) : ?>
+                    <?php if ($puedeVer(_MD_CATEGORIA_CAT_,'ingresar_catcatalogos')) : ?>
                         <a type="button" href="CategoriaCatalogo" class="opciones"><i class="opciones_i" data-lucide="layers-plus"></i> Categorías de Catálogo</a>
                     <?php endif; ?>
 
@@ -89,7 +89,7 @@
                         <a type="button" href="EstadoFisico" class="opciones"><i class="opciones_i" data-lucide="badge-check"></i> Estado Físico</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_ASIGNACIONES_,'')) : ?>
+                    <?php if ($puedeVer(_MD_ASIGNACIONES_,'ingresar_asignaciones')) : ?>
                         <a type="button" href="Asignaciones" class="opciones"><i class="opciones_i" data-lucide="list-plus"></i> Asignaciones</a>
                     <?php endif; ?>
 

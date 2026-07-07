@@ -7,7 +7,7 @@ use App\servicios\GenerarReporte;
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_CATALOGO_; 
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_catalogos');
 
 $nombreClaseModelo = 'App\modelo\ModeloCatalogo';
 
