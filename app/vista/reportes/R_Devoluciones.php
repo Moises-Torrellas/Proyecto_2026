@@ -162,7 +162,7 @@
         </div>
         
         <div class="resumen-ejecutivo">
-            <strong>Resumen Ejecutivo:</strong> El presente documento detalla el historial de devoluciones de equipamiento deportivo registrado en el sistema. Esta información permite realizar un control riguroso sobre el estado, la calidad y las condiciones en las que se reintegra el material al inventario de la academia.
+            <strong>Resumen Ejecutivo:</strong> El presente documento detalla el historial de Devoluciones de las Asignaciones del equipamiento deportivo registrado en el sistema. Esta información permite realizar un control riguroso sobre el Estado Fisico, Fecha Devolucion y Observacion sobre las condiciones en las que se reintegra el material al inventario de la academia.
         </div>
 
         <div class="section-title">Listado de Devoluciones</div>
@@ -173,7 +173,7 @@
                     <th style="width: 5%;">#</th>
                     <th style="width: 15%;">Fecha</th>
                     <th style="width: 35%;">Asignación y Atleta</th>
-                    <th style="width: 20%;">Calidad</th>
+                    <th style="width: 20%;">Estado Fisico</th>
                     <th style="width: 25%;">Observación</th>
                 </tr>
             </thead>
@@ -188,7 +188,7 @@
                         // Variables exactas del modelo
                         $articulo = htmlspecialchars($r['articulo_nombre']);
                         $atleta = htmlspecialchars($r['atleta_nombre'] . ' ' . $r['atleta_apellido']);
-                        $calidad = htmlspecialchars($r['calidad']);
+                        $estado_fisico = htmlspecialchars($r['estado_fisico']);
                 ?>
                     <tr>
                         <td class="data-cell"><?= $id ?></td>
@@ -198,7 +198,7 @@
                             <span style="font-size: 11px; color: #4a5568;"><?= $atleta ?></span>
                         </td>
                         <td class="data-cell">
-                            <strong style="color: #2b6cb0;"><?= $calidad ?></strong>
+                            <strong style="color: #2b6cb0;"><?= $estado_fisico ?></strong>
                         </td>
                         <td class="data-cell"><?= $observacion ?></td>
                     </tr>

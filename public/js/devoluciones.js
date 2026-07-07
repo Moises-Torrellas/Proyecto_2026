@@ -1,85 +1,38 @@
-let paginaActual = 1;
+let timerBusqueda;
 
-// --- LÓGICA DE BUSCADOR Y PAGINACIÓN ---
-function aplicarFiltroYPaginacion() {
-    let busquedaInput = $('#busqueda');
-    let selectRegistros = $('#cantidad_registros');
-    
-    // Validar si los elementos existen en la vista
-    if (!busquedaInput.length || !selectRegistros.length) return;
-
-    let busqueda = busquedaInput.val().toLowerCase();
-    let registrosPorPagina = parseInt(selectRegistros.val()) || 10;
-    let $registros = $('.listado_contenedor_grupal');
-    
-    // 1. Filtrado por texto
-    let $registrosFiltrados = $registros.filter(function() {
-        let texto = $(this).text().toLowerCase();
-        return texto.indexOf(busqueda) > -1;
-    });
-
-    $registros.hide(); // Ocultamos todos primero
-
-    let totalFiltrados = $registrosFiltrados.length;
-    let totalPaginas = Math.ceil(totalFiltrados / registrosPorPagina);
-
-    // Ajustar página si los filtros la dejan fuera de rango
-    if (paginaActual > totalPaginas && totalPaginas > 0) paginaActual = totalPaginas;
-    if (totalPaginas === 0) paginaActual = 1;
-
-    // 2. Paginación visual
-    let inicio = (paginaActual - 1) * registrosPorPagina;
-    let fin = inicio + registrosPorPagina;
-
-    $registrosFiltrados.slice(inicio, fin).show();
-
-    // 3. Actualización de textos informativos
-    let textoInicio = totalFiltrados > 0 ? inicio + 1 : 0;
-    let textoFin = fin > totalFiltrados ? totalFiltrados : fin;
-    $('#texto_registros').text(`Mostrando registros del ${textoInicio} al ${textoFin} de un total de ${totalFiltrados} registros`);
-
-    renderizarBotonesPaginacion(totalPaginas);
+// --- LÓGICA DE BÚSQUEDA AJAX ---
+function busqueda() {
+    clearTimeout(timerBusqueda);
+    timerBusqueda = setTimeout(function () {
+        let valorBusqueda = $('#busqueda').val();
+        let datos = new FormData();
+        datos.append('accion', 'consultar');
+        datos.append('filtro', valorBusqueda);
+        
+        enviaAjax(datos);
+    }, 500);
 }
 
-function renderizarBotonesPaginacion(totalPaginas) {
-    let $paginacion = $('#paginacion');
-    $paginacion.empty();
+// --- RENDERIZADO DEL DOM ---
+function crearConsulta(htmlRecibido) {
+    const contenedor = $('#resultadoconsulta');
+    contenedor.html(htmlRecibido);
 
-    if (totalPaginas <= 1) return;
-
-    let btnPrev = `<button type="button" class="btn btn_t" ${paginaActual === 1 ? 'disabled' : ''} onclick="cambiarPagina(${paginaActual - 1})" style="margin: 0 2px;">Anterior</button>`;
-    $paginacion.append(btnPrev);
-
-    for (let i = 1; i <= totalPaginas; i++) {
-        let claseActiva = i === paginaActual ? 'btn_azul' : 'btn_t';
-        $paginacion.append(`<button type="button" class="btn ${claseActiva}" onclick="cambiarPagina(${i})" style="margin: 0 2px;">${i}</button>`);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
+    
+    if (typeof inicializarPaginador === 'function') {
+        inicializarPaginador();
     }
-
-    let btnNext = `<button type="button" class="btn btn_t" ${paginaActual === totalPaginas ? 'disabled' : ''} onclick="cambiarPagina(${paginaActual + 1})" style="margin: 0 2px;">Siguiente</button>`;
-    $paginacion.append(btnNext);
 }
-
-window.cambiarPagina = function(pag) {
-    paginaActual = pag;
-    aplicarFiltroYPaginacion();
-};
-// --- FIN LÓGICA DE BUSCADOR Y PAGINACIÓN ---
 
 $(document).ready(function () {
-    // Inicializar filtros al cargar la vista
-    aplicarFiltroYPaginacion();
+    if (typeof inicializarPaginador === 'function') {
+        inicializarPaginador();
+    }
     MultiConsulta();
 
-    // Eventos del buscador y selector
-    $(document).on('input', '#busqueda', function() {
-        paginaActual = 1;
-        aplicarFiltroYPaginacion();
-    });
-
-    $(document).on('change', '#cantidad_registros', function() {
-        paginaActual = 1;
-        aplicarFiltroYPaginacion();
-    });
+    $('#busqueda').off('keyup').on('keyup', busqueda);
 
     $("#ayuda").on("click", function() {
         if(typeof iniciarAyuda === 'function') {
@@ -87,7 +40,7 @@ $(document).ready(function () {
         }
     });
 
-    // Acción para Nueva Devolución
+    // --- ACCIONES DE MODALES ---
     $("#btn_nuevo").on("click", function () {
         $("#f")[0].reset();
         $("#id_devolucion").val('');
@@ -100,10 +53,14 @@ $(document).ready(function () {
         $('#observacion').closest('.colum').show();
         $('#fecha_devolucion').closest('.colum').show();
 
-        // Ocultamos las asignaciones que ya fueron devueltas (estatus = 2)
+        // Ocultar asignaciones que ya fueron devueltas o anuladas (estatus diferente de 1)
         $("#id_asignacion option").each(function() {
             let estatus = $(this).attr("data-estatus");
-            if (estatus == "2") {
+            let valor = $(this).val();
+
+            if (valor === "") {
+                $(this).prop("disabled", false).show();
+            } else if (estatus != "1") {
                 $(this).prop("disabled", true).hide();
             } else {
                 $(this).prop("disabled", false).show();
@@ -116,7 +73,6 @@ $(document).ready(function () {
         abrirModal(); 
     });
 
-    // Acción para Generar Reporte
     $("#generar").on("click", function () {
         $("#f")[0].reset();
         $("#id_devolucion").val('');
@@ -126,9 +82,9 @@ $(document).ready(function () {
         $('#id_asignacion').closest('.colum').show();
         $('#id_estado').closest('.colum').show();
         $('#fecha_devolucion').closest('.colum').show();
-        $('#observacion').closest('.colum').hide(); // Observación no filtra
+        $('#observacion').closest('.colum').hide();
         
-        // Mostramos absolutamente todas las asignaciones para poder auditarlas
+        // Habilitar y mostrar todo el universo de asignaciones para permitir la selección de devoluciones históricas
         $("#id_asignacion option").each(function() {
             $(this).prop("disabled", false).show();
         });
@@ -140,7 +96,6 @@ $(document).ready(function () {
         abrirModal();
     });
 
-    // Acción del botón Confirmar
     $('#btn_guardar').on('click', function () {
         let accion = $(this).attr("data-accion");
         
@@ -158,6 +113,7 @@ $(document).ready(function () {
     });
 });
 
+// --- FUNCIONES CORE ---
 function enviaAjax(datos) {
     $.ajax({
         async: true,
@@ -171,12 +127,7 @@ function enviaAjax(datos) {
         timeout: 10000,
         success: function (respuesta) {
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
-                $('#resultadoconsulta').html(respuesta);
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-                
-                // Reiniciar paginador tras la carga del DOM
-                aplicarFiltroYPaginacion(); 
-                
+                crearConsulta(respuesta);
                 return;
             }
             try {
@@ -213,6 +164,7 @@ function consultar() {
     enviaAjax(datos);
 }
 
+// Re-ejecuta de manera asíncrona la carga de catálogos y estados
 function MultiConsulta() {
     let datos = new FormData();
     datos.append('accion', 'MultiConsulta');
@@ -232,7 +184,6 @@ function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
     $("#fecha_devolucion").val(fecha);
     $("#observacion").val(observacion);
     
-    // Mostramos todas las opciones al editar para no romper Select2
     $("#id_asignacion option").each(function() {
         $(this).prop("disabled", false).show();
     });
@@ -244,15 +195,17 @@ function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
 }
 
 function anular(id_devolucion) {
-    confirmarAnulacion('¿Está seguro que quiere anular esta devolución?', function (motivo) {
-        if (motivo !== false) {
-            let datos = new FormData();
-            datos.append('accion', 'anular');
-            datos.append('id_devolucion', id_devolucion);
-            datos.append('motivo_anulacion', motivo); 
-            enviaAjax(datos);
-        }
-    });
+    if(typeof confirmarAnulacion === 'function') {
+        confirmarAnulacion('¿Está seguro que quiere anular esta devolución?', function (motivo) {
+            if (motivo !== false) {
+                let datos = new FormData();
+                datos.append('accion', 'anular');
+                datos.append('id_devolucion', id_devolucion);
+                datos.append('motivo_anulacion', motivo); 
+                enviaAjax(datos);
+            }
+        });
+    }
 }
 
 function poblarCombos(asignaciones, estados) {

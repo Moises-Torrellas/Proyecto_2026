@@ -65,7 +65,7 @@ class ModeloDevoluciones extends Conexion
                         d.id_devolucion, 
                         DATE_FORMAT(d.fecha_devolucion, '%Y-%m-%d') as fecha_vista,
                         d.fecha_devolucion, d.id_asignacion, d.id_estado, d.observacion, 
-                        ee.nombre as calidad, ee.nivel_estado, at.codigo_atleta, at.p_nombre as atleta_nombre,
+                        ee.nombre as estado_fisico, ee.nivel_estado, at.codigo_atleta, at.p_nombre as atleta_nombre,
                         at.p_apellidos as atleta_apellido, cat.nombre as articulo_nombre,
                         (SELECT COUNT(*) FROM devoluciones d2 
                          INNER JOIN asignaciones a2 ON d2.id_asignacion = a2.id_asignacion 

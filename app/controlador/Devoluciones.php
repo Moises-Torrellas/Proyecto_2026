@@ -105,7 +105,6 @@ function MultiConsulta(): void {
                 INNER JOIN atletas at ON a.codigo_atleta = at.codigo_atleta
                 INNER JOIN articulos_inventario e ON a.codigo_articulo = e.codigo_articulo
                 INNER JOIN catalogo c ON e.id_catalogo = c.id_catalogo
-                WHERE a.estatus = 1
                 ORDER BY a.fecha_asignacion DESC";
         
         $stmt = $conex->prepare($sql);
