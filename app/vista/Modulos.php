@@ -23,7 +23,9 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                            <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_modulo'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                            <?php if (!empty($permisos['modificar_modulo'])) : ?>
+                                <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_modulo'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -85,7 +87,9 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                    <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_modulo'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php if (!empty($permisos['modificar_modulo'])) : ?>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_modulo'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>

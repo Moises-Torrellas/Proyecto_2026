@@ -1,7 +1,6 @@
 <?php
 
 use App\modelo\ModeloPalmares;
-use App\modelo\ModeloHistorial;
 use App\modelo\ModeloParticipaciones;
 use App\modelo\ModeloTorneos;
 use App\modelo\ModeloPremios;
@@ -16,7 +15,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_PALMARES_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_palmares');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloPalmares';
@@ -58,34 +57,34 @@ function manejarSolicitudPalmares($obj, $id_modulo, $bitacoraObj, array $permiso
         // Seguridad centralizada y enrutamiento
         switch ($accion) {
             case 'consultarIndividual':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar palmarés individual.');
+                if (empty($permisos['ingresar_palmares'])) throw new Exception('No tienes permisos para consultar palmarés individual.');
                 consultarIndividual($obj, $permisos);
                 break;
             case 'consultarGrupal':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar palmarés grupal.');
+                if (empty($permisos['ingresar_palmares'])) throw new Exception('No tienes permisos para consultar palmarés grupal.');
                 consultarGrupal($obj, $permisos);
                 break;
             case 'MultiConsulta':
                 MultiConsulta();
                 break;
             case 'buscarIndividual':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar palmarés individual.');
+                if (empty($permisos['modificar_palmares'])) throw new Exception('No tienes permisos para modificar palmarés individual.');
                 buscarIndividual($obj);
                 break;
             case 'buscarGrupal':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar palmarés grupal.');
+                if (empty($permisos['modificar_palmares'])) throw new Exception('No tienes permisos para modificar palmarés grupal.');
                 buscarGrupal($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar palmarés.');
+                if (empty($permisos['registrar_palmares'])) throw new Exception('No tienes permisos para registrar palmarés.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar palmarés.');
+                if (empty($permisos['eliminar_palmares'])) throw new Exception('No tienes permisos para eliminar palmarés.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar palmarés.');
+                if (empty($permisos['modificar_palmares'])) throw new Exception('No tienes permisos para modificar palmarés.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

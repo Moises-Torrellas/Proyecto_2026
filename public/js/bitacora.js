@@ -17,7 +17,7 @@ function busqueda() {
     }, 500);
 }
 $(document).ready(function () {
-    consultar();
+    inicializarPaginador();
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
         if (accion == "generar") {
@@ -91,119 +91,12 @@ function eliminar(id) {
 
 }
 
-function obtenerIconoModulo(nombreModulo) {
-    const iconos = {
-        'Usuarios': 'users',
-        'Roles': 'shield-check',
-        'Atletas': 'user',
-        'Representantes': 'users-round',
-        'Deportes': 'activity',
-        'Asignaciones': 'clipboard-list',
-        'Mensualidades': 'calendar-clock',
-        'Pagos': 'banknote',
-        'Bitacora': 'list',
-        'Mantenimiento': 'database',
-        'Reportes': 'file-bar-chart'
-    };
-    return iconos[nombreModulo] || 'box';
-}
-
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.empty();
-
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No se encontraron registros</p></div>');
-    } else {
-        datos.forEach(dato => {
-            var fechaPartes = dato.fecha.split('-');
-            var fechaLocal = new Date(fechaPartes[0], fechaPartes[1] - 1, fechaPartes[2]);
-            var fechaFormateada = fechaLocal.toLocaleDateString('es-ES');
-
-            var horaFormateada = new Date('1970-01-01T' + dato.hora).toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            });
-
-            let icono = obtenerIconoModulo(dato.nombre_modulo);
-            let datosPrevios = dato.datos_previos && dato.datos_previos !== 'null' ? escapeHTML(dato.datos_previos) : 'No Aplica';
-            let datosNuevos = dato.datos_nuevos && dato.datos_nuevos !== 'null' ? escapeHTML(dato.datos_nuevos) : 'No Aplica';
-
-            let estatusClase = dato.acciones === 'exito' || dato.acciones.toLowerCase().includes('éxito') || dato.acciones.toLowerCase().includes('exito') ? 'estatus_v' : (dato.acciones.toLowerCase().includes('error') || dato.acciones.toLowerCase().includes('fallido') || dato.acciones.toLowerCase().includes('fracaso') ? 'estatus_r' : 'estatus_a');
-
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_principal">
-                            <div class="listado_avatar_null"><i class="icon_con" data-lucide="${icono}"></i></div>
-                            <div class="listado_info_base">
-                                <span class="listado_titulo">
-                                    ${escapeHTML(dato.nombre_modulo)}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Usuario</small>
-                                <span>${escapeHTML(dato.nombreUsuario)} ${escapeHTML(dato.apellidoUsuario)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Acción</small>
-                                <span>${escapeHTML(dato.acciones)}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Fecha y Hora</small>
-                                <span>${fechaFormateada} ${horaFormateada}</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
-                        </div>
-                    </div>
-
-                    <div class="listado_detalle_oculto">
-                        <div class="detalle_expandido_container">
-                            <h4 class="titulo_des">Detalles de la Acción:</h4>
-                            <div class="detalle_fila">
-                                <div class="detalle_card" style="width: 100%;">
-                                    <div class="detalle_card_icon"><i data-lucide="info"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Información Adicional</label>
-                                        <span>Cédula: <b>${escapeHTML(dato.cedulaUsuario)}</b></span>
-                                        <span>Entorno: <b>${escapeHTML(dato.entorno || 'N/A')}</b></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <h4 class="titulo_des">Cambios Realizados:</h4>
-                            <div class="detalle_fila">
-                                <div class="detalle_card" style="width: 100%;">
-                                    <div class="detalle_card_icon"><i data-lucide="history"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Datos Previos</label>
-                                        <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555;">${datosPrevios}</span>
-                                    </div>
-                                </div>
-                                <div class="detalle_card" style="width: 100%;">
-                                    <div class="detalle_card_icon"><i data-lucide="file-diff"></i></div>
-                                    <div class="detalle_card_txt">
-                                        <label>Datos Nuevos</label>
-                                        <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745;">${datosNuevos}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
-
+    contenedor.html(htmlRecibido);
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 
@@ -232,12 +125,13 @@ function enviaAjax(datos) {
         },
         timeout: 120000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "consultar") {
-                    crearConsulta(lee.datos);
-                }
-                else if (lee.accion == "eliminar") {
+                if (lee.accion == "eliminar") {
                     if (lee.resultado == 1) {
                         muestraMensaje("success", 2000, "Correcto", lee.mensaje);
                         consultar();

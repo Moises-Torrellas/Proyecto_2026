@@ -10,7 +10,7 @@ class ModeloBitacora extends Conexion implements InterBitacora
 
     public function __construct() {}
 
-    public function RegistrarAccion($id_modulo, $accion, $id_usuario, $datos_previos = '', $datos_nuevos = '', $entorno = '')
+    public function RegistrarAccion($id_modulo, $accion, $id_usuario, $datos_previos = NULL, $datos_nuevos = NULL, $entorno = '')
     {
         $conex = null;
         try{
@@ -58,6 +58,7 @@ class ModeloBitacora extends Conexion implements InterBitacora
                         u.apellidoUsuario,
                         u.cedulaUsuario,
                         m.nombre_modulo,
+                        m.icono,
                         b.acciones,
                         b.datos_previos,
                         b.datos_nuevos,

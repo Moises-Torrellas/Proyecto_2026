@@ -387,7 +387,9 @@ endif;
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="tasa" name="tasa">
+                                <select class="formulario select" id="tasa" name="tasa">
+                                    <option value="" disabled selected>Seleccione una tasa</option>
+                                </select>
                                 <label for="tasa" class="titulo_formulario">Tasa de Cambio (Si aplica)</label>
                                 <span class="mensaje" id="tasa_spam"></span>
                             </div>

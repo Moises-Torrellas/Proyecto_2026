@@ -32,7 +32,7 @@ $(document).ready(function () {
     MultiConsulta();
     inicializarPaginador();
     ModeloBancario("#monto");
-    ModeloBancario("#tasa");
+    // ModeloBancario("#tasa");
 
     Validacion("monto", /^[0-9.\b]*$/, /^\d+(\.\d{1,2})?$/, "Monto inválido", "proceso");
     Validacion("tasa", /^[0-9.\b]*$/, /^\d+(\.\d{1,4})?$/, "Tasa inválida", "proceso");
@@ -44,6 +44,39 @@ $(document).ready(function () {
         let accion = $(this).data("accion");
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
+                // Verificar si hay exceso
+                let monto = parseFloat($('#monto_cambio').val()) || 0;
+                let idsCobrar = $('#cuenta').val() || [];
+                let deudaTotalPendiente = 0;
+                idsCobrar.forEach(id => {
+                    let c = listadoCuentas.find(cuenta => cuenta.id_cobrar == id);
+                    if (c) deudaTotalPendiente += parseFloat(c.monto_pendiente) || 0;
+                });
+
+                let saldoRestante = deudaTotalPendiente - monto;
+                if (saldoRestante < 0) {
+                    // Hay exceso, mostrar modal de vuelto
+                    $('#monto_vuelto').val(Math.abs(saldoRestante).toFixed(2));
+                    $('#fecha_vuelto').val($('#fecha').val()); // misma fecha por defecto
+
+                    // Construir selects
+                    construirSelect('codigo_moneda_vuelto', listadoMonedas, 'codigo_moneda', 'simbolo', 'nombre');
+                    construirSelect('codigo_metodo_vuelto', listadoMetodosVuelto, 'codigo_metodo', 'nombre');
+
+                    $('#codigo_moneda_vuelto').select2({
+                        placeholder: "Selecciona una Moneda",
+                        dropdownParent: $('#secundario_modal_contenedor') // Debe coincidir con el ID del modal
+                    });
+
+                    $('#codigo_metodo_vuelto').select2({
+                        placeholder: "Selecciona un Método",
+                        dropdownParent: $('#secundario_modal_contenedor') // Debe coincidir con el ID del modal
+                    });
+
+                    abrirModalSecundario();
+                    return;
+                }
+
                 confirmar('¿Está seguro que quiere registrar este pago?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
@@ -121,8 +154,11 @@ $(document).ready(function () {
         $('#monto_equivalente_ayuda').html('');
         $('#label_tasa').text("Tasa de cambio");
 
-        // Forzar fecha del sistema
-        let hoy = new Date().toISOString().split('T')[0];
+        let fechaLocal = new Date(); // <-- Agrega esta línea
+        let año = fechaLocal.getFullYear();
+        let mes = String(fechaLocal.getMonth() + 1).padStart(2, '0');
+        let dia = String(fechaLocal.getDate()).padStart(2, '0');
+        let hoy = `${año}-${mes}-${dia}`;
         $('#fecha').val(hoy);
 
         abrirModal();
@@ -258,19 +294,19 @@ $(document).ready(function () {
         solicitarTasaAPI();
     });
 
-    // Recalcular al cambiar la moneda de pago
-    $('#moneda').on('change', function () {
+    // Recalcular al cambiar la moneda de pago o fecha
+    $('#moneda, #fecha').on('change', function () {
         solicitarTasaAPI();
     });
 
     // Listener en tiempo real para amortización y monto al cambio
-    $('#monto, #tasa').on('input', function () {
+    $('#monto, #tasa').on('input change', function () {
         recalcularAmortizacion();
     });
 
-    $('#cerrar_modal_vuelto').on('click', function () {
-        $('#modal_vuelto').removeClass('mostrar');
-        $('#vuelto_modal_content').removeClass('mostrar_modal').addClass('ocultar');
+    $('#cerrar_modal_Secundario').on('click', function () {
+        $('#secundario_modal_contenedor').removeClass('mostrar');
+        $('#secundario_modal').addClass('ocultar');
         $('#f_vuelto')[0].reset();
     });
 
@@ -284,11 +320,22 @@ $(document).ready(function () {
             return false;
         }
 
-        confirmar('¿Está seguro que quiere registrar este vuelto?', function (confirmado) {
+        confirmar('¿Está seguro que quiere registrar el pago y el vuelto?', function (confirmado) {
             if (confirmado) {
-                var datos = new FormData($('#f_vuelto')[0]);
+                // Combinar datos del pago y del vuelto
+                var datos = new FormData($('#f')[0]);
+                var datosVuelto = new FormData($('#f_vuelto')[0]);
+
+                for (var pair of datosVuelto.entries()) {
+                    datos.append(pair[0], pair[1]);
+                }
+
                 datos.append('accion', 'registrar_vuelto');
                 enviaAjax(datos);
+
+                $('#secundario_modal_contenedor').removeClass('mostrar');
+                $('#secundario_modal').addClass('ocultar');
+                $('#f_vuelto')[0].reset();
             }
         });
     });
@@ -312,7 +359,10 @@ function solicitarTasaAPI() {
     let isoPago = monedaPagoObj.abreviatura.toUpperCase();
 
     if (isoCuenta === isoPago) {
-        $('#tasa').val('1.0000').attr('readonly', true);
+        let selectTasa = $('#tasa');
+        selectTasa.empty();
+        selectTasa.append('<option value="1.0000" selected>Misma Moneda (1.0000)</option>');
+        selectTasa.prop('disabled', true);
         $('#label_tasa').html(`Tasa de cambio <span style="color: #28a745; font-size:12px;">(Misma moneda: 1 ${isoPago} = 1 ${isoCuenta})</span>`);
         recalcularAmortizacion();
         return;
@@ -321,9 +371,8 @@ function solicitarTasaAPI() {
     $('#label_tasa').html(`Tasa de cambio <span style="color: #007bff; font-size:11px;">(Convirtiendo de ${isoPago} a ${isoCuenta})</span>`);
 
     let datos = new FormData();
-    datos.append('accion', 'consultarTasa');
-    datos.append('moneda_base', isoCuenta);
-    datos.append('moneda_pago', isoPago);
+    datos.append('accion', 'consultar_tasas_disponibles');
+    datos.append('codigo_moneda', idMonedaPago);
     datos.append('fecha', fecha);
 
     $.ajax({
@@ -338,13 +387,23 @@ function solicitarTasaAPI() {
         success: function (respuesta) {
             try {
                 let lee = JSON.parse(respuesta);
-                if (lee.exito) {
-                    $('#tasa').val(parseFloat(lee.tasa).toFixed(4)).attr('readonly', false);
-                    $('#label_tasa').html(`Tasa de Cambio <strong style="color: #007bff;">(${isoPago} ➔ ${isoCuenta})</strong>`);
-                    recalcularAmortizacion();
+                let selectTasa = $('#tasa');
+                selectTasa.empty();
+
+                if (lee.accion === 'exito' && lee.datos && lee.datos.length > 0) {
+                    selectTasa.append('<option value="" disabled selected>Seleccione una tasa</option>');
+                    lee.datos.forEach(t => {
+                        let tipoLabel = (t.tipo === 'automatica') ? 'Automática' : 'Manual';
+                        selectTasa.append(`<option value="${parseFloat(t.valor_tasa).toFixed(4)}">${tipoLabel} - ${parseFloat(t.valor_tasa).toFixed(4)} ${t.simbolo}</option>`);
+                    });
+                    selectTasa.prop('disabled', false);
+                    $('#label_tasa').html(`Seleccione Tasa <strong style="color: #007bff;">(${isoPago} ➔ ${isoCuenta})</strong>`);
                 } else {
-                    muestraMensaje("error", 3000, "Aviso de Tasa", lee.mensaje);
+                    selectTasa.append('<option value="" disabled selected>No hay tasas disponibles</option>');
+                    selectTasa.prop('disabled', true);
+                    muestraMensaje("error", 3000, "Aviso de Tasa", "No se encontraron tasas disponibles para esta fecha.");
                 }
+                recalcularAmortizacion();
             } catch (e) {
                 console.error("Error procesando tasa", e);
             }
@@ -553,15 +612,26 @@ function enviaAjax(datos) {
                         $('#codigo_pago_vuelto').val(lee.id_pago);
                         $('#monto_vuelto').val(parseFloat(lee.vuelto).toFixed(2));
 
-                        // Establecer fecha del día
-                        let hoyVuelto = new Date().toISOString().split('T')[0];
-                        $('#fecha_vuelto').val(hoyVuelto);
+                        let hoyObj = new Date();
+                        let mesObj = (hoyObj.getMonth() + 1).toString().padStart(2, '0');
+                        let diaObj = hoyObj.getDate().toString().padStart(2, '0');
+                        let fechaLocalVuelto = hoyObj.getFullYear() + '-' + mesObj + '-' + diaObj;
+                        $('#fecha_vuelto').val(fechaLocalVuelto);
 
-                        construirSelect('codigo_moneda_vuelto', listadoMonedas, 'id_moneda', 'simbolo', 'nombre');
-                        construirSelect('codigo_metodo_vuelto', listadoMetodosVuelto, 'id_metodos', 'nombre', 'nec_referencia');
+                        // Dentro del bloque: if (lee.vuelto && parseFloat(lee.vuelto) > 0) { ...
 
-                        $('#codigo_moneda_vuelto').select2({ placeholder: "Selecciona una Moneda", dropdownParent: $('#modal_vuelto') });
-                        $('#codigo_metodo_vuelto').select2({ placeholder: "Selecciona un Método", dropdownParent: $('#modal_vuelto') });
+                        construirSelect('codigo_moneda_vuelto', listadoMonedas, 'codigo_moneda', 'simbolo', 'nombre');
+                        construirSelect('codigo_metodo_vuelto', listadoMetodosVuelto, 'codigo_metodo', 'nombre', 'nec_referencia');
+
+                        // 🔥 SOLUCIÓN: Unificar el ID del modal para evitar problemas de capa (z-index)
+                        $('#codigo_moneda_vuelto').select2({
+                            placeholder: "Selecciona una Moneda",
+                            dropdownParent: $('#secundario_modal_contenedor')
+                        });
+                        $('#codigo_metodo_vuelto').select2({
+                            placeholder: "Selecciona un Método",
+                            dropdownParent: $('#secundario_modal_contenedor')
+                        });
 
                         abrirModalSecundario();
                     }
@@ -572,11 +642,12 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Vuelto Registrado", lee.mensaje);
                     consultar();
                     MultiConsulta();
+                    cerrarModalSecundario();
                 } else if (lee.accion == "eliminar") {
                     consultar();
                     MultiConsulta();
                     muestraMensaje("success", 2000, "Retiro Exitoso", lee.mensaje);
-                }  else if (lee.accion == "buscar") {
+                } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 } else if (lee.accion == "reporte") {
                     cerrarAlertaEspara();

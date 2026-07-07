@@ -24,8 +24,18 @@ $objModelo = new ModeloBitacora();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
-    cargarVista($pagina);
+    registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
+    $respuesta = $objModelo->Consultar();
+
+    $error_bd = '';
+    if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+        $error_bd = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : '';
+    } else {
+        $registro = $respuesta['datos'] ?? [];
+    }
+
+    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
+    cargarVista($pagina, $variables);
 }
 
 function manejarSolicitud($obj, $id_modulo, $bitacoraObj, $permisos): void
@@ -56,7 +66,21 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, $permisos): void
 
 function consultar($obj): void
 {
-    $filtro['filtro'] = $_POST['filtro'] ?? '';
-    $respuesta = $obj->Consultar($filtro);
-    echo json_encode($respuesta);
+  try {
+        $filtro['filtro'] = $_POST['filtro'] ?? '';
+        $respuesta = $obj->Consultar($filtro);
+
+        if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
+            $mensajeError = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : $respuesta['mensaje'];
+            echo json_encode(['accion' => 'error', 'mensaje' => $mensajeError]);
+            return;
+        }
+
+        $registro = $respuesta['datos'] ?? [];
+        $solo_lista = true;
+        include(__DIR__ . '/../vista/Bitacora.php');
+    } catch (throwable $e) {
+        logs('bitacora', $e->getMessage(), 'Controlador_Consultar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
 }

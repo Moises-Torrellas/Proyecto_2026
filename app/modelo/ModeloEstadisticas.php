@@ -219,10 +219,6 @@ class ModeloEstadisticas extends Conexion
                 throw new Exception(INVALID_ID . '2');
             }
 
-            if ($this->ModeloHistorial->verificarHistorialIndividual($this->id) || $this->ModeloHistorial->verificarHistorialGrupal($this->id)) {
-                throw new Exception(ASSOCIATES);
-            }
-
             if (!$this->verificarExistencia('participacion', $this->participacion, 'participaciones', null)) {
                 throw new Exception(INVALID_ID);
             }

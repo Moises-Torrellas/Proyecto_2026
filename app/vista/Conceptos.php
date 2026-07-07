@@ -11,7 +11,8 @@
                 'L' => 'Libre',
                 'M' => 'Mensual',
                 'A' => 'Anual',
-                'U' => 'Unico'
+                'U' => 'Unico',
+                'T' => 'Multa'
             };
             $dias = ($dato['dias_gracia'] == 0) ? 'No Aplica' : $dato['dias_gracia'];
         ?>
@@ -103,7 +104,8 @@
                                         'L' => 'Libre',
                                         'M' => 'Mensual',
                                         'A' => 'Anual',
-                                        'U' => 'Unico'
+                                        'U' => 'Unico',
+                                        'T' => 'Multa'
                                     };
                                     $dias = ($dato['dias_gracia'] == 0) ? 'No Aplica' : $dato['dias_gracia'];
                                 ?>
@@ -187,6 +189,7 @@
                                     <option value="M">Mensual</option>
                                     <option value="A">Anual</option>
                                     <option value="U">Unico</option>
+                                    <option value="T">Multa</option>
                                 </select>
                                 <label for="frecuencia" class="titulo_formulario">Frecuencia</label>
                                 <span class="mensaje" id="frecuencia_span"></span>

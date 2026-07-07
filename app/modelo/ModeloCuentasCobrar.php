@@ -110,7 +110,7 @@ class ModeloCuentasCobrar extends Conexion
             INNER JOIN 
                 conceptos co ON c.codigo_concepto = co.codigo_concepto
             INNER JOIN 
-                monedas m ON m.base = 1
+                monedas m ON c.codigo_moneda = m.codigo_moneda
             LEFT JOIN (
                 SELECT dp.codigo_cargo, SUM(dp.monto_abonado) AS total_abonado 
                 FROM detalles_pagos dp
@@ -144,10 +144,16 @@ class ModeloCuentasCobrar extends Conexion
                 throw new Exception("El concepto de cobro seleccionado no existe.");
             }
 
-            $sentencia = "INSERT INTO cargos (`codigo_concepto`, `codigo_atleta`, `monto_total`, `fecha_emision`) 
-                          VALUES (:codigo_concepto, :codigo_atleta, :monto_total, :fecha_emision)";
+            // Buscar la moneda base actual
+            $stmtBase = $conex->prepare("SELECT codigo_moneda FROM monedas WHERE base = 1 AND estatus = 1 LIMIT 1");
+            $stmtBase->execute();
+            $moneda_base = $stmtBase->fetchColumn() ?: 2; // Default to 2 if not found
+
+            $sentencia = "INSERT INTO cargos (`codigo_concepto`, `codigo_atleta`, `monto_total`, `fecha_emision`, `codigo_moneda`) 
+                          VALUES (:codigo_concepto, :codigo_atleta, :monto_total, :fecha_emision, :codigo_moneda)";
 
             $stmt = $conex->prepare($sentencia);
+            $stmt->bindValue(':codigo_moneda', $moneda_base);
 
             // Iteramos sobre el array de atletas para registrarlos uno por uno
             foreach ($this->codigo_atleta as $id_atleta) {

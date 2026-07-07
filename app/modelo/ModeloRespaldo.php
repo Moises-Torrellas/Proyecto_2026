@@ -8,7 +8,7 @@ use PDO;
 class ModeloRespaldo extends Conexion
 {
     private $mysqlPath;
-    private $dbName = 'cannibalsbd';
+    private $dbName = 'cannibalsbd2';
     private $user = 'root';
     private $pass = '';
     private $rutaSegura;

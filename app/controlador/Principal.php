@@ -1,9 +1,12 @@
 <?php
 use App\modelo\ModeloPrincipal;
+use App\modelo\ModeloAutomatizacion;
 
 require_once(__DIR__ . "/Base.php");
 
 $obj = new ModeloPrincipal();
+$objAutomatizacion = new ModeloAutomatizacion();
+$objAutomatizacion->EjecutarProcesos();
 
 if (comprobarAjax() && !empty($_POST)) {
     $accion = $_POST['accion'] ?? '';

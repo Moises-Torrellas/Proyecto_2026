@@ -67,7 +67,7 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 buscarData($obj);
                 break;
             case 'incluir':
-                if (empty($permisos['registrar_permisos'])) throw new Exception('No tiene permisos para incluir .');
+                if (empty($permisos['registrar_permisos']) && $_SESSION['nivel_rol'] === 1) throw new Exception('No tiene permisos para incluir .');
                 incluirData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
@@ -103,7 +103,7 @@ function consultarData($obj, $permisos): void
         $solo_lista = true;
         include(__DIR__ . '/../vista/Permisos.php');
     } catch (throwable $e) {
-        logs('Representantes', $e->getMessage(), 'Controlador_Consultar');
+        logs('Permisos', $e->getMessage(), 'Controlador_Consultar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

@@ -74,11 +74,11 @@
                             <div class="lista_sub_items">
                             <?php endif;
                         $botonesAccion = '';
-                        if ($permisos['modificar']) {
+                        if (!empty($permisos['modificar_partici'])) {
                             // Ajustado a codigo_participacion
                             $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                         }
-                        if ($permisos['eliminar']) {
+                        if (!empty($permisos['eliminar_partici'])) {
                             // Ajustado a codigo_participacion
                             $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
                         }
@@ -133,10 +133,10 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']) : ?>
+                            <?php if (!empty($permisos['registrar_partici'])) : ?>
                                 <button class="btn btn_azul" id="incluir">Nueva Participacion</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']) : ?>
+                            <?php if (!empty($permisos['generar_partici'])) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -217,11 +217,11 @@
                             <div class="lista_sub_items">
                             <?php endif;
                         $botonesAccion = '';
-                        if ($permisos['modificar']) {
+                        if (!empty($permisos['modificar_partici'])) {
                             // Ajustado a codigo_participacion
                             $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                         }
-                        if ($permisos['eliminar']) {
+                        if (!empty($permisos['eliminar_partici'])) {
                             // Ajustado a codigo_participacion
                             $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
                         }

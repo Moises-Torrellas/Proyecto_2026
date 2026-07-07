@@ -97,6 +97,10 @@
     min-height: 280px;
 }
 
+.row_i {
+    display: block !important;
+}
+
 /* .ojo {
     position: absolute;
     right: 20px;

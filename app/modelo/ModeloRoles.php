@@ -57,7 +57,7 @@ class ModeloRoles extends Conexion
             $params = [];
 
             // 1. Base de la consulta: Excluimos el nivel 1 (Super Usuario) por seguridad
-            $sentencia = "SELECT * FROM roles WHERE nivel_rol != 1";
+            $sentencia = "SELECT * FROM roles WHERE nivel_rol != 1 AND nivel_rol != 2";
 
             // 2. Aplicamos el buscador general si existe
             if (!empty($filtro['filtro'])) {

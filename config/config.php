@@ -1,28 +1,56 @@
 <?php
-/* Base de Datos */
+// =======================================================
+// 1. CARGA DE VARIABLES DE ENTORNO (.env)
+// =======================================================
+// Ajusta esta ruta dependiendo de dónde esté este config.php
+// Si config.php está dentro de una carpeta "config", esto retrocede un nivel a la raíz.
+$rutaEnv = __DIR__ . '/../.env'; 
+
+if (file_exists($rutaEnv)) {
+    $variables = parse_ini_file($rutaEnv);
+    foreach ($variables as $clave => $valor) {
+        $_ENV[$clave] = $valor;
+        putenv(sprintf('%s=%s', $clave, $valor));
+    }
+} else {
+    die("Error crítico: No se encontró el archivo .env en la ruta: " . $rutaEnv);
+}
+
+// =======================================================
+// 2. CONFIGURACIÓN DE BASES DE DATOS (Protegidas)
+// =======================================================
+/* Base de Datos SG */
 define('_DB_NAME_SG_', 'bds2');
 define('_DB_HOST_SG_', 'localhost');
 define('_DB_USER_SG_', 'root');
 define('_DB_PASS_SG_', '');
 
+/* Base de Datos Principal */
 define('_DB_NAME_', 'cannibalsbd2');
 define('_DB_HOST_', 'localhost');
 define('_DB_USER_', 'root');
 define('_DB_PASS_', '');
 
+
+// =======================================================
+// 3. CONFIGURACIÓN REGIONAL Y ZONA HORARIA
+// =======================================================
 date_default_timezone_set('America/Caracas');
 setlocale(LC_TIME, 'es_ES.UTF-8');
 setlocale(LC_CTYPE, 'es_ES.UTF-8');
 
-//define('_URL_', '/Proyecto_2026/public/');
 
+// =======================================================
+// 4. CONFIGURACIÓN DEL TEMA
+// =======================================================
 $tema_recibido = $_COOKIE['tema_preferido'] ?? 'claro';
-
 $tema_seguro = ($tema_recibido === 'oscuro') ? 'oscuro' : 'claro';
-
 define('_TEMA_', $tema_seguro);
 
 
+// =======================================================
+// 5. CONSTANTES DE MÓDULOS
+// =======================================================
 const _MD_USUARIOS_ = 1;
 const _MD_ROLES_    = 2;
 const _MD_BITACORA_ = 3;
@@ -56,8 +84,13 @@ const _MD_REPORTES_ = 107;
 const _MD_HISTORIAL_ = 108;
 const _MD_PERMISOS_ = 109;
 const _MD_TASA_ = 110;
+const _MD_MODULO_ = 112;
 
-/* CODIGOS DE ERROR */
+
+
+// =======================================================
+// 6. CÓDIGOS DE ERROR
+// =======================================================
 const DUPLICATE_CEDULA = "001";
 const DUPLICATE_EMAIL  = "002";
 const INVALID_ID     = "003";
@@ -69,7 +102,3 @@ const VALIDATION = "007";
 const ALREADY_ANNULLED = "008";
 const EMPTY_SELECTION  = "009";
 const DB_CONNECTION    = "500";
-
-
-const EXCHANGE_RATE_API_KEY = 'eb4ded73b72a7239fcce3154' ;
-

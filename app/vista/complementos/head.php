@@ -18,6 +18,7 @@
 <script src="libraries/js/fullCalendar.min.js"></script>
 
 <script src="libraries/driver.js-stable/dist/driver.min.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <link href="css/main.css" rel="stylesheet">
 <link href="css/navbar.css" rel="stylesheet">
 <link href="css/modal.css" rel="stylesheet">

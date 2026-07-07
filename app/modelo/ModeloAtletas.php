@@ -510,10 +510,27 @@ class ModeloAtletas extends Conexion
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
+
+
+
+
             $stmtVerif = $conex->prepare("SELECT COUNT(*) FROM atletas WHERE codigo_atleta = :id");
             $stmtVerif->execute([':id' => $this->id]);
             if ($stmtVerif->fetchColumn() == 0) {
                 throw new Exception(INVALID_ID);
+            }
+
+            $stmtCargo = $conex->prepare("SELECT COUNT(*) FROM cargos WHERE codigo_atleta = :id AND estatus = 1");
+            $stmtCargo->execute([':id' => $this->id]);
+
+            if ($stmtCargo->fetchColumn() > 0) {
+                throw new Exception(ASSOCIATES);
+            }
+            $stmtCargo = $conex->prepare("SELECT COUNT(*) FROM asignaciones WHERE codigo_atleta = :id AND estatus = 1");
+            $stmtCargo->execute([':id' => $this->id]);
+
+            if ($stmtCargo->fetchColumn() > 0) {
+                throw new Exception(ASSOCIATES.'1');
             }
 
             // Cambiar estatus de la inscripcion a 2

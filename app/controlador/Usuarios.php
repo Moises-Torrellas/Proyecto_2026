@@ -9,7 +9,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_USUARIOS_;
 
 // 3. Procesar permisos (esto llena la variable global $permisosGenerales)
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_usuarios');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloUsuarios';
@@ -54,45 +54,39 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
         // Validamos permisos antes de ejecutar las funciones
         switch ($accion) {
             case 'consultar':
+                if (empty($permisos['ingresar_usuarios'])) throw new Exception('No tienes permisos para consultar usuarios.');
                 consultarUsuarios($obj, $permisos);
                 break;
-
             case 'consultarRoles':
+                if (empty($permisos['ingresar_usuarios'])) throw new Exception('No tienes permisos para consultar roles para usuarios.');
                 consultarRoles($obj);
                 break;
-
             case 'incluir':
-                //if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar usuarios.');
+                if (empty($permisos['registrar_usuario'])) throw new Exception('No tienes permisos para registrar usuarios.');
                 incluirUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
-
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar usuarios.');
+                if (empty($permisos['modificar_usuario'])) throw new Exception('No tienes permisos para modificar usuarios.');
                 modificarUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
-
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tiene permisos para eliminar usuarios.');
+                if (empty($permisos['eliminar_usuario'])) throw new Exception('No tiene permisos para eliminar usuarios.');
                 eliminarUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
-
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tiene permisos para buscar/ver detalles.');
+                if (empty($permisos['modificar_usuario'])) throw new Exception('No tiene permisos para buscar/ver detalles.');
                 buscarUsuario($obj);
                 break;
-
             case 'bloquear':
-                if (!$permisos['otros']) throw new Exception('No tiene permisos para bloquear usuarios.');
+                if (empty($permisos['bloquear_usuario'])) throw new Exception('No tiene permisos para bloquear usuarios.');
                 bloquearUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
-
             case 'CargarPermisosUsuario':
-                //if (!$permisos['otros']) throw new Exception('No tiene permisos para ver permisos de usuarios.');
+                if (empty($permisos['permisos_usuario'])) throw new Exception('No tiene permisos para ver permisos de usuarios.');
                 CargarPermisosUsuario($obj);
                 break;
-
             case 'guardar_permisos_usuario':
-                //if (!$permisos['otros']) throw new Exception('No tiene permisos para modificar permisos de usuarios.');
+                if (empty($permisos['permisos_usuario'])) throw new Exception('No tiene permisos para modificar permisos de usuarios.');
                 guardarPermisosUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
 

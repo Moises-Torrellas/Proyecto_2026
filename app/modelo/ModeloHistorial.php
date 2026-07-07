@@ -17,7 +17,8 @@ class ModeloHistorial extends Conexion
         return [];
     }
 
-    public function consultarCurriculum(int $id_atleta): array
+    // Se agrega el parámetro $fecha_inicio opcional
+    public function consultarCurriculum(int $id_atleta, string $fecha_inicio = ''): array
     {
         $conex = null;
         try {
@@ -53,15 +54,24 @@ class ModeloHistorial extends Conexion
                 return [];
             }
 
+            // Preparamos la condición de fecha dinámicamente si fue enviada
+            $filtroFecha = "";
+            if (!empty($fecha_inicio)) {
+                $filtroFecha = " AND t.fecha_fin >= :fecha_inicio ";
+            }
+
             // 2. Obtener estadísticas por torneo desde detalles_participacion
             $sqlEstadisticas = "SELECT dp.*, t.nombre as nombre_torneo, t.codigo_torneo as id_torneo, t.fecha_inicio, t.fecha_fin, t.ubicacion 
                                 FROM detalles_participacion dp 
                                 INNER JOIN participaciones pr ON dp.codigo_participacion = pr.codigo_participacion 
                                 INNER JOIN torneos t ON pr.codigo_torneo = t.codigo_torneo 
-                                WHERE dp.codigo_atleta = :id_atleta
+                                WHERE dp.codigo_atleta = :id_atleta" . $filtroFecha . "
                                 ORDER BY t.fecha_inicio DESC";
             $stmt = $conex->prepare($sqlEstadisticas);
             $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);
+            if (!empty($fecha_inicio)) {
+                $stmt->bindValue(':fecha_inicio', $fecha_inicio);
+            }
             $stmt->execute();
             $estadisticas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -72,9 +82,12 @@ class ModeloHistorial extends Conexion
                                INNER JOIN detalles_participacion dp ON pi.codigo_dtll_prtc = dp.codigo_dtll_prtc
                                INNER JOIN participaciones pr ON dp.codigo_participacion = pr.codigo_participacion
                                INNER JOIN torneos t ON pr.codigo_torneo = t.codigo_torneo
-                               WHERE dp.codigo_atleta = :id_atleta";
+                               WHERE dp.codigo_atleta = :id_atleta" . $filtroFecha;
             $stmt = $conex->prepare($sqlPalmaresInd);
             $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);
+            if (!empty($fecha_inicio)) {
+                $stmt->bindValue(':fecha_inicio', $fecha_inicio);
+            }
             $stmt->execute();
             $palmaresIndividual = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -86,9 +99,12 @@ class ModeloHistorial extends Conexion
                                INNER JOIN detalles_participacion dp ON pr.codigo_participacion = dp.codigo_participacion
                                INNER JOIN equipos eq ON pr.codigo_equipo = eq.codigo_equipo
                                INNER JOIN torneos t ON pr.codigo_torneo = t.codigo_torneo
-                               WHERE dp.codigo_atleta = :id_atleta";
+                               WHERE dp.codigo_atleta = :id_atleta" . $filtroFecha;
             $stmt = $conex->prepare($sqlPalmaresGrp);
             $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);
+            if (!empty($fecha_inicio)) {
+                $stmt->bindValue(':fecha_inicio', $fecha_inicio);
+            }
             $stmt->execute();
             $palmaresGrupal = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

@@ -30,7 +30,7 @@ class ModeloInicio extends Conexion
 
             // 1. Consultar los datos básicos del usuario y su rol
             $sql = 'SELECT usuarios.idUsuario, usuarios.nombreUsuario, usuarios.apellidoUsuario, usuarios.foto, usuarios.pass_hash, usuarios.bloqueo, usuarios.intentos_fallidos,
-                        roles.nombre_rol, roles.id_rol, roles.nivel_rol  
+                        roles.nombre_rol, roles.id_rol, roles.nivel_rol, usuarios.correo, usuarios.telefonoUsuario, usuarios.cedulaUsuario  
                     FROM `usuarios` 
                     INNER JOIN roles ON roles.id_rol = usuarios.id_rol 
                     WHERE cedulaUsuario = :cedula AND usuarios.estatus != 0;';
@@ -74,11 +74,11 @@ class ModeloInicio extends Conexion
 
             $permisos = [];
             
-            if ((int)$resultado['nivel_rol'] === 1) {
+            if ((int)$resultado['nivel_rol'] === 1 || (int)$resultado['nivel_rol'] === 2) {
                 $sqlPermisos = "SELECT m.id_modulo, p.clave, p.nombre as nombre_permiso, 1 AS asignado
                                 FROM modulos m
                                 INNER JOIN permisos p ON p.id_modulo = m.id_modulo
-                                WHERE m.id_modulo NOT IN (4, 5, 8, 1, 2, 3, 99)";
+                                WHERE m.id_modulo NOT IN (4,5,8)";
                 $stmtPermisos = $conex->prepare($sqlPermisos);
                 $stmtPermisos->execute();
                 $permisos_db = $stmtPermisos->fetchAll();
@@ -93,7 +93,7 @@ class ModeloInicio extends Conexion
                             INNER JOIN permisos p ON p.id_modulo = m.id_modulo
                             LEFT JOIN permisos_rol pr ON pr.id_permiso = p.id_permiso AND pr.id_rol = :id_rol
                             LEFT JOIN excepciones e ON e.id_permiso = p.id_permiso AND e.id_usuario = :id
-                            WHERE m.id_modulo NOT IN (4, 5, 8, 1, 2, 3, 99) 
+                            WHERE m.id_modulo NOT IN (4,5,8) 
                             AND p.estatus != 2 AND m.estatus != 2";
 
                 $stmtPermisos = $conex->prepare($sqlPermisos);

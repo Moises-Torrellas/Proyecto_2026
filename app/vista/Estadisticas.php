@@ -83,10 +83,10 @@
                             <?php
                             // 2. RENDERIZAR FILA DE TORNEO CON MÉTRICAS EN FILA HORIZONTAL
                             $botonesAccion = '';
-                            if (isset($permisos['modificar']) && $permisos['modificar']) {
+                            if (!empty($permisos['modificar_estadistica'])) {
                                 $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_estadisticas'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                             }
-                            if (isset($permisos['eliminar']) && $permisos['eliminar']) {
+                            if (!empty($permisos['eliminar_estadistica'])) {
                                 $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['id_estadisticas'] . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-cross-circle"></i></button>';
                             }
                             ?>
@@ -147,10 +147,10 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']) : ?>
+                            <?php if (!empty($permisos['registrar_estadistica'])) : ?>
                                 <button class="btn btn_azul" id="incluir">Nuevas Estadisticas</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']) : ?>
+                            <?php if (!empty($permisos['generar_estadistica'])) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -241,10 +241,10 @@
                     <?php
                                     // 2. RENDERIZAR FILA DE TORNEO CON MÉTRICAS EN FILA HORIZONTAL
                                     $botonesAccion = '';
-                                    if (isset($permisos['modificar']) && $permisos['modificar']) {
+                                    if (!empty($permisos['modificar_estadistica'])) {
                                         $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_estadisticas'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                                     }
-                                    if (isset($permisos['eliminar']) && $permisos['eliminar']) {
+                                    if (!empty($permisos['eliminar_estadistica'])) {
                                         $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['id_estadisticas'] . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-cross-circle"></i></button>';
                                     }
                     ?>

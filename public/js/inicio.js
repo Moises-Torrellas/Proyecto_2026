@@ -34,6 +34,11 @@ function validarEnvio() {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar una contraseña valido");
         return false;
     }
+    /* var response = grecaptcha.getResponse();
+    if(response.length === 0) {
+        muestraMensaje("error", 2000, "Error", "Por favor, verifica que no eres un robot marcando el CAPTCHA.");
+        return false;
+    } */
     return true;
 }
 
@@ -66,13 +71,16 @@ function enviaAjax(datos) {
                     } else if (lee.resultado == 2) {
                         muestraMensaje("error", 2000, "Error", lee.mensaje);
                         $("#cedula").addClass("denegado");
+                        //grecaptcha.reset();
                     } else {
                         muestraMensaje("error", 2000, "Error", lee.mensaje);
                         $("#contraseña").addClass("denegado");
+                        //grecaptcha.reset();
                     }
                 } else if (lee.accion == "denegado") {
                     muestraMensaje("error", 20000, "Acceso Denegado", lee.mensaje);
                     limpia();
+                    //grecaptcha.reset();
                 } else if (lee.accion == "bloqueado") {
                     muestraMensaje("error", 20000, "Cuenta Bloqueada", lee.mensaje);
                     limpia();

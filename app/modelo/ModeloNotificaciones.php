@@ -47,7 +47,7 @@ class ModeloNotificaciones extends Conexion
             // Traemos las notificaciones ordenadas para que las más recientes salgan primero
             $sql = "SELECT id_notificacion, titulo, mensaje, tipo, creado_en, estatus 
                 FROM notificaciones 
-                WHERE id_usuario = :id_usuario 
+                WHERE id_usuario = :id_usuario AND estatus = 1
                 ORDER BY creado_en DESC 
                 LIMIT 20"; // Limitamos a 20 para no saturar el modal
 

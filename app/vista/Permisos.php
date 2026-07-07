@@ -144,7 +144,7 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if (!empty($permisos['registrar_permisos'])) : ?>
+                            <?php if (!empty($permisos['registrar_permisos'] && $_SESSION['nivel_rol'] === 1)) : ?>
                             <button class="btn btn_azul" id="incluir">Nuevo Permiso</button>
                             <?php endif; ?> 
                         </div>

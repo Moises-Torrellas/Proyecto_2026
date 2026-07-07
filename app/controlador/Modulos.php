@@ -5,8 +5,8 @@ use App\servicios\GenerarReporte;
 
 require_once __DIR__ . '/Base.php';
 
-$id_modulo = _MD_REPRESENTANTES_;
-$permisos = procesarPermisos($id_modulo, '');
+$id_modulo = _MD_MODULO_;
+$permisos = procesarPermisos($id_modulo, 'ingresar_modulos');
 
 $nombreClaseModelo = 'App\modelo\ModeloModulos';
 
@@ -47,15 +47,15 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar representantes.');
+                if (empty($permisos['ingresar_modulos'])) throw new Exception('No tienes permisos para consultar representantes.');
                 consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
+                if (empty($permisos['modificar_modulo'])) throw new Exception('No tienes permisos para modificar representantes.');
                 buscar($obj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar representantes.');
+                if (empty($permisos['modificar_modulo'])) throw new Exception('No tienes permisos para modificar representantes.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

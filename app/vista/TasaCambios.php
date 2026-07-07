@@ -20,6 +20,10 @@
                             <small>Tasa</small>
                             <span style="font-weight: bold; color: #2ec135;"><?= htmlspecialchars($dato['valor_tasa']) ?> <?= htmlspecialchars($dato['simbolo']) ?></span>
                         </div>
+                        <div class="listado_dato_grupo">
+                            <small>Tipo</small>
+                            <span><?= ucfirst(htmlspecialchars($dato['tipo'] ?? 'manual')) ?></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -80,6 +84,10 @@
                                                 <div class="listado_dato_grupo">
                                                     <small>Tasa</small>
                                                     <span style="font-weight: bold; color: #2ec135;"><?= htmlspecialchars($dato['valor_tasa']) ?> <?= htmlspecialchars($dato['simbolo']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Tipo</small>
+                                                    <span><?= ucfirst(htmlspecialchars($dato['tipo'] ?? 'manual')) ?></span>
                                                 </div>
                                             </div>
                                         </div>

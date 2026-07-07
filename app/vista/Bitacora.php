@@ -1,3 +1,100 @@
+<?php if (isset($solo_lista) && $solo_lista === true) :
+    if (empty($registro)) : ?>
+        <div class="listado_vacio">
+            <p>No se encontraron registros</p>
+        </div>
+        <?php else :
+        foreach ($registro as $index => $dato) :
+
+            // Adaptación del formateo de fecha y hora original a PHP
+            $fechaFormateada = date('d/m/Y', strtotime($dato['fecha']));
+            $horaFormateada = date('h:i A', strtotime($dato['hora']));
+
+            // Lógica de datos previos y nuevos con escape HTML
+            $datosPrevios = (!empty($dato['datos_previos']) && $dato['datos_previos'] !== 'null') ? htmlspecialchars($dato['datos_previos']) : 'No Aplica';
+            $datosNuevos = (!empty($dato['datos_nuevos']) && $dato['datos_nuevos'] !== 'null') ? htmlspecialchars($dato['datos_nuevos']) : 'No Aplica';
+
+            // Lógica para definir la clase de estatus 
+            // (Nota: la mantengo calculada tal como en tu JS, aunque en la estructura HTML original no la inyectabas)
+            $accionesStr = strtolower($dato['acciones']);
+            if ($accionesStr === 'exito' || strpos($accionesStr, 'éxito') !== false || strpos($accionesStr, 'exito') !== false) {
+                $estatusClase = 'estatus_v';
+            } elseif (strpos($accionesStr, 'error') !== false || strpos($accionesStr, 'fallido') !== false || strpos($accionesStr, 'fracaso') !== false) {
+                $estatusClase = 'estatus_r';
+            } else {
+                $estatusClase = 'estatus_a';
+            }
+        ?>
+
+            <div class="listado_contenedor_grupal">
+                <div class="listado_item" onclick="toggleDetalles(this)">
+                    <div class="listado_col_principal">
+                        <div class="listado_avatar_null"><i class="icon_con" data-lucide="<?= htmlspecialchars($dato['icono']) ?>"></i></div>
+                        <div class="listado_info_base">
+                            <span class="listado_titulo">
+                                <?= htmlspecialchars($dato['nombre_modulo']) ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_datos">
+                        <div class="listado_dato_grupo">
+                            <small>Usuario</small>
+                            <span><?= htmlspecialchars($dato['nombreUsuario']) ?> <?= htmlspecialchars($dato['apellidoUsuario']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Acción</small>
+                            <span><?= htmlspecialchars($dato['acciones']) ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Fecha y Hora</small>
+                            <span><?= $fechaFormateada ?> <?= $horaFormateada ?></span>
+                        </div>
+                    </div>
+
+                    <div class="listado_col_acciones">
+                        <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                    </div>
+                </div>
+
+                <div class="listado_detalle_oculto">
+                    <div class="detalle_expandido_container">
+                        <h4 class="titulo_des">Detalles de la Acción:</h4>
+                        <div class="detalle_fila">
+                            <div class="detalle_card" style="width: 100%;">
+                                <div class="detalle_card_icon"><i data-lucide="info"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Información Adicional</label>
+                                    <span>Cédula: <b><?= htmlspecialchars($dato['cedulaUsuario']) ?></b></span>
+                                    <span>Entorno: <b><?= htmlspecialchars($dato['entorno'] ?? 'N/A') ?></b></span>
+                                </div>
+                            </div>
+                        </div>
+                        <h4 class="titulo_des">Cambios Realizados:</h4>
+                        <div class="detalle_fila">
+                            <div class="detalle_card" style="width: 100%;">
+                                <div class="detalle_card_icon"><i data-lucide="history"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Datos Previos</label>
+                                    <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555;"><?= $datosPrevios ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card" style="width: 100%;">
+                                <div class="detalle_card_icon"><i data-lucide="file-diff"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Datos Nuevos</label>
+                                    <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745;"><?= $datosNuevos ?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <?php endforeach; ?>
+    <?php endif;
+    exit(); ?>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -24,11 +121,107 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
+                            <?php if(!empty($permisos['generar_bitacora'])) : ?>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
+                            <?php if (empty($registro)) : ?>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros</p>
+                                </div>
+                                <?php else :
+                                foreach ($registro as $index => $dato) :
+
+                                    // Adaptación del formateo de fecha y hora original a PHP
+                                    $fechaFormateada = date('d/m/Y', strtotime($dato['fecha']));
+                                    $horaFormateada = date('h:i A', strtotime($dato['hora']));
+
+                                    // Lógica de datos previos y nuevos con escape HTML
+                                    $datosPrevios = (!empty($dato['datos_previos']) && $dato['datos_previos'] !== 'null') ? htmlspecialchars($dato['datos_previos']) : 'No Aplica';
+                                    $datosNuevos = (!empty($dato['datos_nuevos']) && $dato['datos_nuevos'] !== 'null') ? htmlspecialchars($dato['datos_nuevos']) : 'No Aplica';
+
+                                    // Lógica para definir la clase de estatus 
+                                    // (Nota: la mantengo calculada tal como en tu JS, aunque en la estructura HTML original no la inyectabas)
+                                    $accionesStr = strtolower($dato['acciones']);
+                                    if ($accionesStr === 'exito' || strpos($accionesStr, 'éxito') !== false || strpos($accionesStr, 'exito') !== false) {
+                                        $estatusClase = 'estatus_v';
+                                    } elseif (strpos($accionesStr, 'error') !== false || strpos($accionesStr, 'fallido') !== false || strpos($accionesStr, 'fracaso') !== false) {
+                                        $estatusClase = 'estatus_r';
+                                    } else {
+                                        $estatusClase = 'estatus_a';
+                                    }
+                                ?>
+
+                                    <div class="listado_contenedor_grupal">
+                                        <div class="listado_item" onclick="toggleDetalles(this)">
+                                            <div class="listado_col_principal">
+                                                <div class="listado_avatar_null"><i class="icon_con" data-lucide="<?= htmlspecialchars($dato['icono']) ?>"></i></div>
+                                                <div class="listado_info_base">
+                                                    <span class="listado_titulo">
+                                                        <?= htmlspecialchars($dato['nombre_modulo']) ?>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo">
+                                                    <small>Usuario</small>
+                                                    <span><?= htmlspecialchars($dato['nombreUsuario']) ?> <?= htmlspecialchars($dato['apellidoUsuario']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Acción</small>
+                                                    <span><?= htmlspecialchars($dato['acciones']) ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Fecha y Hora</small>
+                                                    <span><?= $fechaFormateada ?> <?= $horaFormateada ?></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="listado_col_acciones">
+                                                <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                                            </div>
+                                        </div>
+
+                                        <div class="listado_detalle_oculto">
+                                            <div class="detalle_expandido_container">
+                                                <h4 class="titulo_des">Detalles de la Acción:</h4>
+                                                <div class="detalle_fila">
+                                                    <div class="detalle_card" style="width: 100%;">
+                                                        <div class="detalle_card_icon"><i data-lucide="info"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Información Adicional</label>
+                                                            <span>Cédula: <b><?= htmlspecialchars($dato['cedulaUsuario']) ?></b></span>
+                                                            <span>Entorno: <b><?= htmlspecialchars($dato['entorno'] ?? 'N/A') ?></b></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <h4 class="titulo_des">Cambios Realizados:</h4>
+                                                <div class="detalle_fila">
+                                                    <div class="detalle_card" style="width: 100%;">
+                                                        <div class="detalle_card_icon"><i data-lucide="history"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Datos Previos</label>
+                                                            <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555;"><?= $datosPrevios ?></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detalle_card" style="width: 100%;">
+                                                        <div class="detalle_card_icon"><i data-lucide="file-diff"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Datos Nuevos</label>
+                                                            <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745;"><?= $datosNuevos ?></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>

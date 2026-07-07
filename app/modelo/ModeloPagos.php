@@ -73,12 +73,19 @@ class ModeloPagos extends Conexion
         echo "Bienvenido, " . $usuario; */
 
         return match ($accion) {
-            'incluir'   => $this->Incluir(),
+            'incluir'   => $this->Incluir($datos),
             'eliminar'  => $this->Eliminar(),
             'generar'   => $this->ConsultarReporte(),
             'registrar_vuelto' => $this->RegistrarVuelto($datos),
+            'consultar_tasas_disponibles' => $this->ConsultarTasasDisponibles($datos),
             default => throw new Exception('La accion solicitada para el pago no es valida.')
         };
+    }
+
+    public function ConsultarTasasDisponibles($datos): array
+    {
+        if(!$this->objTasa) { $this->objTasa = new ModeloTasaCambios(); }
+        return $this->objTasa->ConsultarTasasDisponibles($datos);
     }
 
     public function Consultar(array $filtro = []): array
@@ -251,7 +258,7 @@ class ModeloPagos extends Conexion
         return array_values($pagosAgrupados);
     }
 
-    private function Incluir(): array
+    private function Incluir(array $datos): array
     {
         $conex = null;
         try {
@@ -345,6 +352,20 @@ class ModeloPagos extends Conexion
             }
 
             $conex->commit();
+            
+            // Si vino información de vuelto, lo registramos usando la transacción de RegistrarVuelto (o aquí mismo)
+            if (isset($datos['monto_vuelto']) && $datos['monto_vuelto'] > 0) {
+                $datosVuelto = [
+                    'codigo_pago' => $id_pago,
+                    'codigo_metodo' => $datos['codigo_metodo'] ?? null,
+                    'codigo_moneda' => $datos['codigo_moneda'] ?? null,
+                    'monto_vuelto' => $datos['monto_vuelto'],
+                    'referencia' => $datos['referencia_vuelto'] ?? null,
+                    'fecha_vuelto' => $datos['fecha_vuelto'] ?? date('Y-m-d')
+                ];
+                $this->RegistrarVuelto($datosVuelto);
+            }
+
             return array('accion' => 'exito', 'vuelto' => $vuelto, 'id_pago' => $id_pago);
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {

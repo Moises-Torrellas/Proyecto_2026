@@ -59,10 +59,10 @@
                                 $tipo_param = "'{$tipo_lista}'";
 
                                 $botonesAccion = '';
-                                if (isset($permisos['modificar']) && $permisos['modificar']) {
+                                if (!empty($permisos['modificar_palmares'])) {
                                     $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                                 }
-                                if (isset($permisos['eliminar']) && $permisos['eliminar']) {
+                                if (!empty($permisos['eliminar_palmares'])) {
                                     $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash"></i></button>';
                                 }
                             ?>
@@ -122,10 +122,10 @@ endif; ?>
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']) : ?>
+                            <?php if (!empty($permisos['registrar_palmares'])) : ?>
                                 <button class="btn btn_azul" id="incluir">Nuevo Palmarés</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']) : ?>
+                            <?php if (!empty($permisos['generar_palmares'])) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -181,10 +181,10 @@ endif; ?>
 
                                                                     $botonesAccion = '';
 
-                                                                    if (isset($permisos['modificar']) && $permisos['modificar']) {
+                                                                    if (!empty($permisos['modificar_palmares'])) {
                                                                         $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                                                                     }
-                                                                    if (isset($permisos['eliminar']) && $permisos['eliminar']) {
+                                                                    if (!empty($permisos['eliminar_palmares'])) {
                                                                         $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash"></i></button>';
                                                                     }
                                                                 ?>
@@ -269,10 +269,10 @@ endif; ?>
 
                                                                     $botonesAccion = '';
 
-                                                                    if (isset($permisos['modificar']) && $permisos['modificar']) {
+                                                                    if (!empty($permisos['modificar_palmares'])) {
                                                                         $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                                                                     }
-                                                                    if (isset($permisos['eliminar']) && $permisos['eliminar']) {
+                                                                    if (!empty($permisos['eliminar_palmares'])) {
                                                                         $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $id_item . ', ' . $tipo_param . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash"></i></button>';
                                                                     }
 

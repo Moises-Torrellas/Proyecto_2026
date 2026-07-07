@@ -4,11 +4,11 @@ if (isset($solo_lista) && $solo_lista === true) :
         <div class="listado_vacio">
             <p>No se encontraron registros</p>
         </div>
-    <?php else :
+        <?php else :
         foreach ($registro as $dato) :
             // Evaluación por la letra 'I' en mayúscula según el ENUM
             $txtTipo = (strtoupper($dato['tipo']) === 'I') ? 'Individual' : 'Grupal';
-            ?>
+        ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
                     <div class="listado_col_datos">
@@ -24,10 +24,10 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                            <?php if ($permisos['modificar']) : ?>
+                            <?php if (!empty($permisos['modificar_premio'])) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_premio'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                             <?php endif; ?>
-                            <?php if ($permisos['eliminar']) : ?>
+                            <?php if (!empty($permisos['eliminar_premio'])) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_premio'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
                         </div>
@@ -64,10 +64,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if ($permisos['registrar']) :?>
+                            <?php if (!empty($permisos['registrar_premio'])) : ?>
                                 <button class="btn btn_azul" id="incluir">Nuevo Premio</button>
                             <?php endif; ?>
-                            <?php if ($permisos['reporte']) : ?>
+                            <?php if (!empty($permisos['generar_premio'])) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -78,10 +78,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="listado_vacio">
                                     <p>No se encontraron registros</p>
                                 </div>
-                            <?php else :
+                                <?php else :
                                 foreach ($registro as $dato) :
                                     $txtTipo = (strtoupper($dato['tipo']) === 'I') ? 'Individual' : 'Grupal';
-                                    ?>
+                                ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
                                             <div class="listado_col_datos">
@@ -97,10 +97,10 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                    <?php if ($permisos['modificar']) : ?>
+                                                    <?php if (!empty($permisos['modificar_premio'])) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['codigo_premio'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                                     <?php endif; ?>
-                                                    <?php if ($permisos['eliminar']) : ?>
+                                                    <?php if (!empty($permisos['eliminar_premio'])) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_premio'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                     <?php endif; ?>
                                                 </div>
@@ -116,7 +116,7 @@ if (isset($solo_lista) && $solo_lista === true) :
             </div>
         </div>
     </section>
-    
+
     <section class="contenedor_modal" id="contenedor_modal">
         <div class="modal ocultar" id="modal">
             <div class="cabecera_modal">
@@ -163,4 +163,5 @@ if (isset($solo_lista) && $solo_lista === true) :
     <script src="js/main.js"></script>
     <script src="js/premios.js"></script>
 </body>
+
 </html>

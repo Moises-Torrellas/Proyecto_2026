@@ -65,9 +65,48 @@ function manejarSolicitudInicio($obj, $id_modulo, $bitacoraObj): void
 /**
  * Procesa la autenticación y arma la respuesta JSON compatible con el AJAX
  */
+/**
+ * Procesa la autenticación y arma la respuesta JSON compatible con el AJAX
+ */
 function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
 {
-    // 1. Validar expresiones regulares de Cédula y Contraseña antes de tocar la BD
+    /* // ====================================================================
+    // 1. VALIDACIÓN DEL CAPTCHA
+    // ====================================================================
+    $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+    
+    // Tomamos la clave secreta directamente de las variables de entorno
+    $recaptcha_secret = $_ENV['RECAPTCHA_SECRET_KEY'] ?? ''; 
+
+    if (empty($recaptcha_response)) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['accion' => 'error', 'resultado' => 0, 'mensaje' => 'Por favor, completa el CAPTCHA.']);
+        exit();
+    }
+
+    // Petición a los servidores de Google para validar el token
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'https://www.google.com/recaptcha/api/siteverify');
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+        'secret' => $recaptcha_secret,
+        'response' => $recaptcha_response
+    ]));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $respuesta_curl = curl_exec($ch);
+    curl_close($ch);
+
+    $datos_recaptcha = json_decode($respuesta_curl);
+
+    if (!$datos_recaptcha->success) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['accion' => 'error', 'resultado' => 0, 'mensaje' => 'Validación de CAPTCHA fallida. Intenta de nuevo.']);
+        exit();
+    } */
+
+    // ====================================================================
+    // 2. VALIDACIÓN DE FORMATO DE CREDENCIALES
+    // ====================================================================
     validarCredenciales($_POST['cedula'] ?? '', $_POST['contraseña'] ?? '');
 
     $datos = [
@@ -75,16 +114,26 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         'clave'  => $_POST['contraseña']
     ];
 
+
+    // ====================================================================
+    // 3. PROCESAMIENTO EN BASE DE DATOS
+    // ====================================================================
     $respuesta = $obj->ProcesarDatos($datos);
 
     if (isset($respuesta['resultado']) && $respuesta['resultado'] == 1) {
 
+        // Creación de variables de sesión
         $_SESSION['id']        = $respuesta['datos']['idUsuario'];
         $_SESSION['rol']       = $respuesta['datos']['nombre_rol'];
         $_SESSION['nombre']    = $respuesta['datos']['nombreUsuario'];
         $_SESSION['apellido']  = $respuesta['datos']['apellidoUsuario'];
+        $_SESSION['telefono']  = $respuesta['datos']['telefonoUsuario'];
+        $_SESSION['correo']    = $respuesta['datos']['correo'];
+        $_SESSION['cedula']    = $respuesta['datos']['cedulaUsuario'];
         $_SESSION['nivel_rol'] = (int)$respuesta['datos']['nivel_rol'];
         $_SESSION['foto']      = $respuesta['datos']['foto'];
+        
+        // Mapeo de permisos
         $permisosIndexados = [];
         if (isset($respuesta['permisos']) && is_array($respuesta['permisos'])) {
             foreach ($respuesta['permisos'] as $p) {
@@ -92,11 +141,11 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
                 if (!isset($permisosIndexados[$idModulo])) {
                     $permisosIndexados[$idModulo] = [];
                 }
-                // Si la clave es 'ingresar' o 'registrar', se guardará como $permisosIndexados[2]['ingresar'] = true;
                 $permisosIndexados[$idModulo][$p['clave']] = true;
             }
         }
         $_SESSION['permisos'] = $permisosIndexados;
+        
         //registrarBitacora($bitacoraObj, $id_modulo, 'Inicio de sesión exitoso');
 
         $respuestaFinal = [
@@ -106,6 +155,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
             'url'       => 'Principal'
         ];
     } else {
+        // Manejo de errores devueltos por el modelo
         if ($respuesta['accion'] == 'error') {
             $respuestaFinal = [
                 'accion' => 'error',
@@ -133,7 +183,6 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
 
     header('Content-Type: application/json; charset=utf-8'); 
     echo json_encode($respuestaFinal);
-
     exit();
 }
 

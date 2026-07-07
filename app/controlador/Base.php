@@ -4,20 +4,12 @@ function procesarPermisos(int $id_modulo, string $clave_acceso = '', bool $soloV
 {
     $nivelUsuario = $_SESSION['nivel_rol'] ?? 99;
 
-    // Bloqueo estricto para Nivel 2 (Módulos prohibidos)
-    $modulosProhibidos = [_MD_USUARIOS_, _MD_ROLES_, _MD_BITACORA_];
-    if ($nivelUsuario === 2 && in_array($id_modulo, $modulosProhibidos)) {
-        if ($soloValidar) return []; 
-        $_SESSION['alerta'] = ['icono' => 'error', 'titulo' => 'Acceso denegado', 'mensaje' => 'No tienes permisos.'];
-        header("Location: Principal");
-        exit();
-    }
-
     // 1. Extraemos SOLO la caja de permisos de este módulo específico
     $permisos = $_SESSION['permisos'][$id_modulo] ?? [];
 
     // 2. Validamos dinámicamente con la clave que nos mandó el controlador
-    if (empty($permisos[$clave_acceso]) && $nivelUsuario !== 2 && $nivelUsuario !== 1) {
+    // Si la clave está vacía en su sesión y NO es nivel 1 ni nivel 2, lo bloqueamos
+    if (empty($permisos[$clave_acceso]) && $nivelUsuario !== 1 && $nivelUsuario !== 2) {
         if ($soloValidar) return [];
         $_SESSION['alerta'] = ['icono' => 'error', 'titulo' => 'Acceso denegado', 'mensaje' => 'No puedes entrar.'];
         header("Location: Principal");

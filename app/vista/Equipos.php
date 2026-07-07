@@ -16,12 +16,12 @@
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                            <?php if (($permisos['modificar'] ?? false)) : ?>
+                            <?php if (!empty($permisos['modificar_equipo'])) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= (int)$dato['id_equipos'] ?>)" data-tippy-content="Modificar">
                                     <i class="fi fi-sr-pencil"></i>
                                 </button>
                             <?php endif; ?>
-                            <?php if (($permisos['eliminar'] ?? false)) : ?>
+                            <?php if (!empty($permisos['eliminar_equipo'])) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= (int)$dato['id_equipos'] ?>)" data-tippy-content="Eliminar">
                                     <i class="fi fi-sr-trash-xmark"></i>
                                 </button>
@@ -101,10 +101,10 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <?php if (($permisos['registrar'] ?? false)) : ?>
+                            <?php if (!empty($permisos['registrar_equipo'])) : ?>
                                 <button class="btn btn_azul" id="incluir">Nuevo Equipo</button>
                             <?php endif; ?>
-                            <?php if (($permisos['reporte'] ?? false)) : ?>
+                            <?php if (!empty($permisos['generar_equipo'])) : ?>
                                 <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
                         </div>
@@ -129,12 +129,12 @@
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                    <?php if (($permisos['modificar'] ?? false)) : ?>
+                                                    <?php if (!empty($permisos['modificar_equipo'])) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= (int)$dato['id_equipos'] ?>)" data-tippy-content="Modificar">
                                                             <i class="fi fi-sr-pencil"></i>
                                                         </button>
                                                     <?php endif; ?>
-                                                    <?php if (($permisos['eliminar'] ?? false)) : ?>
+                                                    <?php if (!empty($permisos['eliminar_equipo'])) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= (int)$dato['id_equipos'] ?>)" data-tippy-content="Eliminar">
                                                             <i class="fi fi-sr-trash-xmark"></i>
                                                         </button>

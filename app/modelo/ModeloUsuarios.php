@@ -65,20 +65,21 @@ class ModeloUsuarios extends Conexion
         $this->permisos_seleccionados = $datos['permisos'] ?? [];
 
         $accion = $datos['accion'] ?? null;
+        $tipo_edicion = $datos['tipo_edicion'] ?? null; // Se captura el botón/tipo de formulario presionado
+
         return match ($accion) {
             'incluir'   => $this->Incluir(),
             'modificar' => $this->Modificar(),
             'eliminar'  => $this->Eliminar(),
-            'buscar' => $this->Buscar(),
-            'bloquear' => $this->Bloquear(),
-            'reporte' => $this->Consultar(),
+            'buscar'    => $this->Buscar(),
+            'bloquear'  => $this->Bloquear(),
+            'reporte'   => $this->Consultar(),
             'CargarPermisosUsuario' => $this->CargarPermisosUsuario(),
             'guardar_permisos_usuario' => $this->GuardarPermisosUsuario(),
+            'editar_perfil' => $this->EditarPerfil($tipo_edicion), // Nueva ruta agregada
             default     => throw new Exception("Acción no válida."),
         };
     }
-
-
     public function Consultar(array $filtro = []): array
     {
         try {
@@ -558,6 +559,112 @@ class ModeloUsuarios extends Conexion
                 'accion' => 'error',
                 'mensaje' => 'No se pudo actualizar el último ingreso: ' . $e->getMessage()
             ];
+        } finally {
+            $conex = null;
+        }
+    }
+    private function EditarPerfil(?string $tipo): array
+    {
+        try {
+            if (empty($this->id)) {
+                throw new Exception("ID de usuario no proporcionado.");
+            }
+
+            $conex = $this->conexSG();
+            $conex->beginTransaction();
+
+            // Validar que la sesión esté iniciada para poder sobrescribir los datos
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+
+            if ($tipo === 'personal') {
+                // Validación de duplicado de cédula excluyendo al usuario actual
+                if (!$this->verificarExistenciaPropia('cedula', $this->cedula, $this->id, 'usuarios', 1, 'sg', bloquear: true)) {
+                    if ($this->verificarExistencia('cedula', $this->cedula, 'usuarios', 1, 'sg', bloquear: true)) {
+                        throw new Exception(DUPLICATE_CEDULA);
+                    }
+                }
+
+                $sql = "UPDATE `usuarios` SET 
+                            `cedulaUsuario` = :cedula, 
+                            `nombreUsuario` = :nombre, 
+                            `apellidoUsuario` = :apellido";
+                
+                // Si viene una foto nueva, se actualiza en el SQL
+                if (!empty($this->foto)) {
+                    $sql .= ", `foto` = :foto";
+                }
+                
+                $sql .= " WHERE idUsuario = :id";
+                
+                $stmt = $conex->prepare($sql);
+                $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
+                $stmt->bindValue(':cedula', $this->cedula, \PDO::PARAM_STR);
+                $stmt->bindValue(':nombre', $this->nombre, \PDO::PARAM_STR);
+                $stmt->bindValue(':apellido', $this->apellido, \PDO::PARAM_STR);
+                if (!empty($this->foto)) {
+                    $stmt->bindValue(':foto', $this->foto, \PDO::PARAM_STR);
+                }
+                $stmt->execute();
+
+                // Actualizar la sesión en tiempo real
+                $_SESSION['cedula']   = $this->cedula;
+                $_SESSION['nombre']   = $this->nombre;
+                $_SESSION['apellido'] = $this->apellido;
+                if (!empty($this->foto)) {
+                    $_SESSION['foto'] = $this->foto;
+                }
+
+            } elseif ($tipo === 'contacto') {
+                // Validación de duplicados para teléfono y correo
+                if (!$this->verificarExistenciaPropia('correo', $this->correo, $this->id, 'usuarios', 1, 'sg', bloquear: true)) {
+                    if ($this->verificarExistencia('correo', $this->correo, 'usuarios', 1, 'sg', bloquear: true)) {
+                        throw new Exception(DUPLICATE_EMAIL);
+                    }
+                }
+                if (!$this->verificarExistenciaPropia('telefono', $this->telefono, $this->id, 'usuarios', 1, 'sg', bloquear: true)) {
+                    if ($this->verificarExistencia('telefono', $this->telefono, 'usuarios', 1, 'sg', bloquear: true)) {
+                        throw new Exception(DUPLICATE_PHONE);
+                    }
+                }
+
+                $sql = "UPDATE `usuarios` SET `telefonoUsuario` = :telefono, `correo` = :correo WHERE idUsuario = :id";
+                $stmt = $conex->prepare($sql);
+                $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
+                $stmt->bindValue(':telefono', $this->telefono, \PDO::PARAM_STR);
+                $stmt->bindValue(':correo', $this->correo, \PDO::PARAM_STR);
+                $stmt->execute();
+
+                // Actualizar la sesión en tiempo real
+                $_SESSION['telefono'] = $this->telefono;
+                $_SESSION['correo']   = $this->correo;
+
+            } elseif ($tipo === 'seguridad') {
+                if (!$this->actualizar_contraseña) {
+                    throw new Exception("No se proporcionó una nueva contraseña válida.");
+                }
+
+                $sql = "UPDATE `usuarios` SET `pass_hash` = :contra WHERE idUsuario = :id";
+                $stmt = $conex->prepare($sql);
+                $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
+                $stmt->bindValue(':contra', $this->contraseña, \PDO::PARAM_STR);
+                $stmt->execute();
+                
+                // La contraseña no se guarda en $_SESSION por razones de seguridad
+            } else {
+                throw new Exception("El tipo de edición especificado no es válido.");
+            }
+
+            $conex->commit();
+            return ['accion' => 'exito', 'mensaje' => 'Perfil actualizado correctamente'];
+
+        } catch (Exception $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            logs('Usuarios', $e->getMessage(), 'Modelo_EditarPerfil');
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
         } finally {
             $conex = null;
         }

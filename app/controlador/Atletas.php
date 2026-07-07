@@ -42,7 +42,7 @@ if (comprobarAjax() && !empty($_POST)) {
     } else {
         $registro = $respuesta['datos'] ?? [];
     }
-    
+
     $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
     cargarVista($pagina, $variables);
 }
@@ -216,7 +216,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
                 default          => 'Ocurrió un error inesperado en el registro.'
             };
         }
-        
+
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Atletas', $e->getMessage(), 'Controlador_Incluir');
@@ -256,9 +256,9 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
         $datos['foto'] = [$foto_nombre];
         $datos['accion'] = 'modificar';
-        
+
         $resultado = $obj->ProcesarDatos($datos);
-        
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Modifico al Atleta: " . $datos['nombre'] . " " . $datos['apellido']);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Atleta modificado exitosamente.');
@@ -273,7 +273,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
                 default          => 'Ocurrió un error inesperado en el registro.'
             };
         }
-        
+
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Atletas', $e->getMessage(), 'Controlador_Modificar');
@@ -293,18 +293,20 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         ];
 
         $resultado = $obj->ProcesarDatos($datos);
-        
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Retiro al Atleta: " . $datos['id']);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Atleta retirado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID       => 'El atleta no existe.',
+                ASSOCIATES       => 'No se puede eliminar el atleta porque tiene un cargo pendiente por pagar.',
+                ASSOCIATES.'1'   => 'No se puede eliminar el atleta porque tiene un equipamiento asignado.',
                 DB_CONNECTION    => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en el retiro.'
             };
         }
-        
+
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Atletas', $e->getMessage(), 'Controlador_Eliminar');
@@ -328,14 +330,14 @@ function reinscribir($obj, $id_modulo, $bitacoraObj): void
         ];
 
         $resultado = $obj->ProcesarDatos($datos);
-        
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Re-inscribió al Atleta: " . $datos['id']);
             $resultado = array('accion' => 'reinscribir', 'mensaje' => 'Atleta re-inscrito exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = 'Ocurrió un error inesperado al re-inscribir al atleta.';
         }
-        
+
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Atletas', $e->getMessage(), 'Controlador_Reinscribir');
@@ -375,11 +377,11 @@ function generar($obj, $id_modulo, $bitacoraObj): void
         $nombreVista = 'R_Atletas';
         $objG = new GenerarReporte();
         $pdf = $objG->generarPDF($nombreVista, $datos, 'Atletas');
-        
+
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
             registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de atletas.");
         }
-        
+
         echo json_encode($pdf);
     } catch (Exception $e) {
         logs('Atletas', $e->getMessage(), 'Controlador_Generar');
@@ -393,8 +395,13 @@ function generarCurriculum($id_modulo, $bitacoraObj): void
         validar_requeridos(['id']);
         $id_atleta = (int)$_POST['id'];
 
+        // Capturamos la fecha enviada por JS. Si viene vacía o no existe, será un string vacío.
+        $fecha_inicio = $_POST['fecha_inicio'] ?? '';
+
         $modeloHistorial = new ModeloHistorial();
-        $datosCurriculum = $modeloHistorial->consultarCurriculum($id_atleta);
+
+        // Pasamos el id del atleta y la fecha de inicio al modelo
+        $datosCurriculum = $modeloHistorial->consultarCurriculum($id_atleta, $fecha_inicio);
 
         if (empty($datosCurriculum) || empty($datosCurriculum['atleta'])) {
             echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontró información para generar el currículum de este atleta.']);
@@ -405,7 +412,7 @@ function generarCurriculum($id_modulo, $bitacoraObj): void
         $nombres = $datosCurriculum['atleta']['nombres'];
         $apellidos = $datosCurriculum['atleta']['apellidos'];
         $docIdentidad = $datosCurriculum['atleta']['doc_identidad'];
-        
+
         $nombreArchivoRaw = $nombres . '_' . $apellidos . '_' . $docIdentidad;
         $nombreArchivo = str_replace(' ', '_', $nombreArchivoRaw);
 

@@ -21,7 +21,7 @@
             <div class="contenedor_formulario_inicio">
                 <form autocomplete="off" id="f">
                     <!-- <input type="hidden" id="token" name="token" value="<?php /* echo $_SESSION['token']; */ ?>"> -->
-                    <div class="row">
+                    <div class="row row_i">
                         <div class="colum">
                             <div class="caja_formulario c_f_i">
                                 <input type="text" class="formulario" id="cedula" name="cedula">
@@ -30,7 +30,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row row_i">
                         <div class="colum">
                             <div class="caja_formulario c_f_i">
                                 <input type="password" class="formulario" id="contraseña" name="contraseña">
@@ -40,10 +40,17 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
+                    <!-- <div class="row row_i">
+                        <div class="colum">
+                            <div class="caja_formulario c_f_i" style="display: flex; justify-content: center; margin-bottom: 20px;">
+                                <div class="g-recaptcha" data-sitekey="<?php echo $_ENV['RECAPTCHA_SITE_KEY']; ?>"></div>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="row row_i">
                         <div class="colum column_inicio">
                             <button type="button" class="btn btn_azul btn_inicio" id="ingreso">Iniciar Sesión</button>
-                            <a  href="/Proyecto_2026/public/Recuperacion" style="user-select: none;">¿Has olvidado tu contraseña?</a>
+                            <a href="/Proyecto_2026/public/Recuperacion" style="user-select: none;">¿Has olvidado tu contraseña?</a>
                         </div>
                     </div>
                 </form>

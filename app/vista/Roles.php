@@ -21,13 +21,14 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                            <button class="btn_t cbt_m" onclick="CargarPermisos(<?= $dato['id_rol'] ?>)" data-tippy-content="Permisos"><i class="fi fi-sr-user-permissions"></i></button>
-
-                            <?php if ($permisos['modificar']) : ?>
+                            <?php if (!empty($permisos['permisos_rol'])) : ?>
+                                <button class="btn_t cbt_m" onclick="CargarPermisos(<?= $dato['id_rol'] ?>)" data-tippy-content="Permisos"><i class="fi fi-sr-user-permissions"></i></button>
+                            <?php endif; ?>
+                            <?php if (!empty($permisos['modificar_rol'])) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_rol'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                             <?php endif; ?>
 
-                            <?php if ($permisos['eliminar']) : ?>
+                            <?php if (!empty($permisos['eliminar_rol'])) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_rol'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
                         </div>
@@ -64,48 +65,52 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
-                            <button class="btn btn_azul" id="incluir">Nuevo Rol</button>
-                            <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php if (!empty($permisos['registrar_rol'])) : ?>
+                                <button class="btn btn_azul" id="incluir">Nuevo Rol</button>
+                            <?php endif; ?>
+                            <?php if (!empty($permisos['generar_rol'])) : ?>
+                                <button class="btn btn_verde" id="generar">Generar Reporte</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
                             <?php if (empty($registro)) : ?>
-                                    <div class="listado_vacio">
-                                        <p>No se encontraron registros</p>
-                                    </div>
-                                    <?php else :
-                                    foreach ($registro as $dato) : ?>
-                                        <div class="listado_contenedor_grupal" style="cursor: auto;">
-                                            <div class="listado_item">
-                                                <div class="listado_col_datos">
-                                                    <div class="listado_dato_grupo">
-                                                        <small>Nombre</small>
-                                                        <span><?= $dato['nombre_rol'] ?></span>
-                                                    </div>
-                                                    <div class="listado_dato_grupo">
-                                                        <small>Descripcion</small>
-                                                        <span><?= $dato['descripcion'] ?></span>
-                                                    </div>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros</p>
+                                </div>
+                                <?php else :
+                                foreach ($registro as $dato) : ?>
+                                    <div class="listado_contenedor_grupal" style="cursor: auto;">
+                                        <div class="listado_item">
+                                            <div class="listado_col_datos">
+                                                <div class="listado_dato_grupo">
+                                                    <small>Nombre</small>
+                                                    <span><?= $dato['nombre_rol'] ?></span>
                                                 </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Descripcion</small>
+                                                    <span><?= $dato['descripcion'] ?></span>
+                                                </div>
+                                            </div>
 
-                                                <div class="listado_col_acciones">
-                                                    <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                            <div class="listado_col_acciones">
+                                                <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
+                                                    <?php if (!empty($permisos['permisos_rol'])) : ?>
                                                         <button class="btn_t cbt_m" onclick="CargarPermisos(<?= $dato['id_rol'] ?>)" data-tippy-content="Permisos"><i class="fi fi-sr-user-permissions"></i></button>
-
-                                                        <?php //if ($permisos['modificar']) : ?>
-                                                            <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_rol'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
-                                                        <?php //endif; ?>
-
-                                                        <?php //if ($permisos['eliminar']) : ?>
-                                                            <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_rol'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
-                                                        <?php //endif; ?>
-                                                    </div>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($permisos['modificar_rol'])) : ?>
+                                                        <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_rol'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($permisos['eliminar_rol'])) : ?>
+                                                        <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_rol'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
-                                    <?php endforeach; ?>
-                                <?php endif;?>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>

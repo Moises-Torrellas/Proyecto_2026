@@ -50,27 +50,27 @@ function manejarSolicitudPremios($obj, $id_modulo, $bitacoraObj, array $permisos
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar premios.');
+                if (empty($permisos['ingresar_premio'])) throw new Exception('No tienes permisos para consultar premios.');
                 consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar premios.');
+                if (empty($permisos['modificar_premio'])) throw new Exception('No tienes permisos para modificar premios.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar premios.');
+                if (empty($permisos['registrar_premio'])) throw new Exception('No tienes permisos para registrar premios.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar premios.');
+                if (empty($permisos['eliminar_premio'])) throw new Exception('No tienes permisos para eliminar premios.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar premios.');
+                if (empty($permisos['modificar_premio'])) throw new Exception('No tienes permisos para modificar premios.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'generar':
-                if (!$permisos['reporte']) throw new Exception('No tienes permisos para generar un reporte de los premios.');
+                if (empty($permisos['generar_premio'])) throw new Exception('No tienes permisos para generar un reporte de los premios.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

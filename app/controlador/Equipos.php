@@ -10,7 +10,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_EQUIPOS_;
 
 // 3. Procesar permisos
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_equipo');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloEquipos';
@@ -66,14 +66,14 @@ function manejarSolicitudEquipos($obj, $id_modulo, $bitacoraObj, array $permisos
 
         // Enrutador de acciones (Se removió MultiConsulta)
         match ($accion) {
-            'consultar' => $permisos['ingresar'] ? consultar($obj, $permisos) : throw new Exception('No tienes permisos para consultar equipos.'),
-            'consultarAtletasModal' => ($permisos['ingresar'] || $permisos['modificar']) ? consultarAtletasModal($obj) : throw new Exception('No tienes permisos para consultar atletas.'),
+            'consultar' => !empty($permisos['ingresar_equipo']) ? consultar($obj, $permisos) : throw new Exception('No tienes permisos para consultar equipos.'),
+            'consultarAtletasModal' => (!empty($permisos['ingresar_equipo']) || !empty($permisos['modificar_equipo'])) ? consultarAtletasModal($obj) : throw new Exception('No tienes permisos para consultar atletas.'),
             'consultarAtletasAsignadosEquipo' => consultarAtletasAsignadosEquipo($obj),
-            'buscar'    => $permisos['modificar'] ? buscar($obj) : throw new Exception('No tienes permisos para modificar equipos.'),
-            'incluir'   => $permisos['registrar'] ? incluir($obj, $id_modulo, $bitacoraObj) : throw new Exception('No tienes permisos para registrar equipos.'),
-            'modificar' => $permisos['modificar'] ? modificar($obj, $id_modulo, $bitacoraObj) : throw new Exception('No tienes permisos para modificar equipos.'),
-            'eliminar'  => $permisos['eliminar'] ? eliminar($obj, $id_modulo, $bitacoraObj) : throw new Exception('No tienes permisos para eliminar equipos.'),
-            'generar'   => $permisos['reporte'] ? generar($obj, $id_modulo, $bitacoraObj) : throw new Exception('No tienes permisos para generar un reporte de los equipos.'),
+            'buscar'    => !empty($permisos['modificar_equipo']) ? buscar($obj) : throw new Exception('No tienes permisos para modificar equipos.'),
+            'incluir'   => !empty($permisos['registrar_equipo']) ? incluir($obj, $id_modulo, $bitacoraObj) : throw new Exception('No tienes permisos para registrar equipos.'),
+            'modificar' => !empty($permisos['modificar_equipo']) ? modificar($obj, $id_modulo, $bitacoraObj) : throw new Exception('No tienes permisos para modificar equipos.'),
+            'eliminar'  => !empty($permisos['eliminar_equipo']) ? eliminar($obj, $id_modulo, $bitacoraObj) : throw new Exception('No tienes permisos para eliminar equipos.'),
+            'generar'   => !empty($permisos['generar_equipo']) ? generar($obj, $id_modulo, $bitacoraObj) : throw new Exception('No tienes permisos para generar un reporte de los equipos.'),
             default     => throw new Exception('Acción no permitida: ' . $accion)
         };
 

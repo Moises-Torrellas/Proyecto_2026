@@ -10,7 +10,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_ROLES_;
 
 // 3. Procesar permisos (Ahora retorna un array en lugar de usar global)
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_rol');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloRoles';
@@ -56,32 +56,33 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
         // Validaciones de permisos centralizadas en el switch
         switch ($accion) {
             case 'consultar':
+                if (empty(['ingresar_rol'])) throw new Exception('No tiene permisos para consultar roles.');
                 consultarRolesData($obj, $permisos);
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tiene permisos para buscar roles.');
+                if (empty(['modificar_rol'])) throw new Exception('No tiene permisos para buscar roles.');
                 buscarRolesData($obj);
                 break;
 
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tiene permisos para incluir roles.');
+                if (empty(['registrar_rol'])) throw new Exception('No tiene permisos para incluir roles.');
                 incluirRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
 
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tiene permisos para modificar roles.');
+                if (empty(['modificar_rol'])) throw new Exception('No tiene permisos para modificar roles.');
                 modificarRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'guardar_permisos':
-                //if (!$permisos['modificar']) throw new Exception('No tiene permisos para modificar permisos.');
+                if (empty(['permisos_rol'])) throw new Exception('No tiene permisos para modificar permisos.');
                 guardarPermisosData($obj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tiene permisos para eliminar roles.');
+                if (empty(['eliminar_rol'])) throw new Exception('No tiene permisos para eliminar roles.');
                 eliminarRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'CargarPermisos':
-                //if (!$permisos['otros']) throw new Exception('No tiene permisos para modificar permisos.');
+                if (empty(['permisos_rol'])) throw new Exception('No tiene permisos para modificar permisos.');
                 CargarPermisos();
                 break;
 

@@ -285,7 +285,7 @@ class ModeloConceptos extends Conexion
         if (!empty($datos['monto']) && !preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $datos['monto'])) {
             throw new Exception('Monto inválido.');
         }
-        if (!empty($datos['frecuencia']) && !preg_match('/^[LMAU]$/', $datos['frecuencia'])) {
+        if (!empty($datos['frecuencia']) && !preg_match('/^[LMAUT]$/', $datos['frecuencia'])) {
             throw new Exception('Frecuencia inválido.');
         }
         if (!empty($datos['dias']) && !preg_match('/^[0-9]{1,3}$/', $datos['dias'])) {

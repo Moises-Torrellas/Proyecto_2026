@@ -72,6 +72,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (empty($permisos['registrar_pago'])) throw new Exception('No tienes permisos.');
                 registrar_vuelto($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'consultar_tasas_disponibles':
+                if (empty($permisos['ingresar_pago'])) throw new Exception('No tienes permisos.');
+                consultar_tasas_disponibles($obj);
+                break;
             /* case 'consultarTasa':
                 consultarTasa($obj);
                 break; */
@@ -91,22 +95,20 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 /**
  * --- LÓGICA DE ACCIONES ---
  */
-/* function consultarTasa($obj): void
+function consultar_tasas_disponibles($obj): void
 {
     try {
-        $moneda_base = isset($_POST['moneda_base']) ? strtoupper(trim($_POST['moneda_base'])) : 'USD';
-        $moneda_pago = isset($_POST['moneda_pago']) ? strtoupper(trim($_POST['moneda_pago'])) : 'VES';
-        
-        $objTasa = new ModeloTasaCambios();
-
-        $tasa = $objTasa->obtenerTasa($moneda_base, $moneda_pago);
-
-        echo json_encode(['accion' => 'consultarTasa', 'exito' => true, 'tasa' => $tasa]);
+        $datos = [
+            'accion' => 'consultar_tasas_disponibles',
+            'fecha' => $_POST['fecha'] ?? date('Y-m-d'),
+            'codigo_moneda' => $_POST['codigo_moneda'] ?? null
+        ];
+        $resultado = $obj->procesarDatos($datos);
+        echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('Pagos', $e->getMessage(), 'Controlador_consultarTasa');
-        echo json_encode(['accion' => 'consultarTasa', 'exito' => false, 'mensaje' => $e->getMessage()]);
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
-} */
+}
 
 function consultar($obj, $permisos): void
 {
@@ -162,7 +164,6 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             'metodo' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Método de pago inválido.'],
             'moneda' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Moneda inválida.'],
             'monto'  => ['regla' => '/^\d+(\.\d{1,2})?$/', 'mensaje' => 'Monto del pago inválido.'],
-            'tasa'   => ['regla' => '/^\d+(\.\d{1,4})?$/', 'mensaje' => 'Tasa de cambio inválida.'],
         ];
 
         $datos = [
@@ -170,7 +171,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             'metodo' => trim($_POST['metodo']),
             'moneda' => trim($_POST['moneda']),
             'monto'  => trim($_POST['monto']),
-            'tasa'   => trim($_POST['tasa']),
+            'tasa'   => isset($_POST['tasa']) ? trim($_POST['tasa']) : '1',
             'fecha'  => trim($_POST['fecha']),
         ];
 

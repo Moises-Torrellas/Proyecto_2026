@@ -13,7 +13,7 @@ require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_ESTADISTICAS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_estadistica');
 
 // 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloEstadisticas';
@@ -48,11 +48,11 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar las estadisticas.');
+                if (empty($permisos['ingresar_estadistica'])) throw new Exception('No tienes permisos para consultar las estadisticas.');
                 consultar($obj, $permisos);
                 break;
             case 'MultiConsulta':
-                if (!$permisos['ingresar']) throw new Exception('No tienes permisos para consultar las estadisticas.');
+                if (empty($permisos['ingresar_estadistica'])) throw new Exception('No tienes permisos para consultar las estadisticas.');
 
                 $modeloPart = new ModeloParticipaciones();
                 $modeloAtl = new ModeloAtletas();
@@ -68,19 +68,19 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
                 break;
             case 'buscar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar las estadisticas.');
+                if (empty($permisos['modificar_estadistica'])) throw new Exception('No tienes permisos para modificar las estadisticas.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (!$permisos['registrar']) throw new Exception('No tienes permisos para registrar las estadisticas.');
+                if (empty($permisos['registrar_estadistica'])) throw new Exception('No tienes permisos para registrar las estadisticas.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (!$permisos['modificar']) throw new Exception('No tienes permisos para modificar las estadisticas.');
+                if (empty($permisos['modificar_estadistica'])) throw new Exception('No tienes permisos para modificar las estadisticas.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('No tienes permisos para eliminar las estadisticas.');
+                if (empty($permisos['eliminar_estadistica'])) throw new Exception('No tienes permisos para eliminar las estadisticas.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
 

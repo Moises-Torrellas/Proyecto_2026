@@ -43,23 +43,23 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         switch ($accion) {
             case 'consultar':
-                if (empty($permisos['ingresar'])) throw new Exception('no tienes acceso al modulo.');
+                if (empty($permisos['ingresar_partici'])) throw new Exception('no tienes acceso al modulo.');
                 consultar($obj, $permisos);
                 break;
             case 'MultiConsulta':
-                if (empty($permisos['ingresar'])) throw new Exception('no tienes acceso al modulo.');
+                if (empty($permisos['ingresar_partici'])) throw new Exception('no tienes acceso al modulo.');
                 MultiConsulta();
                 break;
             case 'incluir':
-                if (empty($permisos['registrar'])) throw new Exception('No tienes permiso para realizar esta acción.');
+                if (empty($permisos['registrar_partici'])) throw new Exception('No tienes permiso para realizar esta acción.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'buscar':
-                if (empty($permisos['modificar'])) throw new Exception('No tienes permiso para realizar esta acción.');
+                if (empty($permisos['modificar_partici'])) throw new Exception('No tienes permiso para realizar esta acción.');
                 buscar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (empty($permisos['modificar'])) throw new Exception('No tienes permiso para realizar esta acción.');
+                if (empty($permisos['modificar_partici'])) throw new Exception('No tienes permiso para realizar esta acción.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             

@@ -10,6 +10,8 @@
 # Excepto el archivo.gitkeep
 !/backups/.gitkeep
 
+.env
+
 /public/img/usuarios/*
 /public/img/atletas/*
 /public/docs/*

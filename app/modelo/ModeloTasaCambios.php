@@ -11,6 +11,7 @@ class ModeloTasaCambios extends Conexion
     private $codigo_moneda;
     private $fecha;
     private $valor_tasa;
+    private $tipo;
 
     public function __construct()
     {
@@ -19,7 +20,8 @@ class ModeloTasaCambios extends Conexion
             'codigo_tasa' => 'codigo_tasa',
             'codigo_moneda' => 'codigo_moneda',
             'fecha' => 'fecha',
-            'valor_tasa' => 'valor_tasa'
+            'valor_tasa' => 'valor_tasa',
+            'tipo' => 'tipo'
         ];
         $this->llavePrimaria = 'codigo_tasa';
     }
@@ -34,12 +36,14 @@ class ModeloTasaCambios extends Conexion
         $this->codigo_moneda = $datos['codigo_moneda'] ?? null;
         $this->fecha = $datos['fecha'] ?? date('Y-m-d');
         $this->valor_tasa = $datos['valor_tasa'] ?? null;
+        $this->tipo = $datos['tipo'] ?? 'manual';
 
         $accion = $datos['accion'] ?? null;
 
         return match ($accion) {
             'registrar' => $this->Registrar(),
             'sincronizar' => $this->Sincronizar(),
+            'consultar_disponibles' => $this->ConsultarTasasDisponibles($datos),
             default => throw new Exception('La accion no es valida')
         };
     }
@@ -47,7 +51,7 @@ class ModeloTasaCambios extends Conexion
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT t.codigo_tasa, t.fecha, t.valor_tasa, m.nombre AS moneda, m.simbolo 
+            $sentencia = "SELECT t.codigo_tasa, t.fecha, t.valor_tasa, t.tipo, m.nombre AS moneda, m.simbolo 
                         FROM tasa_cambios t 
                         INNER JOIN monedas m ON t.codigo_moneda = m.codigo_moneda 
                         ORDER BY t.fecha DESC, t.codigo_tasa DESC";
@@ -60,6 +64,48 @@ class ModeloTasaCambios extends Conexion
         } catch (Exception $e) {
             logs('TasaCambios', $e->getMessage(), 'Modelo_Consultar');
             return array('accion' => 'error', 'mensaje' => 'Error al consultar el historial de tasas.');
+        } finally {
+            $conex = NULL;
+        }
+    }
+
+    public function ConsultarTasasDisponibles($datos): array
+    {
+        try {
+            $conex = $this->conex();
+            $fecha = $datos['fecha'] ?? date('Y-m-d');
+            $codigo_moneda = $datos['codigo_moneda'] ?? null;
+
+            if (!$codigo_moneda) {
+                return array('accion' => 'exito', 'datos' => []);
+            }
+
+            $sentencia = "SELECT t.codigo_tasa, t.fecha, t.valor_tasa, t.tipo, m.nombre AS moneda, m.simbolo 
+                        FROM tasa_cambios t 
+                        INNER JOIN monedas m ON t.codigo_moneda = m.codigo_moneda 
+                        WHERE t.fecha = :fecha AND t.codigo_moneda = :moneda
+                        ORDER BY t.codigo_tasa DESC";
+
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute([':fecha' => $fecha, ':moneda' => $codigo_moneda]);
+            $datosResult = $stmt->fetchAll();
+
+            // Si no hay tasas registradas para el día, intentamos obtener la del día (que genera una automática)
+            if (empty($datosResult)) {
+                try {
+                    $this->obtenerTasaDelDia($codigo_moneda);
+                    // Volver a consultar
+                    $stmt->execute([':fecha' => $fecha, ':moneda' => $codigo_moneda]);
+                    $datosResult = $stmt->fetchAll();
+                } catch (Exception $e) {
+                    // Ignorar si falla la API
+                }
+            }
+
+            return array('accion' => 'exito', 'datos' => $datosResult);
+        } catch (Exception $e) {
+            logs('TasaCambios', $e->getMessage(), 'Modelo_ConsultarTasasDisponibles');
+            return array('accion' => 'error', 'mensaje' => 'Error al consultar las tasas disponibles.');
         } finally {
             $conex = NULL;
         }
@@ -121,12 +167,13 @@ class ModeloTasaCambios extends Conexion
                 throw new Exception("La moneda seleccionada no existe.");
             }
 
-            // 2. Buscamos si ya hay un registro de esta moneda para la fecha seleccionada (hoy)
-            $sqlCheck = "SELECT codigo_tasa FROM tasa_cambios WHERE codigo_moneda = :moneda AND fecha = :fecha LIMIT 1";
+            // 2. Buscamos si ya hay un registro de esta moneda para la fecha seleccionada y el tipo
+            $sqlCheck = "SELECT codigo_tasa FROM tasa_cambios WHERE codigo_moneda = :moneda AND fecha = :fecha AND tipo = :tipo LIMIT 1";
             $stmtCheck = $conex->prepare($sqlCheck);
             $stmtCheck->execute([
                 ':moneda' => $this->codigo_moneda,
-                ':fecha' => $this->fecha
+                ':fecha' => $this->fecha,
+                ':tipo' => $this->tipo
             ]);
             $tasaExistente = $stmtCheck->fetchColumn();
 
@@ -142,11 +189,12 @@ class ModeloTasaCambios extends Conexion
                 $mensaje = 'Tasa de cambio actualizada exitosamente.';
             } else {
                 // No existe: Insertamos uno nuevo
-                $sentencia = "INSERT INTO tasa_cambios (codigo_moneda, fecha, valor_tasa) VALUES (:codigo_moneda, :fecha, :tasa)";
+                $sentencia = "INSERT INTO tasa_cambios (codigo_moneda, fecha, valor_tasa, tipo) VALUES (:codigo_moneda, :fecha, :tasa, :tipo)";
                 $stmt = $conex->prepare($sentencia);
                 $stmt->bindParam(':codigo_moneda', $this->codigo_moneda);
                 $stmt->bindParam(':fecha', $this->fecha);
                 $stmt->bindParam(':tasa', $this->valor_tasa);
+                $stmt->bindParam(':tipo', $this->tipo);
                 $stmt->execute();
 
                 $mensaje = 'Tasa de cambio registrada exitosamente.';
@@ -193,6 +241,7 @@ class ModeloTasaCambios extends Conexion
 
             $this->valor_tasa = $tasa;
             $this->fecha = date('Y-m-d');
+            $this->tipo = 'automatica';
 
             return $this->Registrar();
         } catch (Exception $e) {
@@ -229,6 +278,7 @@ class ModeloTasaCambios extends Conexion
                 $this->codigo_moneda = $codigo_moneda;
                 $this->fecha = $fecha_hoy;
                 $this->valor_tasa = $tasaApi;
+                $this->tipo = 'automatica';
                 $this->Registrar();
                 return (float) $tasaApi;
             }
@@ -248,7 +298,7 @@ class ModeloTasaCambios extends Conexion
             return 1.0000;
         }
 
-        $apiKey = defined('EXCHANGE_RATE_API_KEY') ? EXCHANGE_RATE_API_KEY : '';
+        $apiKey = defined('EXCHANGE_RATE_API_KEY') ? $_ENV['EXCHANGE_RATE_API_KEY'] : '';
         if (empty($apiKey)) {
             throw new Exception("La clave de API de tasas de cambio no está configurada.");
         }

@@ -396,14 +396,61 @@ function eliminar(id) {
     });
 }
 function GenerarCurriculum(id) {
-    confirmar('Si Confirma se generará el Curriculum del Atleta con sus premios y estadisticas actual', function (confirmado) {
+    confirmarConFecha('¿Generar el currículum del atleta a partir de una fecha específica?', function (confirmado, fechaSeleccionada) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'generarCurriculum');
             datos.append('id', id);
+            
+            // Agregamos la fecha al FormData que se enviará por AJAX
+            datos.append('fecha_inicio', fechaSeleccionada); 
+            
             enviaAjax(datos);
             abrirAlertaEspara('Generando Curriculum', 'Espere un momento');
         }
+    });
+}
+
+function confirmarConFecha(titulo, callback) {
+    Swal.fire({
+        icon: "question",
+        title: titulo,
+        // Agregamos un texto aclarando que es opcional
+        html: `
+            <div style="margin-top: 15px;">
+                <label for="fecha_curriculum" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Seleccione una fecha de inicio (Opcional):
+                </label>
+                <span style="font-size: 12px; color: #666; display: block; margin-bottom: 10px;">
+                    Si se deja en blanco, se incluirá todo el historial.
+                </span>
+                <input type="date" id="fecha_curriculum" class="swal2-input" style="max-width: 100%;">
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: "SI",
+        confirmButtonColor: "#00a200",
+        cancelButtonText: "NO",
+        cancelButtonColor: "#d30000",
+        customClass: {
+            popup: "mi-popup",
+            title: "mi-titulo",
+            content: "mi-contenido"
+        },
+        preConfirm: () => {
+            // Ya no bloqueamos si está vacío, simplemente capturamos lo que haya
+            const fecha = Swal.getPopup().querySelector('#fecha_curriculum').value;
+            return fecha; // Retornará la fecha seleccionada o un string vacío ("")
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            callback(true, result.value);
+        } else {
+            callback(false, null);
+        }
+    }).catch((e) => {
+        alert("Error en la alerta: " + e.name);
+        callback(false, null);
     });
 }
 function modificar(datos) {
