@@ -51,6 +51,29 @@ function crearConsulta(datos) {
         contenedor.append('<div class="listado_vacio"><p>No hay respaldos almacenados.</p></div>');
     } else {
         datos.forEach(dato => {
+            
+            // --- INICIO DE LA VALIDACIÓN DE ESTATUS ---
+            let accionesHtml = '';
+            
+            if (dato.estatus == 1) {
+                // Estatus Normal: Mostramos los botones de acción
+                accionesHtml = `
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn_t cbt_v" onclick="restaurar('${dato.nombre}')" title="Restaurar esta versión"><i class="fi fi-sr-time-past"></i></button>
+                        <button class="btn_t cbt_r" onclick="eliminar('${dato.nombre}')" title="Eliminar respaldo"><i class="fi fi-sr-trash-xmark"></i></button>
+                    </div>
+                `;
+            } else if (dato.estatus == 2) {
+                // Estatus Borrado: Ocultamos botones y mostramos un badge
+                // Le puse unos estilos en línea sencillos para que parezca una etiqueta roja
+                accionesHtml = `
+                    <span style="color: #dc3545; background-color: #ffe6e6; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold;">
+                        <i class="fi fi-sr-trash" style="margin-right: 4px;"></i> Borrado
+                    </span>
+                `;
+            }
+            // --- FIN DE LA VALIDACIÓN ---
+
             let registro = `
                 <div class="listado_contenedor_grupal">
                     <div class="listado_item">
@@ -74,10 +97,7 @@ function crearConsulta(datos) {
                         </div>
 
                         <div class="listado_col_acciones">
-                            <div style="display:flex; gap:5px;">
-                                <button class="btn_t cbt_v" onclick="restaurar('${dato.nombre}')" title="Restaurar esta versión"><i class="fi fi-sr-time-past"></i></button>
-                                <button class="btn_t cbt_r" onclick="eliminar('${dato.nombre}')" title="Eliminar respaldo"><i class="fi fi-sr-trash-xmark"></i></button>
-                            </div>
+                            ${accionesHtml}
                         </div>
                     </div>
                 </div>
