@@ -300,8 +300,8 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID       => 'El atleta no existe.',
-                ASSOCIATES       => 'No se puede eliminar el atleta porque tiene un cargo pendiente por pagar.',
-                ASSOCIATES.'1'   => 'No se puede eliminar el atleta porque tiene un equipamiento asignado.',
+                ASSOCIATES       => 'No se puede retirar el atleta porque tiene un cargo pendiente por pagar.',
+                ASSOCIATES.'1'   => 'No se puede retirar el atleta porque tiene un equipamiento asignado.',
                 DB_CONNECTION    => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en el retiro.'
             };

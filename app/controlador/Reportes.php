@@ -3,17 +3,10 @@
 use App\modelo\ModeloReportes;
 use App\servicios\GenerarReporteEstadistico;
 
-// 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
-
-// 2. Configuración del módulo (Corregido al ID de Representantes)
 $id_modulo = _MD_REPORTES_;
-
-// 3. Procesar permisos (Retorna el array de permisos)
 $permisos = procesarPermisos($id_modulo, '');
-
-// 4. Lógica de despacho (Router interno)
 $nombreClaseModelo = 'App\modelo\ModeloReportes';
 
 if (!class_exists($nombreClaseModelo)) {
@@ -41,14 +34,70 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
-        // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
-                consultar($obj);
+                $tipoReporte = $_POST['tipo_reporte'] ?? 'atletas';
+
+                if ($tipoReporte === 'recaudacion') {
+                    $filtros = [
+                        'moneda'      => $_POST['moneda'] ?? 'todos',
+                        'concepto'    => $_POST['concepto'] ?? 'todos',
+                        'fecha_desde' => $_POST['fecha_desde'] ?? '',
+                        'fecha_hasta' => $_POST['fecha_hasta'] ?? ''
+                    ];
+                    $respuesta = $obj->ConsultarRecaudacion($filtros);
+                } elseif ($tipoReporte === 'inventario') {
+                    $filtros = [
+                        'categoria_inventario' => $_POST['categoria_inventario'] ?? 'todos',
+                        'estado_fisico'        => $_POST['estado_fisico'] ?? 'todos',
+                        'fecha_desde'          => $_POST['fecha_desde'] ?? '',
+                        'fecha_hasta'          => $_POST['fecha_hasta'] ?? ''
+                    ];
+                    $respuesta = $obj->ConsultarInventario($filtros);
+                } elseif ($tipoReporte === 'rendimiento') { // Corregido a elseif continuo
+                    $filtros = [
+                        'torneo' => $_POST['torneo'] ?? 'todos',
+                        'atleta' => $_POST['atleta'] ?? 'todos' // Cambiado de equipo a atleta
+                    ];
+                    $respuesta = $obj->ConsultarRendimiento($filtros);
+                } else {
+                    $filtros = [
+                        'categoria'         => $_POST['categoria'] ?? 'todos',
+                        'genero'            => $_POST['genero'] ?? 'todos',
+                        'incluir_retirados' => $_POST['incluir_retirados'] ?? '1'
+                    ];
+                    $respuesta = $obj->Consultar($filtros);
+                }
+
+                $respuesta['tipo_reporte'] = $tipoReporte;
+                echo json_encode($respuesta);
                 break;
+
+            case 'MultiConsulta':
+                try {
+                    $categorias = $obj->ObtenerCategorias();
+                    $monedas = $obj->ObtenerMonedas();
+                    $conceptos = $obj->ObtenerConceptos();
+                    $categorias_cat = $obj->ObtenerCategoriasCatalogo();
+
+                    echo json_encode([
+                        'accion'              => 'MultiConsulta',
+                        'categorias'          => $categorias,
+                        'monedas'             => $monedas,
+                        'conceptos'           => $conceptos,
+                        'categorias_catalogo' => $categorias_cat,
+                        'torneos'             => $obj->ObtenerTorneos(),
+                        'atletas'             => $obj->ObtenerAtletas(), // Cambiado de equipos a atletas
+                    ]);
+                } catch (Exception $e) {
+                    echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+                }
+                break;
+
             case 'generar':
                 generar($id_modulo, $bitacoraObj);
                 break;
+
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -58,25 +107,44 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
     }
 }
 
-function consultar($obj){
-    $respuesta = $obj->Consultar();
-    echo json_encode($respuesta);
-}
-
 function generar($id_modulo, $bitacoraObj): void
 {
     try {
-        $nombreVista = 'AtletasCategorias';
-        $grafico = $_POST['grafico_img'];
+        // 1. Detectar el tipo de reporte enviado por el frontend
+        $tipoReporte = $_POST['tipo_reporte'] ?? 'atletas';
+
+        // 2. Elegir dinámicamente la plantilla estructurando de forma correcta con elseif
+        if ($tipoReporte === 'recaudacion') {
+            $nombreVista = 'IngresosRecaudacion';
+            $mensajeErrorEmpty = 'No se encontraron registros de recaudación para generar el reporte.';
+            $descripcionBitacora = "Generó un reporte estadístico de recaudación de ingresos.";
+        } elseif ($tipoReporte === 'inventario') {
+            $nombreVista = 'InventarioAsignaciones';
+            $mensajeErrorEmpty = 'No se encontraron registros de asignaciones para generar el reporte.';
+            $descripcionBitacora = "Generó un reporte estadístico de asignaciones de equipamientos.";
+        } elseif ($tipoReporte === 'rendimiento') {
+            $nombreVista = 'RendimientoAtletas';
+            $mensajeErrorEmpty = 'No se encontraron registros de rendimiento para el reporte.';
+            $descripcionBitacora = "Generó un reporte de rendimiento ofensivo y palmarés.";
+        } else {
+            $nombreVista = 'AtletasCategorias';
+            $mensajeErrorEmpty = 'No se encontraron representantes o atletas para hacer el reporte.';
+            $descripcionBitacora = "Generó un reporte estadístico de atletas.";
+        }
+
+        $grafico = $_POST['grafico_img'] ?? null;
         $datos = isset($_POST['datos_json']) ? json_decode($_POST['datos_json'], true) : [];
+
         if (empty($datos)) {
-            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron representantes para hacer el reporte.']);
+            echo json_encode(['accion' => 'error', 'mensaje' => $mensajeErrorEmpty]);
             exit();
         }
+
         $objG = new GenerarReporteEstadistico();
         $pdf = $objG->generarPDF($nombreVista, $datos, 'Reportes', $grafico);
+
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó un reporte estadisticos.");
+            registrarBitacora($bitacoraObj, $id_modulo, $descripcionBitacora);
         }
         echo json_encode($pdf);
     } catch (Exception $e) {

@@ -69,7 +69,7 @@ class ModeloEstadoFisico extends Conexion
                 $params[':nivel'] = $this->nivel_estado;
             }
 
-            $sentencia .= " ORDER BY nombre ASC";
+            $sentencia .= " ORDER BY id_estado ASC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);

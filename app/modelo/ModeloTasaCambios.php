@@ -298,7 +298,7 @@ class ModeloTasaCambios extends Conexion
             return 1.0000;
         }
 
-        $apiKey = defined('EXCHANGE_RATE_API_KEY') ? $_ENV['EXCHANGE_RATE_API_KEY'] : '';
+        $apiKey =  $_ENV['EXCHANGE_RATE_API_KEY'];
         if (empty($apiKey)) {
             throw new Exception("La clave de API de tasas de cambio no está configurada.");
         }

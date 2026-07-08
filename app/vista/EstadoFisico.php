@@ -8,6 +8,7 @@ if (isset($solo_lista) && $solo_lista === true) :
         foreach ($registro as $dato) :
             // Lógica de nivel convertida de JS a PHP
             $nivel = ($dato['nivel_estado'] == 1) ? "Buen Estado" : (($dato['nivel_estado'] == 2) ? "Desgaste Medio" : "Mal Estado");
+            $clase = ($dato['nivel_estado'] == 1) ? "estatus_v" : (($dato['nivel_estado'] == 2) ? "estatus_a" : "estatus_r");
         ?>
             <div class="listado_contenedor_grupal">
                 <div class="listado_item" onclick="toggleDetalles(this)">
@@ -18,7 +19,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Nivel De Condición</small>
-                            <span><?= $nivel ?></span>
+                            <span class="<?= $clase ?>"><?= $nivel ?></span>
                         </div>
                     </div>
 
@@ -84,6 +85,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 foreach ($registro as $dato) :
                                     // Lógica de nivel convertida de JS a PHP
                                     $nivel = ($dato['nivel_estado'] == 1) ? "Buen Estado" : (($dato['nivel_estado'] == 2) ? "Desgaste Medio" : "Mal Estado");
+                                    $clase = ($dato['nivel_estado'] == 1) ? "estatus_v" : (($dato['nivel_estado'] == 2) ? "estatus_a" : "estatus_r");
                                 ?>
                                     <div class="listado_contenedor_grupal">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
@@ -94,7 +96,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Nivel De Condición</small>
-                                                    <span><?= $nivel ?></span>
+                                                    <span class="<?= $clase ?>"><?= $nivel ?></span>
                                                 </div>
                                             </div>
 
@@ -142,9 +144,9 @@ if (isset($solo_lista) && $solo_lista === true) :
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="nivel_estado" id="nivel_estado" class="formulario select">
-                                    <option value="1" selected>Buen Estado (Disponible)</option>
-                                    <option value="2">Desgaste Medio (En Uso/Mantenimiento)</option>
-                                    <option value="3">Mal Estado (Inactivo/Dañado)</option>
+                                    <option value="1" selected>Buen Estado</option>
+                                    <option value="2">Desgaste Medio</option>
+                                    <option value="3">Mal Estado</option>
                                 </select>
                                 <label for="nivel_estado" class="titulo_formulario">Nivel de Condición</label>
                                 <span class="mensaje" id="nivel_estado_span"></span>
