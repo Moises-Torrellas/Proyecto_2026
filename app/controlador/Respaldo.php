@@ -4,7 +4,7 @@ use App\modelo\ModeloRespaldo;
 
 require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_RESPALDO_; 
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_respaldos');
 $nombreClaseModelo = 'App\modelo\ModeloRespaldo';
 
 if (!class_exists($nombreClaseModelo)) {
@@ -15,9 +15,9 @@ if (!class_exists($nombreClaseModelo)) {
 $objModelo = new ModeloRespaldo();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudRespaldo($objModelo, $id_modulo, $bitacora, $permisos);
+    manejarSolicitudRespaldo($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    registrarBitacora($bitacora , $id_modulo, 'Ingreso al Modulo');
+    registrarBitacora($bitacora ?? null , $id_modulo, 'Ingreso al Modulo');
     cargarVista($pagina);
 }
 
@@ -30,21 +30,21 @@ function manejarSolicitudRespaldo($obj, $id_modulo, $bitacoraObj, array $permiso
         }
 
         $accion = filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS);
-
         switch ($accion) {
             case 'consultar':
-                consultarBackups($obj);
+                if (empty($permisos['ingresar_respaldos'])) throw new Exception('Sin permisos para consultar respaldos.');
+                consultarBackups($obj, $permisos);
                 break;
             case 'generar':
-                if (!$permisos['registrar']) throw new Exception('Sin permisos para generar.');
+                if (empty($permisos['registrar_respaldo'])) throw new Exception('Sin permisos para generar.');
                 generarBackup($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'restaurar':
-                if (!$permisos['modificar']) throw new Exception('Sin permisos para restaurar.');
+                if (empty($permisos['modificar_respaldo'])) throw new Exception('Sin permisos para restaurar.');
                 restaurarBackup($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (!$permisos['eliminar']) throw new Exception('Sin permisos para eliminar.');
+                if (empty($permisos['eliminar_respaldo'])) throw new Exception('Sin permisos para eliminar.');
                 eliminarBackup($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
@@ -55,7 +55,7 @@ function manejarSolicitudRespaldo($obj, $id_modulo, $bitacoraObj, array $permiso
     }
 }
 
-function consultarBackups($obj): void {
+function consultarBackups($obj, $permisos): void {
     $respuesta = $obj->ProcesarDatos(['accion' => 'consultar']);
     if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
         $respuesta['mensaje'] = 'Error al leer el directorio de respaldos.';

@@ -165,7 +165,7 @@
                         <a type="button" href="Bitacora" class="opciones "><i class="opciones_i" data-lucide="notebook"></i> Bitacora</a>
                     <?php endif; ?>
 
-                    <?php if ($puedeVer(_MD_RESPALDO_, 'ingresar_respaldo')) : ?>
+                    <?php if ($puedeVer(_MD_RESPALDO_, 'ingresar_respaldos')) : ?>
                         <a type="button" href="Respaldo" class="opciones "><i class="opciones_i" data-lucide="server-cog"></i> Mantenimiento BD</a>
                     <?php endif; ?>
                 </li>
