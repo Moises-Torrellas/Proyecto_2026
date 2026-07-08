@@ -63,10 +63,14 @@
                             <?php foreach ($atleta['asignaciones'] as $asignacion) :
                                 // Lógica de estados restaurada a tu vista original
                                 $esActivo = false;
-                                if ($asignacion['estatus'] == 0) {
-                                    $textoEstatus = 'Inactiva / Devuelta';
-                                    $claseEstatus = 'estatus_v';
+                                if ($asignacion['estatus'] == 3) {
+                                    $textoEstatus = 'Anulado';
+                                    $claseEstatus = 'estatus_r';
                                     $claseFila = ''; 
+                                } else if($asignacion['estatus'] == 2){
+                                    $textoEstatus = 'Devuelto';
+                                    $claseEstatus = 'estatus_v';
+                                    $claseFila = '';
                                 } else {
                                     $textoEstatus = 'En Uso';
                                     $claseEstatus = 'estatus_a';
@@ -101,8 +105,8 @@
                                                 </button>
                                             <?php endif; ?>
                                             <?php if (!empty($permisos['anular_asignacion'])) : ?>
-                                                <button class="btn_t cbt_r" onclick="anular(<?= $asignacion['id_asignacion'] ?>, <?= $asignacion['codigo_articulo'] ?>)" data-tippy-content="Anular / Liberar Equipo">
-                                                    <i class="fi fi-sr-trash"></i>
+                                                <button class="btn_t cbt_r" onclick="anular(<?= $asignacion['id_asignacion'] ?>, <?= $asignacion['codigo_articulo'] ?>)" data-tippy-content="Anular">
+                                                    <i class="fi fi-sr-cross-circle"></i>
                                                 </button>
                                             <?php endif; ?>
                                         <?php endif; ?>
@@ -164,7 +168,7 @@
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-                            </div>
+                        </div>
                     </div>
                     <?php include('complementos/botonera.php'); ?>
                 </div>

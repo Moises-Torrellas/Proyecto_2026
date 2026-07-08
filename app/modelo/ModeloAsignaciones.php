@@ -268,7 +268,7 @@ class ModeloAsignaciones extends Conexion
             $stmtCheck->execute([$this->id_asignacion]);
             $codigo_articulo_actual = $stmtCheck->fetchColumn();
 
-            $stmtAnular = $conex->prepare("UPDATE asignaciones SET estatus = 0 WHERE id_asignacion = ?");
+            $stmtAnular = $conex->prepare("UPDATE asignaciones SET estatus = 3 WHERE id_asignacion = ?");
             $stmtAnular->execute([$this->id_asignacion]);
 
             if ($codigo_articulo_actual !== false) {

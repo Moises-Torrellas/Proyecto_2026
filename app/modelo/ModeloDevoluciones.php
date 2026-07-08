@@ -130,7 +130,7 @@ class ModeloDevoluciones extends Conexion
             $codigoArticulo = $stmtAsig->fetchColumn();
 
             if ($this->objAsignaciones) {
-                $this->objAsignaciones->CambiarEstatusAsignacion($this->id_asignacion, 0, $conex);
+                $this->objAsignaciones->CambiarEstatusAsignacion($this->id_asignacion, 2, $conex);
             } else {
                 $conex->prepare("UPDATE asignaciones SET estatus = 0 WHERE id_asignacion = ?")->execute([$this->id_asignacion]);
             }
