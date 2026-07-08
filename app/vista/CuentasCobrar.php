@@ -134,6 +134,12 @@
                                     <span class="<?= $claseEstatus ?>"><?= $textoEstatus ?></span>
                                 </div>
 
+                                <?php if ((int)$dato['multado'] === 1) : ?>
+                                    <div style="margin-top: 5px;">
+                                        <span class="estatus_r">Multado</span>
+                                    </div>
+                                <?php endif; ?>
+
                                 <div class="sub_item_montos">
                                     <span>Total: <strong><?= $dato['moneda_simbolo'] . ' ' . $dato['monto_total'] ?></strong></span>
                                     <span class="<?= ((float)$dato['monto_pendiente'] > 0 && !$anulado) ? 'texto_alerta' : '' ?>">
@@ -327,6 +333,12 @@
                         <div class="sub_item_centro">
                             <span class="<?= $claseEstatus ?>"><?= $textoEstatus ?></span>
                         </div>
+
+                        <?php if ((int)$dato['multado'] === 1) : ?>
+                            <div style="margin-top: 5px;">
+                                <span class="estatus_r">Multado</span>
+                            </div>
+                        <?php endif; ?>
 
                         <div class="sub_item_montos">
                             <span>Total: <strong><?= $dato['moneda_simbolo'] . ' ' . $dato['monto_total'] ?></strong></span>

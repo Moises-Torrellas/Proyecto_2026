@@ -28,25 +28,25 @@ class ModeloTorneos extends Conexion
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
-        
+
         $this->ValidarExpresiones($datos);
-        
+
         // Asignamos usando la nueva clave
-        $this->codigo_torneo = $datos['codigo_torneo'] ?? null; 
+        $this->codigo_torneo = $datos['codigo_torneo'] ?? null;
         $this->nombre = mb_strtoupper(trim($datos['nombre'] ?? ''), "UTF-8");
         $this->fecha_inicio = $datos['fecha_inicio'] ?? null;
         $this->fecha_fin = $datos['fecha_fin'] ?? null;
         $this->ubicacion = mb_convert_case(trim($datos['ubicacion'] ?? ''), MB_CASE_TITLE, "UTF-8");
-        $this->estatus = $datos['estatus'] ?? null; 
-        
+        $this->estatus = $datos['estatus'] ?? null;
+
         $accion = $datos['accion'] ?? null;
-        
+
         return match ($accion) {
             'incluir'   => $this->Incluir(),
             'eliminar'  => $this->Eliminar(),
             'buscar'    => $this->Buscar(),
             'modificar' => $this->Modificar(),
-            'consultar' => $this->Consultar(), 
+            'consultar' => $this->Consultar(),
             default => throw new Exception('La acción no es válida')
         };
     }
@@ -55,7 +55,7 @@ class ModeloTorneos extends Conexion
     {
         try {
             $conex = $this->conex();
-            $params = []; 
+            $params = [];
 
             $sentencia = "SELECT * FROM torneos WHERE 1=1";
 
@@ -65,9 +65,14 @@ class ModeloTorneos extends Conexion
                 $params[':f1'] = $p;
             }
 
-            if (!empty($this->nombre)) {    
+            if (!empty($this->nombre)) {
                 $sentencia .= " AND nombre LIKE :nombre";
                 $params[':nombre'] = trim($this->nombre) . "%";
+            }
+
+            if (isset($filtro['estatus'])) {
+                $sentencia .= " AND estatus = :estatus";
+                $params[':estatus'] = $filtro['estatus'];
             }
 
             $sentencia .= " ORDER BY codigo_torneo ASC"; // Ajustado a la BD
@@ -79,7 +84,7 @@ class ModeloTorneos extends Conexion
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Torneos', $e->getMessage(), 'Modelo_Consultar');
-            return array('accion' => 'error'); 
+            return array('accion' => 'error');
         } finally {
             $conex = NULL;
         }
@@ -89,7 +94,7 @@ class ModeloTorneos extends Conexion
     {
         try {
             $conex = $this->conex();
-            
+
             if ($this->verificarExistencia('nombre', $this->nombre, 'torneos', NULL)) {
                 throw new Exception('Ya existe un torneo registrado con este nombre.');
             }
@@ -110,19 +115,19 @@ class ModeloTorneos extends Conexion
         } finally {
             $conex = NULL;
         }
-    }                                              
+    }
 
     private function Modificar(): array
     {
         try {
             $conex = $this->conex();
-            
+
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->codigo_torneo, 'torneos', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'torneos', NULL)) {
                     throw new Exception('Ya existe otro torneo registrado con este nombre.');
                 }
             }
-            
+
             $sentencia = "UPDATE torneos SET 
             nombre = :nombre, 
             fecha_inicio = :fecha_inicio, 
@@ -130,7 +135,7 @@ class ModeloTorneos extends Conexion
             ubicacion = :ubicacion, 
             estatus = :estatus 
             WHERE codigo_torneo = :codigo_torneo"; // Ajustado a la BD
-            
+
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':fecha_inicio', $this->fecha_inicio);
@@ -158,7 +163,7 @@ class ModeloTorneos extends Conexion
             $stmt->bindParam(':codigo_torneo', $this->codigo_torneo); // Ajustado a la BD
             $stmt->execute();
             $datos = $stmt->fetchAll();
-            
+
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Torneos', $e->getMessage(), 'Modelo');
@@ -176,7 +181,7 @@ class ModeloTorneos extends Conexion
             if (!$this->verificarExistencia('codigo_torneo', $this->codigo_torneo, 'torneos', NULL)) {
                 throw new Exception('El torneo no existe.');
             }
-            
+
             // Si la FK en la tabla equipos se llama distinto, debes ajustarla aquí. Asumo que es codigo_torneo también.
             if ($this->verificarExistencia('codigo_torneo', $this->codigo_torneo, 'equipos', NULL)) {
                 throw new Exception('No se puede eliminar: el torneo tiene equipos o atletas asociados.');
@@ -186,7 +191,7 @@ class ModeloTorneos extends Conexion
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':codigo_torneo', $this->codigo_torneo); // Ajustado a la BD
             $stmt->execute();
-            
+
             return array('accion' => 'exito');
         } catch (Exception $e) {
             logs('Torneos', $e->getMessage(), 'Modelo_Eliminar');
@@ -194,7 +199,7 @@ class ModeloTorneos extends Conexion
         } finally {
             $conex = NULL;
         }
-    }   
+    }
 
     private function ValidarExpresiones(array $datos): void
     {
@@ -214,7 +219,7 @@ class ModeloTorneos extends Conexion
         if (!empty($datos['ubicacion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,#-]{5,150}$/u', $datos['ubicacion'])) {
             throw new Exception('Ubicación inválida.');
         }
-        if (!empty($datos['estatus']) && !preg_match('/^[0-9]$/', $datos['estatus'])) {
+        if (!empty($datos['estatus']) && !preg_match('/^[1-3]$/', $datos['estatus'])) {
             throw new Exception('Estatus inválido.');
         }
         if (!empty($datos['fecha_inicio']) && !empty($datos['fecha_fin']) && strtotime($datos['fecha_inicio']) > strtotime($datos['fecha_fin'])) {

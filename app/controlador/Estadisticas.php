@@ -57,7 +57,7 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 $modeloPart = new ModeloParticipaciones();
                 $modeloAtl = new ModeloAtletas();
 
-                $PartRespuesta = $modeloPart->Consultar();
+                $PartRespuesta = $modeloPart->Consultar(['estatus_torneo' => 3]);
                 $AtlRespuesta = $modeloAtl->ConsultarAtletas();
 
                 echo json_encode([

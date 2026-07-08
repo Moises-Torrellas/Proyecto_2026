@@ -62,11 +62,18 @@ class ModeloParticipaciones extends Conexion
         INNER JOIN equipos e ON p.codigo_equipo = e.codigo_equipo
         WHERE 1=1";
 
+            // Filtro de búsqueda (nombre)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . trim($filtro['filtro']) . "%";
                 $sentencia .= " AND (t.nombre LIKE :f1 OR e.nombre LIKE :f2)";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
+            }
+
+            // NUEVO: Filtro por estatus de torneo
+            if (isset($filtro['estatus_torneo'])) {
+                $sentencia .= " AND t.estatus = :estatus";
+                $params[':estatus'] = $filtro['estatus_torneo'];
             }
 
             $sentencia .= " ORDER BY t.codigo_torneo DESC, e.nombre ASC";
@@ -140,7 +147,7 @@ class ModeloParticipaciones extends Conexion
             $stmt = $conex->prepare($sql);
             $stmt->bindValue(':codigo_participacion', $this->codigo_participacion, PDO::PARAM_INT);
             $stmt->execute();
-            
+
             $resultado = $stmt->fetchAll();
 
             if (!$resultado) {
@@ -148,7 +155,6 @@ class ModeloParticipaciones extends Conexion
             }
 
             return array('accion' => 'buscar', 'datos' => $resultado);
-
         } catch (Exception $e) {
             logs('Participaciones', $e->getMessage(), 'Modelo_Buscar');
             return array('accion' => 'error', 'mensaje' => 'Error al buscar el registro');

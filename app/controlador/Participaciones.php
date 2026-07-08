@@ -84,7 +84,7 @@ function MultiConsulta(): void {
         $torneo = new ModeloTorneos();
         $equipo = new ModeloEquipos(); 
 
-        $respTorneo = $torneo->Consultar(); 
+        $respTorneo = $torneo->Consultar(['estatus' => 1]); 
         $respEquipo = $equipo->ConsultarEquipos(); 
 
         echo json_encode([

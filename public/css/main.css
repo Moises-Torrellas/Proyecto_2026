@@ -980,6 +980,13 @@ option {
     border-radius: 5px;
 }
 
+.estatus_g {
+    color: #464646 !important;
+    background-color: #46464630;
+    padding: 5px;
+    border-radius: 5px;
+}
+
 
 .tarjeta_resumen { width: 100%; border: 1px solid; border-radius: 8px; padding: 12px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; }
 .estado_peligro { border-color: #dc2626; background-color: var(--fondo-contraste); color: #dc2626; }

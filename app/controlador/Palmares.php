@@ -128,13 +128,15 @@ function MultiConsulta(): void
         $modeloAtletas = new ModeloAtletas();
         $modeloEquipos = new ModeloEquipos();
 
-        $torneos = $modeloTorneos->Consultar()['datos'] ?? [];
+        // PASO CLAVE: Pasamos el filtro ['estatus' => 3] al modelo de torneos
+        // (Asegúrate de que el método Consultar en ModeloTorneos acepte este filtro)
+        $torneos = $modeloTorneos->Consultar(['estatus' => 3])['datos'] ?? [];
+        
         $premios = $modeloPremios->Consultar()['datos'] ?? [];
-
         $atletasFiltrados = array_filter($modeloAtletas->Consultar()['datos'] ?? [], fn($item) => !isset($item['estatus']) || (int)$item['estatus'] === 1);
         $equiposFiltrados = array_filter($modeloEquipos->Consultar()['datos'] ?? [], fn($item) => !isset($item['estatus']) || (int)$item['estatus'] === 1);
 
-        // Formatear salida para no romper el frontend
+        // Formateo de datos
         $torneosArray = array_map(fn($t) => ['id_torneo' => $t['codigo_torneo'], 'nombre' => $t['nombre'], 'fecha_inicio' => $t['fecha_inicio']], $torneos);
         $premiosArray = array_map(fn($p) => ['id_premio' => $p['codigo_premio'], 'nombre' => $p['nombre'], 'tipo' => $p['tipo']], $premios);
         $atletasArray = array_map(fn($a) => ['id_atleta' => $a['id_atleta'], 'nombres' => $a['nombres'], 'apellidos' => $a['apellidos'], 'doc_identidad' => $a['doc_identidad']], $atletasFiltrados);

@@ -29,8 +29,19 @@
 
                         // LÓGICA DE ESTATUS DINÁMICO
                         $estatusTorneo = (int)$dato['torneo_estatus'];
-                        $textoEstatus = ($estatusTorneo === 1) ? 'Activo' : 'Inactivo';
-                        $claseEstatus = ($estatusTorneo === 1) ? 'estatus_v' : 'estatus_r'; 
+                        $textoEstatus = match ($estatusTorneo) {
+                            1 => 'Por disputarse',
+                            2 => 'En Curso',
+                            3 => 'Finalizado',
+                            default => 'Desconocido' // Es buena práctica tener un valor por defecto
+                        };
+
+                        $claseEstatus = match ($estatusTorneo) {
+                            1 => 'estatus_g',
+                            2 => 'estatus_v',
+                            3 => 'estatus_r',
+                            default => 'estatus_default'
+                        };
                             ?>
                 <div class="listado_contenedor_grupal">
 
@@ -74,13 +85,15 @@
                             <div class="lista_sub_items">
                             <?php endif;
                         $botonesAccion = '';
-                        if (!empty($permisos['modificar_partici'])) {
-                            // Ajustado a codigo_participacion
-                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
-                        }
-                        if (!empty($permisos['eliminar_partici'])) {
-                            // Ajustado a codigo_participacion
-                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
+                        if ($estatusTorneo === 1) {
+                            if (!empty($permisos['modificar_partici'])) {
+                                // Ajustado a codigo_participacion
+                                $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
+                            }
+                            if (!empty($permisos['eliminar_partici'])) {
+                                // Ajustado a codigo_participacion
+                                $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
+                            }
                         }
                             ?>
                             <div class="sub_item_fila">
@@ -143,116 +156,130 @@
                     </div>
                     <div class="contenedor_resultados">
                         <div id="resultadoconsulta" class="resultadoconsulta">
-<?php if (empty($registro)) : ?>
-        <div class="listado_vacio">
-            <p>No se encontraron registros</p>
-        </div>
-        <?php else :
-        $torneoActual = null;
-        $totalRegistros = count($registro);
-
-        foreach ($registro as $index => $dato) :
-            $idTorneo = $dato['codigo_torneo']; // Ajustado
-
-            if ($idTorneo !== $torneoActual) :
-                if ($torneoActual !== null) : ?>
-                    </div>
-                    </div>
-                    </div>
-                    </div> <?php endif;
-
-                        $torneoActual = $idTorneo;
-
-                        $idxAux = $index;
-                        $cantidadEquipos = 0;
-                        while (isset($registro[$idxAux]) && $registro[$idxAux]['codigo_torneo'] == $idTorneo) { // Ajustado
-                            $cantidadEquipos++;
-                            $idxAux++;
-                        }
-                        
-                        // LÓGICA DE ESTATUS DINÁMICO
-                        $estatusTorneo = (int)$dato['torneo_estatus'];
-                        $textoEstatus = ($estatusTorneo === 1) ? 'Activo' : 'Inactivo';
-                        $claseEstatus = ($estatusTorneo === 1) ? 'estatus_v' : 'estatus_r';
-                            ?>
-                <div class="listado_contenedor_grupal">
-
-                    <div class="listado_item" onclick="toggleDetalles(this)">
-                        <div class="listado_col_principal">
-                            <div class="listado_avatar_null"><i class="icon_con" data-lucide="trophy"></i></div>
-                            <div class="listado_info_base">
-                                <span class="listado_titulo"><?= htmlspecialchars($dato['torneo_nombre']) ?></span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo">
-                                <small>Estado</small>
-                                <span class="<?= $claseEstatus ?>"><?= $textoEstatus ?></span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Equipos Inscritos</small>
-                                <span><?= $cantidadEquipos ?> Equipo(s)</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
-                        </div>
-                    </div>
-
-                    <div class="listado_detalle_oculto">
-                        <div class="detalle_expandido_container" style="padding: 15px;">
-
-                            <div class="tarjeta_resumen estado_exito">
-                                <div class="tarjeta_icono"><i data-lucide="users"></i></div>
-                                <div class="tarjeta_texto">
-                                    <label>Resumen de Participación</label>
-                                    <span class="texto_resaltado">Total de Equipos: <?= $cantidadEquipos ?></span>
+                            <?php if (empty($registro)) : ?>
+                                <div class="listado_vacio">
+                                    <p>No se encontraron registros</p>
                                 </div>
-                            </div>
+                                <?php else :
+                                $torneoActual = null;
+                                $totalRegistros = count($registro);
 
-                            <hr class="separador_seccion">
+                                foreach ($registro as $index => $dato) :
+                                    $idTorneo = $dato['codigo_torneo']; // Ajustado
 
-                            <div class="lista_sub_items">
-                            <?php endif;
-                        $botonesAccion = '';
-                        if (!empty($permisos['modificar_partici'])) {
-                            // Ajustado a codigo_participacion
-                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
-                        }
-                        if (!empty($permisos['eliminar_partici'])) {
-                            // Ajustado a codigo_participacion
-                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
-                        }
-                            ?>
-                            <div class="sub_item_fila">
-                                <div class="sub_item_info">
-                                    <span class="sub_item_titulo"><?= htmlspecialchars($dato['equipo_nombre']) ?></span>
-                                </div>
-
-                                <div class="sub_item_centro">
-                                    <span class="estatus_v">Inscrito</span>
-                                </div>
-
-                                <div class="sub_item_acciones">
-                                    <?= $botonesAccion ?>
-                                </div>
-                            </div>
-
-                            <?php if ($index === $totalRegistros - 1) : ?>
-                            </div>
+                                    if ($idTorneo !== $torneoActual) :
+                                        if ($torneoActual !== null) : ?>
                         </div>
                     </div>
-                </div> <?php endif; ?>
+                </div>
+            </div> <?php endif;
 
-        <?php endforeach; ?>
-    <?php endif;?>
-                        </div>
+                                        $torneoActual = $idTorneo;
+
+                                        $idxAux = $index;
+                                        $cantidadEquipos = 0;
+                                        while (isset($registro[$idxAux]) && $registro[$idxAux]['codigo_torneo'] == $idTorneo) { // Ajustado
+                                            $cantidadEquipos++;
+                                            $idxAux++;
+                                        }
+
+                                        // LÓGICA DE ESTATUS DINÁMICO
+                                        $estatusTorneo = (int)$dato['torneo_estatus'];
+                                        $textoEstatus = match ($estatusTorneo) {
+                                            1 => 'Por disputarse',
+                                            2 => 'En Curso',
+                                            3 => 'Finalizado',
+                                            default => 'Desconocido' // Es buena práctica tener un valor por defecto
+                                        };
+
+                                        $claseEstatus = match ($estatusTorneo) {
+                                            1 => 'estatus_g',
+                                            2 => 'estatus_v',
+                                            3 => 'estatus_r',
+                                            default => 'estatus_default'
+                                        };
+                    ?>
+        <div class="listado_contenedor_grupal">
+
+            <div class="listado_item" onclick="toggleDetalles(this)">
+                <div class="listado_col_principal">
+                    <div class="listado_avatar_null"><i class="icon_con" data-lucide="trophy"></i></div>
+                    <div class="listado_info_base">
+                        <span class="listado_titulo"><?= htmlspecialchars($dato['torneo_nombre']) ?></span>
                     </div>
-                    <?php include('complementos/botonera.php'); ?>
+                </div>
+
+                <div class="listado_col_datos">
+                    <div class="listado_dato_grupo">
+                        <small>Estado</small>
+                        <span class="<?= $claseEstatus ?>"><?= $textoEstatus ?></span>
+                    </div>
+                    <div class="listado_dato_grupo">
+                        <small>Equipos Inscritos</small>
+                        <span><?= $cantidadEquipos ?> Equipo(s)</span>
+                    </div>
+                </div>
+
+                <div class="listado_col_acciones">
+                    <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                 </div>
             </div>
+
+            <div class="listado_detalle_oculto">
+                <div class="detalle_expandido_container" style="padding: 15px;">
+
+                    <div class="tarjeta_resumen estado_exito">
+                        <div class="tarjeta_icono"><i data-lucide="users"></i></div>
+                        <div class="tarjeta_texto">
+                            <label>Resumen de Participación</label>
+                            <span class="texto_resaltado">Total de Equipos: <?= $cantidadEquipos ?></span>
+                        </div>
+                    </div>
+
+                    <hr class="separador_seccion">
+
+                    <div class="lista_sub_items">
+                    <?php endif;
+                                    $botonesAccion = '';
+                                    if ($estatusTorneo === 1) {
+                                        if (!empty($permisos['modificar_partici'])) {
+                                            // Ajustado a codigo_participacion
+                                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
+                                        }
+                                        if (!empty($permisos['eliminar_partici'])) {
+                                            // Ajustado a codigo_participacion
+                                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
+                                        }
+                                    }
+
+                    ?>
+                    <div class="sub_item_fila">
+                        <div class="sub_item_info">
+                            <span class="sub_item_titulo"><?= htmlspecialchars($dato['equipo_nombre']) ?></span>
+                        </div>
+
+                        <div class="sub_item_centro">
+                            <span class="estatus_v">Inscrito</span>
+                        </div>
+
+                        <div class="sub_item_acciones">
+                            <?= $botonesAccion ?>
+                        </div>
+                    </div>
+
+                    <?php if ($index === $totalRegistros - 1) : ?>
+                    </div>
+                </div>
+            </div>
+        </div> <?php endif; ?>
+
+<?php endforeach; ?>
+<?php endif; ?>
+        </div>
+        </div>
+        <?php include('complementos/botonera.php'); ?>
+        </div>
+        </div>
         </div>
     </section>
     <section class="contenedor_modal" id="contenedor_modal">
