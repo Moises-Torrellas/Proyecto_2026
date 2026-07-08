@@ -8,13 +8,14 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Exception;
 use PDO;
-use App\modelo\ModeloBase;
+use App\modelo\Conexion;
 use App\modelo\ModeloAtletas;
 use App\modelo\ModeloTorneos;
 use App\modelo\ModeloCuentasCobrar;
 use App\modelo\ModeloNotificaciones;
 
-class verificarEvento extends ModeloBase {
+
+class verificarEvento extends Conexion {
     private $db;
     private $notificacion;
 
