@@ -25,12 +25,10 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                     <div class="listado_col_acciones">
                         <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                            <?php if (!empty($permisos['modificar_estfisico'])) : // Asegúrate de que este sea tu permiso real 
-                            ?>
+                            <?php if (!empty($permisos['modificar_estfisico'])) : ?>
                                 <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_estado'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                             <?php endif; ?>
-                            <?php if (!empty($permisos['eliminar_estfisico'])) : // Asegúrate de que este sea tu permiso real 
-                            ?>
+                            <?php if (!empty($permisos['eliminar_estfisico'])) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_estado'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
                         </div>
@@ -83,7 +81,6 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 </div>
                                 <?php else :
                                 foreach ($registro as $dato) :
-                                    // Lógica de nivel convertida de JS a PHP
                                     $nivel = ($dato['nivel_estado'] == 1) ? "Buen Estado" : (($dato['nivel_estado'] == 2) ? "Desgaste Medio" : "Mal Estado");
                                     $clase = ($dato['nivel_estado'] == 1) ? "estatus_v" : (($dato['nivel_estado'] == 2) ? "estatus_a" : "estatus_r");
                                 ?>
@@ -102,12 +99,10 @@ if (isset($solo_lista) && $solo_lista === true) :
 
                                             <div class="listado_col_acciones">
                                                 <div onclick="event.stopPropagation();" style="display:flex; gap:5px;">
-                                                    <?php if (!empty($permisos['modificar_estfisico'])) : // Asegúrate de que este sea tu permiso real 
-                                                    ?>
+                                                    <?php if (!empty($permisos['modificar_estfisico'])) : ?>
                                                         <button id="cbt_v" class="btn_t cbt_v" onclick="buscar(<?= $dato['id_estado'] ?>)" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button>
                                                     <?php endif; ?>
-                                                    <?php if (!empty($permisos['eliminar_estfisico'])) : // Asegúrate de que este sea tu permiso real 
-                                                    ?>
+                                                    <?php if (!empty($permisos['eliminar_estfisico'])) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['id_estado'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                     <?php endif; ?>
                                                 </div>
@@ -134,7 +129,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <input type="hidden" id="id_estado" name="id_estado">
 
                     <div class="row">
-                        <div class="colum">
+                        <div class="colum" id="contenedor_nombre">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="nombre" name="nombre">
                                 <label for="nombre" class="titulo_formulario">Nombre</label>
@@ -144,7 +139,8 @@ if (isset($solo_lista) && $solo_lista === true) :
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="nivel_estado" id="nivel_estado" class="formulario select">
-                                    <option value="1" selected>Buen Estado</option>
+                                    <option value="" id="opcion_default" selected disabled>Seleccione...</option>
+                                    <option value="1">Buen Estado</option>
                                     <option value="2">Desgaste Medio</option>
                                     <option value="3">Mal Estado</option>
                                 </select>

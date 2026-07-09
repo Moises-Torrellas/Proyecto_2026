@@ -69,10 +69,13 @@
                         
                         <div class="lista_sub_items">
                             <?php foreach ($grupo['piezas'] as $pieza) { 
+                                // --- LÓGICA DE ESTATUS ACTUALIZADA ---
                                 if ($pieza['estatus'] == 1) {
                                     $clase = 'estatus_v'; $txt = 'Disponible';
                                 } elseif ($pieza['estatus'] == 2) {
                                     $clase = 'estatus_a'; $txt = 'En Uso';
+                                } elseif ($pieza['estatus'] == 3) {
+                                    $clase = 'estatus_r'; $txt = 'Retirado';
                                 } else {
                                     $clase = 'estatus_r'; $txt = 'Inactivo';
                                 }
@@ -104,10 +107,17 @@
                                                 <i class="fi fi-sr-pencil"></i>
                                             </button>
                                         <?php } ?>
+                                        
                                         <?php if (!empty($permisos['eliminar_articulo'])) { ?>
-                                            <button class="btn_t cbt_r" onclick="eliminar(<?= $pieza['codigo_articulo'] ?>)" data-tippy-content="Eliminar">
-                                                <i class="fi fi-sr-trash"></i>
-                                            </button>
+                                            <?php if ($pieza['estatus'] == 1) { ?>
+                                                <button class="btn_t cbt_r" onclick="eliminar(<?= $pieza['codigo_articulo'] ?>)" data-tippy-content="Retirar Artículo">
+                                                    <i class="fi fi-sr-trash"></i>
+                                                </button>
+                                            <?php } elseif ($pieza['estatus'] == 3) { ?>
+                                                <button class="btn_t cbt_a" onclick="reincorporar(<?= $pieza['codigo_articulo'] ?>)" data-tippy-content="Reincorporar Artículo">
+                                                    <i class="fi fi-br-rotate-right"></i>
+                                                </button>
+                                            <?php } ?>
                                         <?php } ?>
                                     </div>
                                 </div>
