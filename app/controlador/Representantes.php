@@ -121,7 +121,6 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        // Validación de vacíos únicamente
         validar_requeridos(['nacionalidad', 'cedula', 'nombre', 'apellido', 'telefono', 'direccion']);
 
         $datos = [
@@ -136,7 +135,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
 
-        $datos_previos = $resultado['datos_previos'] ?? '';
+        $datos_previos = '';
         $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
@@ -176,13 +175,14 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'accion'       => 'modificar'
         ];
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
         $resultado = $obj->procesarDatos($datos);
 
-        $datos_previos = $resultado['datos_previos'] ?? '';
+        $datos_previos = json_encode($consultar_datos_previos['datos']);
         $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó al representante: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido'], $datos_previos, $datos_nuevos);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó al representante: " . $_POST['cedula'] . ' - ' . $_POST['nombre'] . ' ' . $_POST['apellido'], $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Representante modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -210,14 +210,15 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'id' => $_POST['id'],
             'accion' => 'eliminar'
         ];
-
+        
+        $consultar_datos_previos= $obj->Buscar($_POST['id']);
         $resultado = $obj->procesarDatos($datos);
 
-        $datos_previos = $resultado['datos_previos'] ?? '';
-        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+        $datos_previos = json_encode($consultar_datos_previos['datos']);
+        $datos_nuevos = '';
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó al representante: " . $_POST['id'], $datos_previos, $datos_nuevos);
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó al representante: " .$datos_previos['cedula']. ' - '.$consultar_datos_previos['datos']['nombre'].' '.$consultar_datos_previos['datos']['apellido'] , $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Representante eliminado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {

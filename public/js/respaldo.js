@@ -45,18 +45,22 @@ function eliminar(archivo) {
 
 function crearConsulta(datos) {
     const contenedor = $('#resultadoconsulta');
+
     contenedor.empty();
 
     if (datos.length === 0) {
         contenedor.append('<div class="listado_vacio"><p>No hay respaldos almacenados.</p></div>');
     } else {
         datos.forEach(dato => {
-            
+
             // --- INICIO DE LA VALIDACIÓN DE ESTATUS ---
             let accionesHtml = '';
-            
+            let estatus = "";
+            let clase = "";
+
             if (dato.estatus == 1) {
-                // Estatus Normal: Mostramos los botones de acción
+                estatus = "Guardado";
+                clase = "estatus_v";
                 accionesHtml = `
                     <div style="display:flex; gap:5px;">
                         <button class="btn_t cbt_v" onclick="restaurar('${dato.nombre}')" title="Restaurar esta versión"><i class="fi fi-sr-time-past"></i></button>
@@ -64,13 +68,9 @@ function crearConsulta(datos) {
                     </div>
                 `;
             } else if (dato.estatus == 2) {
-                // Estatus Borrado: Ocultamos botones y mostramos un badge
-                // Le puse unos estilos en línea sencillos para que parezca una etiqueta roja
-                accionesHtml = `
-                    <span style="color: #dc3545; background-color: #ffe6e6; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold;">
-                        <i class="fi fi-sr-trash" style="margin-right: 4px;"></i> Borrado
-                    </span>
-                `;
+                estatus = "Eliminado";
+                clase = "estatus_r";
+                accionesHtml = ``;
             }
             // --- FIN DE LA VALIDACIÓN ---
 
@@ -94,6 +94,10 @@ function crearConsulta(datos) {
                                 <small>Peso</small>
                                 <span>${dato.tamano}</span>
                             </div>
+                            <div class="listado_dato_grupo">
+                                <small>Estatus</small>
+                                <span class="${clase}">${estatus}</span>
+                            </div>
                         </div>
 
                         <div class="listado_col_acciones">
@@ -112,7 +116,7 @@ function enviaAjaxRespaldo(datos) {
 
     $.ajax({
         async: true,
-        url: "", 
+        url: "",
         type: "POST",
         contentType: false,
         data: datos,
@@ -121,16 +125,16 @@ function enviaAjaxRespaldo(datos) {
         beforeSend: function (request) {
             request.setRequestHeader("X-CSRF-TOKEN", token);
         },
-        timeout: 30000, 
+        timeout: 30000,
         success: function (respuesta) {
             try {
                 var lee = JSON.parse(respuesta);
-                
+
                 if (lee.accion == "consultar") {
                     crearConsulta(lee.datos);
-                } 
+                }
                 else if (lee.accion == "generar") {
-                    cerrarModal(); 
+                    cerrarModal();
                     consultar();
                     muestraMensaje("success", 3000, "Éxito", lee.mensaje);
                 }
@@ -138,7 +142,7 @@ function enviaAjaxRespaldo(datos) {
                     cerrarModal();
                     consultar();
                     muestraMensaje("success", 3000, "Proceso Completado", lee.mensaje);
-                } 
+                }
                 else if (lee.accion == "error") {
                     cerrarModal();
                     muestraMensaje("error", 4000, "Error del Sistema", lee.mensaje);
