@@ -5,7 +5,7 @@ use App\modelo\ModeloConceptos;
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
-// 2. Configuración del módulo (Corregido al ID de Representantes)
+// 2. Configuración del módulo
 $id_modulo = _MD_CONCEPTOS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
@@ -76,6 +76,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
             case 'estatus':
                 if (empty($permisos['bloquear_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de pago.');
                 cambiarEstatus($obj, $id_modulo, $bitacoraObj);
+                break;
+            case 'generar':
+                if (empty($permisos['generar_concepto'])) throw new Exception('No tienes permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
                 break;
 
             default:
@@ -252,6 +256,73 @@ function cambiarEstatus($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Concepto', $e->getMessage(), 'Controlador_Estatus');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $conex = $obj->conex();
+        $nombre = trim($_POST['nombre'] ?? '');
+        $frecuencia = trim($_POST['frecuencia'] ?? '');
+        
+        $sql = "SELECT * FROM conceptos WHERE 1=1";
+        $params = [];
+
+        if (!empty($nombre)) {
+            $sql .= " AND nombre LIKE :nombre";
+            $params[':nombre'] = "%" . $nombre . "%";
+        }
+
+        if (!empty($frecuencia)) {
+            $sql .= " AND frecuencia = :frecuencia";
+            $params[':frecuencia'] = $frecuencia;
+        }
+        
+        $sql .= " ORDER BY codigo_concepto ASC";
+        
+        $stmt = $conex->prepare($sql);
+        $stmt->execute($params);
+        $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 2. Validación estricta
+        if (empty($datos)) {
+            echo json_encode([
+                'accion' => 'error', 
+                'mensaje' => 'No se encontraron conceptos de pago con ese nombre y frecuencia.'
+            ]);
+            return;
+        }
+
+        registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Conceptos");
+
+        $fecha_reporte = date('d/m/Y h:i A');
+        $usuario = $_SESSION['nombre_usuario'] ?? 'Administrador';
+        
+        $logo = __DIR__ . '/../../public/img/logo.png'; 
+        $logo_footer = __DIR__ . '/../../public/img/logo_footer.png';
+
+        // 3. Incluimos la vista del PDF
+        ob_start();
+        include(__DIR__ . '/../vista/reportes/R_Conceptos.php'); 
+        $html = ob_get_clean();
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $pdfBase64 = base64_encode($dompdf->output());
+        
+        echo json_encode([
+            'accion' => 'generar', 
+            'mensaje' => 'Reporte procesado con éxito.',
+            'pdf' => $pdfBase64
+        ]);
+
+    } catch (Exception $e) {
+        logs('Conceptos', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

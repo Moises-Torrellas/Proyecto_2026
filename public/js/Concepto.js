@@ -1,10 +1,12 @@
 $('#busqueda').off('keyup').on('keyup', busqueda);
 let timerBusqueda;
+
 function consultar() {
     let datos = new FormData();
     datos.append('accion', 'consultar');
     enviaAjax(datos);
 }
+
 function busqueda() {
     clearTimeout(timerBusqueda);
     timerBusqueda = setTimeout(function () {
@@ -12,22 +14,20 @@ function busqueda() {
         let datos = new FormData();
         datos.append('accion', 'consultar');
         datos.append('filtro', valorBusqueda);
-
         enviaAjax(datos);
     }, 500);
 }
+
 $(document).ready(function () {
     inicializarPaginador();
-    // Validación de Nombre
-    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
-
-    // Validación de monto
-    Validacion("monto", /^[0-9\b\,]*$/, /^[0-9]+(.[0-9]{1,2})?$/, "Solo números con hasta dos decimales (solo comas)", "proceso");
     
+    // Validaciones
+    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
+    Validacion("monto", /^[0-9\b\,]*$/, /^[0-9]+(.[0-9]{1,2})?$/, "Solo números con hasta dos decimales (solo comas)", "proceso");
     Validacion("dias", /^[0-9]*$/, /^[0-9]{1,3}$/, "Solo números hasta tres digitos", "proceso");
 
     $('#proceso').on('click', function () {
-        accion = $(this).data("accion");
+        let accion = $(this).data("accion");
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
                 confirmar('¿Está seguro que quiere registrar este concepto de pago?', function (confirmado) {
@@ -51,9 +51,10 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
+            confirmar('¿Está seguro que quiere generar un reporte con este criterio?', function (confirmado) {
                 if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento')
+                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                    // Enviamos todo el formulario (incluye el nombre y la frecuencia seleccionada)
                     var datos = new FormData($('#f')[0]);
                     datos.append('accion', 'generar');
                     enviaAjax(datos);
@@ -64,7 +65,6 @@ $(document).ready(function () {
 
     $("#incluir").on("click", function () {
         limpia();
-
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Concepto");
         $("#titulo_modal").text("Registrar Concepto de Pago");
@@ -73,7 +73,6 @@ $(document).ready(function () {
 
     $("#generar").on("click", function () {
         limpia();
-
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
@@ -82,48 +81,19 @@ $(document).ready(function () {
 
     $('#ayuda').on('click', function () {
         const pasos = [
-            {
-                element: '#busqueda',
-                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar el Concepto de Pago que necesites.', position: 'bottom' }
-            },
-            {
-                element: '#incluir',
-                popover: { title: 'Nuevo Concepto de pago', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevo Concepto de Pago', position: 'bottom' }
-            },
-            {
-                element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
-            },
-            {
-                element: '#resultadoconsulta',
-                popover: { title: 'Conceptos de Pago Registrados', description: 'Aqui se mostraran todos los Conceptos de pago registrados.', position: 'top' }
-            },
-            {
-                element: '#cbt_v',
-                popover: { title: 'Modificar Concepto de Pago', description: 'Si pulsa aqui se abrira un modal para modificar el Conceptos de Pago seleccionado.', position: 'left' }
-            },
-            {
-                element: '#cbt_r',
-                popover: { title: 'Eliminar Concepto de Pago', description: 'Si pulsa aqui eliminara el Concepto de Pago seleccionado.', position: 'left' }
-            },
-            {
-                element: '#rowsPerPage',
-                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
-            },
-            {
-                element: '#botonera',
-                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
-            },
-            {
-                element: '#cantidad',
-                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de Concepto de Pagos cargados.', position: 'top' }
-            },
+            { element: '#busqueda', popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar el Concepto de Pago que necesites.', position: 'bottom' } },
+            { element: '#incluir', popover: { title: 'Nuevo Concepto de pago', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevo Concepto de Pago', position: 'bottom' } },
+            { element: '#generar', popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' } },
+            { element: '#resultadoconsulta', popover: { title: 'Conceptos de Pago Registrados', description: 'Aqui se mostraran todos los Conceptos de pago registrados.', position: 'top' } },
+            { element: '#cbt_v', popover: { title: 'Modificar Concepto de Pago', description: 'Si pulsa aqui se abrira un modal para modificar el Conceptos de Pago seleccionado.', position: 'left' } },
+            { element: '#cbt_r', popover: { title: 'Eliminar Concepto de Pago', description: 'Si pulsa aqui eliminara el Concepto de Pago seleccionado.', position: 'left' } },
+            { element: '#rowsPerPage', popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' } },
+            { element: '#botonera', popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' } },
+            { element: '#cantidad', popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de Concepto de Pagos cargados.', position: 'top' } },
         ];
-
         const driver = iniciarTourConPasos(pasos);
         driver.start();
     });
-
 });
 
 function buscar(id) {
@@ -132,6 +102,7 @@ function buscar(id) {
     datos.append('id', id);
     enviaAjax(datos);
 }
+
 function eliminar(id) {
     confirmar('¿Está seguro que quiere eliminar este proceso de pago?', function (confirmado) {
         if (confirmado) {
@@ -142,6 +113,7 @@ function eliminar(id) {
         }
     });
 }
+
 function cambiarEstatus(id, estadoActual) {
     let accionTexto = (estadoActual == 1) ? 'desactivar' : 'activar';
     confirmar(`¿Está seguro que desea ${accionTexto} este concepto de pago?`, function (confirmado) {
@@ -156,25 +128,21 @@ function cambiarEstatus(id, estadoActual) {
 }
 
 function validarEnvio(proceso) {
-    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-        $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres", true)) {
+    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
         return false;
     }
-    else if (validarkeyup(/^[0-9]+(.[0-9]{1,2})?$/, $('#monto'),
-        $("#monto_spam"), "Solo números con hasta dos decimales (solo comas)", true)) {
+    else if (validarkeyup(/^[0-9]+(.[0-9]{1,2})?$/, $('#monto'), $("#monto_spam"), "Solo números con hasta dos decimales (solo comas)", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar un monto válido");
         return false;
     }
     else if ($('#frecuencia').val() == "" || $('#frecuencia').val() == null) {
         muestraMensaje("error", 2000, "Error", "Debe elegir la frecuencia");
         return false;
-    }else if (validarkeyup(/^[0-9]{0,10}$/, $('#dias'),
-        $("#dias_spam"), "Solo números de hasta 3 digitos.", true)) {
+    } else if (validarkeyup(/^[0-9]{0,10}$/, $('#dias'), $("#dias_spam"), "Solo números de hasta 3 digitos.", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar un numero de dias valido");
         return false;
     }
-
     return true;
 }
 
@@ -189,6 +157,7 @@ function modificar(datos) {
     $('#dias').val(datos[0].dias_gracia);
     abrirModal();
 }
+
 function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
     contenedor.html(htmlRecibido);
@@ -222,6 +191,7 @@ function enviaAjax(datos) {
                 if (lee.accion == "incluir") {
                     consultar();
                     limpia();
+                    cerrarModal();
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } else if (lee.accion == "estatus") {
                     consultar();
@@ -233,26 +203,41 @@ function enviaAjax(datos) {
                     consultar();
                     limpia();
                     cerrarModal();
-
                     muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
-                }
-                else if (lee.accion == "error") {
+                } else if (lee.accion == "generar") {
+                    if (typeof Swal !== 'undefined') Swal.close(); 
+                    
+                    if (lee.pdf) {
+                        const byteCharacters = atob(lee.pdf);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const file = new Blob([byteArray], { type: 'application/pdf' });
+                        
+                        const fileURL = URL.createObjectURL(file);
+                        window.open(fileURL, '_blank');
+                        
+                        muestraMensaje("success", 2000, "Éxito", "Reporte generado correctamente");
+                    }
+                } else if (lee.accion == "error") {
+                    if (typeof Swal !== 'undefined') Swal.close(); 
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }
             } catch (e) {
+                if (typeof Swal !== 'undefined') Swal.close(); 
                 alert("Error en JSON " + e.name);
             }
         },
-
-
         error: function (request, status, err) {
-
+            if (typeof Swal !== 'undefined') Swal.close(); 
             if (status == "timeout") {
                 muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
             } else {
-                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + request + status + err);
+                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + request.status + " " + err);
             }
         },
         complete: function () { },
