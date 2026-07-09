@@ -1,6 +1,8 @@
 <?php
 
 use App\modelo\ModeloMetodosPago;
+// Si usas Dompdf con Composer, asegúrate de tener el autoload requerido aquí o en tu Base.php
+// require_once __DIR__ . '/../../vendor/autoload.php'; 
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -70,6 +72,10 @@ function manejarSolicitudMetodos_Pagos($obj, $id_modulo, $bitacoraObj, array $pe
             case 'bloquear':
                 if (empty($permisos['bloquear_metodop'])) throw new Exception('No tienes permisos para bloquear Metodos de pago.');
                 bloquear($obj, $id_modulo, $bitacoraObj);
+                break;
+            case 'generar':
+                if (empty($permisos['generar_metodop'])) throw new Exception('No tienes permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
                 throw new Exception('Acción no permitida.');
@@ -206,7 +212,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
 
             registrarBitacora($bitacoraObj, $id_modulo, "Elimino al metodo de pago: " . $_POST['id']);
-            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Método de pago eliminado exitosamente.'); // CORREGIDO AQUÍ
+            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Método de pago eliminado exitosamente.'); 
 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -258,6 +264,64 @@ function bloquear($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Metodos_Pago', $e->getMessage(), 'Controlador_Bloquear');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        // 1. Capturamos lo que escribiste en el modal para filtrar la consulta
+        $filtro = [];
+        if (!empty($_POST['nombre'])) {
+            $filtro['filtro'] = trim($_POST['nombre']);
+        }
+        
+        // 2. Ejecutamos la consulta con el filtro aplicado
+        $respuesta = $obj->Consultar($filtro);
+        $datos = $respuesta['datos'] ?? [];
+
+        // --- 🚨 NUEVA VALIDACIÓN: SI NO HAY DATOS, CANCELAMOS TODO 🚨 ---
+        if (empty($datos)) {
+            echo json_encode([
+                'accion' => 'error', 
+                'mensaje' => 'No se encontraron registros con ese nombre. El reporte fue cancelado.'
+            ]);
+            return; // Cortamos la ejecución de la función aquí mismo
+        }
+        // ---------------------------------------------------------------
+
+        registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Métodos de Pago");
+
+        $fecha_reporte = date('d/m/Y h:i A');
+        $usuario = $_SESSION['nombre_usuario'] ?? 'Administrador';
+        
+        $logo = __DIR__ . '/../../public/img/logo.png'; 
+        $logo_footer = __DIR__ . '/../../public/img/logo_footer.png';
+
+        // 3. Incluimos el archivo con el nombre correcto
+        ob_start();
+        include(__DIR__ . '/../vista/reportes/R_MetodosPago.php'); 
+        $html = ob_get_clean();
+
+        // Inicializamos Dompdf
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // Codificamos a Base64
+        $pdfBase64 = base64_encode($dompdf->output());
+        
+        // Retornamos el JSON con el PDF
+        echo json_encode([
+            'accion' => 'generar', 
+            'mensaje' => 'Reporte procesado con éxito.',
+            'pdf' => $pdfBase64
+        ]);
+
+    } catch (Exception $e) {
+        logs('Metodos_Pago', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

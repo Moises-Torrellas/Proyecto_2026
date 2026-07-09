@@ -54,30 +54,26 @@ class ModeloMetodosPago extends Conexion
     {
         try {
             $conex = $this->conex();
-            $params = []; // Unificamos el nombre de la variable
+            $params = []; 
 
-            // 1. Iniciamos la sentencia con WHERE 1=1 para concatenar AND tranquilamente
+            // 1. Iniciamos la sentencia con WHERE 1=1
             $sentencia = "SELECT * FROM metodos_pago WHERE 1=1";
 
-            // 2. BUSCADOR GENERAL (El que viene del keyup)
+            // 2. BUSCADOR GENERAL (El que viene del reporte o del keyup)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
-                $sentencia .= " AND (
-                nombre LIKE :f1 
-            )";
+                $sentencia .= " AND (nombre LIKE :f1)";
                 $params[':f1'] = $p;
-                $params[':f2'] = $p;
-                $params[':f3'] = $p;
+                // Eliminamos el :f2 y :f3 que hacían chocar a la base de datos
             }
 
-            // 3. FILTROS ESPECÍFICOS (Si vienen del Modal o propiedades del objeto)
-
+            // 3. FILTROS ESPECÍFICOS (Si vienen propiedades del objeto)
             if (!empty($this->nombre)) {
                 $sentencia .= " AND nombre LIKE :nombre";
                 $params[':nombre'] = "%" . trim($this->nombre) . "%";
             }
 
-            // 4. Orden (Asegúrate de usar una columna que exista, como id_metodos)
+            // 4. Orden
             $sentencia .= " ORDER BY codigo_metodo ASC";
 
             $stmt = $conex->prepare($sentencia);
