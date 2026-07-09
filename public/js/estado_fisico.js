@@ -62,7 +62,12 @@ $(document).ready(function () {
 
     $("#incluir").on("click", function () {
         limpia(); 
-        $("#id_estado").val(""); // Ajustado
+        $("#id_estado").val("");
+        
+        // Ajustes visuales para el formulario
+        $("#contenedor_nombre").show();
+        $("#opcion_default").prop("disabled", true).text("Seleccione...");
+
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Estado");
         $("#titulo_modal").text("Registrar Nuevo Estado Físico");
@@ -71,23 +76,34 @@ $(document).ready(function () {
 
     $("#generar").on("click", function () {
         limpia();
+        
+        // Ajustes visuales: ocultamos el nombre, y convertimos la opción vacía en "Todos"
+        $("#contenedor_nombre").hide();
+        $("#opcion_default").prop("disabled", false).text("Todos los niveles");
+        $("#nivel_estado").val("");
+
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
         abrirModal();
     });
+    
+    // Limpiar manual
+    $("#limpiar").on("click", function() {
+        limpia();
+    });
 });
 
 // --- FUNCIONES LÓGICAS GLOBALES ---
 
-function buscar(id_estado) { // Ajustado a id_estado
+function buscar(id_estado) { 
     var datos = new FormData();
     datos.append('accion', 'buscar');
     datos.append('id_estado', id_estado);
     enviaAjax(datos);
 }
 
-function eliminar(id_estado) { // Ajustado a id_estado
+function eliminar(id_estado) { 
     confirmar('¿Está seguro que quiere eliminar este estado físico?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
@@ -99,24 +115,30 @@ function eliminar(id_estado) { // Ajustado a id_estado
 }
 
 function validarEnvio(proceso) {
-    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 3 y 30 caracteres solo letras", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre válido para el estado físico.");
-        return false;
+    if (proceso !== "generar") {
+        if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 3 y 30 caracteres solo letras", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre válido para el estado físico.");
+            return false;
+        }
+        else if ($('#nivel_estado option:selected').val() == null || $('#nivel_estado option:selected').val() == "") {
+            muestraMensaje("error", 2000, "Error", "Tiene que elegir una opción de nivel.");
+            return false;
+        }
     }
-    else if ($('#nivel_estado option:selected').val() == null || $('#nivel_estado option:selected').val() == "") {
-        muestraMensaje("error", 2000, "Error", "Tiene que elegir una opción de nivel.");
-        return false;
-    }
-
     return true;
 }
 
 function modificar(datos) {
+    limpia();
+    
+    // Devolvemos a la normalidad el diseño por si se abrió el modal de reporte antes
+    $("#contenedor_nombre").show();
+    $("#opcion_default").prop("disabled", true).text("Seleccione...");
+
     $("#proceso").data("accion", "modificar");
     $("#proceso").text("Modificar Estado");
     $("#titulo_modal").text("Modificar Estado Físico");
     
-    // Ajustado a las variables correctas
     $('#id_estado').val(datos[0].id_estado);
     $('#nombre').val(datos[0].nombre);
     $('#nivel_estado').val(datos[0].nivel_estado);
@@ -139,7 +161,10 @@ function escapeHTML(texto) {
 }
 
 function limpia() {
-    if($('#f')[0]) $('#f')[0].reset();
+    if($('#f')[0]) {
+        $('#f')[0].reset();
+        $('#nivel_estado').val(""); // Resetear select
+    }
 }
 
 var token = $('meta[name="csrf-token"]').attr('content');
@@ -184,7 +209,25 @@ function enviaAjax(datos) {
                 else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }
+                else if (lee.accion === "reporte") {
+                    // Cierra la alerta y el modal
+                    if(typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
+                    if(typeof cerrarModal === 'function') cerrarModal();
+                    
+                    muestraMensaje("success", 1000, "Reporte Generado", 'Se ha generado el reporte');
+                    
+                    // Técnica del enlace fantasma para abrir el PDF
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
+                }
                 else if (lee.accion == "error") {
+                    if(typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
                     muestraMensaje("error", 3000, "Error", lee.mensaje);
                 }
             } catch (e) {
@@ -193,6 +236,7 @@ function enviaAjax(datos) {
             }
         },
         error: function (request, status, err) {
+            if(typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
             if (status == "timeout") {
                 muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
             } else {
