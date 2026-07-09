@@ -233,13 +233,11 @@ function enviaAjax(datos) {
         },
         timeout: 120000,
         success: function (respuesta) {
-            // 1. COMPROBACIÓN CRÍTICA: ¿Es HTML? (Se evalúa ANTES de parsear JSON)
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
                 crearConsulta(respuesta);
-                return; // Cortamos el flujo de inmediato de forma exitosa
+                return;
             }
 
-            // 2. PROCESAMIENTO JSON: Si no es HTML, obligatoriamente es una respuesta JSON
             try {
                 var lee = JSON.parse(respuesta);
                 
@@ -263,15 +261,37 @@ function enviaAjax(datos) {
                 } else if (lee.accion == "select") {
                     muestraMensaje("success", 2000, "Cambio Exitoso", lee.mensaje);
                     consultar();
+                } else if (lee.accion == "generar") {
+                    // Cerramos la alerta de espera de SweetAlert
+                    if (typeof Swal !== 'undefined') Swal.close(); 
+                    
+                    if (lee.pdf) {
+                        const byteCharacters = atob(lee.pdf);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const file = new Blob([byteArray], { type: 'application/pdf' });
+                        
+                        const fileURL = URL.createObjectURL(file);
+                        window.open(fileURL, '_blank');
+                        
+                        muestraMensaje("success", 2000, "Éxito", "Reporte generado correctamente");
+                    }
                 } else if (lee.accion == "error") {
-                    muestraMensaje("error", 2000, "Error", lee.mensaje);
+                    // Cerramos cualquier alerta de carga en caso de error
+                    if (typeof Swal !== 'undefined') Swal.close(); 
+                    muestraMensaje("error", 3000, "Error", lee.mensaje);
                 }
             } catch (e) {
+                if (typeof Swal !== 'undefined') Swal.close(); 
                 console.error("Error al procesar JSON:", e, respuesta);
                 alert("Error en JSON: " + e.message);
             }
         },
         error: function (request, status, err) {
+            if (typeof Swal !== 'undefined') Swal.close(); 
             if (status == "timeout") {
                 muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
             } else {
