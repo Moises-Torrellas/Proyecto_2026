@@ -175,10 +175,12 @@ function escapeHTML(texto) {
 
 var token = $('meta[name="csrf-token"]').attr('content');
 
+var token = $('meta[name="csrf-token"]').attr('content');
+
 function enviaAjax(datos) {
     $.ajax({
         async: true,
-        url: "", // Recuerda que esto apunta al controlador actual (/MetodosPago)
+        url: "", 
         type: "POST",
         contentType: false,
         data: datos,
@@ -191,7 +193,7 @@ function enviaAjax(datos) {
         success: function (respuesta) {
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
                 crearConsulta(respuesta);
-                return; // Cortamos el flujo de inmediato de forma exitosa
+                return;
             }
             try {
                 var lee = JSON.parse(respuesta);
@@ -212,21 +214,50 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
                 }
                 else if (lee.accion == "bloquear") {
-                    muestraMensaje("success", 2000, "Bloqueo Exitosa", lee.mensaje);
+                    muestraMensaje("success", 2000, "Bloqueo Existoso", lee.mensaje);
                     consultar();
                 }
                 else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }
+                else if (lee.accion == "generar") {
+                    // Cerramos la alerta de espera de SweetAlert (o la que uses)
+                    if (typeof Swal !== 'undefined') {
+                        Swal.close(); 
+                    } else if (typeof cerrarModal === 'function') {
+                        cerrarModal(); 
+                    }
+
+                    // Decodificamos y abrimos el PDF
+                    if (lee.pdf) {
+                        const byteCharacters = atob(lee.pdf);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const file = new Blob([byteArray], { type: 'application/pdf' });
+                        
+                        const fileURL = URL.createObjectURL(file);
+                        window.open(fileURL, '_blank');
+                        
+                        muestraMensaje("success", 2000, "Éxito", "Reporte generado correctamente");
+                    } else {
+                        muestraMensaje("error", 3000, "Error", "No se recibió el PDF");
+                    }
+                }
                 else if (lee.accion == "error") {
+                    if (typeof Swal !== 'undefined') Swal.close(); 
                     muestraMensaje("error", 3000, "Error", lee.mensaje);
                 }
             } catch (e) {
+                if (typeof Swal !== 'undefined') Swal.close(); 
                 alert("Error procesando los datos: " + e.message);
                 console.error(respuesta);
             }
         },
         error: function (request, status, err) {
+            if (typeof Swal !== 'undefined') Swal.close(); 
             if (status == "timeout") {
                 muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
             } else {
