@@ -1,5 +1,6 @@
 <?php
 use App\modelo\ModeloArticulosInventario;
+use App\servicios\GenerarReporte; // <-- 1. Importamos la clase de reportes
 
 require_once __DIR__ . '/Base.php';
 
@@ -88,9 +89,50 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
                 
                 echo json_encode($resultado);
                 break;
+                case 'reincorporar':
+                if (empty($permisos['eliminar_articulo'])) throw new Exception('Sin permisos.');
+                
+                $resultado = $obj->ProcesarDatos(['accion' => 'reincorporar', 'codigo_articulo' => $_POST['codigo_articulo']]);
+                
+                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Reincorporó artículo Código: " . $_POST['codigo_articulo']);
+                else $resultado['mensaje'] = traducirErrores($resultado['codigo']);
+                
+                echo json_encode($resultado);
+                break;
+            case 'generar': 
+                if (empty($permisos['generar_articulo'])) throw new Exception('No tienes permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
+    } catch (Exception $e) {
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+// 3. Función independiente para aislar la lógica del reporte, igual que en Catalogo
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $respuesta = $obj->ProcesarDatos(['accion' => 'consultar']);
+        $datos = $respuesta['datos'] ?? [];
+
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron artículos en el inventario para generar el reporte.']);
+            exit();
+        }
+        
+        $nombreVista = 'R_ArticulosInventario'; 
+        $objG = new GenerarReporte();
+        // Generamos el PDF pasándole la vista y los datos
+        $pdf = $objG->generarPDF($nombreVista, $datos, 'Inventario Fisico');
+        
+        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte del inventario de artículos.");
+        }
+        
+        echo json_encode($pdf);
     } catch (Exception $e) {
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }

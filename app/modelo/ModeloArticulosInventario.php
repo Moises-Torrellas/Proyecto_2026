@@ -28,6 +28,7 @@ class ModeloArticulosInventario extends Conexion
             'incluir'       => $this->IncluirArticulo($datos),
             'modificar'     => $this->ModificarArticulo($datos),
             'eliminar'      => $this->EliminarArticulo($datos['codigo_articulo'] ?? null),
+            'reincorporar'  => $this->ReincorporarArticulo($datos['codigo_articulo'] ?? null),
             default         => ['accion' => 'error', 'codigo' => defined('_ERR_ACCION_') ? _ERR_ACCION_ : 'ERR_ACCION']
         };
     }
@@ -48,7 +49,6 @@ class ModeloArticulosInventario extends Conexion
             $siguiente = (int)$resultado['max_num'] + 1;
         }
 
-        // Formateamos para que tenga ceros a la izquierda (ej. CL-0001)
         return 'CL-' . str_pad((string)$siguiente, 4, '0', STR_PAD_LEFT);
     }
 
@@ -75,7 +75,6 @@ class ModeloArticulosInventario extends Conexion
             $stmt->execute();
             $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Agrupamos por artículo del catálogo
             $agrupado = [];
             foreach ($datos as $fila) {
                 $id_cat = $fila['id_catalogo'];
@@ -158,25 +157,45 @@ class ModeloArticulosInventario extends Conexion
             return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
         }
     }
-
-    private function EliminarArticulo($id): array
+private function EliminarArticulo($id): array
     {
         if (empty($id)) return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
 
         $conex = $this->conex();
         try {
             $conex->beginTransaction();
-            $sql = "DELETE FROM articulos_inventario WHERE codigo_articulo = ?";
+            $sql = "UPDATE articulos_inventario SET estatus = 3 WHERE codigo_articulo = ? AND estatus = 1";
+            $stmt = $conex->prepare($sql);
+            $stmt->execute([$id]);
+            
+            if ($stmt->rowCount() > 0) {
+                $conex->commit();
+                return ['accion' => 'exito', 'mensaje' => 'El artículo ha sido retirado del inventario.'];
+            } else {
+                $conex->rollBack();
+                return ['accion' => 'error', 'mensaje' => 'El artículo no puede ser retirado porque está en uso.'];
+            }
+        } catch (\PDOException $e) {
+            if ($conex->inTransaction()) $conex->rollBack();
+            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
+        }
+    }
+
+    private function ReincorporarArticulo($id): array
+    {
+        if (empty($id)) return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
+
+        $conex = $this->conex();
+        try {
+            $conex->beginTransaction();
+            $sql = "UPDATE articulos_inventario SET estatus = 1 WHERE codigo_articulo = ? AND estatus = 3";
             $stmt = $conex->prepare($sql);
             $stmt->execute([$id]);
             $conex->commit();
 
-            return ['accion' => 'exito', 'mensaje' => 'Artículo retirado del inventario.'];
+            return ['accion' => 'exito', 'mensaje' => 'Artículo reincorporado como Disponible.'];
         } catch (\PDOException $e) {
             if ($conex->inTransaction()) $conex->rollBack();
-            if ($e->getCode() == 23000) { 
-                return ['accion' => 'error', 'codigo' => defined('_ERR_USO_') ? _ERR_USO_ : 'ERR_USO'];
-            }
             return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
         }
     }
@@ -185,7 +204,6 @@ public function ConsultarArticulosLibres(): array {
         $conex = null;
         try {
             $conex = $this->conex();
-            // ¡AQUÍ ESTÁ EL CAMBIO! Se agregó e.codigo_club a la consulta
             $sql = "SELECT e.codigo_articulo, e.codigo_club, IFNULL(c.nombre, 'Artículo sin registrar') as articulo FROM articulos_inventario e LEFT JOIN catalogo c ON e.id_catalogo = c.id_catalogo WHERE e.estatus = 1";
             $articulos = $conex->query($sql)->fetchAll(PDO::FETCH_ASSOC);
             return ['accion' => 'exito', 'datos' => $articulos];

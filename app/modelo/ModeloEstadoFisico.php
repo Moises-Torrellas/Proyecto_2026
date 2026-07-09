@@ -42,16 +42,14 @@ class ModeloEstadoFisico extends Conexion
         };
     }
 
-    public function Consultar(array $filtro = []): array
+   public function Consultar(array $filtro = []): array
     {
         try {
             $conex = $this->conex();
             $params = [];
-
-            // 1. Sentencia base adaptada a la tabla estado_fisico
             $sentencia = "SELECT * FROM estado_fisico WHERE 1=1";
 
-            // 2. BUSCADOR GENERAL
+            // Buscador General (texto)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
                 $sentencia .= " AND (nombre LIKE :f1 OR nivel_estado LIKE :f2)";
@@ -59,21 +57,16 @@ class ModeloEstadoFisico extends Conexion
                 $params[':f2'] = $p;
             }
 
-            if (!empty($this->nombre)) {
-                $sentencia .= " AND nombre LIKE :nombre";
-                $params[':nombre'] = trim($this->nombre) . "%";
-            }
-
-            if (!empty($this->nivel_estado)) {
-                $sentencia .= " AND nivel_estado = :nivel";
-                $params[':nivel'] = $this->nivel_estado;
+            // Filtro específico por nivel de estado (Para el Reporte)
+            if (!empty($filtro['nivel_estado'])) {
+                $sentencia .= " AND nivel_estado = :filtro_nivel";
+                $params[':filtro_nivel'] = $filtro['nivel_estado'];
             }
 
             $sentencia .= " ORDER BY id_estado ASC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
-
             $datos = $stmt->fetchAll();
 
             return array('accion' => 'consultar', 'datos' => $datos);

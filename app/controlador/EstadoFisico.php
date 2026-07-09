@@ -1,6 +1,7 @@
 <?php
 
 use App\modelo\ModeloEstadoFisico;
+use App\servicios\GenerarReporte;
 
 require_once __DIR__ . '/Base.php';
 
@@ -67,6 +68,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (empty($permisos['modificar_estfisico'])) throw new Exception('No tienes permisos para modificar el estado físico.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar':
+                if (empty($permisos['generar_estfisico'])) throw new Exception('No tienes permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;    
 
             default:
                 throw new Exception('Acción no permitida.');
@@ -203,6 +208,37 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('EstadoFisico', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }  
+}
+
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $filtros = [];
+        // Si enviaron un nivel específico desde el modal, lo usamos
+        if (!empty($_POST['nivel_estado'])) {
+            $filtros['nivel_estado'] = filter_var($_POST['nivel_estado'], FILTER_SANITIZE_NUMBER_INT);
+        }
+
+        $respuesta = $obj->Consultar($filtros);
+        $datos = $respuesta['datos'] ?? [];
+
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron registros para generar el reporte.']);
+            exit();
+        }
+
+        $nombreVista = 'R_EstadoFisico';
+        $objG = new GenerarReporte();
+        $pdf = $objG->generarPDF($nombreVista, $datos, 'Estado Fisico');
+
+        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte del módulo Estados Físicos.");
+        }
+        
+        echo json_encode($pdf);
+    } catch (Exception $e) {
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
