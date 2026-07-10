@@ -2,12 +2,10 @@
 
 use App\modelo\ModeloMonedas;
 
-use const Dom\VALIDATION_ERR;
-
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
 
-// 2. Configuración del módulo (Corregido al ID de Representantes)
+// 2. Configuración del módulo
 $id_modulo = _MD_MONEDAS_;
 
 // 3. Procesar permisos (Retorna el array de permisos)
@@ -43,35 +41,39 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
-        // Seguridad centralizada
+        // Seguridad centralizada (Permisos corregidos)
         switch ($accion) {
             case 'consultar':
-                if (empty(['ingresar_moneda'])) throw new Exception('No tienes permisos para consultar Monedas.');
+                if (empty($permisos['ingresar_moneda'])) throw new Exception('No tienes permisos para consultar Monedas.');
                 consultar($obj, $permisos);
                 break;
             case 'incluir':
-                if (empty(['registrar_moneda'])) throw new Exception('No tienes permisos para registrar Monedas.');
+                if (empty($permisos['registrar_moneda'])) throw new Exception('No tienes permisos para registrar Monedas.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'buscar':
-                if (empty(['modificar_moneda'])) throw new Exception('No tienes permisos para modificar Monedas.');
+                if (empty($permisos['modificar_moneda'])) throw new Exception('No tienes permisos para modificar Monedas.');
                 buscar($obj);
                 break;
             case 'modificar':
-                if (empty(['modificar_moneda'])) throw new Exception('No tienes permisos para modificar Monedas.');
+                if (empty($permisos['modificar_moneda'])) throw new Exception('No tienes permisos para modificar Monedas.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (empty(['elimina_moneda'])) throw new Exception('No tienes permisos para eliminar Monedas.');
+                if (empty($permisos['elimina_moneda'])) throw new Exception('No tienes permisos para eliminar Monedas.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'bloquear':
-                if (empty(['bloquear_moneda'])) throw new Exception('No tienes permisos para bloquear Monedas.');
+                if (empty($permisos['bloquear_moneda'])) throw new Exception('No tienes permisos para bloquear Monedas.');
                 bloquear($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'select':
-                if (empty(['asignar_moneda'])) throw new Exception('No tienes permisos para selecionar la Moneda base.');
+                if (empty($permisos['asignar_moneda'])) throw new Exception('No tienes permisos para selecionar la Moneda base.');
                 select($obj, $id_modulo, $bitacoraObj);
+                break;
+            case 'generar':
+                if (empty($permisos['generar_moneda'])) throw new Exception('No tienes permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
                 throw new Exception('Acción no permitida.');
@@ -87,9 +89,8 @@ function consultar($obj, $permisos): void
     $filtro['filtro'] = $_POST['filtro'] ?? '';
     $respuesta = $obj->Consultar($filtro);
 
-    // Extraemos los datos crudos que espera la vista
     $registro = $respuesta['datos'] ?? [];
-    $solo_lista = true; // El interruptor mágico para el AJAX
+    $solo_lista = true; 
 
     include(__DIR__ . '/../vista/Monedas.php');
 }
@@ -137,7 +138,6 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             registrarBitacora($bitacoraObj, $id_modulo, "Registró la moneda: " . $_POST['nombre']);
             $respuesta = array('accion' => 'incluir', 'mensaje' => 'Moneda registrada exitosamente.');
         } else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
-
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
                 DUPLICATE_NAME => 'Ya existe una moneda registrada con este nombre.',
                 VALIDATION . '1'  => 'Ya existe una moneda registrada con esta abreviatura.',
@@ -152,6 +152,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         echo json_encode(['accion' => 'error', 'mensaje' => 'Ocurrio un error inesperado al intentar registrar la moneda.']);
     }
 }
+
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
@@ -178,7 +179,6 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             registrarBitacora($bitacoraObj, $id_modulo, "Modifico la moneda: " . $_POST['nombre']);
             $respuesta = array('accion' => 'modificar', 'mensaje' => 'Moneda modificada exitosamente.');
         } else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
-
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
                 DUPLICATE_NAME => 'Ya existe una moneda registrada con este nombre.',
                 VALIDATION . '1'  => 'Ya existe una moneda registrada con esta abreviatura.',
@@ -194,6 +194,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode(['accion' => 'error', 'mensaje' => 'Ocurrio un error inesperado al intentar modificar la moneda.']);
     }
 }
+
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
@@ -214,7 +215,6 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             registrarBitacora($bitacoraObj, $id_modulo, "Elimino la moneda: " . $_POST['id']);
             $respuesta = array('accion' => 'eliminar', 'mensaje' => 'Moneda eliminada exitosamente.');
         } else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
-
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
                 ASSOCIATES => 'No se puede eliminar la moneda porque esta asociado a pagos.',
                 ASSOCIATES . '2' => 'No se puede eliminar la moneda porque esta asociado a vueltos.',
@@ -257,7 +257,6 @@ function bloquear($obj, $id_modulo, $bitacoraObj): void
             registrarBitacora($bitacoraObj, $id_modulo, $mensajeBitacora . $_POST['id']);
             $resultado = array('accion' => 'bloquear', 'mensaje' => $mensajeExito);
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 VALIDATION     => 'No se puede bloquear la moneda base del sistema.',
                 VALIDATION . '2'  => 'No se puede bloquear. Deben mantenerse al menos dos monedas activas en el sistema.',
@@ -292,7 +291,6 @@ function select($obj, $id_modulo, $bitacoraObj): void
             registrarBitacora($bitacoraObj, $id_modulo, "Selecciono la moneda: " . $_POST['id']);
             $resultado = array('accion' => 'select', 'mensaje' => 'Cambio de moneda exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'La moneda no existe.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
@@ -303,6 +301,69 @@ function select($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Monedas', $e->getMessage(), 'Controlador_Bloquear');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        // 1. Instanciamos la conexión y preparamos la consulta
+        $conex = $obj->conex();
+        $nombre = trim($_POST['nombre'] ?? '');
+        
+        $sql = "SELECT * FROM monedas WHERE 1=1";
+        $params = [];
+
+        if (!empty($nombre)) {
+            $sql .= " AND nombre LIKE :nombre";
+            $params[':nombre'] = "%" . $nombre . "%";
+        }
+        
+        $sql .= " ORDER BY codigo_moneda ASC";
+        
+        $stmt = $conex->prepare($sql);
+        $stmt->execute($params);
+        $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 2. Validación: Si no existe, no generamos PDF y retornamos error
+        if (empty($datos)) {
+            echo json_encode([
+                'accion' => 'error', 
+                'mensaje' => 'No se encontraron monedas con ese nombre. Verifique e intente nuevamente.'
+            ]);
+            return;
+        }
+
+        registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Monedas");
+
+        $fecha_reporte = date('d/m/Y h:i A');
+        $usuario = $_SESSION['nombre_usuario'] ?? 'Administrador';
+        
+        $logo = __DIR__ . '/../../public/img/logo.png'; 
+        $logo_footer = __DIR__ . '/../../public/img/logo_footer.png';
+
+        // 3. Incluimos el archivo de la vista
+        ob_start();
+        include(__DIR__ . '/../vista/reportes/R_Monedas.php'); 
+        $html = ob_get_clean();
+
+        // 4. Inicializamos Dompdf y generamos el Base64
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $pdfBase64 = base64_encode($dompdf->output());
+        
+        echo json_encode([
+            'accion' => 'generar', 
+            'mensaje' => 'Reporte procesado con éxito.',
+            'pdf' => $pdfBase64
+        ]);
+
+    } catch (Exception $e) {
+        logs('Monedas', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
