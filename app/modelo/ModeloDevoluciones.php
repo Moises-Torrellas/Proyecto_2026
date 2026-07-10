@@ -210,6 +210,14 @@ class ModeloDevoluciones extends Conexion
             $stmtEq->execute([$idAsig]);
             $codigoArticulo = $stmtEq->fetchColumn();
 
+            $stmtEstadoEq = $conex->prepare("SELECT estatus FROM articulos_inventario WHERE codigo_articulo = ? FOR UPDATE");
+            $stmtEstadoEq->execute([$codigoArticulo]);
+            $estadoEq = $stmtEstadoEq->fetchColumn();
+
+            if ($estadoEq != 1) {
+                throw new Exception("No se puede anular la devolución. El artículo ya ha sido asignado a otro atleta o no se encuentra disponible.");
+            }
+
             $conex->prepare("DELETE FROM devoluciones WHERE id_devolucion = ?")->execute([$this->id_devolucion]);
 
             if ($this->objAsignaciones) {

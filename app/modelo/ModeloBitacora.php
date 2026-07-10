@@ -85,7 +85,7 @@ class ModeloBitacora extends Conexion implements InterBitacora
             $params[':f4'] = $p;
         }
 
-        $sentencia .= " ORDER BY b.id_bitacora ASC";
+        $sentencia .= " ORDER BY b.id_bitacora DESC";
 
         $stmt = $conex->prepare($sentencia);
         $stmt->execute($params);

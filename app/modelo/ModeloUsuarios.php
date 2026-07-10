@@ -264,9 +264,27 @@ class ModeloUsuarios extends Conexion
             $conex = $this->conexSG();
             $conex->beginTransaction();
 
-            $stmtRolActual = $conex->prepare("SELECT id_rol FROM usuarios WHERE idUsuario = :id");
+            $stmtRolActual = $conex->prepare("SELECT u.id_rol, r.nivel_rol FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol WHERE u.idUsuario = :id");
             $stmtRolActual->execute([':id' => $this->id]);
-            $rolActual = $stmtRolActual->fetchColumn();
+            $rolActualData = $stmtRolActual->fetch(\PDO::FETCH_ASSOC);
+            $rolActual = $rolActualData['id_rol'];
+            $nivelActual = $rolActualData['nivel_rol'];
+
+            if ($rolActual != $this->rol) {
+                if ($nivelActual == 1) {
+                    throw new Exception('ROLE_RULES_1');
+                }
+                if (isset($_SESSION['id']) && $_SESSION['id'] == $this->id && $nivelActual == 2) {
+                    throw new Exception('ROLE_RULES_2');
+                }
+                if ($nivelActual == 2) {
+                    $stmtCount = $conex->prepare("SELECT COUNT(*) FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol WHERE r.nivel_rol = :nivel AND u.estatus = 1 AND u.idUsuario != :id");
+                    $stmtCount->execute([':nivel' => $nivelActual, ':id' => $this->id]);
+                    if ($stmtCount->fetchColumn() == 0) {
+                        throw new Exception('ROLE_RULES_3');
+                    }
+                }
+            }
 
             if (!$this->verificarExistenciaPropia('cedula', $this->cedula, $this->id, 'usuarios', 1, 'sg', bloquear: true)) {
                 if ($this->verificarExistencia('cedula', $this->cedula, 'usuarios', 1, 'sg', bloquear: true)) {
@@ -346,6 +364,14 @@ class ModeloUsuarios extends Conexion
                 throw new Exception(INVALID_ID);
             }
 
+            $stmtNivel = $conex->prepare("SELECT r.nivel_rol FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol WHERE u.idUsuario = :id");
+            $stmtNivel->execute([':id' => $this->id]);
+            $nivelActual = $stmtNivel->fetchColumn();
+            
+            if ($nivelActual == 1 || $nivelActual == 2) {
+                throw new Exception('ROLE_RULES_4');
+            }
+
             $sql = "UPDATE `usuarios` SET 
                             `estatus` = 0
                             WHERE idUsuario = :id";
@@ -384,6 +410,14 @@ class ModeloUsuarios extends Conexion
 
             if (!$this->verificarExistencia('id', $this->id, 'usuarios', 1, 'sg', bloquear: true)) {
                 throw new Exception(INVALID_ID);
+            }
+
+            $stmtNivel = $conex->prepare("SELECT r.nivel_rol FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol WHERE u.idUsuario = :id");
+            $stmtNivel->execute([':id' => $this->id]);
+            $nivelActual = $stmtNivel->fetchColumn();
+            
+            if ($nivelActual == 1 || $nivelActual == 2) {
+                throw new Exception('ROLE_RULES_5');
             }
 
             $nuevoEstado = ($this->bloqueo == 1) ? 2 : 1;

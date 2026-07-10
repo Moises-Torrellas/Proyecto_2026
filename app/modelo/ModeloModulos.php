@@ -55,14 +55,13 @@ class ModeloModulos extends Conexion
 
     public function Consultar(array $filtro = []): array
     {
-        $conex=null;
+        $conex = null;
         try {
             $conex = $this->conexSG();
             $params = [];
 
-
-            $sentencia = "SELECT * FROM modulos WHERE 1=1";
-
+            // Agregamos la restricción NOT IN para excluir los IDs 4, 5 y 8
+            $sentencia = "SELECT * FROM modulos WHERE 1=1 AND id_modulo NOT IN (4, 5, 8)";
 
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
@@ -72,14 +71,12 @@ class ModeloModulos extends Conexion
                 $params[':f1'] = $p;
             }
 
-
             $sentencia .= " ORDER BY id_modulo ASC";
 
             $stmt = $conex->prepare($sentencia);
-
-
             $stmt->execute($params);
 
+            // Es buena práctica especificar FETCH_ASSOC para no traer datos duplicados en el array
             $datos = $stmt->fetchAll();
 
             return array('accion' => 'consultar', 'datos' => $datos);
@@ -93,7 +90,7 @@ class ModeloModulos extends Conexion
 
     function Buscar(): array
     {
-        $conex=null;
+        $conex = null;
         try {
             $conex = $this->conexSG();
             $sentencia = "SELECT * FROM modulos WHERE id_modulo = :id";
@@ -112,13 +109,13 @@ class ModeloModulos extends Conexion
 
     private function Modificar(): array
     {
-        $conex=null;
+        $conex = null;
         try {
             $conex = $this->conexSG();
             $conex->beginTransaction();
 
             if (!$this->verificarExistencia('id', $this->id, 'modulos', 1, 'sg', bloquear: true)) {
-                    throw new Exception(INVALID_ID);
+                throw new Exception(INVALID_ID);
             }
 
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'modulos', 1, 'sg', bloquear: true)) {
@@ -148,6 +145,4 @@ class ModeloModulos extends Conexion
             $conex = NULL;
         }
     }
-
-
 }

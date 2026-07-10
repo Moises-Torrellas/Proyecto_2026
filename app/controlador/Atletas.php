@@ -168,14 +168,14 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         $datos = [
             'fecha_nac' => $_POST['fecha_nac'],
-            'nombre' => $_POST['nombre'],
-            'apellido' => $_POST['apellido'],
-            'posicion' => $_POST['posicion'],
+            'nombre'    => $_POST['nombre'],
+            'apellido'  => $_POST['apellido'],
+            'posicion'  => $_POST['posicion'],
             'categoria' => $_POST['categoria'],
-            'genero' => $_POST['genero'],
-            'dorsal' => $_POST['dorsal'] ?? 0,
-            'peso' => $_POST['peso'] ?? 0,
-            'estatura' => $_POST['estatura'] ?? 0,
+            'genero'    => $_POST['genero'],
+            'dorsal'    => $_POST['dorsal'] ?? 0,
+            'peso'      => $_POST['peso'] ?? 0,
+            'estatura'  => $_POST['estatura'] ?? 0,
         ];
 
         if (isset($_POST['representante'])) $datos['representante'] = $_POST['representante'];
@@ -202,10 +202,18 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->ProcesarDatos($datos);
 
+        $datos_previos = '';
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+
+        $identificador = $datos['doc_identidad'] ?? 'Sin Cédula';
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registro al Atleta: " . $datos['nombre'] . " " . $datos['apellido']);
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró al Atleta: " . $identificador . " - " . $datos['nombre'] . " " . $datos['apellido'], $datos_previos, $datos_nuevos);
+
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Atleta registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_CEDULA => 'La cedula ingresada ya pertenece a un atleta registrado.',
                 DUPLICATE_PHONE  => 'El telefono ingresado ya pertenece a un atleta registrado.',
@@ -215,6 +223,10 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
                 DB_CONNECTION    => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en el registro.'
             };
+
+            // 3. Registramos el error en bitácora
+            $mensaje_error = "Falló al registrar al atleta: " . $identificador . " - " . $resultado['mensaje'];
+            registrarBitacora($bitacoraObj, $id_modulo, $mensaje_error, $datos_previos, $datos_nuevos);
         }
 
         echo json_encode($resultado);
@@ -257,10 +269,22 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $datos['foto'] = [$foto_nombre];
         $datos['accion'] = 'modificar';
 
+        // 1. Buscamos los datos PREVIOS antes de modificarlos
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $atleta_previo = $consultar_datos_previos['datos'][0] ?? null; // Posición [0] por el fetchAll()
+        $datos_previos_json = json_encode($atleta_previo);
+
+        // 2. Procesamos la modificación
         $resultado = $obj->ProcesarDatos($datos);
 
+        // 3. Extraemos los datos NUEVOS del resultado
+        $datos_nuevos_json = $resultado['datos_nuevos'] ?? '';
+
+        // Generamos un identificador seguro para el mensaje
+        $identificador = $datos['doc_identidad'] ?? 'R-' . $atleta_previo['cedula_rep'];
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico al Atleta: " . $datos['nombre'] . " " . $datos['apellido']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó al Atleta: " . $identificador . " - " . $datos['nombre'] . " " . $datos['apellido'], $datos_previos_json, $datos_nuevos_json);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Atleta modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -270,8 +294,11 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
                 INVALID_ID . '0' => 'La posicion ingresada no existe en los registros del club.',
                 INVALID_ID . '1' => 'El representante ingresado no existe en los registros del club.',
                 DB_CONNECTION    => 'Ocurrio un error al conectarse con la base de datos.',
-                default          => 'Ocurrió un error inesperado en el registro.'
+                default          => 'Ocurrió un error inesperado en la modificación.'
             };
+
+            $mensaje_error = "Falló al modificar al Atleta: " . $identificador . " - " . $resultado['mensaje'];
+            registrarBitacora($bitacoraObj, $id_modulo, $mensaje_error, $datos_previos_json, $datos_nuevos_json);
         }
 
         echo json_encode($resultado);
@@ -292,19 +319,43 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
 
+        // 1. Buscamos los datos PREVIOS del atleta antes de retirarlo
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $atleta_previo = $consultar_datos_previos['datos'][0] ?? null;
+
+        // 2. Preparamos los JSON para la bitácora (datos_nuevos va vacío)
+        $datos_previos_json = json_encode($atleta_previo);
+        $datos_nuevos_json = '';
+
+        // 3. Generamos el identificador seguro usando la misma lógica excelente de modificar
+        // Usamos el operador null safe o validación por si el atleta_previo viene vacío en un caso extremo
+        $identificador = $atleta_previo['doc_identidad'] ?? 'R-' . ($atleta_previo['cedula_rep'] ?? 'Desconocido');
+
+        // 4. Procesamos el retiro en el modelo
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Retiro al Atleta: " . $datos['id']);
+
+            // Armamos un mensaje descriptivo con el nombre del atleta
+            $nombre_completo = ($atleta_previo['p_nombre'] ?? '') . " " . ($atleta_previo['p_apellidos'] ?? '');
+            $mensaje = "Retiró al Atleta: " . $identificador . " - " . trim($nombre_completo);
+
+            registrarBitacora($bitacoraObj, $id_modulo, $mensaje, $datos_previos_json, $datos_nuevos_json);
+
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Atleta retirado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID       => 'El atleta no existe.',
                 ASSOCIATES       => 'No se puede retirar el atleta porque tiene un cargo pendiente por pagar.',
-                ASSOCIATES.'1'   => 'No se puede retirar el atleta porque tiene un equipamiento asignado.',
-                DB_CONNECTION    => 'Ocurrio un error al conectarse con la base de datos.',
+                ASSOCIATES . '1' => 'No se puede retirar el atleta porque tiene un equipamiento asignado.',
+                DB_CONNECTION    => 'Ocurrió un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en el retiro.'
             };
+
+            // Registramos el fallo en la bitácora
+            $mensaje_error = "Falló al retirar al Atleta: " . $identificador . " - " . $resultado['mensaje'];
+            registrarBitacora($bitacoraObj, $id_modulo, $mensaje_error, $datos_previos_json, $datos_nuevos_json);
         }
 
         echo json_encode($resultado);
@@ -329,13 +380,30 @@ function reinscribir($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'reinscribir'
         ];
 
+        // 1. Buscamos los datos PREVIOS del atleta antes de reinscribirlo
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $atleta_previo = $consultar_datos_previos['datos'][0] ?? null;
+        $datos_previos_json = json_encode($atleta_previo);
+
         $resultado = $obj->ProcesarDatos($datos);
 
+        $datos_nuevos_json = $resultado['datos_nuevos'] ?? '';
+
+        $identificador = $atleta_previo['doc_identidad'] ?? 'R-' . ($atleta_previo['cedula_rep'] ?? 'Desconocido');
+        $nombre_completo = trim(($atleta_previo['p_nombre'] ?? '') . ' ' . ($atleta_previo['p_apellidos'] ?? ''));
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Re-inscribió al Atleta: " . $datos['id']);
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Re-inscribió al Atleta: " . $identificador . " - " . $nombre_completo, $datos_previos_json, $datos_nuevos_json);
+
             $resultado = array('accion' => 'reinscribir', 'mensaje' => 'Atleta re-inscrito exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-            $resultado['mensaje'] = 'Ocurrió un error inesperado al re-inscribir al atleta.';
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                DB_CONNECTION    => 'Ocurrió un error al conectarse con la base de datos.',
+                default          => 'Ocurrió un error inesperado al re-inscribir al atleta.'
+            };
+            $mensaje_error = "Falló al re-inscribir al Atleta: " . $identificador . " - " . $resultado['mensaje'];
+            registrarBitacora($bitacoraObj, $id_modulo, $mensaje_error, $datos_previos_json, $datos_nuevos_json);
         }
 
         echo json_encode($resultado);
@@ -379,7 +447,8 @@ function generar($obj, $id_modulo, $bitacoraObj): void
         $pdf = $objG->generarPDF($nombreVista, $datos, 'Atletas');
 
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de atletas.");
+            // Se envían strings vacíos para datos_previos y datos_nuevos
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de atletas.", '', '');
         }
 
         echo json_encode($pdf);
@@ -420,7 +489,8 @@ function generarCurriculum($id_modulo, $bitacoraObj): void
 
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
             $atletaNombre = $datosCurriculum['atleta']['nombres'] . " " . $datosCurriculum['atleta']['apellidos'];
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó currículum deportivo del atleta: " . $atletaNombre);
+            // Se envían strings vacíos para datos_previos y datos_nuevos
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó currículum deportivo del atleta: " . $atletaNombre, '', '');
         }
 
         echo json_encode($pdf);

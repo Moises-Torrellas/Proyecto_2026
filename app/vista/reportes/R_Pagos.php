@@ -251,10 +251,32 @@
                                     </tbody>
                                 </table>
 
-                                <?php if ((float)$pago['monto_vuelto'] >= 0) : ?>
-                                    <div style="text-align: right; font-size: 10px; margin-top: 6px; color: #2b6cb0;">
-                                        <strong>Vuelto Generado:</strong> <?= number_format($pago['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($pago['abre']) ?>
-                                    </div>
+                                <?php if (!empty($pago['vueltos'])) : ?>
+                                    <div style="margin-top: 10px; font-size: 11px; color: #4a5568; font-weight: bold;">Vueltos Registrados:</div>
+                                    <table style="width: 100%; border-collapse: collapse; table-layout: fixed; word-wrap: break-word; font-size: 11px;">
+                                        <thead>
+                                            <tr style="border-bottom: 1px dashed #cbd5e0;">
+                                                <th style="padding: 3px 0; background: transparent; color: #718096; font-size: 10px;">Fecha</th>
+                                                <th style="padding: 3px 0; background: transparent; color: #718096; font-size: 10px;">Método</th>
+                                                <th style="padding: 3px 0; background: transparent; color: #718096; font-size: 10px;">Referencia</th>
+                                                <th style="padding: 3px 0; background: transparent; color: #718096; font-size: 10px; text-align: right;">Exceso Base</th>
+                                                <th style="padding: 3px 0; background: transparent; color: #718096; font-size: 10px; text-align: right;">Tasa</th>
+                                                <th style="padding: 3px 0; background: transparent; color: #718096; font-size: 10px; text-align: right;">Monto Devuelto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($pago['vueltos'] as $v) : ?>
+                                                <tr>
+                                                    <td style="padding: 4px 0; color: #4a5568;"><?= date('d/m/Y', strtotime($v['fecha_vuelto'])) ?></td>
+                                                    <td style="padding: 4px 0; color: #718096;"><?= htmlspecialchars($v['nombre_metodo_vuelto'] ?? 'N/A') ?></td>
+                                                    <td style="padding: 4px 0; color: #718096;"><?= !empty($v['referencia']) ? htmlspecialchars($v['referencia']) : 'N/A' ?></td>
+                                                    <td style="padding: 4px 0; color: #718096; text-align: right;"><?= number_format($v['monto_exceso_base'], 2, ',', '.') ?> <?= htmlspecialchars($pago['abre']) ?></td>
+                                                    <td style="padding: 4px 0; color: #718096; text-align: right;"><?= ($v['tasa_usada'] > 0 && $v['tasa_usada'] != 1) ? number_format($v['tasa_usada'], 4, ',', '.') . ' ' . htmlspecialchars($v['abreviatura']) : '1.0000' ?></td>
+                                                    <td style="padding: 4px 0; color: #2f855a; font-weight: bold; text-align: right;"><?= number_format($v['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($v['simbolo'] . ' ' . $v['abreviatura']) ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
                                 <?php endif; ?>
                             </td>
                         </tr>

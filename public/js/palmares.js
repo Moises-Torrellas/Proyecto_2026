@@ -185,7 +185,7 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
         }
         // Equipos
         else if (idSelect === 'equipo' || idSelect === 'palmares_equipo') {
-            textoMostrar = `${dato[campo1]} - ${dato[campo2]}`;
+            textoMostrar = `${dato[campo1]}`;
         }
         // Premios
         else if (idSelect === 'premio_ind' || idSelect === 'premio_grp') {

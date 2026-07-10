@@ -56,7 +56,8 @@ class ModeloParticipaciones extends Conexion
             t.estatus AS torneo_estatus,
             t.fecha_inicio,
             e.codigo_equipo, 
-            e.nombre AS equipo_nombre
+            e.nombre AS equipo_nombre,
+            (SELECT COUNT(DISTINCT de.codigo_atleta) FROM detalles_equipos de WHERE de.codigo_equipo = e.codigo_equipo) AS cantidad_atletas
         FROM participaciones p
         INNER JOIN torneos t ON p.codigo_torneo = t.codigo_torneo
         INNER JOIN equipos e ON p.codigo_equipo = e.codigo_equipo
@@ -174,8 +175,24 @@ class ModeloParticipaciones extends Conexion
                 throw new Exception(INVALID_ID . '2');
             }
 
+            $stmtEstado = $conex->prepare("SELECT t.estatus FROM torneos t JOIN participaciones p ON t.codigo_torneo = p.codigo_torneo WHERE p.codigo_participacion = :id");
+            $stmtEstado->execute([':id' => $this->codigo_participacion]);
+            $estatusTorneo = $stmtEstado->fetchColumn();
+
+            if ($estatusTorneo == 2 || $estatusTorneo == 3) {
+                throw new Exception('STATUS_ERROR');
+            }
+
             if (!$this->verificarExistencia('codigo_torneo', $this->codigo_torneo, 'torneos', null)) {
                 throw new Exception(INVALID_ID);
+            }
+
+            $stmtNuevo = $conex->prepare("SELECT estatus FROM torneos WHERE codigo_torneo = :id");
+            $stmtNuevo->execute([':id' => $this->codigo_torneo]);
+            $estatusNuevo = $stmtNuevo->fetchColumn();
+
+            if ($estatusNuevo == 2 || $estatusNuevo == 3) {
+                throw new Exception('STATUS_ERROR');
             }
             if (!$this->verificarExistencia('codigo_equipo', $this->codigo_equipo, 'equipos', null)) {
                 throw new Exception(INVALID_ID . '0');
@@ -219,6 +236,14 @@ class ModeloParticipaciones extends Conexion
 
             if (!$this->verificarExistencia('codigo_participacion', $this->codigo_participacion, 'participaciones', null)) {
                 throw new Exception(INVALID_ID);
+            }
+
+            $stmtEstado = $conex->prepare("SELECT t.estatus FROM torneos t JOIN participaciones p ON t.codigo_torneo = p.codigo_torneo WHERE p.codigo_participacion = :id");
+            $stmtEstado->execute([':id' => $this->codigo_participacion]);
+            $estatusTorneo = $stmtEstado->fetchColumn();
+
+            if ($estatusTorneo == 2 || $estatusTorneo == 3) {
+                throw new Exception('STATUS_ERROR');
             }
 
             $sql = "DELETE FROM participaciones WHERE codigo_participacion = :codigo_participacion";

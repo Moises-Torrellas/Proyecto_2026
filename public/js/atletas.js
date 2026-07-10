@@ -151,7 +151,7 @@ $(document).ready(function () {
 
     $("#generar").on("click", function () {
         limpia();
-
+        MultiConsulta();
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
@@ -401,10 +401,10 @@ function GenerarCurriculum(id) {
             var datos = new FormData();
             datos.append('accion', 'generarCurriculum');
             datos.append('id', id);
-            
+
             // Agregamos la fecha al FormData que se enviará por AJAX
-            datos.append('fecha_inicio', fechaSeleccionada); 
-            
+            datos.append('fecha_inicio', fechaSeleccionada);
+
             enviaAjax(datos);
             abrirAlertaEspara('Generando Curriculum', 'Espere un momento');
         }

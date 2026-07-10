@@ -49,6 +49,17 @@ $(document).ready(function () {
         }
     });
 
+    $('#goles, #partido').on('input', function() {
+        let goles = parseInt($('#goles').val()) || 0;
+        let partido = parseInt($('#partido').val()) || 0;
+        if (partido > 0) {
+            let avg = (goles / partido).toFixed(2);
+            $('#average').val(avg);
+        } else {
+            $('#average').val("0.00");
+        }
+    });
+
     inicializarPaginador();
 
     Validacion("goles", /^[0-9]*$/, /^[0-9]{1,3}$/, "Ingrese una cantidad válida (0-999)", "proceso");

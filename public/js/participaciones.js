@@ -261,7 +261,7 @@ function enviaAjax(datos) {
                 var lee = JSON.parse(respuesta);
                 if (lee.accion == "MultiConsulta") {
                     construirSelect('codigo_torneo', lee.torneo, 'codigo_torneo', 'nombre', 'fecha_inicio');
-                    construirSelect('codigo_equipo', lee.equipo, 'codigo_equipo', 'nombre');
+                    construirSelect('codigo_equipo', lee.equipo, 'id_equipos', 'nombre');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();

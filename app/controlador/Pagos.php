@@ -76,11 +76,8 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (empty($permisos['ingresar_pago'])) throw new Exception('No tienes permisos.');
                 consultar_tasas_disponibles($obj);
                 break;
-            /* case 'consultarTasa':
-                consultarTasa($obj);
-                break; */
             case 'generar':
-                if (empty($permisos['generar_pago']))
+                if (empty($permisos['generar_pago'])) throw new Exception('No tienes permisos para generar reportes de pagos.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
@@ -103,8 +100,11 @@ function consultar_tasas_disponibles($obj): void
             'fecha' => $_POST['fecha'] ?? date('Y-m-d'),
             'codigo_moneda' => $_POST['codigo_moneda'] ?? null
         ];
-        $resultado = $obj->procesarDatos($datos);
+        
+        $resultado = $obj->ProcesarDatos($datos);
+        
         echo json_encode($resultado);
+        
     } catch (Exception $e) {
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
@@ -195,8 +195,8 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         }
 
         $obj->setMonedas(new ModeloMonedas());
-        $obj->setCuentas(new ModeloCuentasCobrar());
         $obj->setTasa(new ModeloTasaCambios());
+        $obj->setCuentas(new ModeloCuentasCobrar());
 
         $datos['accion'] = 'incluir';
         $resultado = $obj->ProcesarDatos($datos);

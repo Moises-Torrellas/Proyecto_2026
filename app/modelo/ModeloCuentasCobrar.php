@@ -101,8 +101,9 @@ class ModeloCuentasCobrar extends Conexion
                 a.p_apellidos, 
                 co.nombre AS concepto, 
                 c.fecha_emision, 
-                (c.monto_total - IFNULL(pagos.total_abonado, 0)) AS monto_total,
-                m.simbolo AS simbolo_moneda
+                (c.monto_total - IFNULL(pagos.total_abonado, 0)) AS monto_pendiente,
+                m.simbolo AS simbolo_moneda,
+                m.abreviatura AS moneda_abreviatura
             FROM 
                 cargos c
             INNER JOIN 

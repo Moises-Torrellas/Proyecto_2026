@@ -230,113 +230,98 @@ class ModeloAtletas extends Conexion
     private function Incluir()
     {
         $conex = null;
+
+        // 1. Preparamos el arreglo con los datos nuevos (útil para el retorno o logs)
+        $datos_nuevos = [
+            'doc_identidad' => $this->doc_identidad,
+            'nombre'        => $this->nombre,
+            'apellido'      => $this->apellido,
+            'genero'        => $this->genero,
+            'fecha_nac'     => $this->fecha_nac,
+            'telefono'      => $this->telefono,
+            'direccion'     => $this->direccion,
+            'representante' => $this->representante,
+            'categoria'     => $this->categoria,
+            'posicion'      => $this->posicion,
+            'dorsal'        => $this->dorsal,
+            'peso_kg'       => $this->peso_kg,
+            'estatura_cm'   => $this->estatura_cm,
+            'foto'          => $this->foto
+        ];
+
         try {
+            // Mantenemos las verificaciones de tus otros objetos en PHP
             if (!$this->ObjCat->verificarCategoria($this->categoria)) {
                 throw new Exception(INVALID_ID);
             }
             if (!$this->ObjPos->verificarPosiciones($this->posicion)) {
                 throw new Exception(INVALID_ID . '0');
             }
-            if ($this->representante !== null) {
+            if ($this->representante !== null && $this->representante !== '0') {
                 if (!$this->ObjRep->verificarRepresentantes($this->representante)) {
                     throw new Exception(INVALID_ID . '1');
                 }
             }
+
+            // Separar nombres y apellidos antes de enviarlos a la BD
+            $nombresArr  = explode(' ', trim($this->nombre), 2);
+            $p_nombre    = $nombresArr[0];
+            $s_nombre    = $nombresArr[1] ?? '';
+
+            $apellidosArr = explode(' ', trim($this->apellido), 2);
+            $p_apellidos  = $apellidosArr[0];
+            $s_apellidos  = $apellidosArr[1] ?? '';
+
             $conex = $this->conex();
-            $conex->beginTransaction();
 
-            // 1. Verificaciones de duplicados (Cédula y Teléfono)
-            if ($this->doc_identidad !== null && $this->doc_identidad !== '') {
-                $stmtVerifDoc = $conex->prepare("SELECT COUNT(*) FROM identidad_atleta WHERE numero_doc = :doc");
-                $stmtVerifDoc->execute([':doc' => $this->doc_identidad]);
-                if ($stmtVerifDoc->fetchColumn() > 0) {
-                    throw new Exception(DUPLICATE_CEDULA);
-                }
-            }
-            if ($this->telefono !== null && $this->telefono !== '') {
-                $stmtVerifTel = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE telefono = :tel");
-                $stmtVerifTel->execute([':tel' => $this->telefono]);
-                if ($stmtVerifTel->fetchColumn() > 0) {
-                    throw new Exception(DUPLICATE_PHONE);
-                }
-            }
+            // Llamamos al procedimiento almacenado pasando parámetros y declarando @resultado
+            $sql = "CALL RegistrarAtletaCompleto(
+            :doc, :pn, :sn, :pa, :sa, :gen, :fn, :tel, :dir, :rep, :cat, :pos, :dor, :peso, :est, :foto, @resultado
+        )";
 
-            // Separar nombres y apellidos
-            $nombresArr = explode(' ', $this->nombre, 2);
-            $p_nombre = $nombresArr[0];
-            $s_nombre = isset($nombresArr[1]) ? $nombresArr[1] : '';
-
-            $apellidosArr = explode(' ', $this->apellido, 2);
-            $p_apellidos = $apellidosArr[0];
-            $s_apellidos = isset($apellidosArr[1]) ? $apellidosArr[1] : '';
-
-            // Insertar atleta
-            $sqlAtleta = "INSERT INTO atletas (p_nombre, s_nombre, p_apellidos, s_apellidos, genero, fecha_nac, foto) 
-                          VALUES (:pn, :sn, :pa, :sa, :gen, :fn, :foto)";
-            $stmtAtleta = $conex->prepare($sqlAtleta);
-            $stmtAtleta->execute([
-                ':pn' => $p_nombre,
-                ':sn' => $s_nombre,
-                ':pa' => $p_apellidos,
-                ':sa' => $s_apellidos,
-                ':gen' => $this->genero,
-                ':fn' => $this->fecha_nac,
+            $stmt = $conex->prepare($sql);
+            $stmt->execute([
+                ':doc'  => $this->doc_identidad ?? '',
+                ':pn'   => $p_nombre,
+                ':sn'   => $s_nombre,
+                ':pa'   => $p_apellidos,
+                ':sa'   => $s_apellidos,
+                ':gen'  => $this->genero,
+                ':fn'   => $this->fecha_nac,
+                ':tel'  => $this->telefono ?? '',
+                ':dir'  => $this->direccion ?? '',
+                ':rep'  => ($this->representante !== '0' && $this->representante !== '') ? $this->representante : null,
+                ':cat'  => $this->categoria,
+                ':pos'  => $this->posicion,
+                ':dor'  => $this->dorsal,
+                ':peso' => $this->peso_kg,
+                ':est'  => $this->estatura_cm,
                 ':foto' => $this->foto
             ]);
-            $codigo_atleta = $conex->lastInsertId();
 
-            // Insertar contacto
-            if ($this->telefono || $this->direccion) {
-                $sqlContacto = "INSERT INTO contacto_atleta (codigo_atleta, direccion, telefono) VALUES (:ca, :dir, :tel)";
-                $stmtContacto = $conex->prepare($sqlContacto);
-                $stmtContacto->execute([
-                    ':ca' => $codigo_atleta,
-                    ':dir' => $this->direccion ?? '',
-                    ':tel' => $this->telefono ?? ''
-                ]);
+            // ¡IMPORTANTE! Liberar el cursor para permitir ejecutar la siguiente consulta (SELECT @resultado)
+            $stmt->closeCursor();
+
+            // Consultamos qué nos respondió el Procedimiento Almacenado
+            $resStmt = $conex->query("SELECT @resultado AS resultado");
+            $row = $resStmt->fetch(PDO::FETCH_ASSOC);
+            $resultado_sp = $row['resultado'];
+
+            // Interpretamos los códigos devueltos por MySQL para lanzar las excepciones correspondientes
+            if ($resultado_sp == -1) {
+                throw new Exception(DUPLICATE_CEDULA);
+            } elseif ($resultado_sp == -2) {
+                throw new Exception(DUPLICATE_PHONE);
+            } elseif ($resultado_sp == 0) {
+                throw new Exception("Ocurrió un error en la base de datos al registrar el atleta.");
             }
 
-            // Insertar identidad
-            if ($this->doc_identidad) {
-                $sqlIdentidad = "INSERT INTO identidad_atleta (codigo_atleta, tipo_doc, numero_doc) VALUES (:ca, 'V', :nd)";
-                $stmtIdentidad = $conex->prepare($sqlIdentidad);
-                $stmtIdentidad->execute([
-                    ':ca' => $codigo_atleta,
-                    ':nd' => $this->doc_identidad
-                ]);
-            }
-
-            // Insertar representante
-            if ($this->representante && $this->representante !== '0') {
-                $sqlAr = "INSERT INTO atleta_representante (codigo_atleta, codigo_representante) VALUES (:ca, :cr)";
-                $stmtAr = $conex->prepare($sqlAr);
-                $stmtAr->execute([
-                    ':ca' => $codigo_atleta,
-                    ':cr' => $this->representante
-                ]);
-            }
-
-            // Insertar inscripcion
-            $sqlInsc = "INSERT INTO inscripciones (codigo_atleta, codigo_categoria, codigo_posicion, dorsal, peso_kg, estatura_cm, fecha_inscripcion, estatus) 
-                        VALUES (:ca, :cc, :cp, :dorsal, :peso, :estatura, CURDATE(), 1)";
-            $stmtInsc = $conex->prepare($sqlInsc);
-            $stmtInsc->execute([
-                ':ca' => $codigo_atleta,
-                ':cc' => $this->categoria,
-                ':cp' => $this->posicion,
-                ':dorsal' => $this->dorsal,
-                ':peso' => $this->peso_kg,
-                ':estatura' => $this->estatura_cm
-            ]);
-
-            $conex->commit();
-            return array('accion' => 'exito');
+            // Si llegamos aquí, el resultado fue 1 (Éxito)
+            return array('accion' => 'exito', 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
-            if ($conex && $conex->inTransaction()) {
-                $conex->rollBack();
-            }
+            // Ya no necesitas hacer $conex->rollBack() en PHP porque MySQL se encarga de eso.
             logs('Atletas', $e->getMessage(), 'Modelo_Incluir');
-            return array('accion' => 'error', 'codigo' => $e->getMessage());
+            return array('accion' => 'error', 'codigo' => $e->getMessage(), 'datos_nuevos' => json_encode($datos_nuevos));
         } finally {
             $conex = null;
         }
@@ -345,6 +330,25 @@ class ModeloAtletas extends Conexion
     private function Modificar()
     {
         $conex = null;
+
+        // 1. Preparamos el arreglo con los datos nuevos que se intentan guardar
+        $datos_nuevos = [
+            'doc_identidad' => $this->doc_identidad,
+            'nombre'        => $this->nombre,
+            'apellido'      => $this->apellido,
+            'genero'        => $this->genero,
+            'fecha_nac'     => $this->fecha_nac,
+            'telefono'      => $this->telefono,
+            'direccion'     => $this->direccion,
+            'representante' => $this->representante,
+            'categoria'     => $this->categoria,
+            'posicion'      => $this->posicion,
+            'dorsal'        => $this->dorsal,
+            'peso_kg'       => $this->peso_kg,
+            'estatura_cm'   => $this->estatura_cm,
+            'foto'          => $this->foto
+        ];
+
         try {
             if (!$this->verificarExistencia('categoria', $this->categoria, 'categorias', NULL)) {
                 throw new Exception(INVALID_ID);
@@ -357,6 +361,7 @@ class ModeloAtletas extends Conexion
                     throw new Exception(INVALID_ID . '1');
                 }
             }
+
             $conex = $this->conex();
             $conex->beginTransaction();
 
@@ -367,6 +372,7 @@ class ModeloAtletas extends Conexion
                     throw new Exception(DUPLICATE_CEDULA);
                 }
             }
+
             if ($this->telefono !== null && $this->telefono !== '') {
                 $stmtVerifTel = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE telefono = :tel AND codigo_atleta != :id");
                 $stmtVerifTel->execute([':tel' => $this->telefono, ':id' => $this->id]);
@@ -385,7 +391,7 @@ class ModeloAtletas extends Conexion
             $s_apellidos = isset($apellidosArr[1]) ? $apellidosArr[1] : '';
 
             $sqlAtleta = "UPDATE atletas SET p_nombre = :pn, s_nombre = :sn, p_apellidos = :pa, s_apellidos = :sa, 
-                          genero = :gen, fecha_nac = :fn, foto = :foto WHERE codigo_atleta = :id";
+                      genero = :gen, fecha_nac = :fn, foto = :foto WHERE codigo_atleta = :id";
             $stmtAtleta = $conex->prepare($sqlAtleta);
             $stmtAtleta->execute([
                 ':pn' => $p_nombre,
@@ -445,7 +451,7 @@ class ModeloAtletas extends Conexion
 
             // Update inscripciones (the latest one)
             $sqlInsc = "UPDATE inscripciones SET codigo_categoria = :cc, codigo_posicion = :cp, dorsal = :dorsal, peso_kg = :peso, estatura_cm = :estatura 
-                        WHERE codigo_atleta = :id AND codigo_inscripcion = (SELECT max_id FROM (SELECT MAX(codigo_inscripcion) as max_id FROM inscripciones WHERE codigo_atleta = :id2) AS temp)";
+                    WHERE codigo_atleta = :id AND codigo_inscripcion = (SELECT max_id FROM (SELECT MAX(codigo_inscripcion) as max_id FROM inscripciones WHERE codigo_atleta = :id2) AS temp)";
             $stmtInsc = $conex->prepare($sqlInsc);
             $stmtInsc->execute([
                 ':cc' => $this->categoria,
@@ -458,26 +464,31 @@ class ModeloAtletas extends Conexion
             ]);
 
             $conex->commit();
-            return array('accion' => 'exito');
+
+            // 2. Retornamos los datos nuevos en caso de éxito
+            return array('accion' => 'exito', 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
             }
             logs('Atletas', $e->getMessage(), 'Modelo_Modificar');
-            return array('accion' => 'error', 'codigo' => $e->getMessage());
+
+            // 3. Retornamos los datos nuevos en caso de error
+            return array('accion' => 'error', 'codigo' => $e->getMessage(), 'datos_nuevos' => json_encode($datos_nuevos));
         } finally {
             $conex = null;
         }
     }
 
-    private function Buscar()
+    public function Buscar($id = null)
     {
         $conex = null;
         try {
+            $codigo = ($id === null) ? $this->id : $id;
             $conex = $this->conex();
             $sentencia = "SELECT * FROM vista_atletas WHERE id_atleta = :id";
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':id', $codigo);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             return array('accion' => 'buscar', 'datos' => $datos);
@@ -510,10 +521,6 @@ class ModeloAtletas extends Conexion
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
-
-
-
-
             $stmtVerif = $conex->prepare("SELECT COUNT(*) FROM atletas WHERE codigo_atleta = :id");
             $stmtVerif->execute([':id' => $this->id]);
             if ($stmtVerif->fetchColumn() == 0) {
@@ -530,7 +537,7 @@ class ModeloAtletas extends Conexion
             $stmtCargo->execute([':id' => $this->id]);
 
             if ($stmtCargo->fetchColumn() > 0) {
-                throw new Exception(ASSOCIATES.'1');
+                throw new Exception(ASSOCIATES . '1');
             }
 
             // Cambiar estatus de la inscripcion a 2
@@ -564,30 +571,44 @@ class ModeloAtletas extends Conexion
     private function Reinscribir(): array
     {
         $conex = null;
+
+        // 1. Capturamos los datos de la nueva inscripción
+        $datos_nuevos = [
+            'categoria'   => $this->categoria,
+            'posicion'    => $this->posicion,
+            'dorsal'      => $this->dorsal,
+            'peso_kg'     => $this->peso_kg,
+            'estatura_cm' => $this->estatura_cm
+        ];
+
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
 
             $sqlInsc = "INSERT INTO inscripciones (codigo_atleta, codigo_categoria, codigo_posicion, dorsal, peso_kg, estatura_cm, fecha_inscripcion, estatus) 
-                        VALUES (:ca, :cc, :cp, :dorsal, :peso, :estatura, CURDATE(), 1)";
+                    VALUES (:ca, :cc, :cp, :dorsal, :peso, :estatura, CURDATE(), 1)";
             $stmtInsc = $conex->prepare($sqlInsc);
             $stmtInsc->execute([
-                ':ca' => $this->id,
-                ':cc' => $this->categoria,
-                ':cp' => $this->posicion,
-                ':dorsal' => $this->dorsal,
-                ':peso' => $this->peso_kg,
+                ':ca'       => $this->id,
+                ':cc'       => $this->categoria,
+                ':cp'       => $this->posicion,
+                ':dorsal'   => $this->dorsal,
+                ':peso'     => $this->peso_kg,
                 ':estatura' => $this->estatura_cm
             ]);
 
             $conex->commit();
-            return ['accion' => 'exito'];
+
+            // 2. Retornamos los datos nuevos en el éxito
+            return ['accion' => 'exito', 'datos_nuevos' => json_encode($datos_nuevos)];
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
             }
             logs('Atletas', $e->getMessage(), 'Modelo_Reinscribir');
-            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+
+            // 3. Retornamos los datos nuevos en el error
+            return ['accion' => 'error', 'codigo' => $e->getMessage(), 'datos_nuevos' => json_encode($datos_nuevos)];
         } finally {
             $conex = null;
         }

@@ -220,6 +220,9 @@ function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
                 DUPLICATE_EMAIL . '0'  => 'El correo ya fue usado por otro usuario (eliminado). No se puede reutilizar.',
                 DUPLICATE_CEDULA . '0'  => 'La cedula ya fue usado por otro usuario (eliminado). No se puede reutilizar.',
                 DUPLICATE_PHONE . '0'  => 'El Telefono ya fue usado por otro usuario (eliminado). No se puede reutilizar.',
+                'ROLE_RULES_1' => 'No se puede cambiar el rol de un usuario de Nivel 1.',
+                'ROLE_RULES_2' => 'Un usuario de Nivel 2 no puede cambiar su propio rol.',
+                'ROLE_RULES_3' => 'Debe existir al menos un usuario activo con nivel de rol 2.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
         }
@@ -250,6 +253,7 @@ function eliminarUsuario($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID       => 'El usuario que intenta eliminar ya no existe',
                 ASSOCIATES  => 'No puede eliminar al Super Usuario',
+                'ROLE_RULES_4' => 'Los usuarios con nivel de rol 1 o 2 no pueden ser eliminados.',
                 default          => 'Ocurrió un error inesperado en la eliminacion.'
             };
         }
@@ -297,6 +301,7 @@ function bloquearUsuario($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 ASSOCIATES => 'El Super Usuario no puede ser bloqueado.',
                 INVALID_ID => 'El usuario que intenta modificar ya no existe.',
+                'ROLE_RULES_5' => 'Los usuarios con nivel de rol 1 o 2 no pueden ser bloqueados.',
                 default    => 'No se pudo completar la operación de bloqueo.'
             };
         }

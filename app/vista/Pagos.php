@@ -115,7 +115,9 @@ if (isset($solo_lista) && $solo_lista === true) :
                                         <div class="detalle_card_icon"><i data-lucide="hand-coins"></i></div>
                                         <div class="detalle_card_txt">
                                             <label>Vuelto Entregado</label>
-                                            <span>Monto: <b style="color:#28a745;"><?= number_format($v['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($v['simbolo'] . ' ' . $v['abreviatura']) ?></b></span>
+                                            <span>Monto Devuelto: <b style="color:#28a745;"><?= number_format($v['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($v['simbolo'] . ' ' . $v['abreviatura']) ?></b></span>
+                                            <small>Exceso Base: <?= number_format($v['monto_exceso_base'], 2, ',', '.') ?> <?= htmlspecialchars($dato['abre'] ?? '') ?></small>
+                                            <small>Tasa Usada: <?= ($v['tasa_usada'] > 0 && $v['tasa_usada'] != 1) ? number_format($v['tasa_usada'], 4, ',', '.') . ' ' . htmlspecialchars($v['abreviatura']) : '1.0000' ?></small>
                                             <small>Método: <?= htmlspecialchars($v['nombre_metodo_vuelto'] ?? 'N/A') ?></small>
                                             <small>Fecha: <?= date('d/m/Y', strtotime($v['fecha_vuelto'])) ?></small>
                                             <?php if(!empty($v['referencia'])): ?>
@@ -287,7 +289,9 @@ endif;
                                         <div class="detalle_card_icon"><i data-lucide="hand-coins"></i></div>
                                         <div class="detalle_card_txt">
                                             <label>Vuelto Entregado</label>
-                                            <span>Monto: <b style="color:#28a745;"><?= number_format($v['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($v['simbolo'] . ' ' . $v['abreviatura']) ?></b></span>
+                                            <span>Monto Devuelto: <b style="color:#28a745;"><?= number_format($v['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($v['simbolo'] . ' ' . $v['abreviatura']) ?></b></span>
+                                            <small>Exceso Base: <?= number_format($v['monto_exceso_base'], 2, ',', '.') ?> <?= htmlspecialchars($dato['abre'] ?? '') ?></small>
+                                            <small>Tasa Usada: <?= ($v['tasa_usada'] > 0 && $v['tasa_usada'] != 1) ? number_format($v['tasa_usada'], 4, ',', '.') . ' ' . htmlspecialchars($v['abreviatura']) : '1.0000' ?></small>
                                             <small>Método: <?= htmlspecialchars($v['nombre_metodo_vuelto'] ?? 'N/A') ?></small>
                                             <small>Fecha: <?= date('d/m/Y', strtotime($v['fecha_vuelto'])) ?></small>
                                             <?php if(!empty($v['referencia'])): ?>
@@ -436,15 +440,31 @@ endif;
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="monto_vuelto" name="monto_vuelto" readonly>
-                                <label for="monto_vuelto" class="titulo_formulario">Monto Vuelto</label>
+                                <input type="text" class="formulario" id="monto_vuelto_base" readonly>
+                                <label for="monto_vuelto_base" class="titulo_formulario" id="label_vuelto_base">Monto Vuelto Base</label>
                             </div>
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
                                 <select name="codigo_moneda" id="codigo_moneda_vuelto" class="formulario select">
                                 </select>
-                                <label for="codigo_moneda_vuelto" class="titulo_formulario">Moneda</label>
+                                <label for="codigo_moneda_vuelto" class="titulo_formulario">Moneda del Vuelto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="tasa_vuelto" id="tasa_vuelto" class="formulario select">
+                                    <option value="" disabled selected>Seleccione una tasa</option>
+                                </select>
+                                <label for="tasa_vuelto" class="titulo_formulario" id="label_tasa_vuelto">Tasa de Cambio (Si aplica)</label>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="monto_vuelto" name="monto_vuelto" readonly>
+                                <label for="monto_vuelto" class="titulo_formulario">Monto a Devolver</label>
                             </div>
                         </div>
                     </div>

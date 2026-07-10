@@ -12,7 +12,6 @@ class ModeloPagos extends Conexion
     private $id_metodo;
     private $id_moneda;
     private $monto;
-    private $tasa;
     private $fecha;
     private $fecha_f;
     private $referencia;
@@ -61,7 +60,6 @@ class ModeloPagos extends Conexion
         $this->id_moneda  = $datos['moneda'] ?? null;
         $this->anulados   = $datos['anulados'] ?? null;
         $this->monto      = isset($datos['monto']) ? (float) $datos['monto'] : null;
-        $this->tasa       = !empty($datos['tasa']) ? (float) $datos['tasa'] : 1;
         $this->fecha      = !empty($datos['fecha']) ? trim($datos['fecha']) : null;
         $this->fecha_f    = !empty($datos['fecha_f']) ? trim($datos['fecha_f']) : null;
         $this->referencia = isset($datos['referencia']) ? trim($datos['referencia']) : null;
@@ -244,11 +242,14 @@ class ModeloPagos extends Conexion
 
         try {
             $conex = $this->conex();
-            $stmtVueltos = $conex->prepare("SELECT v.*, m.simbolo, m.abreviatura, mp.nombre AS nombre_metodo_vuelto FROM vueltos v INNER JOIN monedas m ON v.codigo_moneda = m.codigo_moneda INNER JOIN metodos_pago mp ON v.codigo_metodo = mp.id_metodo");
+            $stmtVueltos = $conex->prepare("SELECT v.*, m.simbolo, m.abreviatura, mp.nombre AS nombre_metodo_vuelto FROM vueltos v INNER JOIN monedas m ON v.codigo_moneda = m.codigo_moneda INNER JOIN metodos_pago mp ON v.codigo_metodo = mp.codigo_metodo");
             $stmtVueltos->execute();
             $vueltosAll = $stmtVueltos->fetchAll();
             foreach ($vueltosAll as $v) {
                 if (isset($pagosAgrupados[$v['codigo_pago']])) {
+                    $monto_base = (float)$pagosAgrupados[$v['codigo_pago']]['monto_vuelto'];
+                    $v['monto_exceso_base'] = $monto_base;
+                    $v['tasa_usada'] = ($monto_base > 0) ? ((float)$v['monto_vuelto'] / $monto_base) : 0;
                     $pagosAgrupados[$v['codigo_pago']]['vueltos'][] = $v;
                 }
             }
@@ -318,7 +319,6 @@ class ModeloPagos extends Conexion
             foreach ($this->id_cuenta as $id_cobrar) {
                 if ($vuelto <= 0) break;
 
-                // Mantenemos la interacción con tu ModeloCuentasCobrar
                 $stmtCuenta = $this->objCuentas->Buscar($id_cobrar);
                 $cuentaData = $stmtCuenta['datos'] ?? null;
 

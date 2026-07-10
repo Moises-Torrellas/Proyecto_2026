@@ -62,6 +62,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (empty($permisos['modificar_partici'])) throw new Exception('No tienes permiso para realizar esta acción.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'eliminar':
+                if (empty($permisos['eliminar_partici'])) throw new Exception('No tienes permiso para realizar esta acción.');
+                eliminar($obj, $id_modulo, $bitacoraObj);
+                break;
             
             default:
                 throw new Exception('Acción no permitida.');
@@ -186,6 +190,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
                 INVALID_ID . '0'   => 'El equipo seleccionado no existe.',
                 DUPLICATE          => 'Este equipo ya se encuentra inscrito en el torneo.',
                 DB_CONNECTION      => 'Ocurrió un error al conectarse con la base de datos.',
+                'STATUS_ERROR'     => 'No se puede modificar ni eliminar una participacion de un torneo finalizado o en curso.',
                 default            => 'Ocurrió un error inesperado en la modificación.'
             };
         }
@@ -193,6 +198,40 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Participaciones', $e->getMessage(), 'Controlador_Modificar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function eliminar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $validaciones = [
+            'codigo_participacion' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Código inválido.']
+        ];
+
+        validar_datos($validaciones);
+
+        $datos = [
+            'codigo_participacion' => $_POST['codigo_participacion'],
+            'accion' => 'eliminar'
+        ];
+
+        $resultado = $obj->ProcesarDatos($datos);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino una participacion");
+            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Participación eliminada exitosamente.');
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            $resultado['mensaje'] = match ($resultado['codigo']) {
+                INVALID_ID         => 'La participacion que intenta eliminar no existe.',
+                'STATUS_ERROR'     => 'No se puede modificar ni eliminar una participacion de un torneo finalizado o en curso.',
+                default            => 'Ocurrió un error inesperado en la eliminacion.'
+            };
+        }
+
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Participaciones', $e->getMessage(), 'Controlador_Eliminar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

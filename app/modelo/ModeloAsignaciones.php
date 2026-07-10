@@ -88,7 +88,7 @@ class ModeloAsignaciones extends Conexion
 
             // Construcción dinámica de la consulta SQL (WHERE 1=1 permite ir sumando "AND" fácilmente)
             $sql = "SELECT a.id_asignacion, 
-                           DATE_FORMAT(a.fecha_asignacion, '%d/%m/%Y %H:%i') as fecha_vista,
+                           DATE_FORMAT(a.fecha_asignacion, '%d/%m/%Y') as fecha_vista,
                            a.fecha_asignacion as fecha_real,
                            a.estatus as estatus_asignacion,
                            a.codigo_atleta,

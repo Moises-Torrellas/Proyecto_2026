@@ -211,25 +211,32 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
         
-        $consultar_datos_previos= $obj->Buscar($_POST['id']);
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
         $resultado = $obj->procesarDatos($datos);
 
-        $datos_previos = json_encode($consultar_datos_previos['datos']);
+        $representante = $consultar_datos_previos['datos'][0] ?? null;
+
+        $datos_previos_json = json_encode($representante);
         $datos_nuevos = '';
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó al representante: " .$datos_previos['cedula']. ' - '.$consultar_datos_previos['datos']['nombre'].' '.$consultar_datos_previos['datos']['apellido'] , $datos_previos, $datos_nuevos);
+            $mensaje = "Eliminó al representante: " . $representante['cedula'] . ' - ' . $representante['nombre'] . ' ' . $representante['apellido'];
+            registrarBitacora($bitacoraObj, $id_modulo, $mensaje, $datos_previos_json, $datos_nuevos);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Representante eliminado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El representante no existe.',
                 ASSOCIATES  => 'El representante tiene atletas asociados.',
-                DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
+                DB_CONNECTION      => 'Ocurrió un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la eliminacion.'
             };
-            registrarBitacora($bitacoraObj, $id_modulo, "Fallo al eliminar al representante: " . $_POST['id'] . ' - ' . $resultado['mensaje'], $datos_previos, $datos_nuevos);
+            
+            $mensaje_error = "Falló al eliminar al representante: " . $_POST['id'] . ' - ' . $resultado['mensaje'];
+            registrarBitacora($bitacoraObj, $id_modulo, $mensaje_error, $datos_previos_json, $datos_nuevos);
         }
+        
         echo json_encode($resultado);
+        
     } catch (Exception $e) {
         logs('Representantes', $e->getMessage(), 'Controlador_Eliminar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);

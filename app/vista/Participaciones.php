@@ -99,6 +99,9 @@
                             <div class="sub_item_fila">
                                 <div class="sub_item_info">
                                     <span class="sub_item_titulo"><?= htmlspecialchars($dato['equipo_nombre']) ?></span>
+                                    <span class="sub_item_fechas" style="font-size: 13px; color: var(--color-texto-secundario); margin-top: 4px; display: block;">
+                                        Atletas Asignados: <strong class="estatus_v" style="padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 5px;"><?= $dato['cantidad_atletas'] ?? '0' ?></strong>
+                                    </span>
                                 </div>
 
                                 <div class="sub_item_centro">
@@ -256,6 +259,9 @@
                     <div class="sub_item_fila">
                         <div class="sub_item_info">
                             <span class="sub_item_titulo"><?= htmlspecialchars($dato['equipo_nombre']) ?></span>
+                            <span class="sub_item_fechas" style="font-size: 13px; color: var(--color-texto-secundario); margin-top: 4px; display: block;">
+                                Atletas Asignados: <strong class="estatus_v" style="padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 5px;"><?= $dato['cantidad_atletas'] ?? '0' ?></strong>
+                            </span>
                         </div>
 
                         <div class="sub_item_centro">

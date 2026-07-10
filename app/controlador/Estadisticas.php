@@ -133,7 +133,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             'asistencias'    => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Asistencias: Ingrese una cantidad válida (0-999).'],
             'penalizaciones' => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Penalizaciones: Ingrese una cantidad válida (0-999).'],
             'goles_c'        => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Goles en contra: Ingrese una cantidad válida (0-999).'],
-            'partido'        => ['regla' => '/^([1-9][0-9]{0,2})$/', 'mensaje' => 'Debe ser al menos 1 partido.'],
+            'partido'        => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Debe ser al menos 0 partidos.'],
             'average'        => ['regla' => '/^[0-9]+(\.[0-9]{1,2})?$/', 'mensaje' => 'Formato decimal inválido (ej: 1.50).']
         ];
 
@@ -143,6 +143,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         validar_datos($validaciones);
 
+        $goles = (int) $_POST['goles'];
+        $partido = (int) $_POST['partido'];
+        $average_calc = ($partido > 0) ? number_format($goles / $partido, 2, '.', '') : '0.00';
+        $average_final = (isset($_POST['average']) && trim($_POST['average']) !== '') ? $_POST['average'] : $average_calc;
+
         $datos = [
             'participacion'  => $_POST[$llave_participacion],
             'atleta'         => $_POST['atleta'],
@@ -151,7 +156,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             'penalizaciones' => $_POST['penalizaciones'],
             'goles_c'        => $_POST['goles_c'],
             'partido'        => $_POST['partido'],
-            'average'        => $_POST['average']
+            'average'        => $average_final
         ];
         $datos['accion'] = 'incluir';
 
@@ -191,7 +196,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'asistencias'    => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Asistencias: Ingrese una cantidad válida (0-999).'],
             'penalizaciones' => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Penalizaciones: Ingrese una cantidad válida (0-999).'],
             'goles_c'        => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Goles en contra: Ingrese una cantidad válida (0-999).'],
-            'partido'        => ['regla' => '/^([1-9][0-9]{0,2})$/', 'mensaje' => 'Debe ser al menos 1 partido.'],
+            'partido'        => ['regla' => '/^[0-9]{1,3}$/', 'mensaje' => 'Debe ser al menos 0 partidos.'],
             'average'        => ['regla' => '/^[0-9]+(\.[0-9]{1,2})?$/', 'mensaje' => 'Formato decimal inválido (ej: 1.50).']
         ];
 
@@ -200,6 +205,11 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $validaciones[$llave_participacion] = ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Seleccione una participación válida.'];
 
         validar_datos($validaciones);
+
+        $goles = (int) $_POST['goles'];
+        $partido = (int) $_POST['partido'];
+        $average_calc = ($partido > 0) ? number_format($goles / $partido, 2, '.', '') : '0.00';
+        $average_final = (isset($_POST['average']) && trim($_POST['average']) !== '') ? $_POST['average'] : $average_calc;
 
         $datos = [
             'id'             => $_POST['id'],
@@ -210,7 +220,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'penalizaciones' => $_POST['penalizaciones'],
             'goles_c'        => $_POST['goles_c'],
             'partido'        => $_POST['partido'],
-            'average'        => $_POST['average']
+            'average'        => $average_final
         ];
         $datos['accion'] = 'modificar';
 

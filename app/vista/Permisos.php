@@ -96,7 +96,6 @@
                                 <div class="sub_item_info" style="flex: 2;">
                                     <span class="sub_item_titulo"><?= htmlspecialchars($dato['nombre_permiso']) ?></span>
                                     <small style="display: block; color: #666; font-size: 0.85em; margin-top: 2px;">Descripción: <?= htmlspecialchars($dato['descripcion']) ?></small>
-                                    <small style="display: block; color: #666; font-size: 0.85em; margin-top: 2px;">Clave: <?= htmlspecialchars($dato['clave']) ?></small>
                                 </div>
 
                                 <div class="sub_item_centro">
@@ -248,7 +247,6 @@
                         <div class="sub_item_info" style="flex: 2;">
                             <span class="sub_item_titulo"><?= htmlspecialchars($dato['nombre_permiso']) ?></span>
                             <small style="display: block; color: #666; font-size: 0.85em; margin-top: 2px;">Descripción: <?= htmlspecialchars($dato['descripcion']) ?></small>
-                            <small style="display: block; color: #666; font-size: 0.85em; margin-top: 2px;">Clave: <?= htmlspecialchars($dato['clave']) ?></small>
                         </div>
 
                         <div class="sub_item_centro">

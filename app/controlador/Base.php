@@ -56,7 +56,7 @@ function registrarBitacora($bitacora, int $id_modulo, string $mensaje, string $d
 function validar_datos(array $data): void
 {
     foreach ($data as $campo => $valor) {
-        if (!isset($_POST[$campo]) || empty(trim($_POST[$campo]))) {
+        if (!isset($_POST[$campo]) || trim($_POST[$campo]) === '') {
             throw new Exception("El campo $campo es obligatorio.");
         }
     }

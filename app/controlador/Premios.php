@@ -209,7 +209,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El Premio no existe.',
-                ASSOCIATES => 'El Premio tiene detalle palmare asociados.',
+                ASSOCIATES => 'El Premio esta asociado a un palmare.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default    => 'Ocurrió un error inesperado en la eliminacion.'
             };

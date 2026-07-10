@@ -49,14 +49,19 @@ $(document).ready(function () {
                 let idsCobrar = $('#cuenta').val() || [];
                 let deudaTotalPendiente = 0;
                 idsCobrar.forEach(id => {
-                    let c = listadoCuentas.find(cuenta => cuenta.id_cobrar == id);
+                    let c = listadoCuentas.find(cuenta => cuenta.codigo_cargo == id);
                     if (c) deudaTotalPendiente += parseFloat(c.monto_pendiente) || 0;
                 });
 
                 let saldoRestante = deudaTotalPendiente - monto;
                 if (saldoRestante < 0) {
                     // Hay exceso, mostrar modal de vuelto
-                    $('#monto_vuelto').val(Math.abs(saldoRestante).toFixed(2));
+                    let exceso = Math.abs(saldoRestante);
+                    $('#monto_vuelto_base').val(exceso.toFixed(2));
+                    $('#monto_vuelto_base').data('valor', exceso);
+                    let simDeuda = cuentaSeleccionadaActual.simbolo_moneda;
+                    $('#label_vuelto_base').text(`Monto Vuelto Base (${simDeuda})`);
+                    $('#monto_vuelto').val('');
                     $('#fecha_vuelto').val($('#fecha').val()); // misma fecha por defecto
 
                     // Construir selects
@@ -258,11 +263,11 @@ $(document).ready(function () {
         }
 
         // Validación de protección multimoneda en selección múltiple
-        let primeraCuenta = listadoCuentas.find(c => c.id_cobrar == idsCobrar[0]);
+        let primeraCuenta = listadoCuentas.find(c => c.codigo_cargo == idsCobrar[0]);
         let monedaIncompatible = false;
 
         idsCobrar.forEach(id => {
-            let cuenta = listadoCuentas.find(c => c.id_cobrar == id);
+            let cuenta = listadoCuentas.find(c => c.codigo_cargo == id);
             if (cuenta && cuenta.moneda_abreviatura !== primeraCuenta.moneda_abreviatura) {
                 monedaIncompatible = true;
             }
@@ -281,10 +286,10 @@ $(document).ready(function () {
         let htmlDeudas = '<div class="alerta-info-deuda" style="background-color: #f0f7ff; border-left: 4px solid #007bff; padding: 10px; margin-top: 5px; border-radius: 4px;"><p style="margin: 0; font-size: 13px; color: #333;">⚠️ <strong>Cuentas seleccionadas:</strong></p><ul style="margin: 5px 0 0 20px;">';
 
         idsCobrar.forEach(id => {
-            let cuenta = listadoCuentas.find(c => c.id_cobrar == id);
+            let cuenta = listadoCuentas.find(c => c.codigo_cargo == id);
             if (cuenta) {
                 let pendiente = parseFloat(cuenta.monto_pendiente).toFixed(2);
-                let simboloMoneda = cuenta.moneda_simbolo;
+                let simboloMoneda = cuenta.simbolo_moneda;
                 htmlDeudas += `<li style="font-size: 12px; color: #555;">${cuenta.concepto_nombre} - ${cuenta.atleta_nombre}: <span style="color: #dc3545; font-weight: bold;">${pendiente} ${simboloMoneda}</span></li>`;
             }
         });
@@ -302,6 +307,14 @@ $(document).ready(function () {
     // Listener en tiempo real para amortización y monto al cambio
     $('#monto, #tasa').on('input change', function () {
         recalcularAmortizacion();
+    });
+
+    $('#codigo_moneda_vuelto, #fecha_vuelto').on('change', function () {
+        solicitarTasaVueltoAPI();
+    });
+
+    $('#tasa_vuelto').on('change', function () {
+        recalcularVuelto();
     });
 
     $('#cerrar_modal_Secundario').on('click', function () {
@@ -352,7 +365,7 @@ function solicitarTasaAPI() {
         return;
     }
 
-    let monedaPagoObj = listadoMonedas.find(m => m.id_moneda == idMonedaPago);
+    let monedaPagoObj = listadoMonedas.find(m => m.codigo_moneda == idMonedaPago);
     if (!monedaPagoObj) return;
 
     let isoCuenta = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
@@ -391,19 +404,27 @@ function solicitarTasaAPI() {
                 selectTasa.empty();
 
                 if (lee.accion === 'exito' && lee.datos && lee.datos.length > 0) {
-                    selectTasa.append('<option value="" disabled selected>Seleccione una tasa</option>');
-                    lee.datos.forEach(t => {
+
+                    // Modificación: Iteramos y seleccionamos automáticamente la primera tasa
+                    lee.datos.forEach((t, index) => {
                         let tipoLabel = (t.tipo === 'automatica') ? 'Automática' : 'Manual';
-                        selectTasa.append(`<option value="${parseFloat(t.valor_tasa).toFixed(4)}">${tipoLabel} - ${parseFloat(t.valor_tasa).toFixed(4)} ${t.simbolo}</option>`);
+                        let seleccion = (index === 0) ? 'selected' : ''; // <-- Autoselección en la primera iteración
+
+                        selectTasa.append(`<option value="${parseFloat(t.valor_tasa).toFixed(4)}" ${seleccion}>${tipoLabel} - ${parseFloat(t.valor_tasa).toFixed(4)} ${t.simbolo}</option>`);
                     });
+
                     selectTasa.prop('disabled', false);
-                    $('#label_tasa').html(`Seleccione Tasa <strong style="color: #007bff;">(${isoPago} ➔ ${isoCuenta})</strong>`);
+                    $('#label_tasa').html(`Tasa Seleccionada <strong style="color: #007bff;">(${isoPago} ➔ ${isoCuenta})</strong>`);
+
                 } else {
                     selectTasa.append('<option value="" disabled selected>No hay tasas disponibles</option>');
                     selectTasa.prop('disabled', true);
                     muestraMensaje("error", 3000, "Aviso de Tasa", "No se encontraron tasas disponibles para esta fecha.");
                 }
+
+                // Como ya hay una tasa seleccionada, esto calculará el monto de inmediato
                 recalcularAmortizacion();
+
             } catch (e) {
                 console.error("Error procesando tasa", e);
             }
@@ -423,17 +444,17 @@ function recalcularAmortizacion() {
         $('#monto_cambio').val(montoAmortizado.toFixed(2));
 
         // 2. Mantenemos el bloque visual de ayuda por si quieres mostrarle el desglose al usuario
-        let simDeuda = cuentaSeleccionadaActual.moneda_simbolo;
+        let simDeuda = cuentaSeleccionadaActual.simbolo_moneda;
         let isoDeuda = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
 
         let idMonedaPago = $('#moneda').val();
-        let monedaPagoObj = listadoMonedas.find(m => m.id_moneda == idMonedaPago);
+        let monedaPagoObj = listadoMonedas.find(m => m.codigo_moneda == idMonedaPago);
         let isoPago = monedaPagoObj ? monedaPagoObj.abreviatura.toUpperCase() : '';
 
         let idsCobrar = $('#cuenta').val() || [];
         let deudaTotalPendiente = 0;
         idsCobrar.forEach(id => {
-            let c = listadoCuentas.find(cuenta => cuenta.id_cobrar == id);
+            let c = listadoCuentas.find(cuenta => cuenta.codigo_cargo == id);
             if (c) deudaTotalPendiente += parseFloat(c.monto_pendiente) || 0;
         });
 
@@ -458,6 +479,90 @@ function recalcularAmortizacion() {
         // Si los campos están vacíos, reseteamos tanto el input como el mensaje de ayuda
         $('#monto_cambio').val('');
         $('#monto_equivalente_ayuda').html('');
+    }
+}
+
+function solicitarTasaVueltoAPI() {
+    let idMonedaVuelto = $('#codigo_moneda_vuelto').val();
+    let fechaVuelto = $('#fecha_vuelto').val();
+    
+    if (!idMonedaVuelto || !fechaVuelto || !cuentaSeleccionadaActual) {
+        $('#label_tasa_vuelto').text("Tasa de Cambio");
+        return;
+    }
+
+    let monedaVueltoObj = listadoMonedas.find(m => m.codigo_moneda == idMonedaVuelto);
+    if (!monedaVueltoObj) return;
+
+    let isoCuenta = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
+    let isoVuelto = monedaVueltoObj.abreviatura.toUpperCase();
+
+    if (isoCuenta === isoVuelto) {
+        let selectTasa = $('#tasa_vuelto');
+        selectTasa.empty();
+        selectTasa.append('<option value="1.0000" selected>Misma Moneda (1.0000)</option>');
+        selectTasa.prop('disabled', true);
+        $('#label_tasa_vuelto').html(`Tasa de cambio <span style="color: #28a745; font-size:12px;">(1 ${isoVuelto} = 1 ${isoCuenta})</span>`);
+        recalcularVuelto();
+        return;
+    }
+
+    $('#label_tasa_vuelto').html(`Tasa de cambio <span style="color: #007bff; font-size:11px;">(${isoVuelto} ➔ ${isoCuenta})</span>`);
+
+    let datos = new FormData();
+    datos.append('accion', 'consultar_tasas_disponibles');
+    datos.append('codigo_moneda', idMonedaVuelto);
+    datos.append('fecha', fechaVuelto);
+
+    $.ajax({
+        url: "",
+        type: "POST",
+        contentType: false,
+        processData: false,
+        data: datos,
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
+        success: function (respuesta) {
+            try {
+                let lee = JSON.parse(respuesta);
+                let selectTasa = $('#tasa_vuelto');
+                selectTasa.empty();
+
+                if (lee.accion === 'exito' && lee.datos && lee.datos.length > 0) {
+                    lee.datos.forEach((t, index) => {
+                        let tipoLabel = (t.tipo === 'automatica') ? 'Automática' : 'Manual';
+                        let seleccion = (index === 0) ? 'selected' : ''; 
+                        selectTasa.append(`<option value="${parseFloat(t.valor_tasa).toFixed(4)}" ${seleccion}>${tipoLabel} - ${parseFloat(t.valor_tasa).toFixed(4)} ${t.simbolo}</option>`);
+                    });
+                    selectTasa.prop('disabled', false);
+                    $('#label_tasa_vuelto').html(`Tasa Seleccionada <strong style="color: #007bff;">(${isoVuelto} ➔ ${isoCuenta})</strong>`);
+                } else {
+                    selectTasa.append('<option value="" disabled selected>No hay tasas disponibles</option>');
+                    selectTasa.prop('disabled', true);
+                    muestraMensaje("error", 3000, "Aviso de Tasa", "No se encontraron tasas disponibles para esta fecha.");
+                }
+
+                recalcularVuelto();
+            } catch (e) {
+                console.error("Error procesando tasa de vuelto", e);
+            }
+        }
+    });
+}
+
+function recalcularVuelto() {
+    let excesoBase = parseFloat($('#monto_vuelto_base').data('valor')) || 0;
+    let tasa = parseFloat($('#tasa_vuelto').val()) || 0;
+
+    if (excesoBase > 0 && tasa > 0) {
+        // excesoBase está en la moneda de la cuenta (moneda base).
+        // tasa es la tasa de cambio desde moneda base a moneda vuelto.
+        // Entonces, para convertir excesoBase a "moneda vuelto", multiplicamos por la tasa.
+        let montoConvertido = excesoBase * tasa;
+        $('#monto_vuelto').val(montoConvertido.toFixed(2));
+    } else {
+        $('#monto_vuelto').val('');
     }
 }
 
@@ -598,7 +703,7 @@ function enviaAjax(datos) {
 
                     construirSelect('moneda', lee.monedas, 'codigo_moneda', 'simbolo', 'nombre');
                     construirSelect('metodo', lee.metodos, 'codigo_metodo', 'nombre', 'nec_referencia');
-                    construirSelect('cuenta', lee.cuentas, 'codigo_cargo', 'concepto', 'p_nombre', 'p_apellidos', 'monto_total', 'simbolo_moneda', 'fecha_emision');
+                    construirSelect('cuenta', lee.cuentas, 'codigo_cargo', 'concepto', 'p_nombre', 'p_apellidos', 'monto_pendiente', 'simbolo_moneda', 'fecha_emision');
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
@@ -610,7 +715,13 @@ function enviaAjax(datos) {
 
                     if (lee.vuelto && parseFloat(lee.vuelto) > 0) {
                         $('#codigo_pago_vuelto').val(lee.id_pago);
-                        $('#monto_vuelto').val(parseFloat(lee.vuelto).toFixed(2));
+                        $('#monto_vuelto_base').val(parseFloat(lee.vuelto).toFixed(2));
+                        $('#monto_vuelto_base').data('valor', parseFloat(lee.vuelto));
+                        $('#monto_vuelto').val('');
+                        if (cuentaSeleccionadaActual) {
+                            let simDeuda = cuentaSeleccionadaActual.simbolo_moneda;
+                            $('#label_vuelto_base').text(`Monto Vuelto Base (${simDeuda})`);
+                        }
 
                         let hoyObj = new Date();
                         let mesObj = (hoyObj.getMonth() + 1).toString().padStart(2, '0');

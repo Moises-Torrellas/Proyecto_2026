@@ -177,7 +177,10 @@ class ModeloPremios extends Conexion
                 throw new Exception(INVALID_ID);
             }
             // Si la llave foránea en 'detalles_palmares' se llama distinto, ajústalo aquí. Asumo que es 'codigo_premio'
-            if ($this->verificarExistencia('codigo_premio', $this->codigo_premio, 'detalles_palmares', NULL, bloquear:true)) {
+            if ($this->verificarExistencia('codigo_premio', $this->codigo_premio, 'palmares_grupal', NULL, bloquear:true)) {
+                throw new Exception(ASSOCIATES);
+            }
+            if ($this->verificarExistencia('codigo_premio', $this->codigo_premio, 'palmares_individual', NULL, bloquear:true)) {
                 throw new Exception(ASSOCIATES);
             }
             
