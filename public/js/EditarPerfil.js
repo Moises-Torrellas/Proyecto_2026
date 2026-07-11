@@ -36,27 +36,42 @@ $(document).ready(function () {
     // --- FORMULARIO: INFORMACIÓN PERSONAL ---
     $('#btn_editar_personal').on('click', function () {
         if (validarPersonal()) {
-            var datos = new FormData($('#form_personal')[0]);
-            datos.append('accion', 'editar_personal');
-            enviaAjax(datos);
+            confirmar("¿Está seguro de actualizar su Información Personal?", function (confirmado) {
+                if (confirmado) {
+                    var datos = new FormData($('#form_personal')[0]);
+                    if (window.croppedImageBlob) {
+                        datos.set('foto', window.croppedImageBlob, 'foto_recortada.jpg');
+                    }
+                    datos.append('accion', 'editar_personal');
+                    enviaAjax(datos);
+                }
+            });
         }
     });
 
     // --- FORMULARIO: CONTACTO ---
     $('#btn_editar_contacto').on('click', function () {
         if (validarContacto()) {
-            var datos = new FormData($('#form_contacto')[0]);
-            datos.append('accion', 'editar_contacto');
-            enviaAjax(datos);
+            confirmar("¿Está seguro de actualizar su Información de Contacto?", function (confirmado) {
+                if (confirmado) {
+                    var datos = new FormData($('#form_contacto')[0]);
+                    datos.append('accion', 'editar_contacto');
+                    enviaAjax(datos);
+                }
+            });
         }
     });
 
     // --- FORMULARIO: SEGURIDAD ---
     $('#btn_editar_seguridad').on('click', function () {
         if (validarSeguridad()) {
-            var datos = new FormData($('#form_seguridad')[0]);
-            datos.append('accion', 'editar_seguridad');
-            enviaAjax(datos);
+            confirmar("¿Está seguro de actualizar su Contraseña?", function (confirmado) {
+                if (confirmado) {
+                    var datos = new FormData($('#form_seguridad')[0]);
+                    datos.append('accion', 'editar_seguridad');
+                    enviaAjax(datos);
+                }
+            });
         }
     });
 });
@@ -159,21 +174,4 @@ function enviaAjax(datos) {
         }
     });
 }
-
-// ==========================================
-// 6. PREVISUALIZACIÓN DE FOTO DE PERFIL
-// ==========================================
-const inputFoto = document.getElementById('foto');
-if (inputFoto) {
-    inputFoto.addEventListener('change', function (event) {
-        const archivo = event.target.files[0];
-
-        if (archivo) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                document.getElementById('foto_previa').src = e.target.result;
-            }
-            reader.readAsDataURL(archivo);
-        }
-    });
-}
+

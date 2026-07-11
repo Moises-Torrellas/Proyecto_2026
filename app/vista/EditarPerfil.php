@@ -22,20 +22,22 @@
                     </div>
                     
                     <div class="contenedor_panel">
-                        <div class="contenido_modal" style="display: flex; flex-direction: column; gap: 2rem;">
+                        <div class="perfil_grid">
                             
-                            <div class="seccion_perfil">
-                                <h3 style="margin-bottom: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Información Personal</h3>
+                            <div class="card_perfil perfil_col_1">
+                                <h3><i data-lucide="user"></i> Información Personal</h3>
                                 <form id="form_personal" autocomplete="off" enctype="multipart/form-data">
                                     <input type="hidden" id="id" name="id" value="<?= $_SESSION['id'] ?? '' ?>">
                                     <div class="row">
                                         <div class="colum">
-                                            <div class="caja_formulario subir_foto">
+                                            <div class="caja_formulario subir_foto" style="display: flex; flex-direction: column; align-items: center;">
                                                 <div class="preview_contenedor">
                                                     <?php 
-                                                        $ruta_foto = (isset($_SESSION['foto']) && !empty($_SESSION['foto'])) ? $_SESSION['foto'] : 'public/img/camara.png'; 
+                                                        $tiene_foto = (isset($_SESSION['foto']) && !empty($_SESSION['foto']) && $_SESSION['foto'] !== 'default.png' && $_SESSION['foto'] !== 'public/img/camara.png');
+                                                        $ruta_foto = $tiene_foto ? 'img/usuarios/' . $_SESSION['foto'] : ''; 
                                                     ?>
-                                                    <img id="foto_previa" src="<?= $ruta_foto ?>" alt="Foto de perfil">
+                                                    <img id="foto_previa" src="<?= $ruta_foto ?>" alt="Foto de perfil" style="display: <?= $tiene_foto ? 'block' : 'none' ?>;">
+                                                    <i id="icono_default" data-lucide="circle-user" style="display: <?= $tiene_foto ? 'none' : 'block' ?>; width: 80px; height: 80px; color: var(--color-primario);"></i>
                                                 </div>
                                                 <input type="file" class="input_foto_oculto" id="foto" name="foto" accept="image/*">
                                                 <label for="foto" class="btn_subir_foto">
@@ -71,71 +73,67 @@
                                         </div>
                                     </div>
                                     
-                                    <div class="row">
-                                        <div class="colum">
-                                            <button type="button" class="btn btn_azul" id="btn_editar_personal">Guardar Información Personal</button>
+                                    <div class="row" style="margin-top: 10px;">
+                                        <div class="colum" style="display: flex; justify-content: flex-end;">
+                                            <button type="button" class="btn btn_azul" id="btn_editar_personal">Guardar Personal</button>
                                         </div>
                                     </div>
                                 </form>
                             </div>
 
-                            <div class="seccion_perfil">
-                                <h3 style="margin-bottom: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Información de Contacto</h3>
+                            <div class="card_perfil">
+                                <h3><i data-lucide="phone"></i> Información de Contacto</h3>
                                 <form id="form_contacto" autocomplete="off">
-                                    <div class="row">
-                                        <div class="colum">
-                                            <div class="caja_formulario">
+                                    <div class="row" style="flex-direction: column; gap: 15px;">
+                                        <div class="colum" style="width: 100%;">
+                                            <div class="caja_formulario" style="margin-bottom: 0;">
                                                 <input type="text" class="formulario" id="telefono" name="telefono" value="<?= $_SESSION['telefono'] ?? '' ?>">
                                                 <label for="telefono" class="titulo_formulario">Teléfono</label>
                                                 <span class="mensaje" id="telefono_spam"></span>
                                             </div>
                                         </div>
-                                        <div class="colum">
-                                            <div class="caja_formulario">
+                                        <div class="colum" style="width: 100%;">
+                                            <div class="caja_formulario" style="margin-bottom: 0;">
                                                 <input type="text" class="formulario" id="correo" name="correo" value="<?= $_SESSION['correo'] ?? '' ?>">
                                                 <label for="correo" class="titulo_formulario">Correo</label>
                                                 <span class="mensaje" id="correo_spam"></span>
                                             </div>
                                         </div>
-                                        <div class="colum"></div>
-                                        <div class="colum"></div>
                                     </div>
 
-                                    <div class="row">
-                                        <div class="colum">
+                                    <div class="row" style="margin-top: 20px;">
+                                        <div class="colum" style="display: flex; justify-content: flex-end;">
                                             <button type="button" class="btn btn_azul" id="btn_editar_contacto">Guardar Contacto</button>
                                         </div>
                                     </div>
                                 </form>
                             </div>
 
-                            <div class="seccion_perfil">
-                                <h3 style="margin-bottom: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Seguridad</h3>
+                            <div class="card_perfil">
+                                <h3><i data-lucide="lock"></i> Seguridad</h3>
                                 <form id="form_seguridad" autocomplete="off">
-                                    <div class="row">
-                                        <div class="colum">
-                                            <div class="caja_formulario">
+                                    <div class="row" style="flex-direction: column; gap: 15px;">
+                                        <div class="colum" style="width: 100%;">
+                                            <div class="caja_formulario" style="margin-bottom: 0;">
                                                 <input type="password" class="formulario" id="contrasena" name="contrasena">
                                                 <label for="contrasena" class="titulo_formulario">Nueva Contraseña</label>
                                                 <span class="mensaje" id="contrasena_spam"></span>
                                                 <i class="fi fi-sr-eye ojo icon_input_ojo"></i>
                                             </div>
                                         </div>
-                                        <div class="colum">
-                                            <div class="caja_formulario">
+                                        <div class="colum" style="width: 100%;">
+                                            <div class="caja_formulario" style="margin-bottom: 0;">
                                                 <input type="password" class="formulario" id="confirmar_contrasena" name="confirmar_contrasena">
                                                 <label for="confirmar_contrasena" class="titulo_formulario">Confirmar Contraseña</label>
                                                 <span class="mensaje" id="confirmar_contrasena_spam"></span>
                                                 <i class="fi fi-sr-eye ojo icon_input_ojo"></i>
                                             </div>
                                         </div>
-                                        <div class="colum"></div>
-                                        <div class="colum"></div>
                                     </div>
 
-                                    <div class="row">
-                                        <div class="colum">
-                                            <button type="button" class="btn btn_azul" id="btn_editar_seguridad">Actualizar Contraseña</button>
+                                    <div class="row" style="margin-top: 20px;">
+                                        <div class="colum" style="display: flex; justify-content: flex-end;">
+                                            <button type="button" class="btn btn_azul" id="btn_editar_seguridad">Actualizar Clave</button>
                                         </div>
                                     </div>
                                 </form>
@@ -146,6 +144,7 @@
             </div>
         </div>
     </section>
+    <?php include('complementos/MiniModal.php'); ?>
     <script src="js/main.js"></script>
     <script src="js/EditarPerfil.js"></script>
 </body>

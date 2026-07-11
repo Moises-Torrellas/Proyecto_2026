@@ -593,7 +593,8 @@ endif;
                             <div class="caja_formulario subir_foto">
 
                                 <div class="preview_contenedor">
-                                    <img id="foto_previa" src="">
+                                    <img id="foto_previa" src="" style="display: none;">
+                                    <i id="icono_default" data-lucide="circle-user" style="display: block; width: 80px; height: 80px; color: var(--color-primario);"></i>
                                 </div>
 
                                 <input type="file" class="input_foto_oculto" id="foto" name="foto" accept="image/*">
@@ -617,6 +618,7 @@ endif;
             </div>
         </div>
     </section>
+    <?php include('complementos/MiniModal.php'); ?>
     <script src="js/main.js"></script>
     <script src="js/atletas.js"></script>
     <?php include('complementos/mensajeError.php'); ?>

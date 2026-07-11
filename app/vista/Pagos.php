@@ -331,7 +331,7 @@ endif;
                                 <select name="cuenta[]" id="cuenta" class="formulario select" multiple="multiple">
 
                                 </select>
-                                <label for="cuenta" class="titulo_formulario">Cuenta por Cobrar</label>
+                                <label for="cuenta" class="titulo_formulario">Cargos a Pagar</label>
                                 <span class="mensaje" id="cuenta_span"></span>
                             </div>
                         </div>

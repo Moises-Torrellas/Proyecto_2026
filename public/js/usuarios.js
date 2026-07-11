@@ -70,6 +70,9 @@ $(document).ready(function () {
                 confirmar('¿Está seguro que quiere registrar este usuario?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
+                        if (window.croppedImageBlob) {
+                            datos.set('foto', window.croppedImageBlob, 'foto_recortada.jpg');
+                        }
                         datos.append('accion', 'incluir');
                         enviaAjax(datos);
                     }
@@ -81,8 +84,10 @@ $(document).ready(function () {
                 confirmar('¿Está seguro que quiere modificar este usuario?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
-
-                        var fotoActual = $("#proceso").data("foto_actual")
+                        if (window.croppedImageBlob) {
+                            datos.set('foto', window.croppedImageBlob, 'foto_recortada.jpg');
+                        }
+                        var fotoActual = $("#proceso").data("foto_actual");
                         datos.append('foto_actual', fotoActual);
                         datos.append('accion', 'modificar');
                         enviaAjax(datos);
@@ -285,6 +290,14 @@ function modificar(datos) {
     $('#correo').val(datos[0].correo);
     $('#roles').val(datos[0].id_rol).trigger('change');
     $("#proceso").data("foto_actual", datos[0].foto);
+
+    if (datos[0].foto && datos[0].foto !== 'default.png') {
+        $('#foto_previa').attr('src', 'img/usuarios/' + datos[0].foto).show();
+        $('#icono_default').hide();
+    } else {
+        $('#foto_previa').hide().attr('src', '');
+        $('#icono_default').show();
+    }
 
     abrirModal();
 }
@@ -579,21 +592,5 @@ function enviaAjax(datos) {
     });
 }
 
-// Escuchamos cuando el usuario selecciona un archivo
-document.getElementById('foto').addEventListener('change', function (event) {
-    const archivo = event.target.files[0];
 
-    if (archivo) {
-        // Creamos el objeto para leer el archivo
-        const reader = new FileReader();
-
-        // Cuando termine de leer, cambiamos el 'src' de la imagen
-        reader.onload = function (e) {
-            document.getElementById('foto_previa').src = e.target.result;
-        }
-
-        // Inicia la lectura del archivo como una URL de datos
-        reader.readAsDataURL(archivo);
-    }
-});
 

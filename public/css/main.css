@@ -50,38 +50,38 @@
 [data-tema="oscuro"] {
     /* Modo oscuro */
     --fuente: sans-serif;
-    --fondo-principal: #313841;
-    --fondo-contraste: #3a4750;
+    --fondo-principal: #0f151b;
+    --fondo-contraste: #172029;
     --color-primario: #32AF0A;
-    --color-claro: #828282;
-    --color-secundario: #0a1e33;
-    --color-oscuro: #cfd8dc;
-    --texto-principal: #cfd8dc;
-    --texto-contraste: #1F283B;
+    --color-claro: #94a3b8;
+    --color-secundario: #1e293b;
+    --color-oscuro: #f8fafc;
+    --texto-principal: #f8fafc;
+    --texto-contraste: #ffffff;
     --borde-color: #32AF0A;
-    --color-peligro: #ff4d4f;
-    --texto-sombra: 0px 0px 8px #31c7e666;
+    --color-peligro: #ef4444;
+    --texto-sombra: 0px 0px 8px rgba(50, 175, 10, 0.4);
 
-    --fondo-form: #334954;
-    --borde-form: #c8d1e0;
+    --fondo-form: #1e293b;
+    --borde-form: #334155;
 
     --boton-fondo: var(--color-primario);
-    --boton-texto: var(--texto-contraste);
-    --boton-sombra: 0px 0px 8px 0px rgba(66, 204, 100, 0.4);
+    --boton-texto: #ffffff;
+    --boton-sombra: 0px 0px 8px 0px rgba(50, 175, 10, 0.4);
     --boton-texto-sombra: 0px 0px 8px rgba(255, 255, 255, 0.3);
 
     --boton-fondo-secundario: var(--color-secundario);
     --boton-texto-secundario: var(--texto-principal);
-    --boton-sombra-secundario: 0px 0px 8px 0px rgba(66, 204, 100, 0.4);
+    --boton-sombra-secundario: 0px 0px 8px 0px rgba(50, 175, 10, 0.4);
     --boton-texto-sombra-secundario: 0px 0px 8px rgba(255, 255, 255, 0.3);
 
     --tabla-encabezado-fondo: var(--color-primario);
-    --tabla-encabezado-texto: var(--texto-contraste);
-    --tabla-fila-fondo: #2b3a48;
+    --tabla-encabezado-texto: #ffffff;
+    --tabla-fila-fondo: #1e293b;
     --tabla-fila-texto: var(--texto-principal);
 
     --color_loader: #32AF0A;
-    --fondo_loader: #1f2a36;
+    --fondo_loader: #0b0f13;
 }
 
 :root,
@@ -1450,7 +1450,7 @@ option {
 /* Números de los días */
 .fc-daygrid-day-number {
     color: var(--texto-principal) !important;
-    padding: 5px !important;
+    transition: none !important;
 }
 
 /* Bordes del calendario */
@@ -1576,3 +1576,95 @@ option {
 }
 
 
+
+/* ======================================================== */
+/* ESTILOS EDITAR PERFIL (Cards) */
+/* ======================================================== */
+.perfil_grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 100%;
+    padding-bottom: 30px;
+}
+
+.perfil_col_1 {
+    grid-column: 1 / 3;
+}
+
+.card_perfil {
+    background: var(--fondo-principal);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid var(--borde-form);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card_perfil:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.card_perfil h3 {
+    color: var(--texto-principal);
+    font-size: 1.2rem;
+    border-bottom: 2px solid var(--color-primario);
+    padding-bottom: 10px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card_perfil h3 i {
+    color: var(--color-primario);
+}
+
+.btn_subir_foto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--color-primario);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+    margin-top: 10px;
+}
+
+.btn_subir_foto:hover {
+    filter: brightness(1.1);
+}
+
+.preview_contenedor {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid var(--color-primario);
+    box-shadow: 0 0 15px rgba(50, 175, 10, 0.3);
+    overflow: hidden;
+    background: var(--fondo-principal);
+}
+
+.preview_contenedor img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.input_foto_oculto {
+    display: none;
+}

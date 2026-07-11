@@ -591,3 +591,15 @@
         font-size: 0.75rem;
     }
 }
+
+/* ======================================================== */
+/* RESPONSIVE EDITAR PERFIL */
+/* ======================================================== */
+@media screen and (max-width: 900px) {
+    .perfil_grid {
+        grid-template-columns: 1fr;
+    }
+    .perfil_col_1 {
+        grid-column: 1;
+    }
+}

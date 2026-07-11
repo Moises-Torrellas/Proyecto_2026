@@ -10,7 +10,7 @@ window.onload = function () {
 
 
 $(".ojo").click(function () {
-    var $this = $(this); // el botón clickeado
+    var $this = $(this); // el botÃ³n clickeado
     var $pass = $this.siblings("input[type='password'], input[type='text']"); // el input cercano
 
     if ($pass.attr("type") === "password") {
@@ -100,15 +100,15 @@ $(document).ready(function () {
         let $this = $(this);
         let id = $this.attr('class'); // Usamos la clase como identificador simple
 
-        // Agregamos la clase al contenedor que se está moviendo
+        // Agregamos la clase al contenedor que se estÃ¡ moviendo
         $this.addClass('is-scrolling');
 
-        // Limpiamos el timer específico de este contenedor
+        // Limpiamos el timer especÃ­fico de este contenedor
         if (scrollTimers[id]) {
             clearTimeout(scrollTimers[id]);
         }
 
-        // Ocultamos el scroll después de 1.2 segundos de inactividad
+        // Ocultamos el scroll despuÃ©s de 1.2 segundos de inactividad
         scrollTimers[id] = setTimeout(function () {
             $this.removeClass('is-scrolling');
             delete scrollTimers[id];
@@ -150,7 +150,7 @@ $(document).ready(function () {
                 let fecha = new Date();
                 fecha.setTime(fecha.getTime() + (30 * 24 * 60 * 60 * 1000));
 
-                // CORRECCIÓN DE SEGURIDAD AQUÍ: Agregamos SameSite
+                // CORRECCIÃ“N DE SEGURIDAD AQUÃ: Agregamos SameSite
                 // Nota: Cuando migres a Linux con HTTPS, cambia el final a: ";path=/;SameSite=Lax;Secure";
                 document.cookie = "tema_preferido=" + tema + ";expires=" + fecha.toUTCString() + ";path=/;SameSite=Lax";
             }, 400);
@@ -168,7 +168,7 @@ $(document).ready(function () {
                 let fecha = new Date();
                 fecha.setTime(fecha.getTime() + (30 * 24 * 60 * 60 * 1000));
 
-                // CORRECCIÓN DE SEGURIDAD AQUÍ
+                // CORRECCIÃ“N DE SEGURIDAD AQUÃ
                 document.cookie = "tema_preferido=" + tema + ";expires=" + fecha.toUTCString() + ";path=/;SameSite=Lax";
             }, 400);
         }
@@ -186,7 +186,7 @@ $(document).ready(function () {
 
     $('#noti').on('click', function (e) {
         e.stopPropagation();
-        // Cerramos el menú de usuario y reseteamos la flecha
+        // Cerramos el menÃº de usuario y reseteamos la flecha
         $('#menu_superior').removeClass('expandir');
         $('#flecha').removeClass('rotar');
 
@@ -199,7 +199,7 @@ $(document).ready(function () {
     });
 
     $(document).on('click', function (e) {
-        // Si el clic no es en el área de usuario, cerrar menú usuario
+        // Si el clic no es en el Ã¡rea de usuario, cerrar menÃº usuario
         if (!$(e.target).closest('#info_usuario, #menu_superior').length) {
             $('#menu_superior').removeClass('expandir');
             $('#flecha').removeClass('rotar');
@@ -208,7 +208,7 @@ $(document).ready(function () {
         if (!$(e.target).closest('#noti, #contenedor_notificaciones').length) {
             $('#contenedor_notificaciones').removeClass('expandir');
         }
-        // Si el clic no es en nav_lateral ni en btn_hamburguesa, cerrar menú lateral
+        // Si el clic no es en nav_lateral ni en btn_hamburguesa, cerrar menÃº lateral
         if (!$(e.target).closest('.nav_lateral, #btn_hamburguesa').length) {
             $('.nav_lateral').removeClass('mostrar');
         }
@@ -221,9 +221,9 @@ $(document).ready(function () {
     });
 
     $("#salir").on("click", function () {
-        confirmar('¿Está seguro de que quieres salir?', function (confirmado) {
+        confirmar('Â¿EstÃ¡ seguro de que quieres salir?', function (confirmado) {
             if (confirmado) {
-                muestraMensaje("success", 2000, "Cerrando sesión");
+                muestraMensaje("success", 2000, "Cerrando sesiÃ³n");
                 setTimeout(function () {
                     location.href = "CerrarSesion";
                 }, 2000)
@@ -234,7 +234,7 @@ $(document).ready(function () {
     function enviarMensaje() {
         let texto = $('#chat_mensaje').val().trim();
         if (texto !== "") {
-            // 1. Añadir mensaje del usuario con las NUEVAS clases
+            // 1. AÃ±adir mensaje del usuario con las NUEVAS clases
             $('#chat_historial').append(`
             <div class="asistente_msg asistente_usuario">
                 <div class="asistente_burbuja">${texto}</div>
@@ -244,7 +244,7 @@ $(document).ready(function () {
             // Limpiar input
             $('#chat_mensaje').val('');
 
-            // Scroll automático al fondo
+            // Scroll automÃ¡tico al fondo
             let historial = $('#chat_historial');
             historial.scrollTop(historial[0].scrollHeight);
 
@@ -260,7 +260,7 @@ $(document).ready(function () {
         }
     }
 
-    // Eventos (Se mantienen igual, solo asegúrate de que los IDs coincidan)
+    // Eventos (Se mantienen igual, solo asegÃºrate de que los IDs coincidan)
     $('#enviar_mensaje').on('click', enviarMensaje);
 
     $('#chat_mensaje').on('keydown', function (e) {
@@ -275,11 +275,11 @@ function inicializarPaginador() {
     const $contenedorListado = $('#resultadoconsulta');
 
     // CAMBIO CLAVE: Ahora buscamos el CONTENEDOR GRUPAL, no solo el item.
-    // Esto asegura que se oculte el borde verde y el panel de detalle también.
+    // Esto asegura que se oculte el borde verde y el panel de detalle tambiÃ©n.
     const $items = $contenedorListado.find('.listado_contenedor_grupal');
 
     // Si tienes tablas sin tree (donde usas listado_item directo), 
-    // esta línea detectará ambos casos:
+    // esta lÃ­nea detectarÃ¡ ambos casos:
     const $registros = $items.length > 0 ? $items : $contenedorListado.find('.listado_item');
 
     const $rowsPerPageSelect = $('#rowsPerPage');
@@ -295,8 +295,8 @@ function inicializarPaginador() {
         // Ocultamos todos los contenedores completos
         $registros.hide();
 
-        // Mostramos solo los de la página actual
-        // Si es el tree, usamos block (porque el flex está dentro, en el listado_item)
+        // Mostramos solo los de la pÃ¡gina actual
+        // Si es el tree, usamos block (porque el flex estÃ¡ dentro, en el listado_item)
         // Si es la tabla simple, usamos flex.
         $registros.slice(start, end).each(function () {
             if ($(this).hasClass('listado_contenedor_grupal')) {
@@ -307,7 +307,7 @@ function inicializarPaginador() {
         });
     }
 
-    // --- El resto de tu función renderPagination se mantiene igual ---
+    // --- El resto de tu funciÃ³n renderPagination se mantiene igual ---
     function renderPagination() {
         const totalItems = $registros.length;
         const pageCount = Math.ceil(totalItems / itemsPerPage);
@@ -366,7 +366,7 @@ function inicializarPaginador() {
 
 
 function muestraMensaje(icono, tiempo, titulo, mensaje) {
-    // ¡Este return es obligatorio para que funcione el .then()!
+    // Â¡Este return es obligatorio para que funcione el .then()!
     return Swal.fire({
         icon: icono,
         title: titulo,
@@ -421,21 +421,21 @@ function validarkeypress(er, e) {
     let a = er.test(tecla);
     if (!a) {
         e.preventDefault();
-        muestraMensajeMini('error', 2000, 'Carácter no permitido');
+        muestraMensajeMini('error', 2000, 'CarÃ¡cter no permitido');
     }
 }
 
-// CAMBIO: Ahora esta función tiene una lógica inteligente
+// CAMBIO: Ahora esta funciÃ³n tiene una lÃ³gica inteligente
 function validarkeyup(er, etiqueta, etiquetamensaje, mensaje, mostrarError = false) {
     let a = er.test(etiqueta.val());
 
     if (a) {
-        // Si es válido: Limpiamos todo
+        // Si es vÃ¡lido: Limpiamos todo
         etiquetamensaje.text("");
         etiqueta.removeClass("denegado");
         return false;
     } else {
-        // Si es inválido:
+        // Si es invÃ¡lido:
         if (mostrarError) {
             // Solo ponemos el rojo si salimos del foco (blur) o damos clic en enviar
             etiquetamensaje.text(mensaje);
@@ -497,13 +497,13 @@ function confirmar(titulo, callback) {
 
 function confirmarAnulacion(titulo, callback) {
 
-    const regexMotivo = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-]+$/;
+    const regexMotivo = /^[a-zA-Z0-9Ã¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘\s,.\-]+$/;
 
     Swal.fire({
         icon: "warning",
         title: titulo,
         input: "text",
-        inputPlaceholder: "Escribe el motivo aquí...",
+        inputPlaceholder: "Escribe el motivo aquÃ­...",
         showCancelButton: true,
         confirmButtonText: "SI",
         confirmButtonColor: "#00a200",
@@ -514,23 +514,23 @@ function confirmarAnulacion(titulo, callback) {
             title: "mi-titulo",
             content: "mi-contenido"
         },
-        // Doble validación: existencia y formato seguro
+        // Doble validaciÃ³n: existencia y formato seguro
         inputValidator: (value) => {
             let textoLimpio = value ? value.trim() : "";
 
-            // 1. Validar que no esté vacío
+            // 1. Validar que no estÃ© vacÃ­o
             if (textoLimpio === "") {
-                return "¡Es obligatorio ingresar un motivo para la anulación!";
+                return "Â¡Es obligatorio ingresar un motivo para la anulaciÃ³n!";
             }
 
-            // 2. Validar que cumpla con la longitud mínima (ej. 10 caracteres para que sea un motivo real)
+            // 2. Validar que cumpla con la longitud mÃ­nima (ej. 10 caracteres para que sea un motivo real)
             if (textoLimpio.length < 5) {
-                return "Por favor, escribe un motivo más detallado (mínimo 10 caracteres).";
+                return "Por favor, escribe un motivo mÃ¡s detallado (mÃ­nimo 10 caracteres).";
             }
 
-            // 3. Validar con la Expresión Regular
+            // 3. Validar con la ExpresiÃ³n Regular
             if (!regexMotivo.test(textoLimpio)) {
-                return "El motivo contiene caracteres no permitidos. Evita usar símbolos como <, >, $, %, etc.";
+                return "El motivo contiene caracteres no permitidos. Evita usar sÃ­mbolos como <, >, $, %, etc.";
             }
         }
     }).then((result) => {
@@ -541,7 +541,7 @@ function confirmarAnulacion(titulo, callback) {
             callback(false);
         }
     }).catch((e) => {
-        alert("Error en confirmación: " + e.name);
+        alert("Error en confirmaciÃ³n: " + e.name);
         callback(false);
     });
 }
@@ -571,17 +571,18 @@ function limpia() {
     // 1. Limpiar campos de texto, fecha y otros (Excepto token)
     formulario.find('input').not(':checkbox, :radio, :file, #token').val('');
 
-    // 2. Limpiar input de ARCHIVO y resetear la PREVISUALIZACIÓN a la cámara
+    // 2. Limpiar input de ARCHIVO y resetear la PREVISUALIZACIÃ“N a la cÃ¡mara
     formulario.find('input:file').val('');
-    $('#foto_previa').attr('src', ''); // Restablece el icono original
+    $('#foto_previa').attr('src', '').hide(); 
+    $('#icono_default').show(); 
 
     // 3. Desmarcar checkboxes y radios
     formulario.find('input:checkbox, input:radio').prop('checked', false);
 
-    // 4. Limpiar textareas (Dirección)
+    // 4. Limpiar textareas (DirecciÃ³n)
     formulario.find('textarea').val('');
 
-    // 5. Resetear Selects (Categoría, Posición, Representante)
+    // 5. Resetear Selects (CategorÃ­a, PosiciÃ³n, Representante)
     formulario.find('select').each(function () {
         $(this).val($(this).find('option:first').val()).trigger('change');
     });
@@ -590,12 +591,12 @@ function limpia() {
     formulario.find('.denegado').removeClass('denegado');
     $('.mensaje').text('');
 
-    // 7. Restablecer bloqueos de la lógica de edad (Atletas)
+    // 7. Restablecer bloqueos de la lÃ³gica de edad (Atletas)
     formulario.find('input, select, textarea, button').prop('disabled', false);
     $('.campo_deshabilitado, .bloqueado, .btn_bloqueado').removeClass('campo_deshabilitado bloqueado btn_bloqueado');
 
     // 8. Ajustes de placeholders y visibilidad
-    $("#doc_i").attr("placeholder", "Cédula");
+    $("#doc_i").attr("placeholder", "CÃ©dula");
     formulario.find('.row, .col, div').show();
 }
 
@@ -626,13 +627,13 @@ function iniciarTourConPasos(pasos) {
 }
 
 function toggleDetalles(elemento) {
-    // 1. Identificamos el contenedor padre y el panel específico que el usuario clickeó
+    // 1. Identificamos el contenedor padre y el panel especÃ­fico que el usuario clickeÃ³
     const contenedorActual = $(elemento).closest('.listado_contenedor_grupal');
     const panelActual = contenedorActual.find('.listado_detalle_oculto');
 
     // 2. Buscamos TODOS los paneles ocultos, EXCEPTO el que acabamos de clickear
     $('.listado_detalle_oculto').not(panelActual).each(function () {
-        // Validamos la realidad visual: ¿Está abierto en la pantalla?
+        // Validamos la realidad visual: Â¿EstÃ¡ abierto en la pantalla?
         if ($(this).is(':visible')) {
             $(this).slideUp(300); // Lo cerramos suavemente
             $(this).closest('.listado_contenedor_grupal').removeClass('expandido'); // Limpiamos la clase por si acaso
@@ -649,11 +650,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const btnNoti = document.getElementById("noti");
     const contenedorNoti = document.getElementById("contenedor_notificaciones");
 
-    // Mostrar notificaciones automáticas al iniciar
-    mostrarNotificacionesAutomaticas();
+    // Mostrar notificaciones automÃ¡ticas al iniciar
+    if (btnNoti) {
+        mostrarNotificacionesAutomaticas();
+    }
 
     // ==========================================
-    // 2. INTERACCIÓN DEL PANEL DESPLEGABLE FLOTANTE
+    // 2. INTERACCIÃ“N DEL PANEL DESPLEGABLE FLOTANTE
     // ==========================================
     if (btnNoti && contenedorNoti) {
         btnNoti.addEventListener("click", function (e) {
@@ -686,12 +689,12 @@ function mostrarNotificacionesAutomaticas() {
                 respuesta.datos.forEach(noti => {
                     if (noti.estatus == 1) {
                         unreadCount++;
-                        // Mostrar como popup automáticamente
+                        // Mostrar como popup automÃ¡ticamente
                         renderizarNotificacionSuperior(noti.titulo, noti.mensaje, noti.tipo);
                     }
                 });
 
-                // Actualizar el badge según la cantidad de no leídas
+                // Actualizar el badge segÃºn la cantidad de no leÃ­das
                 const badge = document.getElementById("campana-notificaciones-badge");
                 if (badge && unreadCount > 0) {
                     badge.textContent = unreadCount;
@@ -699,7 +702,7 @@ function mostrarNotificacionesAutomaticas() {
                 }
             }
         })
-        .catch(err => console.error("Error al cargar historial automático:", err));
+        .catch(err => console.error("Error al cargar historial automÃ¡tico:", err));
 }
 
 // ==========================================
@@ -713,7 +716,7 @@ function cargarNotificacionesEnPanel() {
             const listaUl = document.querySelector(".lista_noti");
             if (!listaUl) return;
 
-            listaUl.innerHTML = ""; // Limpiar elementos estáticos viejos
+            listaUl.innerHTML = ""; // Limpiar elementos estÃ¡ticos viejos
 
             if (respuesta.accion === 'consultar' && respuesta.datos.length > 0) {
 
@@ -721,7 +724,7 @@ function cargarNotificacionesEnPanel() {
                     let iconName = "info";
                     let iconClass = "icon_noti_info";
 
-                    if (noti.tipo == 1) { // 1 = Cumpleaños
+                    if (noti.tipo == 1) { // 1 = CumpleaÃ±os
                         iconName = "cake";
                         iconClass = "icon_noti_info";
                     } else if (noti.tipo == 3) { // 3 = Torneos
@@ -757,7 +760,7 @@ function cargarNotificacionesEnPanel() {
                 // Forzar re-escaneo de Lucide sobre las nuevas etiquetas li
                 if (typeof lucide !== 'undefined') lucide.createIcons({ container: listaUl });
 
-                // Reiniciar el badge numérico visual del botón
+                // Reiniciar el badge numÃ©rico visual del botÃ³n
                 const badge = document.getElementById("campana-notificaciones-badge");
                 let unreadPanel = 0;
                 respuesta.datos.forEach(noti => {
@@ -817,7 +820,7 @@ function cargarNotificacionesEnPanel() {
 }
 
 // ==========================================
-// 4. FUNCIONES DE RENDERIZACIÓN PARA SWEETALERT Y BADGE
+// 4. FUNCIONES DE RENDERIZACIÃ“N PARA SWEETALERT Y BADGE
 // ==========================================
 function renderizarNotificacionSuperior(titulo, mensaje, tipo) {
     let nombreIcono = "bell";
@@ -849,7 +852,7 @@ function actualizarContadorBadge() {
     }
 }
 
-// Tu función original intacta adaptada para inicializar Lucide
+// Tu funciÃ³n original intacta adaptada para inicializar Lucide
 function muestraNoti(titulo, tiempo) {
     const Toast = Swal.mixin({
         toast: true,
@@ -872,7 +875,7 @@ function muestraNoti(titulo, tiempo) {
     Toast.fire({ html: titulo });
 }
 
-// Función global para manejar imágenes rotas de atletas
+// FunciÃ³n global para manejar imÃ¡genes rotas de atletas
 function manejarErrorCamara(img) {
     // 1. Definimos el HTML exacto que quieres para el estado 'null'
     const htmlAvatarNull = '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>';
@@ -885,7 +888,7 @@ function manejarErrorCamara(img) {
     // 3. Reemplazamos la imagen rota por el nuevo contenedor del icono
     img.replaceWith(nuevoNodo);
 
-    // 4. ¡IMPORTANTE! Forzamos a Lucide a renderizar el icono recién insertado
+    // 4. Â¡IMPORTANTE! Forzamos a Lucide a renderizar el icono reciÃ©n insertado
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
@@ -903,7 +906,7 @@ function ModeloBancario(selector) {
         let valorFlotante = parseFloat(entrada) / 100;
 
         // Cambiamos a 'en-US' para que use punto (.) como separador decimal
-        // y eliminamos los separadores de miles para que no choque con tu Regex de validación
+        // y eliminamos los separadores de miles para que no choque con tu Regex de validaciÃ³n
         let valorFormateado = valorFlotante.toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -945,4 +948,127 @@ function mostrarAlertaTipoPalmares(titulo, texto, callback) {
         }
     });
 }
+
+
+/* ======================================================== */
+/* LÓGICA GLOBAL CROPPER.JS PARA FOTOS DE PERFIL */
+/* ======================================================== */
+window.croppedImageBlob = null;
+let cropperInstance = null;
+
+$(document).ready(function() {
+    $(document).on('change', '#foto', function(event) {
+        try {
+            const $miniModal = $('#mini_modal_cropper');
+            const $cropperImage = $('#cropper_image');
+            
+            // Buscar los elementos de preview correspondientes al input actual
+            const $caja = $(event.target).closest('.caja_formulario');
+            window.$activePreviewImg = $caja.length ? $caja.find('.preview_contenedor img') : $('.preview_contenedor:visible img').first();
+            window.$activePreviewIcon = $caja.length ? $caja.find('.preview_contenedor i') : $('.preview_contenedor:visible i').first();
+            
+            const archivo = event.target.files[0];
+            if (archivo) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#mini_modal_cropper').css({
+                        'display': 'flex',
+                        'opacity': '1',
+                        'visibility': 'visible'
+                    });
+                    $('#mini_modal').addClass('expandir');
+                    
+                    if (cropperInstance) {
+                        cropperInstance.destroy();
+                    }
+                    
+                    // Attach load event BEFORE setting src to avoid race conditions
+                    $cropperImage.one('load', function() {
+                        // Allow DOM to render the modal fully before initializing Cropper
+                        setTimeout(() => {
+                            try {
+                                cropperInstance = new Cropper(this, {
+                                    aspectRatio: 1,
+                                    viewMode: 1,
+                                    background: false,
+                                    autoCropArea: 0.8,
+                                    responsive: true
+                                });
+                            } catch (err) {
+                                console.error(err);
+                                if (window.$activePreviewImg) window.$activePreviewImg.attr('src', e.target.result).show();
+                                if (window.$activePreviewIcon) window.$activePreviewIcon.hide();
+                                
+                                $('#mini_modal_cropper').css({
+                                    'opacity': '0',
+                                    'visibility': 'hidden'
+                                });
+                                $('#mini_modal').removeClass('expandir');
+                                setTimeout(() => { $('#mini_modal_cropper').hide(); }, 200);
+                                window.croppedImageBlob = null;
+                            }
+                        }, 50); // small delay ensures modal dimensions are calculated
+                    });
+                    
+                    $cropperImage.attr('src', e.target.result);
+                };
+                reader.readAsDataURL(archivo);
+            } else {
+                // Si cancelan el selector de archivos
+                if (window.$activePreviewImg) window.$activePreviewImg.hide().attr('src', '');
+                if (window.$activePreviewIcon) window.$activePreviewIcon.show();
+            }
+        } catch (error) {
+            console.error("Error en el evento change de foto:", error);
+        }
+    });
+
+    $(document).on('click', '#btn_cancelar_crop, #cerrar_mini_modal', function() {
+        $('#mini_modal_cropper').css({
+            'opacity': '0',
+            'visibility': 'hidden'
+        });
+        $('#mini_modal').removeClass('expandir');
+        setTimeout(() => { $('#mini_modal_cropper').hide(); }, 200);
+        
+        if (cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+        }
+        $('#foto').val(''); // Reset input
+        window.croppedImageBlob = null;
+    });
+
+    $(document).on('click', '#btn_recortar', function() {
+        if (!cropperInstance) return;
+
+        const canvas = cropperInstance.getCroppedCanvas({
+            width: 300,
+            height: 300
+        });
+
+        // Generar DataURL para la vista previa visual (más robusto que ObjectURL)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        const $img = (window.$activePreviewImg && window.$activePreviewImg.length) ? window.$activePreviewImg : $('.preview_contenedor:visible img').first();
+        const $icon = (window.$activePreviewIcon && window.$activePreviewIcon.length) ? window.$activePreviewIcon : $('.preview_contenedor:visible i').first();
+        
+        $img.attr('src', dataUrl).css('display', 'block');
+        $icon.hide();
+
+        // Generar Blob para el envío del formulario
+        canvas.toBlob(function(blob) {
+            window.croppedImageBlob = blob;
+        }, 'image/jpeg', 0.9);
+
+            $('#mini_modal_cropper').css({
+                'opacity': '0',
+                'visibility': 'hidden'
+            });
+            $('#mini_modal').removeClass('expandir');
+            setTimeout(() => { $('#mini_modal_cropper').hide(); }, 200);
+            
+            cropperInstance.destroy();
+            cropperInstance = null;
+    });
+});
 

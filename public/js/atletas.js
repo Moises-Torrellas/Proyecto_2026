@@ -59,6 +59,9 @@ $(document).ready(function () {
                 confirmar('¿Está seguro que quiere registrar este atleta?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
+                        if (window.croppedImageBlob) {
+                            datos.set('foto', window.croppedImageBlob, 'foto_recortada.jpg');
+                        }
                         datos.append('accion', 'incluir');
                         enviaAjax(datos);
                     }
@@ -70,7 +73,10 @@ $(document).ready(function () {
                 confirmar('¿Está seguro que quiere modificar este atleta?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
-                        var fotoActual = $("#proceso").data("foto_actual")
+                        if (window.croppedImageBlob) {
+                            datos.set('foto', window.croppedImageBlob, 'foto_recortada.jpg');
+                        }
+                        var fotoActual = $("#proceso").data("foto_actual");
                         datos.append('foto_actual', fotoActual);
                         datos.append('accion', 'modificar');
                         enviaAjax(datos);
@@ -489,9 +495,14 @@ function modificar(datos) {
     $('#peso').val(datos[0].peso_kg);
     $('#estatura').val(datos[0].estatura_cm);
     $("#proceso").data("foto_actual", datos[0].foto);
-    const rutaCarpeta = "img/atletas/";
-    const nombreFoto = datos[0].foto ? datos[0].foto : "default.png";
-    $("#foto_previa").attr("src", rutaCarpeta + nombreFoto).trigger('change');
+    const nombreFoto = datos[0].foto;
+    if (nombreFoto && nombreFoto !== 'default.png') {
+        $("#foto_previa").attr("src", "img/atletas/" + nombreFoto).show();
+        $('#icono_default').hide();
+    } else {
+        $("#foto_previa").attr("src", "").hide();
+        $('#icono_default').show();
+    }
     validarEdadAtleta(datos[0].fecha_nac);
     cargarEdad(datos[0].fecha_nac);
 
@@ -654,19 +665,4 @@ function enviaAjax(datos) {
         complete: function () { },
     });
 }
-
-document.getElementById('foto').addEventListener('change', function (event) {
-    const archivo = event.target.files[0];
-    const vistaPrevia = document.getElementById('foto_previa');
-
-    if (archivo) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            vistaPrevia.src = e.target.result;
-        }
-        reader.readAsDataURL(archivo);
-    } else {
-        // Si el usuario cancela la selección, volvemos a poner la cámara
-        vistaPrevia.src = '';
-    }
-});
+

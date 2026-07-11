@@ -23,7 +23,7 @@ if (!class_exists($nombreClaseModelo)) {
 
 $objModelo = new ModeloInicio();
 
-if (/* comprobarAjax() &&  */!empty($_POST)) {
+if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudInicio($objModelo, $id_modulo, $bitacora ?? null);
 } else {
     if (isset($_SESSION['id'])) {
@@ -40,10 +40,10 @@ function manejarSolicitudInicio($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         // Validar Token CSRF (Descomentar si reactivas la seguridad en producción)
-        /* $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $tokenRecibido)) {
             throw new Exception('Error de seguridad: Token inválido o expirado.');
-        } */
+        }
 
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
@@ -62,17 +62,9 @@ function manejarSolicitudInicio($obj, $id_modulo, $bitacoraObj): void
     }
 }
 
-/**
- * Procesa la autenticación y arma la respuesta JSON compatible con el AJAX
- */
-/**
- * Procesa la autenticación y arma la respuesta JSON compatible con el AJAX
- */
 function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
 {
-    /* // ====================================================================
-    // 1. VALIDACIÓN DEL CAPTCHA
-    // ====================================================================
+    /*
     $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
     
     // Tomamos la clave secreta directamente de las variables de entorno
@@ -104,9 +96,6 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         exit();
     } */
 
-    // ====================================================================
-    // 2. VALIDACIÓN DE FORMATO DE CREDENCIALES
-    // ====================================================================
     validarCredenciales($_POST['cedula'] ?? '', $_POST['contraseña'] ?? '');
 
     $datos = [
@@ -114,10 +103,6 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         'clave'  => $_POST['contraseña']
     ];
 
-
-    // ====================================================================
-    // 3. PROCESAMIENTO EN BASE DE DATOS
-    // ====================================================================
     $respuesta = $obj->ProcesarDatos($datos);
 
     if (isset($respuesta['resultado']) && $respuesta['resultado'] == 1) {
@@ -186,9 +171,6 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
     exit();
 }
 
-/**
- * Valida los formatos de datos nativos antes de procesar el Query
- */
 function validarCredenciales($cedula, $clave): void
 {
     if (empty($cedula) || empty($clave)) {
