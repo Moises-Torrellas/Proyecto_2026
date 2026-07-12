@@ -31,7 +31,7 @@
                 </div>
             </div>
             <div class="info_usuario" id="info_usuario">
-                <?php if (isset($_SESSION['foto']) && $_SESSION['foto'] !== 'default.png' && $_SESSION['foto'] !== '') : ?>
+                <?php if (isset($_SESSION['foto']) && $_SESSION['foto'] !== 'default.png' && $_SESSION['foto'] !== '' && file_exists('img/usuarios/' . $_SESSION['foto'])) : ?>
                     <img src="img/usuarios/<?php echo $_SESSION['foto']; ?>" alt="Perfil" class="img_usuario foto_perfil_navbar">
                 <?php else : ?>
                     <i data-lucide="circle-user" class="img_usuario"></i>

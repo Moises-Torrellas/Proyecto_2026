@@ -110,7 +110,7 @@ class ModeloRecuperacion extends Conexion
             }
             $cedula_r = $_SESSION['cedula_r'];
             $sentencia = "UPDATE `usuarios` SET 
-                            `contraseña` = :contra
+                            `pass_hash` = :contra
                             WHERE cedulaUsuario = :cedula";
 
             $this->conexion = self::conexSG();
@@ -150,17 +150,20 @@ class ModeloRecuperacion extends Conexion
             $destinatario = $_SESSION['destinatario'];
 
             // 2. Configuración del Servidor SMTP (Gmail)
+            // 2. Configuración del Servidor SMTP (Gmail)
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'soporte.sigmasell@gmail.com'; // Tu cuenta de Gmail
-            $mail->Password   = 'tfutvwetzdkevpwu';           // Tu Contraseña de Aplicación (16 letras)
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;   // SSL para puerto 465
+            // IMPORTANTE: Mantén tu correo principal y contraseña de aplicación para la conexión
+            $mail->Username   = 'soporte.sigmasell@gmail.com'; 
+            $mail->Password   = 'tfutvwetzdkevpwu';           
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;   
             $mail->Port       = 465;
-            $mail->CharSet    = 'UTF-8';                       // Asegura tildes y eñes
+            $mail->CharSet    = 'UTF-8';                       
 
             // 3. Remitente y Destinatario
-            $mail->setFrom('soporte.sigmasell@gmail.com', 'Soporte de Cannibals Lara');
+            // AQUÍ COLOCAS TU CORREO ALTERNATIVO COMO REMITENTE
+            $mail->setFrom('soporte.cannibalslara@gmail.com', 'Soporte de Cannibals Lara');
             $mail->addAddress($correo, $destinatario);
 
             // 4. Diseño del Cuerpo del Correo (HTML)

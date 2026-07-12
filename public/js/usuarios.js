@@ -119,7 +119,7 @@ $(document).ready(function () {
     $('#roles').select2({
         placeholder: "Selecciona una opción",
         allowClear: true,
-        dropdownParent: $('.contenedor_modal'),
+        dropdownParent: $('#contenedor_modal'),
     });
     $("#incluir").on("click", function () {
         limpia();

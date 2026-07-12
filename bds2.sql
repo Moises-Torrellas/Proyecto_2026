@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 08-07-2026 a las 01:53:47
+-- Tiempo de generación: 12-07-2026 a las 19:35:44
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -46,98 +46,14 @@ CREATE TABLE `bitacora` (
 --
 
 INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `datos_previos`, `datos_nuevos`, `entorno`, `fecha_hora`, `idUsuario`) VALUES
-(551, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:32:04', 4),
-(552, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:32:11', 4),
-(553, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:34:28', 4),
-(554, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:34:30', 4),
-(555, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:34:30', 4),
-(556, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:34:51', 4),
-(557, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:41:19', 4),
-(558, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:41:36', 4),
-(559, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:41:50', 4),
-(560, 106, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:44:44', 4),
-(561, 106, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:47:42', 4),
-(562, 106, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:47:58', 4),
-(563, 106, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:48:08', 4),
-(564, 106, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:57:40', 4),
-(565, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:57:44', 4),
-(566, 112, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 21:57:48', 4),
-(567, 112, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:04:19', 4),
-(568, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:04:31', 4),
-(569, 16, 'Ingreso al Modulo de Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:04:35', 4),
-(570, 17, 'Ingreso al Modulo de Asignaciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:04:40', 4),
-(571, 17, 'Ingreso al Modulo de Asignaciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:06:50', 4),
-(572, 104, 'Ingreso al Modulo de Estado Físico', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:06:54', 4),
-(573, 17, 'Ingreso al Modulo de Asignaciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:07:47', 4),
-(574, 103, 'Ingreso al Modulo Categoría Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:07:50', 4),
-(575, 16, 'Ingreso al Modulo de Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:07:55', 4),
-(576, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:08:09', 4),
-(577, 110, 'Ingreso al Modulo de Tasas de Cambio', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:08:12', 4),
-(578, 22, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:08:16', 4),
-(579, 22, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:53:02', 4),
-(580, 19, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:53:33', 4),
-(581, 19, 'Registró el torneo: Tocuyo 2026', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:54:21', 4),
-(582, 22, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:54:31', 4),
-(583, 22, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:58:19', 4),
-(584, 22, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 22:59:54', 4),
-(585, 22, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:00:25', 4),
-(586, 22, 'Modificó el palmarés individual ID: 2', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:00:43', 4),
-(587, 22, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:14:47', 4),
-(588, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:14:51', 4),
-(589, 1, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:16:39', 4),
-(590, 12, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:17:24', 4),
-(591, 13, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:17:38', 4),
-(592, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:17:41', 4),
-(593, 17, 'Ingreso al Modulo de Asignaciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:17:44', 4),
-(594, 17, 'Modificó asignación ID: 1', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:17:50', 4),
-(595, 17, 'Generó reporte de Asignaciones.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:17:56', 4),
-(596, 104, 'Ingreso al Modulo de Estado Físico', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:18:18', 4),
-(597, 104, 'Modificó el estado físico: Exelente', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:18:41', 4),
-(598, 23, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:18:59', 4),
-(599, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:19:16', 4),
-(600, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:25:06', 4),
-(601, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:26:14', 4),
-(602, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:26:21', 4),
-(603, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:26:23', 4),
-(604, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:26:24', 4),
-(605, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:26:26', 4),
-(606, 16, 'Ingreso al Modulo de Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:26:28', 4),
-(607, 103, 'Ingreso al Modulo Categoría Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:26:37', 4),
-(608, 104, 'Ingreso al Modulo de Estado Físico', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:26:40', 4),
-(609, 103, 'Ingreso al Modulo Categoría Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:26:44', 4),
-(610, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:28:23', 4),
-(611, 104, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:40:49', 4),
-(612, 104, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:40:54', 4),
-(613, 104, 'Modificó el estado físico: Exelente', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:40:59', 4),
-(614, 16, 'Ingreso al Modulo de Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:41:21', 4),
-(615, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:41:25', 4),
-(616, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:41:26', 4),
-(617, 103, 'Ingreso al Modulo Categoría Catálogo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:41:48', 4),
-(618, 109, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:43:50', 4),
-(619, 103, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:47:55', 4),
-(620, 103, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:47:57', 4),
-(621, 3, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:48:09', 4),
-(622, 18, 'Ingreso al Modulo de Devoluciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:48:22', 4),
-(623, 17, 'Ingreso al Modulo de Asignaciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:48:42', 4),
-(624, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:48:53', 4),
-(625, 15, 'Eliminó artículo Código: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:49:00', 4),
-(626, 15, 'Eliminó artículo Código: 2', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:49:03', 4),
-(627, 17, 'Ingreso al Modulo de Asignaciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:49:14', 4),
-(628, 17, 'Anuló asignación ID: 1', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:49:18', 4),
-(629, 104, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:49:27', 4),
-(630, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:49:34', 4),
-(631, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:51:02', 4),
-(632, 15, 'Eliminó artículo Código: 1', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:51:06', 4),
-(633, 15, 'Registró artículo en inventario.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:51:11', 4),
-(634, 17, 'Ingreso al Modulo de Asignaciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:51:26', 4),
-(635, 17, 'Asignó el artículo ID: 4', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:51:39', 4),
-(636, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:51:43', 4),
-(637, 15, 'Modificó artículo Código: 4', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:51:49', 4),
-(638, 18, 'Ingreso al Modulo de Devoluciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:52:10', 4),
-(639, 18, 'Registró devolución ID Asig: 2', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:52:26', 4),
-(640, 15, 'Ingreso al Modulo de Artículos Inventario', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:52:33', 4),
-(641, 17, 'Ingreso al Modulo de Asignaciones', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:52:36', 4),
-(642, 17, 'Asignó el artículo ID: 4', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-07 23:52:57', 4);
+(1281, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:26:24', 1),
+(1282, 1, 'Registro al usuario: 29997994 Yessica Melendez', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:28:37', 1),
+(1283, 1, 'Modifico al usuario: 29997994 Yessica Melendez', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:29:02', 1),
+(1284, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:30:35', 1),
+(1285, 1, 'Registro al usuario: 29531465 Yonathan Mogollón', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:32:53', 1),
+(1286, 1, 'Bloqueo al usuario: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:33:09', 1),
+(1287, 1, 'Desbloqueo al usuario: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:33:12', 1),
+(1288, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:34:00', 1);
 
 -- --------------------------------------------------------
 
@@ -223,22 +139,6 @@ CREATE TABLE `notificaciones` (
   `creado_en` timestamp NOT NULL DEFAULT current_timestamp(),
   `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
---
--- Volcado de datos para la tabla `notificaciones`
---
-
-INSERT INTO `notificaciones` (`id_notificacion`, `id_usuario`, `titulo`, `mensaje`, `tipo`, `creado_en`, `estatus`) VALUES
-(25, 1, 'Cumpleaños Feliz', 'Hoy está de cumpleaños el atleta: Moises Torrellas.', 1, '2026-07-06 23:23:55', 2),
-(26, 3, 'Cumpleaños Feliz', 'Hoy está de cumpleaños el atleta: Moises Torrellas.', 1, '2026-07-06 23:23:55', 2),
-(27, 1, 'Cargo Atrasado', 'Cargo atrasado de Moises Torrellas por \'Mensualidad\'. Saldo pendiente: 30.00. Fecha emisión: 2026-06-22.', 2, '2026-07-06 23:23:55', 2),
-(28, 3, 'Cargo Atrasado', 'Cargo atrasado de Moises Torrellas por \'Mensualidad\'. Saldo pendiente: 30.00. Fecha emisión: 2026-06-22.', 2, '2026-07-06 23:23:55', 2),
-(29, 1, 'Cargo Atrasado', 'Cargo atrasado de Moises Torrellas por \'Inscripcion\'. Saldo pendiente: 25.00. Fecha emisión: 2026-06-23.', 2, '2026-07-06 23:23:55', 2),
-(30, 3, 'Cargo Atrasado', 'Cargo atrasado de Moises Torrellas por \'Inscripcion\'. Saldo pendiente: 25.00. Fecha emisión: 2026-06-23.', 2, '2026-07-06 23:23:55', 2),
-(31, 1, 'Cargo Atrasado', 'Cargo atrasado de Moises Torrellas por \'Viaticos\'. Saldo pendiente: 25.00. Fecha emisión: 2026-06-23.', 2, '2026-07-06 23:23:55', 2),
-(32, 3, 'Cargo Atrasado', 'Cargo atrasado de Moises Torrellas por \'Viaticos\'. Saldo pendiente: 25.00. Fecha emisión: 2026-06-23.', 2, '2026-07-06 23:23:55', 2),
-(33, 1, 'Cargo Atrasado', 'Cargo atrasado de Moises Torrellas por \'Mensualidad\'. Saldo pendiente: 30.00. Fecha emisión: 2026-07-06.', 2, '2026-07-07 04:01:41', 2),
-(34, 3, 'Cargo Atrasado', 'Cargo atrasado de Moises Torrellas por \'Mensualidad\'. Saldo pendiente: 30.00. Fecha emisión: 2026-07-06.', 2, '2026-07-07 04:01:41', 2);
 
 -- --------------------------------------------------------
 
@@ -395,7 +295,11 @@ INSERT INTO `permisos` (`id_permiso`, `id_modulo`, `nombre`, `clave`, `descripci
 (132, 17, 'Registrar Asignaciones', 'registrar_asignacion', 'Sin Descripción ', 1),
 (133, 17, 'Modificar Asignaciones', 'modificar_asignacion', 'Sin Descripción ', 1),
 (134, 17, 'Anular Asignacion', 'anular_asignacion', 'Sin Descripción ', 1),
-(135, 17, 'Generar Reporte Asignacion', 'generar_asignaciones', 'Sin Descripción ', 1);
+(135, 17, 'Generar Reporte Asignacion', 'generar_asignaciones', 'Sin Descripción ', 1),
+(136, 106, 'Ingresar A Mantenimiento De La Bd', 'ingresar_respaldos', 'Sin Descripción ', 1),
+(137, 106, 'Crear Respaldo', 'registrar_respaldo', 'Sin Descripción ', 1),
+(138, 106, 'Restaurar Base De Datos', 'modificar_respaldo', 'Sin Descripción ', 1),
+(139, 106, 'Eliminar Respaldo', 'eliminar_respaldo', 'Sin Descripción ', 1);
 
 -- --------------------------------------------------------
 
@@ -506,9 +410,11 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `foto`, `telefonoUsuario`, `pass_hash`, `correo`, `id_rol`, `ultimo_ingreso`, `intentos_fallidos`, `estatus`, `bloqueo`) VALUES
-(1, '12345678', 'Moises', 'Admin', 'user_12345678_1783394677.png', '1234-5678909', '$2y$10$jIi5Y2TlNk61pSslaz3QW.aBfFfqF0vT1aVSA5sjCDNvVpV/YiAMm', 'admin@gmail.com', 1, '2026-07-07 16:40:53', 0, 1, 1),
-(3, '29506932', 'Moises', 'Torrellas', 'default.png', '0023-2323232', '$2y$10$5iUNe57cdVOn3lV23254OOyB3S0GEiqfeXgsPFUtaF/ZQ/kp8YlNS', 'moitcj@gmail.com', 4, '2026-07-07 10:16:45', 0, 1, 1),
-(4, '87654321', 'Soporte', 'Soporte', 'default.png', '0575-5555555', '$2y$10$aGsNgc1FDztpxbfMRuEHZeCSGVlbvT6r6/kDbIRDHWYwthsVb.uK6', 'soporte@gmail.com', 5, '2026-07-07 19:17:00', 0, 1, 1);
+(1, '12345678', 'Admin', 'Admin', 'user_12345678_1783874906.jpg', '1234-5678909', '$2y$10$jIi5Y2TlNk61pSslaz3QW.aBfFfqF0vT1aVSA5sjCDNvVpV/YiAMm', 'admin@gmail.com', 1, '2026-07-12 13:15:55', 0, 1, 1),
+(3, '29506932', 'Moises', 'Torrellas', 'user_29506932_1783876758.jpg', '0412-0565231', '$2y$10$aG.8xwekD3.T1Vp1oktcp.W6hG5Kztobw8QjkglaEeZAYAQyhTmbe', 'moitcj@gmail.com', 5, '2026-07-12 13:15:04', 0, 1, 1),
+(5, '29517871', 'Leonardo', 'Medina', 'user_29517871_1783876738.jpg', '0426-6589382', '$2y$10$nzDUpRMt.RMrMxKm/VvZk..mAaOdcg24jhqnO0386LKj3QSYeSP4O', 'leodi0611@gmail.com', 5, NULL, 0, 1, 1),
+(6, '29997994', 'Yessica', 'Melendez', 'user_29997994_1783877342.jpg', '0426-2430903', '$2y$10$NQ2l46IOYTd1DJIRvNlrFOHYlzSumMp8kPMVUK221couPGCy/bvq.', 'yessicamelendez0708@gmail.com', 5, NULL, 0, 1, 1),
+(7, '29531465', 'Yonathan', 'Mogollón', 'user_29531465_1783877573.jpg', '0412-3652677', '$2y$10$jZPAhca4AS48yEuVKBrS3OltCeWQ54xdKpUNMkS/fhRHwWw.Inlqu', 'yonathanmogollon2002@gmail.com', 5, NULL, 0, 1, 1);
 
 --
 -- Índices para tablas volcadas
@@ -587,7 +493,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=643;
+  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1289;
 
 --
 -- AUTO_INCREMENT de la tabla `excepciones`
@@ -605,13 +511,13 @@ ALTER TABLE `modulos`
 -- AUTO_INCREMENT de la tabla `notificaciones`
 --
 ALTER TABLE `notificaciones`
-  MODIFY `id_notificacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id_notificacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos`
 --
 ALTER TABLE `permisos`
-  MODIFY `id_permiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
+  MODIFY `id_permiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=140;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos_rol`
@@ -623,7 +529,7 @@ ALTER TABLE `permisos_rol`
 -- AUTO_INCREMENT de la tabla `respaldos`
 --
 ALTER TABLE `respaldos`
-  MODIFY `id_respaldo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_respaldo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -635,7 +541,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `idUsuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `idUsuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Restricciones para tablas volcadas
