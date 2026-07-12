@@ -12,7 +12,7 @@
 
 .env
 
-#/public/img/usuarios/*
+/public/img/usuarios/*
 /public/img/atletas/*
 /public/docs/*
 # Otros archivos recomendados para tu entorno (XAMPP/Windows)
