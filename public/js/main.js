@@ -132,8 +132,36 @@ $(document).ready(function () {
     var titulo = $("#titulo").text().trim();
 
     $(".opciones").each(function () {
-        if ($(this).text().trim() === titulo) {
+        var textoOpcion = $(this).text().trim();
+        if (textoOpcion === titulo || (textoOpcion === "Mi Perfil" && titulo === "Editar Perfil")) {
             $(this).addClass("selecto");
+            
+            let opcionesContenedor = $(this).closest('.nav_opciones');
+            if (opcionesContenedor.length > 0) {
+                if (!opcionesContenedor.hasClass('nav_opciones_superior')) {
+                    opcionesContenedor.css('display', 'flex');
+                    
+                    let identificador = opcionesContenedor.prev('.nav_identificador');
+                    if (identificador.length > 0) {
+                        identificador.addClass('selecto_identificador');
+                        identificador.find('.icono_flecha_detalle').addClass('rotar_flecha');
+                    }
+                }
+            }
+        }
+    });
+
+    $('.nav_identificador').on('click', function () {
+        let opciones = $(this).next('.nav_opciones');
+        if (opciones.length > 0) {
+            opciones.slideToggle(300, function () {
+                if ($(this).is(':visible')) {
+                    $(this).css('display', 'flex');
+                } else {
+                    $(this).css('display', 'none');
+                }
+            });
+            $(this).find('.icono_flecha_detalle').toggleClass('rotar_flecha');
         }
     });
 
@@ -229,9 +257,9 @@ $(document).ready(function () {
     });
 
     $("#salir").on("click", function () {
-        confirmar('Â¿EstÃ¡ seguro de que quieres salir?', function (confirmado) {
+        confirmar('¿Esta seguro de que quieres salir?', function (confirmado) {
             if (confirmado) {
-                muestraMensaje("success", 2000, "Cerrando sesiÃ³n");
+                muestraMensaje("success", 2000, "Cerrando Sesión");
                 setTimeout(function () {
                     location.href = "CerrarSesion";
                 }, 2000)
