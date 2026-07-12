@@ -29,7 +29,7 @@
 }
 
 /* --- Forzar Select2 a ocupar todo el contenedor --- */
-.select2-container {
+.caja_formulario .select2-container {
     width: 100% !important;
 }
 
@@ -603,3 +603,19 @@
         grid-column: 1;
     }
 }
+
+/* ======================================================== */
+/* RESPONSIVE REPORTES */
+/* ======================================================== */
+@media screen and (max-width: 900px) {
+    .canvas_reporte {
+        height: 280px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .canvas_reporte {
+        height: 220px;
+    }
+}
+
