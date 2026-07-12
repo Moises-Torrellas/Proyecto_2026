@@ -84,6 +84,14 @@ function cerrarModalSecundario() {
 }
 
 $(document).ready(function () {
+    // Inicializar flatpickr para los inputs de tipo fecha en todo el sistema
+    flatpickr("input[type=date]", {
+        dateFormat: "Y-m-d", // Formato interno (para BD)
+        altInput: true,
+        altFormat: "d/m/Y", // Formato visual
+        allowInput: false    // Permite escribir la fecha manualmente
+    });
+
 
     lucide.createIcons();
 
@@ -446,8 +454,16 @@ function validarkeyup(er, etiqueta, etiquetamensaje, mensaje, mostrarError = fal
 }
 
 function Validacion(idInput, erKeyPress, erKeyUp, mensajeAyuda, boton = null) {
-    const $input = $(`#${idInput}`);
+    let $input = $(`#${idInput}`);
     const $spam = $(`#${idInput}_spam`);
+
+    // Soporte para el altInput de Flatpickr (Si el input original estÃ¡ oculto, usar el visible)
+    if ($input.hasClass('flatpickr-input') && $input.attr('type') === 'hidden') {
+        let $alt = $input.siblings('.flatpickr-input[type!="hidden"]');
+        if ($alt.length > 0) {
+            $input = $alt;
+        }
+    }
 
     $input.on("keypress", function (e) {
         validarkeypress(erKeyPress, e);

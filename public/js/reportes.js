@@ -1,144 +1,111 @@
-let miGrafico = null;
-let Datos = null;
-let reporteActual = '';
-let cargandoFiltros = false; // BANDERA: Evita peticiones duplicadas al rellenar selects
-let ajxConsultar = null;      // BANDERA: Guarda la petición activa para poder abortarla
+const graficos = {};
+const Datos = {};
+let cargandoFiltros = false;
+
+// Variables para abortar peticiones previas de cada gráfico si se hacen múltiples clics rápidos
+const peticionesActivas = {
+    atletas: null,
+    recaudacion: null,
+    inventario: null,
+    rendimiento: null
+};
+Validacion('filtro_desde', /^[0-9\/]*$/, /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, 'Formato: dd/mm/yyyy');
+Validacion('filtro_hasta', /^[0-9\/]*$/, /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, 'Formato: dd/mm/yyyy');
+Validacion('filtro_inv_desde', /^[0-9\/]*$/, /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, 'Formato: dd/mm/yyyy');
+Validacion('filtro_inv_hasta', /^[0-9\/]*$/, /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, 'Formato: dd/mm/yyyy');
 
 $(document).ready(function () {
+    // 0. Inicializar select2 en todos los selectores
+    $('.select').select2({
+        width: '100%',
+        placeholder: "Seleccione una opción"
+    });
 
-    // Evento unificado para procesar/generar PDF
-    $('#proceso').on('click', function () {
-        const accion = $(this).attr("data-accion") || $(this).data("accion");
-        if (accion === "generar") {
-            confirmar('¿Está seguro que quiere generar este reporte PDF?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
-                    var datos = new FormData();
-                    datos.append('accion', 'generar');
-                    datos.append('tipo_reporte', reporteActual);
+    // Validaciones para inputs de fecha (ahora usando flatpickr y la función Validacion)
 
-                    if (miGrafico !== null) {
-                        datos.append('grafico_img', miGrafico.toBase64Image());
-                    }
 
-                    datos.append('datos_json', JSON.stringify(Datos));
-                    enviaAjax(datos);
+    // 1. Cargar filtros globales (MultiConsulta) al iniciar
+    cargarFiltrosIniciales();
+
+    // 2. Evento para generar PDF
+    $('.btn-generar').on('click', function () {
+        const tipo = $(this).data("tipo");
+        confirmar('¿Está seguro que quiere generar este reporte PDF?', function (confirmado) {
+            if (confirmado) {
+                abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                var datos = new FormData();
+                datos.append('accion', 'generar');
+                datos.append('tipo_reporte', tipo);
+
+                if (graficos[tipo] !== undefined && graficos[tipo] !== null) {
+                    datos.append('grafico_img', graficos[tipo].toBase64Image());
                 }
-            });
-        }
+
+                datos.append('datos_json', JSON.stringify(Datos[tipo] || []));
+                enviaAjax(datos);
+            }
+        });
     });
 
-    // Evento delegado al presionar cualquier tarjeta de reporte
-    $(".btn-abrir-reporte").on("click", function () {
-        limpia();
-        reporteActual = $(this).data("tipo"); // 'atletas', 'recaudacion', 'inventario' o 'rendimiento'
-
-        // LIMPIEZA INMEDIATA: Desintegra el canvas viejo para que no muestre datos anteriores
-        if (miGrafico !== null) {
-            miGrafico.destroy();
-            miGrafico = null;
-        }
-        $('#barChart').remove();
-        $('#contenedor_canvas').append('<canvas id="barChart"></canvas>');
-
-        // Sincroniza tanto el data-cache de jQuery como el atributo del DOM
-        $("#proceso").attr("data-accion", "generar").data("accion", "generar");
-        $("#proceso").text("Generar Reporte");
-
-        // Alternar contenedores visuales de filtros y títulos según el reporte
-        if (reporteActual === 'recaudacion') {
-            $("#titulo_modal").text("Reporte: Efectividad de Recaudación y Morosidad");
-            $("#grupo_filtros_atletas, #grupo_filtros_inventario, #grupo_filtros_rendimiento").hide();
-            $("#grupo_filtros_recaudacion").show();
-        } else if (reporteActual === 'inventario') {
-            $("#titulo_modal").text("Reporte: Flujo y Estado de Implementos Asignados");
-            $("#grupo_filtros_atletas, #grupo_filtros_recaudacion, #grupo_filtros_rendimiento").hide();
-            $("#grupo_filtros_inventario").show();
-        } else if (reporteActual === 'rendimiento') {
-            $("#titulo_modal").text("Reporte: Rendimiento Ofensivo");
-            $("#grupo_filtros_atletas, #grupo_filtros_recaudacion, #grupo_filtros_inventario").hide();
-            $("#grupo_filtros_rendimiento").show();
-        } else {
-            $("#titulo_modal").text("Reporte: Atletas por Categorías");
-            $("#grupo_filtros_recaudacion, #grupo_filtros_inventario, #grupo_filtros_rendimiento").hide();
-            $("#grupo_filtros_atletas").show();
-        }
-
-        // Carga inicial de datos para poblar selects (MultiConsulta)
-        if ($('#filtro_categoria').children('option').length <= 1) {
-            let datosFiltros = new FormData();
-            datosFiltros.append('accion', 'MultiConsulta');
-            enviaAjax(datosFiltros);
-        } else {
-            filtrarReporte();
-        }
-    });
-
-    // Detectar cambios en filtros de atletas (Solo si no está cargando la data base)
+    // 3. Eventos 'change' para recalcular gráficos cuando se modifiquen los filtros
     $(document).on('change', '#filtro_categoria, #filtro_genero, #filtro_retirados', function () {
-        if (reporteActual === 'atletas' && !cargandoFiltros) filtrarReporte();
+        if (!cargandoFiltros) filtrarReporte('atletas');
     });
 
-    // Detectar cambios en filtros de recaudación
     $(document).on('change', '#filtro_moneda, #filtro_concepto, #filtro_desde, #filtro_hasta', function () {
-        if (reporteActual === 'recaudacion' && !cargandoFiltros) filtrarReporte();
+        if (!cargandoFiltros) filtrarReporte('recaudacion');
     });
 
-    // Detectar cambios en filtros de inventario
     $(document).on('change', '#filtro_cat_inventario, #filtro_estado_fisico, #filtro_inv_desde, #filtro_inv_hasta', function () {
-        if (reporteActual === 'inventario' && !cargandoFiltros) filtrarReporte();
+        if (!cargandoFiltros) filtrarReporte('inventario');
     });
 
     $(document).on('change', '#filtro_atleta, #filtro_temporada', function () {
-        if (reporteActual === 'rendimiento' && !cargandoFiltros) filtrarReporte();
-    });
-
-    $('#cerrar_modal').on('click', function () {
-        if (miGrafico !== null) {
-            miGrafico.destroy();
-            miGrafico = null;
-        }
+        if (!cargandoFiltros) filtrarReporte('rendimiento');
     });
 });
 
-function filtrarReporte() {
-    // Si ya existe una consulta ejecutándose en segundo plano, la abortamos inmediatamente
-    if (ajxConsultar !== null) {
-        ajxConsultar.abort();
-        ajxConsultar = null;
+function cargarFiltrosIniciales() {
+    let datosFiltros = new FormData();
+    datosFiltros.append('accion', 'MultiConsulta');
+    enviaAjax(datosFiltros);
+}
+
+function filtrarReporte(tipoReporte) {
+    if (peticionesActivas[tipoReporte] !== null) {
+        peticionesActivas[tipoReporte].abort();
+        peticionesActivas[tipoReporte] = null;
     }
 
     var datos = new FormData();
     datos.append('accion', 'consultar');
-    datos.append('tipo_reporte', reporteActual);
+    datos.append('tipo_reporte', tipoReporte);
 
-    if (reporteActual === 'recaudacion') {
+    if (tipoReporte === 'recaudacion') {
         datos.append('moneda', $('#filtro_moneda').val() || 'todos');
         datos.append('concepto', $('#filtro_concepto').val() || 'todos');
         datos.append('fecha_desde', $('#filtro_desde').val() || '');
         datos.append('fecha_hasta', $('#filtro_hasta').val() || '');
-    } else if (reporteActual === 'inventario') {
+    } else if (tipoReporte === 'inventario') {
         datos.append('categoria_inventario', $('#filtro_cat_inventario').val() || 'todos');
         datos.append('estado_fisico', $('#filtro_estado_fisico').val() || 'todos');
         datos.append('fecha_desde', $('#filtro_inv_desde').val() || '');
         datos.append('fecha_hasta', $('#filtro_inv_hasta').val() || '');
-    } else if (reporteActual === 'rendimiento') {
+    } else if (tipoReporte === 'rendimiento') {
         datos.append('atleta', $('#filtro_atleta').val() || 'todos');
         datos.append('torneo', $('#filtro_temporada').val() || 'todos');
-    } else {
+    } else if (tipoReporte === 'atletas') {
         datos.append('categoria', $('#filtro_categoria').val() || 'todos');
         datos.append('genero', $('#filtro_genero').val() || 'todos');
         datos.append('incluir_retirados', $('#filtro_retirados').is(':checked') ? '1' : '0');
     }
 
-    // Almacenamos el hilo AJAX activo
     let xhr = enviaAjax(datos);
-    ajxConsultar = xhr;
+    peticionesActivas[tipoReporte] = xhr;
 
-    // Control de seguridad: Resetea la variable global solo si sigue siendo la misma petición
     xhr.always(function () {
-        if (ajxConsultar === xhr) {
-            ajxConsultar = null;
+        if (peticionesActivas[tipoReporte] === xhr) {
+            peticionesActivas[tipoReporte] = null;
         }
     });
 }
@@ -146,7 +113,6 @@ function filtrarReporte() {
 function enviaAjax(datos) {
     var token = $('meta[name="csrf-token"]').attr('content');
 
-    // Retornamos el objeto $.ajax para poder controlarlo con .abort()
     return $.ajax({
         async: true,
         url: "",
@@ -161,11 +127,10 @@ function enviaAjax(datos) {
         },
         success: function (respuesta) {
             try {
-                // SEGURIDAD: Evita romper el flujo si el servidor ya devuelve un objeto JSON parseado automáticamente
                 var lee = (typeof respuesta === 'string') ? JSON.parse(respuesta) : respuesta;
 
                 if (lee.accion == "MultiConsulta") {
-                    cargandoFiltros = true; // Bloqueamos temporalmente los disparadores 'change'
+                    cargandoFiltros = true;
 
                     construirSelect('filtro_categoria', lee.categorias, 'codigo_categoria', 'nombre', 'Todas las Categorías');
                     construirSelect('filtro_moneda', lee.monedas, 'codigo_moneda', 'abreviatura', 'Todas las Monedas');
@@ -182,23 +147,20 @@ function enviaAjax(datos) {
                         construirSelect('filtro_temporada', lee.torneos, 'codigo_torneo', 'nombre', 'Todos los Torneos');
                     }
 
-                    cargandoFiltros = false; // Desbloqueamos los cambios
-                    filtrarReporte();
+                    cargandoFiltros = false; 
+
+                    // Iniciar la carga de todos los gráficos por primera vez
+                    filtrarReporte('atletas');
+                    filtrarReporte('recaudacion');
+                    filtrarReporte('inventario');
+                    filtrarReporte('rendimiento');
                 }
                 else if (lee.accion == "consultar") {
-                    Datos = lee.datos;
-                    if ($("#contenedor_modal").hasClass('ocultar') || !$("#modal").hasClass('mostrar')) {
-                        abrirModal();
-                        setTimeout(function () {
-                            cargarGraficoReporte(lee.datos, lee.tipo_reporte);
-                        }, 250);
-                    } else {
-                        cargarGraficoReporte(lee.datos, lee.tipo_reporte);
-                    }
+                    Datos[lee.tipo_reporte] = lee.datos;
+                    cargarGraficoReporte(lee.datos, lee.tipo_reporte);
                 }
                 else if (lee.accion == "reporte") {
                     cerrarAlertaEspara();
-                    cerrarModal();
                     muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
                     setTimeout(function () {
                         const enlaceFantasma = document.createElement('a');
@@ -219,9 +181,7 @@ function enviaAjax(datos) {
             }
         },
         error: function (request, status, err) {
-            // Si el error fue causado por nuestro propio .abort(), no mostramos alerta molesta
             if (request.statusText === 'abort') return;
-
             cerrarAlertaEspara();
             muestraMensaje("error", 2000, "Error", "ERROR: " + request.statusText);
         }
@@ -230,18 +190,29 @@ function enviaAjax(datos) {
 
 function construirSelect(idSelect, datos, campoId, campo1, textoPorDefecto) {
     var select = $('#' + idSelect);
+    
+    if (select.hasClass("select2-hidden-accessible")) {
+        select.select2('destroy');
+    }
+    
     select.empty();
 
-    // Si pasamos un texto global (ej: "Todas las Categorías"), lo añadimos como seleccionado por defecto
     if (textoPorDefecto) {
         select.append(`<option value="todos" selected>${textoPorDefecto}</option>`);
     } else {
         select.append('<option value="" disabled selected>Seleccione una opción</option>');
     }
 
-    datos.forEach(dato => {
-        var linea = `<option value="${dato[campoId]}">${escapeHTML(String(dato[campo1]))}</option>`;
-        select.append(linea);
+    if (datos && Array.isArray(datos)) {
+        datos.forEach(dato => {
+            var linea = `<option value="${dato[campoId]}">${escapeHTML(String(dato[campo1]))}</option>`;
+            select.append(linea);
+        });
+    }
+    
+    select.select2({
+        width: '100%',
+        placeholder: "Seleccione una opción"
     });
 }
 
@@ -251,14 +222,26 @@ function escapeHTML(texto) {
 }
 
 function cargarGraficoReporte(datosServidor, tipoReporte) {
-    if (miGrafico !== null) {
-        miGrafico.destroy();
-        miGrafico = null;
+    const canvasId = 'chart_' + tipoReporte;
+    
+    if (graficos[tipoReporte]) {
+        graficos[tipoReporte].destroy();
+        graficos[tipoReporte] = null;
     }
-    $('#barChart').remove();
-    $('#contenedor_canvas').append('<canvas id="barChart"></canvas>');
+    
+    $('#' + canvasId).remove();
+    // Lo agregamos nuevamente al DOM para asegurarnos que ChartJS dibuje sobre un canvas limpio
+    if (tipoReporte === 'atletas') {
+        $('.card_perfil').eq(0).find('.canvas_reporte').append(`<canvas id="${canvasId}"></canvas>`);
+    } else if (tipoReporte === 'recaudacion') {
+        $('.card_perfil').eq(1).find('.canvas_reporte').append(`<canvas id="${canvasId}"></canvas>`);
+    } else if (tipoReporte === 'inventario') {
+        $('.card_perfil').eq(2).find('.canvas_reporte').append(`<canvas id="${canvasId}"></canvas>`);
+    } else if (tipoReporte === 'rendimiento') {
+        $('.card_perfil').eq(3).find('.canvas_reporte').append(`<canvas id="${canvasId}"></canvas>`);
+    }
 
-    const canvas = document.getElementById('barChart');
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
@@ -346,14 +329,14 @@ function cargarGraficoReporte(datosServidor, tipoReporte) {
                 {
                     label: 'Goles',
                     data: datosServidor.map(item => parseInt(item.total_goles) || 0),
-                    backgroundColor: 'rgba(255, 159, 64, 0.85)', // Naranja opaco y visible
+                    backgroundColor: 'rgba(255, 159, 64, 0.85)',
                     borderColor: 'rgba(255, 159, 64, 1)',
                     borderWidth: 1
                 },
                 {
                     label: 'Asistencias',
                     data: datosServidor.map(item => parseInt(item.total_asistencias) || 0),
-                    backgroundColor: 'rgba(153, 102, 255, 0.85)', // Morado opaco y visible
+                    backgroundColor: 'rgba(153, 102, 255, 0.85)',
                     borderColor: 'rgba(153, 102, 255, 1)',
                     borderWidth: 1
                 }
@@ -396,7 +379,7 @@ function cargarGraficoReporte(datosServidor, tipoReporte) {
                 datalabels: {
                     anchor: 'center',
                     align: 'center',
-                    color: '#ffffff', // Ahora resalta perfectamente sobre el fondo sólido
+                    color: '#ffffff',
                     font: { weight: 'bold', size: 11 },
                     formatter: function (value) {
                         if (tipoReporte === 'recaudacion') {
@@ -410,5 +393,5 @@ function cargarGraficoReporte(datosServidor, tipoReporte) {
         scales: opcionesScales
     };
 
-    miGrafico = new Chart(ctx, config);
+    graficos[tipoReporte] = new Chart(ctx, config);
 }

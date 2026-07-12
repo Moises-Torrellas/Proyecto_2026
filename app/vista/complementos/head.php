@@ -16,6 +16,7 @@
 <script src="libraries/js/plugin-chart.min.js"></script>
 <script src="libraries/js/cropper.min.js"></script>
 <script src="libraries/js/fullCalendar.min.js"></script>
+<script src="libraries/js/flatpickr.js"></script>
 
 <script src="libraries/driver.js-stable/dist/driver.min.js"></script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -30,4 +31,5 @@
 <link href="libraries/css/tippy.css" rel="stylesheet" />
 <link href="libraries/css/tippy-animation.css" rel="stylesheet" />
 <link href="libraries/css/cropper.min.css" rel="stylesheet" />
+<link href="libraries/css/flatpickr.min.css" rel="stylesheet" />
 <link rel="shortcut icon" href="img/logo.ico">
