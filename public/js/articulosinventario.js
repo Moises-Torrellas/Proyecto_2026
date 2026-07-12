@@ -162,10 +162,7 @@ function crearConsulta(htmlRecibido) {
     if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
-function toggleDetalles(elemento) {
-    $(elemento).next('.listado_detalle_oculto').slideToggle();
-    $(elemento).find('.icono_flecha_detalle').toggleClass('rotar_flecha');
-}
+
 
 function limpia() {
     if($('#f')[0]) $('#f')[0].reset();

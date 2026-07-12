@@ -24,7 +24,10 @@
             ?>
 
             <?php if ($puedeVer(_MD_ATLETAS_, 'ingresar_atleta') || $puedeVer(_MD_REPRESENTANTES_, 'ingresar_representantes') || $puedeVer(_MD_POSICIONES_, 'ingresar_posicion') || $puedeVer(_MD_CATEGORIAS_, 'ingresar_categorias')) : ?>
-                <li class="nav_identificador">Administracion</li>
+                <li class="nav_identificador">
+                    <span class="identificador_texto"><i data-lucide="briefcase" class="opciones_i"></i> Administración</span>
+                    <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                </li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_ATLETAS_, 'ingresar_atleta')) : ?>
                         <a type="button" href="Atletas" class="opciones"><i class="opciones_i" data-lucide="circle-star"></i> Atletas</a>
@@ -45,7 +48,10 @@
             <?php endif; ?>
 
             <?php if ($puedeVer(_MD_CUENTAS_, 'ingresar_cargo') || $puedeVer(_MD_PAGOS_, 'ingresar_pago') || $puedeVer(_MD_METODOS_, 'ingresar_metodop') || $puedeVer(_MD_CONCEPTOS_, 'ingresar_conceptos') || $puedeVer(_MD_MONEDAS_, 'ingresar_moneda') || $puedeVer(_MD_TASA_, 'ingresar_tasa')) : ?>
-                <li class="nav_identificador">Cobranzas</li>
+                <li class="nav_identificador">
+                    <span class="identificador_texto"><i data-lucide="circle-dollar-sign" class="opciones_i"></i> Cobranzas</span>
+                    <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                </li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_CUENTAS_, 'ingresar_cargo')) : ?>
                         <a type="button" href="CuentasCobrar" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Cargos</a>
@@ -73,7 +79,10 @@
             <?php endif; ?>
 
             <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_, 'ingresar_articulos') || $puedeVer(_MD_CATALOGO_, 'ingresar_catalogos') || $puedeVer(_MD_CATEGORIA_CAT_, 'ingresar_catcatalogos') || $puedeVer(_MD_ESTADO_FISICO_, 'ingresar_estfisico') || $puedeVer(_MD_ASIGNACIONES_, 'ingresar_asignaciones') || $puedeVer(_MD_DEVOLUCIONES_, 'ingresar_devoluciones')) : ?>
-                <li class="nav_identificador">Inventario</li>
+                <li class="nav_identificador">
+                    <span class="identificador_texto"><i data-lucide="archive" class="opciones_i"></i> Inventario</span>
+                    <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                </li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_ARTICULOS_INVENTARIO_, 'ingresar_articulos')) : ?>
                         <a type="button" href="ArticulosInventario" class="opciones"><i class="opciones_i" data-lucide="boxes"></i> Inventario de Artículos</a>
@@ -102,7 +111,10 @@
             <?php endif; ?>
 
             <?php if ($puedeVer(_MD_TORNEOS_, 'ingresar_torneos') || $puedeVer(_MD_EQUIPOS_, 'ingresar_equipo') || $puedeVer(_MD_PARTICIPACIONES_, 'ingresar_partici')) : ?>
-                <li class="nav_identificador">Competencias</li>
+                <li class="nav_identificador">
+                    <span class="identificador_texto"><i data-lucide="swords" class="opciones_i"></i> Competencias</span>
+                    <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                </li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_TORNEOS_, 'ingresar_torneos')) : ?>
                         <a type="button" href="Torneos" class="opciones"><i class="opciones_i" data-lucide="trophy"></i> Torneos</a>
@@ -118,7 +130,10 @@
                 </li>
             <?php endif; ?>
             <?php if ($puedeVer(_MD_PREMIOS_, 'ingresar_premio') || $puedeVer(_MD_PALMARES_, 'ingresar_palmares') || $puedeVer(_MD_ESTADISTICAS_, 'ingresar_estadistica')) : ?>
-                <li class="nav_identificador">Historial Deportivo</li>
+                <li class="nav_identificador">
+                    <span class="identificador_texto"><i data-lucide="history" class="opciones_i"></i> Historial Deportivo</span>
+                    <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                </li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_PREMIOS_, 'ingresar_premio')) : ?>
                         <a type="button" href="Premios" class="opciones"><i class="opciones_i" data-lucide="medal"></i> Premios</a>
@@ -135,7 +150,10 @@
             <?php endif; ?>
 
             <?php if ($puedeVer(_MD_REPORTES_, 'ingresar_estadistica')) : ?>
-                <li class="nav_identificador">Reportes</li>
+                <li class="nav_identificador">
+                    <span class="identificador_texto"><i data-lucide="bar-chart-2" class="opciones_i"></i> Reportes</span>
+                    <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                </li>
                 <li class="nav_opciones">
                     <a type="button" href="Reportes" class="opciones"><i class="opciones_i" data-lucide="chart-column-stacked"></i> Reportes Estadisticos</a>
                 </li>
@@ -143,7 +161,10 @@
 
             <?php
             if (($nivelUsuario === 1 || $nivelUsuario === 2) && ($puedeVer(_MD_USUARIOS_, 'ingresar_usuarios') || $puedeVer(_MD_ROLES_, 'ingresar_rol') || $puedeVer(_MD_PERMISOS_, 'ingresar_permisos') || $puedeVer(_MD_MODULO_, 'ingresar_modulos') || $puedeVer(_MD_BITACORA_, 'ingresar_bitacora') || $puedeVer(_MD_RESPALDO_, 'ingresar_respaldo'))) : ?>
-                <li class="nav_identificador">General</li>
+                <li class="nav_identificador">
+                    <span class="identificador_texto"><i data-lucide="settings" class="opciones_i"></i> General</span>
+                    <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                </li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_USUARIOS_, 'ingresar_usuarios')) : ?>
                         <a type="button" href="Usuarios" class="opciones"><i class="opciones_i" data-lucide="users"></i> Usuarios</a>
@@ -171,7 +192,10 @@
                 </li>
             <?php endif; ?>
 
-            <li class="nav_identificador">Soporte</li>
+            <li class="nav_identificador">
+                <span class="identificador_texto"><i data-lucide="headset" class="opciones_i"></i> Soporte</span>
+                <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+            </li>
             <li class="nav_opciones">
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="info"></i> Preguntas Frecuentes</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="book-open-text"></i> Manual De Usuario</a>
