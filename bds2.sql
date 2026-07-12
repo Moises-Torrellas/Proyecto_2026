@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 12-07-2026 a las 19:35:44
+-- Tiempo de generación: 12-07-2026 a las 19:51:09
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -53,7 +53,11 @@ INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `datos_previos`,
 (1285, 1, 'Registro al usuario: 29531465 Yonathan Mogollón', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:32:53', 1),
 (1286, 1, 'Bloqueo al usuario: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:33:09', 1),
 (1287, 1, 'Desbloqueo al usuario: 3', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:33:12', 1),
-(1288, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:34:00', 1);
+(1288, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:34:00', 1),
+(1289, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:42:08', 1),
+(1290, 1, 'Ingreso a Editar Perfil', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:49:50', 1),
+(1291, 1, 'Actualizó sus credenciales de seguridad de perfil.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:50:22', 1),
+(1292, 1, 'Ingreso a Editar Perfil', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-07-12 17:50:23', 1);
 
 -- --------------------------------------------------------
 
@@ -410,7 +414,7 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `foto`, `telefonoUsuario`, `pass_hash`, `correo`, `id_rol`, `ultimo_ingreso`, `intentos_fallidos`, `estatus`, `bloqueo`) VALUES
-(1, '12345678', 'Admin', 'Admin', 'user_12345678_1783874906.jpg', '1234-5678909', '$2y$10$jIi5Y2TlNk61pSslaz3QW.aBfFfqF0vT1aVSA5sjCDNvVpV/YiAMm', 'admin@gmail.com', 1, '2026-07-12 13:15:55', 0, 1, 1),
+(1, '12345678', 'Admin', 'Admin', 'user_12345678_1783874906.jpg', '1234-5678909', '$2y$10$wX2681v1JKAWgLVNC4ILleAltRb1SSikv2T1aMknanUrC2.Vo3Y3i', 'admin@gmail.com', 1, '2026-07-12 13:15:55', 0, 1, 1),
 (3, '29506932', 'Moises', 'Torrellas', 'user_29506932_1783876758.jpg', '0412-0565231', '$2y$10$aG.8xwekD3.T1Vp1oktcp.W6hG5Kztobw8QjkglaEeZAYAQyhTmbe', 'moitcj@gmail.com', 5, '2026-07-12 13:15:04', 0, 1, 1),
 (5, '29517871', 'Leonardo', 'Medina', 'user_29517871_1783876738.jpg', '0426-6589382', '$2y$10$nzDUpRMt.RMrMxKm/VvZk..mAaOdcg24jhqnO0386LKj3QSYeSP4O', 'leodi0611@gmail.com', 5, NULL, 0, 1, 1),
 (6, '29997994', 'Yessica', 'Melendez', 'user_29997994_1783877342.jpg', '0426-2430903', '$2y$10$NQ2l46IOYTd1DJIRvNlrFOHYlzSumMp8kPMVUK221couPGCy/bvq.', 'yessicamelendez0708@gmail.com', 5, NULL, 0, 1, 1),
@@ -493,7 +497,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1289;
+  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1293;
 
 --
 -- AUTO_INCREMENT de la tabla `excepciones`
