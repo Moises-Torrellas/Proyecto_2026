@@ -884,7 +884,7 @@ function renderizarNotificacionSuperior(titulo, mensaje, tipo) {
         </div>
     `;
 
-    muestraNoti(contenidoHTML, 10000);
+    muestraNoti(contenidoHTML, 5000);
 }
 
 function actualizarContadorBadge() {
