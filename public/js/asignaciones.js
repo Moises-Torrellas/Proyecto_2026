@@ -120,10 +120,38 @@ $(document).ready(function () {
 
     $('#ayuda').on('click', function () {
         const pasos = [
-            { element: '#busqueda', popover: { title: 'Búsqueda', description: 'Aquí puedes buscar por nombre de atleta.', position: 'bottom' } },
-            { element: '#btn_nuevo', popover: { title: 'Nueva Asignación', description: 'Registra un préstamo de equipo.', position: 'bottom' } },
-            { element: '#generar', popover: { title: 'Generar Reporte', description: 'Descarga un archivo PDF de las asignaciones.', position: 'left' } },
-            { element: '#resultadoconsulta', popover: { title: 'Lista Agrupada', description: 'Haz clic en cualquier atleta para ver sus detalles.', position: 'top' } }
+            { 
+                element: '#busqueda', 
+                popover: { 
+                    title: 'Búsqueda Rápida', 
+                    description: 'Filtra las asignaciones escribiendo el nombre, apellido o cédula del atleta, o el nombre del artículo deportivo.', 
+                    position: 'bottom' 
+                } 
+            },
+            { 
+                element: '#btn_nuevo', 
+                popover: { 
+                    title: 'Nueva Asignación', 
+                    description: 'Haz clic aquí para abrir el formulario y registrar el préstamo de un nuevo equipo a un atleta.', 
+                    position: 'bottom' 
+                } 
+            },
+            { 
+                element: '#generar', 
+                popover: { 
+                    title: 'Exportar Reportes', 
+                    description: 'Configura y descarga un archivo PDF de las asignaciones. Puedes filtrar por fechas e incluir artículos devueltos o anulados.', 
+                    position: 'left' 
+                } 
+            },
+            { 
+                element: '#resultadoconsulta', 
+                popover: { 
+                    title: 'Historial Agrupado', 
+                    description: 'Aquí verás el inventario en préstamo agrupado por atleta. Despliega la tarjeta para ver los detalles, editar fechas o registrar una devolución.', 
+                    position: 'top' 
+                } 
+            }
         ];
         if (typeof iniciarTourConPasos === 'function') {
             iniciarTourConPasos(pasos).start();
@@ -133,16 +161,22 @@ $(document).ready(function () {
 
 function validarEnvio(accion) {
     if (accion === "incluir" || accion === "modificar") {
-        if ($('#codigo_atleta').val() == "" || $('#codigo_atleta').val() == null) {
-            muestraMensaje("error", 2000, "Validación", "Debe seleccionar un atleta.");
+        let atleta = $('#codigo_atleta').val();
+        let articulo = $('#codigo_articulo').val();
+        let fecha = $('#fecha_asignacion').val();
+
+        let regexFecha = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+        if (atleta == "" || atleta == null) {
+            muestraMensaje("error", 2000, "Validación", "Debe seleccionar un atleta válido de la lista.");
             return false;
         }
-        if ($('#codigo_articulo').val() == "" || $('#codigo_articulo').val() == null) {
-            muestraMensaje("error", 2000, "Validación", "Debe seleccionar un artículo del inventario.");
+        if (articulo == "" || articulo == null) {
+            muestraMensaje("error", 2000, "Validación", "Debe seleccionar un artículo de inventario válido.");
             return false;
         }
-        if ($('#fecha_asignacion').val() == "") {
-            muestraMensaje("error", 2000, "Validación", "Debe seleccionar la fecha de asignación.");
+        if (!fecha || !regexFecha.test(fecha)) {
+            muestraMensaje("error", 2000, "Validación", "La fecha de asignación es obligatoria y debe ser válida (AAAA-MM-DD).");
             return false;
         }
     }

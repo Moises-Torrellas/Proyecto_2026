@@ -205,11 +205,11 @@ function generar($obj, $id_modulo, $bitacoraObj): void
         $datosFiltro = ['accion' => 'consultar']; 
 
         if (!empty($_POST['fecha'])) {
-            $validacionesReporte['fecha'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
+            $validacionesReporte['fecha'] = ['regla' => '/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', 'mensaje' => 'Formato de fecha de inicio inválido. Use AAAA-MM-DD.'];
             $datosFiltro['fecha_asignacion'] = $_POST['fecha'];
         }
         if (!empty($_POST['fecha_f'])) {
-            $validacionesReporte['fecha_f'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
+            $validacionesReporte['fecha_f'] = ['regla' => '/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', 'mensaje' => 'Formato de fecha de fin inválido. Use AAAA-MM-DD.'];
             $datosFiltro['fecha_f'] = $_POST['fecha_f'];
         }
 

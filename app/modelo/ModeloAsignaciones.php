@@ -303,22 +303,30 @@ class ModeloAsignaciones extends Conexion
         }
     }
 
-    private function ValidarExpresiones(array $datos): void
+   private function ValidarExpresiones(array $datos): void
     {
-        if (!empty($datos['id_asignacion']) && !preg_match('/^[0-9]+$/', $datos['id_asignacion'])) {
+        // IDs: Se mantiene la expresión original
+        $regexId = '/^[0-9]+$/';
+        
+        // Fechas: Formato estricto YYYY-MM-DD validando meses (01-12) y días (01-31)
+        $regexFecha = '/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/';
+
+        if (!empty($datos['id_asignacion']) && !preg_match($regexId, $datos['id_asignacion'])) {
             throw new Exception('ID de asignación inválido.');
         }
-        if (!empty($datos['codigo_atleta']) && !preg_match('/^[0-9]+$/', $datos['codigo_atleta'])) {
+        if (!empty($datos['codigo_atleta']) && !preg_match($regexId, $datos['codigo_atleta'])) {
             throw new Exception('Atleta inválido.');
         }
-        if (!empty($datos['codigo_articulo']) && !preg_match('/^[0-9]+$/', $datos['codigo_articulo'])) {
+        if (!empty($datos['codigo_articulo']) && !preg_match($regexId, $datos['codigo_articulo'])) {
             throw new Exception('Artículo inválido.');
         }
-        if (!empty($datos['fecha_asignacion']) && !preg_match('/^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2})?)?$/', $datos['fecha_asignacion'])) {
-            throw new Exception('Formato de fecha inválido.');
+        
+        // Validación estricta de formato de fecha
+        if (!empty($datos['fecha_asignacion']) && !preg_match($regexFecha, $datos['fecha_asignacion'])) {
+            throw new Exception('Formato de fecha de asignación inválido. Use AAAA-MM-DD.');
         }
-        if (!empty($datos['fecha_f']) && !preg_match('/^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2})?)?$/', $datos['fecha_f'])) {
-            throw new Exception('Formato de fecha de fin inválido.');
+        if (!empty($datos['fecha_f']) && !preg_match($regexFecha, $datos['fecha_f'])) {
+            throw new Exception('Formato de fecha de fin inválido. Use AAAA-MM-DD.');
         }
     }
 }
