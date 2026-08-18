@@ -17,17 +17,18 @@
 
                 <div class="contenedor_notificaciones ocultar" id="contenedor_notificaciones">
                     <div class="encabezado_notificaciones">
-                        <h1>Notificaciones</h1>
-                        <i data-lucide="bell" class="icon_noti_titulo"></i>
+                        <div class="encabezado_titulo_noti">
+                            <h1>Notificaciones</h1>
+                            <i data-lucide="bell" class="icon_noti_titulo"></i>
+                        </div>
+                        <button class="btn_t cbt_v" id="marcar_todas_vistas" data-tippy-content="Marcar todas como leídas">
+                            <i class="fi fi-sr-check-double"></i>
+                        </button>
                     </div>
 
                     <ul class="lista_noti">
                         
                     </ul>
-
-                    <div class="ver_todas_notificaciones">
-                        <a href="#">Ver todas las notificaciones</a>
-                    </div>
                 </div>
             </div>
             <div class="info_usuario" id="info_usuario">

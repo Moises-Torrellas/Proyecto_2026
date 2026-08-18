@@ -253,9 +253,13 @@ function validarEdadAtleta(fechaValor) {
     const $direccion = $("#direccion");
     const $btnProceso = $("#proceso");
 
-    // 1. Regla: Mínimo 4 años
+    // 1. Regla: Mínimo 4 años y Máximo 60 años
     if (edad < 4) {
         muestraMensaje("error", 3000, "Edad insuficiente", "El atleta debe tener al menos 4 años.");
+        $btnProceso.prop("disabled", true).addClass("btn_bloqueado");
+        return;
+    } else if (edad > 60) {
+        muestraMensaje("error", 3000, "Edad excedida", "El atleta no puede tener más de 60 años.");
         $btnProceso.prop("disabled", true).addClass("btn_bloqueado");
         return;
     } else {
@@ -400,6 +404,25 @@ function eliminar(id) {
             enviaAjax(datos);
         }
     });
+}
+
+function verHistorial(id) {
+    var datos = new FormData();
+    datos.append('accion', 'historial');
+    datos.append('id', id);
+    enviaAjax(datos);
+}
+
+function abrirModalHistorial() {
+    $("#contenedor_modal_historial").css('opacity', '1');
+    $("#contenedor_modal_historial").css('visibility', 'visible');
+    $("#modal_historial").addClass("expandir");
+}
+
+function cerrarModalHistorial() {
+    $("#modal_historial").removeClass("expandir");
+    $("#contenedor_modal_historial").css('opacity', '0');
+    $("#contenedor_modal_historial").css('visibility', 'hidden');
 }
 function GenerarCurriculum(id) {
     confirmarConFecha('¿Generar el currículum del atleta a partir de una fecha específica?', function (confirmado, fechaSeleccionada) {
@@ -646,6 +669,27 @@ function enviaAjax(datos) {
                     }, 1000);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
+                } else if (lee.accion == "historial") {
+                    let tbody = $('#tbody_historial');
+                    tbody.empty();
+                    if(lee.datos.length === 0) {
+                        tbody.append('<tr><td colspan="3">No hay historial disponible</td></tr>');
+                    } else {
+                        lee.datos.forEach(dato => {
+                            let claseColor = dato.tipo === 'Inscripción' ? 'estatus_v' : 'estatus_r';
+                            let partesFecha = dato.fecha.split('-');
+                            let fechaMostrar = partesFecha.length === 3 ? partesFecha[2] + '-' + partesFecha[1] + '-' + partesFecha[0] : dato.fecha;
+                            
+                            tbody.append(`
+                                <tr>
+                                    <td>${fechaMostrar}</td>
+                                    <td><span class="${claseColor}">${dato.tipo}</span></td>
+                                    <td>${dato.detalles}</td>
+                                </tr>
+                            `);
+                        });
+                    }
+                    abrirModalHistorial();
                 } else if (lee.accion == "error") {
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }

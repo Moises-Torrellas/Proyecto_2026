@@ -12,18 +12,27 @@ if (!isset($_SESSION['id'])) {
 $modelo = new ModeloNotificaciones();
 header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'marcar_visto') {
-    if (isset($_POST['id_notificacion'])) {
-        $id_noti = (int)$_POST['id_notificacion'];
-        $exito = $modelo->marcarComoVisto($id_noti);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
+    if ($_POST['accion'] === 'marcar_visto') {
+        if (isset($_POST['id_notificacion'])) {
+            $id_noti = (int)$_POST['id_notificacion'];
+            $exito = $modelo->marcarComoVisto($id_noti);
+            echo json_encode([
+                'accion' => 'marcar_visto',
+                'exito' => $exito
+            ]);
+        } else {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'Faltan parámetros']);
+        }
+        exit();
+    } elseif ($_POST['accion'] === 'marcar_todas_vistas') {
+        $exito = $modelo->marcarTodasVistas($_SESSION['id']);
         echo json_encode([
-            'accion' => 'marcar_visto',
+            'accion' => 'marcar_todas_vistas',
             'exito' => $exito
         ]);
-    } else {
-        echo json_encode(['accion' => 'error', 'mensaje' => 'Faltan parámetros']);
+        exit();
     }
-    exit();
 }
 
 // Usamos $_SESSION['id'] que es el índice que maneja tu enrutador

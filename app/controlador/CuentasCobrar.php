@@ -170,6 +170,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Generó cargo(s) de " . $_POST['monto_total']);
+            
+            // Verificador dinámico de eventos (Cargos atrasados, etc.)
+            require_once __DIR__ . '/../servicios/verificarEvento.php';
+            $verificador = new \App\servicios\verificarEvento();
+            $verificador->procesar();
+
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Cuenta por cobrar registrada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = ($resultado['codigo'] ?? '');
@@ -204,6 +210,12 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Modificó la cuenta por cobrar ID: " . $_POST['id']);
+
+            // Verificador dinámico de eventos (Cargos atrasados, etc.)
+            require_once __DIR__ . '/../servicios/verificarEvento.php';
+            $verificador = new \App\servicios\verificarEvento();
+            $verificador->procesar();
+
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Cuenta por cobrar modificada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = 'Ocurrió un error inesperado en la modificación.';

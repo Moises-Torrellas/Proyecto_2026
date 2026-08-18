@@ -126,6 +126,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Registró el torneo: " . $_POST['nombre']);
+            
+            // Verificador dinámico de eventos (Torneos, etc.)
+            require_once __DIR__ . '/../servicios/verificarEvento.php';
+            $verificador = new \App\servicios\verificarEvento();
+            $verificador->procesar();
+
             $resultado = ['accion' => 'incluir', 'mensaje' => 'Torneo registrado exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -161,6 +167,12 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Modificó el torneo: " . $_POST['nombre']);
+
+            // Verificador dinámico de eventos (Torneos, etc.)
+            require_once __DIR__ . '/../servicios/verificarEvento.php';
+            $verificador = new \App\servicios\verificarEvento();
+            $verificador->procesar();
+
             $resultado = ['accion' => 'modificar', 'mensaje' => 'Torneo modificado exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
