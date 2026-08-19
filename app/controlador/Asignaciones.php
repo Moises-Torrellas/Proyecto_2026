@@ -20,7 +20,7 @@ $objAsignaciones = new ModeloAsignaciones();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudAsignacion($objAsignaciones, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Asignaciones');
+    // La vista se carga de manera normal sin bitácora por seguridad
     $respuesta = $objAsignaciones->ConsultarAsignaciones(); 
     
     $error_bd = '';
@@ -63,7 +63,7 @@ function manejarSolicitudAsignacion($obj, $id_modulo, $bitacoraObj, array $permi
                 if (empty($permisos['anular_asignacion'])) throw new Exception('Sin permisos.');
                 anular($obj, $id_modulo, $bitacoraObj);
                 break;
-            case 'generar': // <-- 2. Agregamos el caso para generar el PDF
+            case 'generar': 
                 if (empty($permisos['generar_asignaciones'])) throw new Exception('Sin permisos para generar reportes.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
@@ -116,8 +116,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void {
         
         $resultado = $obj->ProcesarDatos($datos);
         
+        $datos_previos = '';
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Asignó el artículo ID: " . $datos['codigo_articulo']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró asignación del artículo ID: " . $datos['codigo_articulo'] . " al atleta ID: " . $datos['codigo_atleta'], $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'exito', 'mensaje' => 'Asignación procesada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -125,6 +128,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void {
                 DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
                 default       => 'Ocurrió un error inesperado al procesar la asignación.'
             };
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al registrar asignación: " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
         }
         echo json_encode($resultado);
     } catch (Exception $e) { 
@@ -147,18 +151,25 @@ function modificar($obj, $id_modulo, $bitacoraObj): void {
         
         $obj->setArticulos(new ModeloArticulosInventario());
         
+        // BITÁCORA: Capturamos el antes y el después
+        $consultar_datos_previos = $obj->Buscar($_POST['id_asignacion']);
         $resultado = $obj->ProcesarDatos($datos);
         
+        $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó asignación ID: " . $datos['id_asignacion']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó asignación ID: " . $datos['id_asignacion'], $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'exito', 'mensaje' => 'Asignación modificada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID    => 'La asignación original no fue encontrada.',
+                'ERR_ESTATUS' => 'No puede modificar una asignación que ya ha sido devuelta o anulada.',
                 VALIDATION    => 'El nuevo artículo seleccionado no está disponible.',
                 DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
                 default       => 'Ocurrió un error inesperado al modificar.'
             };
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al modificar asignación ID: " . $datos['id_asignacion'] . " - " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
         }
         echo json_encode($resultado);
     } catch (Exception $e) { 
@@ -179,16 +190,23 @@ function anular($obj, $id_modulo, $bitacoraObj): void {
         
         $obj->setArticulos(new ModeloArticulosInventario());
         
+        // BITÁCORA: Capturamos los datos antes de anular
+        $consultar_datos_previos = $obj->Buscar($_POST['id_asignacion']);
         $resultado = $obj->ProcesarDatos($datos);
         
+        $asignacion = $consultar_datos_previos['datos'][0] ?? null;
+        $datos_previos_json = json_encode($asignacion);
+        $datos_nuevos = '';
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Anuló asignación ID: " . $datos['id_asignacion']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Anuló asignación ID: " . $datos['id_asignacion'], $datos_previos_json, $datos_nuevos);
             $resultado = array('accion' => 'exito', 'mensaje' => 'Asignación anulada exitosamente.'); 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
                 default       => 'Ocurrió un error inesperado al anular la asignación.'
             };
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al anular asignación ID: " . $datos['id_asignacion'] . " - " . $resultado['mensaje'], $datos_previos_json, $datos_nuevos);
         }
         echo json_encode($resultado);
     } catch (Exception $e) { 
@@ -197,19 +215,23 @@ function anular($obj, $id_modulo, $bitacoraObj): void {
     }
 }
 
-// 3. Añadimos la función para procesar y devolver el reporte
 function generar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $validacionesReporte = [];
-        $datosFiltro = ['accion' => 'consultar']; 
+        $datosFiltro = [
+            'accion' => 'generar',
+            'anulados' => $_POST['anulados'] ?? 0,
+            'filtro' => $_POST['filtro'] ?? ''
+        ]; 
 
-        if (!empty($_POST['fecha'])) {
-            $validacionesReporte['fecha'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
-            $datosFiltro['fecha_asignacion'] = $_POST['fecha'];
+        // Bug corregido: se usa el id correcto del input HTML -> fecha_asignacion
+        if (!empty($_POST['fecha_asignacion'])) {
+            $validacionesReporte['fecha_asignacion'] = ['regla' => '/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
+            $datosFiltro['fecha_asignacion'] = $_POST['fecha_asignacion'];
         }
         if (!empty($_POST['fecha_f'])) {
-            $validacionesReporte['fecha_f'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
+            $validacionesReporte['fecha_f'] = ['regla' => '/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
             $datosFiltro['fecha_f'] = $_POST['fecha_f'];
         }
 
@@ -217,8 +239,7 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             validar_datos($validacionesReporte);
         }
 
-        // Ejecutamos la consulta para obtener los datos agrupados
-        $respuesta = $obj->ConsultarAsignaciones(); // Usamos directamente tu método actual que agrupa por atleta
+        $respuesta = $obj->ProcesarDatos($datosFiltro);
 
         if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
             echo json_encode(['accion' => 'error', 'mensaje' => 'Ocurrió un error al consultar las asignaciones para el reporte.']);
@@ -227,7 +248,7 @@ function generar($obj, $id_modulo, $bitacoraObj): void
 
         $datos = $respuesta['datos'] ?? [];
         if (empty($datos)) {
-            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron asignaciones para generar el reporte.']);
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron asignaciones para generar el reporte con los filtros ingresados.']);
             exit();
         }
 
@@ -237,7 +258,7 @@ function generar($obj, $id_modulo, $bitacoraObj): void
         $pdf = $objG->generarPDF($nombreVista, $datos, 'Asignaciones');
         
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Asignaciones.");
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte PDF de Asignaciones.");
         }
         
         echo json_encode($pdf);
