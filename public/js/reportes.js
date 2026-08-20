@@ -27,15 +27,36 @@ $(document).ready(function () {
     // 1. Cargar filtros globales (MultiConsulta) al iniciar
     cargarFiltrosIniciales();
 
-    // 2. Evento para generar PDF
+    // 2. Evento para generar reporte (Pregunta formato PDF o Excel)
     $('.btn-generar').on('click', function () {
         const tipo = $(this).data("tipo");
-        confirmar('¿Está seguro que quiere generar este reporte PDF?', function (confirmado) {
-            if (confirmado) {
+        Swal.fire({
+            title: 'Generar Reporte',
+            text: '¿En qué formato deseas exportar este reporte estadístico?',
+            icon: 'question',
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: '<i class="fi fi-sr-file-pdf"></i> PDF',
+            confirmButtonColor: '#d33',
+            denyButtonText: '<i class="fi fi-sr-file-excel"></i> Excel',
+            denyButtonColor: '#28a745',
+            cancelButtonText: 'Cancelar',
+            customClass: {
+                popup: 'mi-popup',
+                title: 'mi-titulo',
+                content: 'mi-contenido'
+            }
+        }).then((result) => {
+            let formato = '';
+            if (result.isConfirmed) formato = 'pdf';
+            else if (result.isDenied) formato = 'excel';
+            
+            if (formato !== '') {
                 abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
                 var datos = new FormData();
                 datos.append('accion', 'generar');
                 datos.append('tipo_reporte', tipo);
+                datos.append('formato', formato);
 
                 if (graficos[tipo] !== undefined && graficos[tipo] !== null) {
                     datos.append('grafico_img', graficos[tipo].toBase64Image());
@@ -62,6 +83,20 @@ $(document).ready(function () {
 
     $(document).on('change', '#filtro_atleta, #filtro_temporada', function () {
         if (!cargandoFiltros) filtrarReporte('rendimiento');
+    });
+
+    // 4. Redibujar gráficos si cambia el tipo de gráfico localmente
+    $(document).on('change', '#tipo_grafico_atletas', function () {
+        if (Datos['atletas']) cargarGraficoReporte(Datos['atletas'], 'atletas');
+    });
+    $(document).on('change', '#tipo_grafico_recaudacion', function () {
+        if (Datos['recaudacion']) cargarGraficoReporte(Datos['recaudacion'], 'recaudacion');
+    });
+    $(document).on('change', '#tipo_grafico_inventario', function () {
+        if (Datos['inventario']) cargarGraficoReporte(Datos['inventario'], 'inventario');
+    });
+    $(document).on('change', '#tipo_grafico_rendimiento', function () {
+        if (Datos['rendimiento']) cargarGraficoReporte(Datos['rendimiento'], 'rendimiento');
     });
 });
 
@@ -245,8 +280,23 @@ function cargarGraficoReporte(datosServidor, tipoReporte) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
+    let tipoGrafico = 'bar';
+    if ($('#tipo_grafico_' + tipoReporte).length) {
+        tipoGrafico = $('#tipo_grafico_' + tipoReporte).val();
+    }
+
     let data = {};
     let opcionesScales = {};
+
+    // Helper for pie/doughnut colors if needed
+    const generarColores = (num) => {
+        const colores = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED', '#8AC926', '#1982C4', '#6A4C93'];
+        let result = [];
+        for (let i = 0; i < num; i++) {
+            result.push(colores[i % colores.length]);
+        }
+        return result;
+    };
 
     if (tipoReporte === 'recaudacion') {
         const etiquetas = datosServidor.map(item => `${item.concepto} (${item.moneda})`);
@@ -350,47 +400,86 @@ function cargarGraficoReporte(datosServidor, tipoReporte) {
 
     } else {
         const etiquetas = datosServidor.map(item => item.categoria);
-        data = {
-            labels: etiquetas,
-            datasets: [
-                { label: 'Atletas Masc. (Activos)', data: datosServidor.map(item => parseInt(item.masc_activos) || 0), backgroundColor: 'rgba(0, 123, 255, 0.8)', stack: 'Masculino' },
-                { label: 'Atletas Masc. (Retirados)', data: datosServidor.map(item => parseInt(item.masc_retirados) || 0), backgroundColor: 'rgba(0, 123, 255, 0.4)', stack: 'Masculino' },
-                { label: 'Atletas Fem. (Activos)', data: datosServidor.map(item => parseInt(item.fem_activos) || 0), backgroundColor: 'rgba(40, 167, 69, 0.8)', stack: 'Femenino' },
-                { label: 'Atletas Fem. (Retirados)', data: datosServidor.map(item => parseInt(item.fem_retirados) || 0), backgroundColor: 'rgba(40, 167, 69, 0.4)', stack: 'Femenino' }
-            ]
-        };
+        
+        if (tipoGrafico === 'pie' || tipoGrafico === 'doughnut') {
+            let totales = datosServidor.map(item => 
+                (parseInt(item.masc_activos) || 0) + 
+                (parseInt(item.masc_retirados) || 0) + 
+                (parseInt(item.fem_activos) || 0) + 
+                (parseInt(item.fem_retirados) || 0)
+            );
+            data = {
+                labels: etiquetas,
+                datasets: [
+                    { label: 'Total de Atletas', data: totales }
+                ]
+            };
+            opcionesScales = {};
+        } else {
+            data = {
+                labels: etiquetas,
+                datasets: [
+                    { label: 'Atletas Masc. (Activos)', data: datosServidor.map(item => parseInt(item.masc_activos) || 0), backgroundColor: 'rgba(0, 123, 255, 0.8)', stack: 'Masculino' },
+                    { label: 'Atletas Masc. (Retirados)', data: datosServidor.map(item => parseInt(item.masc_retirados) || 0), backgroundColor: 'rgba(0, 123, 255, 0.4)', stack: 'Masculino' },
+                    { label: 'Atletas Fem. (Activos)', data: datosServidor.map(item => parseInt(item.fem_activos) || 0), backgroundColor: 'rgba(40, 167, 69, 0.8)', stack: 'Femenino' },
+                    { label: 'Atletas Fem. (Retirados)', data: datosServidor.map(item => parseInt(item.fem_retirados) || 0), backgroundColor: 'rgba(40, 167, 69, 0.4)', stack: 'Femenino' }
+                ]
+            };
+            opcionesScales = {
+                x: { stacked: false },
+                y: { stacked: true, grace: '10%' }
+            };
+        }
+    }
 
-        opcionesScales = {
-            x: { stacked: false },
-            y: { stacked: true, grace: '10%' }
-        };
+    // Adjust for non-axis charts like pie and doughnut
+    if (tipoGrafico === 'pie' || tipoGrafico === 'doughnut') {
+        opcionesScales = {}; // Pie/Doughnut do not use scales
+        
+        let colores = generarColores(data.labels.length);
+        data.datasets.forEach(ds => {
+            ds.backgroundColor = colores;
+            ds.borderColor = '#ffffff';
+            ds.borderWidth = 1;
+        });
+    }
+
+    let isIndexAxisY = (tipoReporte === 'inventario' && tipoGrafico === 'bar');
+
+    let chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top' },
+            datalabels: {
+                anchor: 'center',
+                align: 'center',
+                color: '#ffffff',
+                font: { weight: 'bold', size: 11 },
+                formatter: function (value) {
+                    if (tipoReporte === 'recaudacion') {
+                        return value > 0 ? value.toLocaleString('es-VE', { minimumFractionDigits: 2 }) : '';
+                    }
+                    return value > 0 ? value : '';
+                }
+            },
+            tooltip: {
+                mode: (tipoGrafico === 'pie' || tipoGrafico === 'doughnut') ? 'nearest' : 'index',
+                intersect: false,
+            }
+        }
+    };
+
+    if (tipoGrafico !== 'pie' && tipoGrafico !== 'doughnut') {
+        chartOptions.scales = opcionesScales;
+        chartOptions.indexAxis = isIndexAxisY ? 'y' : 'x';
     }
 
     const config = {
-        type: 'bar',
+        type: tipoGrafico,
         data: data,
-        plugins: [ChartDataLabels],
-        options: {
-            indexAxis: tipoReporte === 'inventario' ? 'y' : 'x', 
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' },
-                datalabels: {
-                    anchor: 'center',
-                    align: 'center',
-                    color: '#ffffff',
-                    font: { weight: 'bold', size: 11 },
-                    formatter: function (value) {
-                        if (tipoReporte === 'recaudacion') {
-                            return value > 0 ? value.toLocaleString('es-VE', { minimumFractionDigits: 2 }) : '';
-                        }
-                        return value > 0 ? value : '';
-                    }
-                }
-            }
-        },
-        scales: opcionesScales
+        options: chartOptions,
+        plugins: [ChartDataLabels]
     };
 
     graficos[tipoReporte] = new Chart(ctx, config);

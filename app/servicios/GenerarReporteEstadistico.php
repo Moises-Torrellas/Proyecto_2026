@@ -56,4 +56,101 @@ class GenerarReporteEstadistico
             return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         }
     }
+    
+    public static function generarExcel(string $tipoReporte, array $datos, string $modulo)
+    {
+        $modulo = preg_replace('/[^a-zA-Z0-9]/', '', $modulo);
+        try {
+            ini_set('memory_limit', '512M');
+            set_time_limit(300);
+
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Reporte Estadistico');
+
+            $row = 1;
+            if ($tipoReporte === 'recaudacion') {
+                $sheet->setCellValue('A1', 'Concepto');
+                $sheet->setCellValue('B1', 'Moneda');
+                $sheet->setCellValue('C1', 'Total Cargado');
+                $sheet->setCellValue('D1', 'Total Recaudado');
+                $row = 2;
+                foreach ($datos as $d) {
+                    $sheet->setCellValue('A' . $row, $d['concepto'] ?? '');
+                    $sheet->setCellValue('B' . $row, $d['moneda'] ?? '');
+                    $sheet->setCellValue('C' . $row, $d['total_cargado'] ?? 0);
+                    $sheet->setCellValue('D' . $row, $d['total_recaudado'] ?? 0);
+                    $row++;
+                }
+            } elseif ($tipoReporte === 'inventario') {
+                $sheet->setCellValue('A1', 'Artículo');
+                $sheet->setCellValue('B1', 'Uso Activo');
+                $sheet->setCellValue('C1', 'Devuelto (Buen Estado)');
+                $sheet->setCellValue('D1', 'Devuelto (Desgaste Medio)');
+                $sheet->setCellValue('E1', 'Devuelto (Mal Estado)');
+                $row = 2;
+                foreach ($datos as $d) {
+                    $sheet->setCellValue('A' . $row, $d['articulo'] ?? '');
+                    $sheet->setCellValue('B' . $row, $d['uso_activo'] ?? 0);
+                    $sheet->setCellValue('C' . $row, $d['devuelto_bueno'] ?? 0);
+                    $sheet->setCellValue('D' . $row, $d['devuelto_medio'] ?? 0);
+                    $sheet->setCellValue('E' . $row, $d['devuelto_malo'] ?? 0);
+                    $row++;
+                }
+            } elseif ($tipoReporte === 'rendimiento') {
+                $sheet->setCellValue('A1', 'Atleta');
+                $sheet->setCellValue('B1', 'Torneo');
+                $sheet->setCellValue('C1', 'Goles');
+                $sheet->setCellValue('D1', 'Asistencias');
+                $row = 2;
+                foreach ($datos as $d) {
+                    $sheet->setCellValue('A' . $row, $d['atleta'] ?? '');
+                    $sheet->setCellValue('B' . $row, $d['torneo'] ?? '');
+                    $sheet->setCellValue('C' . $row, $d['total_goles'] ?? 0);
+                    $sheet->setCellValue('D' . $row, $d['total_asistencias'] ?? 0);
+                    $row++;
+                }
+            } else {
+                $sheet->setCellValue('A1', 'Categoría');
+                $sheet->setCellValue('B1', 'Atletas Masc. (Activos)');
+                $sheet->setCellValue('C1', 'Atletas Masc. (Retirados)');
+                $sheet->setCellValue('D1', 'Atletas Fem. (Activas)');
+                $sheet->setCellValue('E1', 'Atletas Fem. (Retiradas)');
+                $row = 2;
+                foreach ($datos as $d) {
+                    $sheet->setCellValue('A' . $row, $d['categoria'] ?? '');
+                    $sheet->setCellValue('B' . $row, $d['masc_activos'] ?? 0);
+                    $sheet->setCellValue('C' . $row, $d['masc_retirados'] ?? 0);
+                    $sheet->setCellValue('D' . $row, $d['fem_activos'] ?? 0);
+                    $sheet->setCellValue('E' . $row, $d['fem_retirados'] ?? 0);
+                    $row++;
+                }
+            }
+
+            // Aplicar negritas a los encabezados
+            $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1')->getFont()->setBold(true);
+
+            // Autoajustar columnas
+            foreach (range('A', $sheet->getHighestColumn()) as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            
+            $nombreArchivo = $modulo . "_" . time() . "_" . uniqid() . ".xlsx";
+            $subDirectorio = "docs/reportes/" . strtolower($modulo);
+            $rutaRelativa = $subDirectorio . "/" . $nombreArchivo;
+            $rutaAbsoluta = __DIR__ . "/../../public/" . $rutaRelativa;
+
+            if (!is_dir(dirname($rutaAbsoluta))) {
+                mkdir(dirname($rutaAbsoluta), 0755, true);
+            }
+
+            $writer->save($rutaAbsoluta);
+
+            return ['accion' => 'reporte', 'archivo' => $rutaRelativa];
+        } catch (\Exception $e) {
+            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
+        }
+    }
 }

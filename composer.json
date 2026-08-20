@@ -20,7 +20,8 @@
         "ext-intl": "*",
         "phpmailer/phpmailer": "^7.0",
         "dompdf/dompdf": "^3.1",
-        "cboden/ratchet": "^0.4.4"
+        "cboden/ratchet": "^0.4.4",
+        "phpoffice/phpspreadsheet": "^5.9"
     },
     "require-dev": {
         "designsecurity/progpilot": "^1.2"

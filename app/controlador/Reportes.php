@@ -140,13 +140,19 @@ function generar($id_modulo, $bitacoraObj): void
             exit();
         }
 
-        $objG = new GenerarReporteEstadistico();
-        $pdf = $objG->generarPDF($nombreVista, $datos, 'Reportes', $grafico);
+        $formato = $_POST['formato'] ?? 'pdf';
 
-        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, $descripcionBitacora);
+        $objG = new GenerarReporteEstadistico();
+        if ($formato === 'excel') {
+            $resultado = $objG->generarExcel($tipoReporte, $datos, 'Reportes');
+        } else {
+            $resultado = $objG->generarPDF($nombreVista, $datos, 'Reportes', $grafico);
         }
-        echo json_encode($pdf);
+
+        if (isset($resultado['accion']) && $resultado['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, $descripcionBitacora . ($formato === 'excel' ? ' (Excel)' : ' (PDF)'));
+        }
+        echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Reportes', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
