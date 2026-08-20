@@ -105,6 +105,7 @@ class ModeloAtletas extends Conexion
             'reinscribir' => $this->Reinscribir(), // Nuevo estado
             'buscar'    => $this->Buscar(),
             'generar'   => $this->Consultar(),
+            'historial' => $this->ConsultarHistorialInscripcion(),
             default     => throw new Exception('La acción solicitada para el atleta no es válida.')
         };
     }
@@ -494,6 +495,49 @@ class ModeloAtletas extends Conexion
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Atletas', $e->getMessage(), 'Modelo');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
+        }
+    }
+
+    public function ConsultarHistorialInscripcion($id = null)
+    {
+        $conex = null;
+        try {
+            $codigo = ($id === null) ? $this->id : $id;
+            $conex = $this->conex();
+            
+            $sentencia = "SELECT 
+                i.fecha_inscripcion as fecha,
+                'Inscripción' as tipo,
+                CONCAT('Categoría: ', c.nombre, ' - Posición: ', p.nombre) as detalles
+            FROM inscripciones i
+            LEFT JOIN categorias c ON i.codigo_categoria = c.codigo_categoria
+            LEFT JOIN posiciones p ON i.codigo_posicion = p.codigo_posicion
+            WHERE i.codigo_atleta = :id1
+            
+            UNION ALL
+            
+            SELECT 
+                r.fecha_retiro as fecha,
+                'Retiro' as tipo,
+                CONCAT('Motivo: ', r.motivo) as detalles
+            FROM retiros r
+            INNER JOIN inscripciones i ON r.codigo_inscripcion = i.codigo_inscripcion
+            WHERE i.codigo_atleta = :id2
+            
+            ORDER BY fecha DESC";
+            
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindParam(':id1', $codigo, PDO::PARAM_INT);
+            $stmt->bindParam(':id2', $codigo, PDO::PARAM_INT);
+            $stmt->execute();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return array('accion' => 'historial', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Atletas', $e->getMessage(), 'Modelo_Historial');
             return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = NULL;

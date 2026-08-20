@@ -192,6 +192,12 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 </div>
                             <?php endif; ?>
                         </div>
+
+                        <div class="detalle_fila" style="justify-content: center; margin-top: 15px;">
+                            <button class="btn btn_azul" onclick="verHistorial(<?= $dato['id_atleta'] ?>)">
+                                <i class="fi fi-sr-time-past"></i> Historial de Inscripción
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -430,6 +436,12 @@ endif;
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
+
+                                                <div class="detalle_fila" style="justify-content: center; margin-top: 15px;">
+                                                    <button class="btn btn_azul" onclick="verHistorial(<?= $dato['id_atleta'] ?>)">
+                                                        <i class="fi fi-sr-time-past"></i> Historial de Inscripción
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -618,6 +630,33 @@ endif;
             </div>
         </div>
     </section>
+    
+    <section class="contenedor_modal" id="contenedor_modal_historial">
+        <div class="modal ocultar" id="modal_historial">
+            <div class="cabecera_modal">
+                <h2 class="titulo_modal">Historial de Inscripciones y Retiros</h2>
+                <a type="button" class="cerrar_modal" onclick="cerrarModalHistorial()">&times;</a>
+            </div>
+            <div class="contenido_modal">
+                <div class="colum colum_tabla_completa">
+                    <div class="caja_tabla ct_t">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Acción</th>
+                                    <th>Detalles</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody_historial">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <?php include('complementos/MiniModal.php'); ?>
     <script src="js/main.js"></script>
     <script src="js/atletas.js"></script>

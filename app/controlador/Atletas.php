@@ -101,6 +101,10 @@ function manejarSolicitudAtletas($obj, $id_modulo, $bitacoraObj, array $permisos
                 if (empty($permisos['curriculum_atleta'])) throw new Exception('No tienes permisos para generar un curriculum de Atletas.');
                 generarCurriculum($id_modulo, $bitacoraObj);
                 break;
+            case 'historial':
+                if (empty($permisos['ingresar_atleta'])) throw new Exception('No tienes permisos para ver el historial.');
+                historial($obj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -166,6 +170,16 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
     try {
         validar_requeridos(['fecha_nac', 'nombre', 'apellido', 'posicion', 'categoria', 'genero']);
 
+        $fechaNacObj = new DateTime($_POST['fecha_nac']);
+        $hoy = new DateTime();
+        $edad = $hoy->format('Y') - $fechaNacObj->format('Y');
+
+        if ($edad < 4) {
+            throw new Exception('El atleta debe tener al menos 4 años.');
+        } elseif ($edad > 60) {
+            throw new Exception('El atleta no puede tener más de 60 años.');
+        }
+
         $datos = [
             'fecha_nac' => $_POST['fecha_nac'],
             'nombre'    => $_POST['nombre'],
@@ -211,6 +225,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
             registrarBitacora($bitacoraObj, $id_modulo, "Registró al Atleta: " . $identificador . " - " . $datos['nombre'] . " " . $datos['apellido'], $datos_previos, $datos_nuevos);
 
+            // Verificador dinámico de eventos (Cumpleaños, etc.)
+            require_once __DIR__ . '/../servicios/verificarEvento.php';
+            $verificador = new \App\servicios\verificarEvento();
+            $verificador->procesar();
+
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Atleta registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -240,6 +259,16 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         validar_requeridos(['id', 'fecha_nac', 'nombre', 'apellido', 'posicion', 'categoria', 'genero', 'foto_actual']);
+
+        $fechaNacObj = new DateTime($_POST['fecha_nac']);
+        $hoy = new DateTime();
+        $edad = $hoy->format('Y') - $fechaNacObj->format('Y');
+
+        if ($edad < 4) {
+            throw new Exception('El atleta debe tener al menos 4 años.');
+        } elseif ($edad > 60) {
+            throw new Exception('El atleta no puede tener más de 60 años.');
+        }
 
         $datos = [
             'id' => $_POST['id'],
@@ -285,6 +314,12 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Modificó al Atleta: " . $identificador . " - " . $datos['nombre'] . " " . $datos['apellido'], $datos_previos_json, $datos_nuevos_json);
+
+            // Verificador dinámico de eventos (Cumpleaños, etc.)
+            require_once __DIR__ . '/../servicios/verificarEvento.php';
+            $verificador = new \App\servicios\verificarEvento();
+            $verificador->procesar();
+
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Atleta modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -496,6 +531,22 @@ function generarCurriculum($id_modulo, $bitacoraObj): void
         echo json_encode($pdf);
     } catch (Exception $e) {
         logs('Atletas', $e->getMessage(), 'Controlador_GenerarCurriculum');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function historial($obj): void
+{
+    try {
+        validar_requeridos(['id']);
+        $datos = [
+            'id' => $_POST['id'],
+            'accion' => 'historial'
+        ];
+        $resultado = $obj->procesarDatos($datos);
+        echo json_encode($resultado);
+    } catch (Exception $e) {
+        logs('Atletas', $e->getMessage(), 'Controlador_Historial');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

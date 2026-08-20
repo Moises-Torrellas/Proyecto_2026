@@ -94,4 +94,58 @@ class ModeloNotificaciones extends Conexion
             return false;
         }
     }
+
+    public function marcarTodasVistas(int $idUsuario): bool
+    {
+        try {
+            $conex = $this->conexSG();
+            $sql = "UPDATE notificaciones SET estatus = 2 WHERE id_usuario = :id_usuario AND estatus = 1";
+            $stmt = $conex->prepare($sql);
+            $stmt->bindValue(':id_usuario', $idUsuario, \PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (\Exception $e) {
+            if (function_exists('logs')) {
+                logs('Notificaciones', $e->getMessage(), 'Modelo_MarcarTodasVistas');
+            }
+            return false;
+        }
+    }
+
+    public function notificarATodos(string $titulo, string $mensaje, int $tipo): bool
+    {
+        try {
+            $conex = $this->conexSG();
+            
+            // Verificar si este mismo mensaje exacto ya se envió hoy (para evitar duplicados)
+            $sqlCheck = "SELECT COUNT(*) FROM notificaciones WHERE mensaje = :mensaje AND DATE(creado_en) = CURDATE()";
+            $stmtCheck = $conex->prepare($sqlCheck);
+            $stmtCheck->execute([':mensaje' => $mensaje]);
+            if ($stmtCheck->fetchColumn() > 0) {
+                return true; // Ya se notificó esto hoy
+            }
+
+            // Obtener todos los usuarios activos
+            $sqlUsuarios = "SELECT idUsuario FROM usuarios WHERE estatus = 1";
+            $usuarios = $conex->query($sqlUsuarios)->fetchAll();
+
+            $sql = "INSERT INTO notificaciones (id_usuario, titulo, mensaje, tipo) 
+                    VALUES (:id_usuario, :titulo, :mensaje, :tipo)";
+            $stmt = $conex->prepare($sql);
+            
+            foreach ($usuarios as $usuario) {
+                $stmt->bindValue(':id_usuario', $usuario['idUsuario'], PDO::PARAM_INT);
+                $stmt->bindValue(':titulo', $titulo);
+                $stmt->bindValue(':mensaje', $mensaje);
+                $stmt->bindValue(':tipo', $tipo, PDO::PARAM_INT);
+                $stmt->execute();
+            }
+
+            return true;
+        } catch (Exception $e) {
+            if (function_exists('logs')) {
+                logs('Notificaciones', $e->getMessage(), 'Modelo_NotificarATodos');
+            }
+            return false;
+        }
+    }
 }

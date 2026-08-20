@@ -222,12 +222,17 @@ $(document).ready(function () {
 
     $('#noti').on('click', function (e) {
         e.stopPropagation();
-        // Cerramos el menÃº de usuario y reseteamos la flecha
+        // Cerramos el menú de usuario y reseteamos la flecha
         $('#menu_superior').removeClass('expandir');
         $('#flecha').removeClass('rotar');
 
         // Toggle al de notificaciones
         $('#contenedor_notificaciones').toggleClass('expandir');
+        
+        // Si se abrió, cargar las notificaciones
+        if ($('#contenedor_notificaciones').hasClass('expandir')) {
+            cargarNotificacionesEnPanel();
+        }
     });
 
     $('#asistente').on('click', function (e) {
@@ -424,6 +429,7 @@ function muestraMensajeMini(icono, tiempo, titulo) {
         toast: true,
         position: "top",
         showConfirmButton: false,
+        showCloseButton: true,
         timer: tiempo,
         timerProgressBar: true,
         didOpen: (toast) => {
@@ -432,7 +438,8 @@ function muestraMensajeMini(icono, tiempo, titulo) {
         },
         customClass: {
             popup: "mi-popup",
-            title: "mi-titulo"
+            title: "mi-titulo",
+            closeButton: "mi-titulo"
         }
     });
     Toast.fire({
@@ -699,29 +706,8 @@ document.addEventListener("DOMContentLoaded", function () {
         mostrarNotificacionesAutomaticas();
     }
 
-    // ==========================================
-    // 2. INTERACCIÃ“N DEL PANEL DESPLEGABLE FLOTANTE
-    // ==========================================
-    if (btnNoti && contenedorNoti) {
-        btnNoti.addEventListener("click", function (e) {
-            e.preventDefault();
-
-            // Alternar visibilidad con tu clase existente
-            contenedorNoti.classList.toggle("ocultar");
-
-            // Si el panel se abre, extraemos la historia real de MariaDB
-            if (!contenedorNoti.classList.contains("ocultar")) {
-                cargarNotificacionesEnPanel();
-            }
-        });
-
-        // Ocultar el panel si hacen clic en cualquier otra zona de la pantalla
-        document.addEventListener("click", function (e) {
-            if (!btnNoti.contains(e.target) && !contenedorNoti.contains(e.target)) {
-                contenedorNoti.classList.add("ocultar");
-            }
-        });
-    }
+    // El toggle manual (clic en la campana y fuera de ella)
+    // ahora se maneja en el listener principal '#noti' de la línea 223
 });
 
 function mostrarNotificacionesAutomaticas() {
@@ -760,7 +746,7 @@ function cargarNotificacionesEnPanel() {
             const listaUl = document.querySelector(".lista_noti");
             if (!listaUl) return;
 
-            listaUl.innerHTML = ""; // Limpiar elementos estÃ¡ticos viejos
+            listaUl.innerHTML = "";
 
             if (respuesta.accion === 'consultar' && respuesta.datos.length > 0) {
 
@@ -768,7 +754,7 @@ function cargarNotificacionesEnPanel() {
                     let iconName = "info";
                     let iconClass = "icon_noti_info";
 
-                    if (noti.tipo == 1) { // 1 = CumpleaÃ±os
+                    if (noti.tipo == 1) { // 1 = Cumpleaños
                         iconName = "cake";
                         iconClass = "icon_noti_info";
                     } else if (noti.tipo == 3) { // 3 = Torneos
@@ -779,10 +765,9 @@ function cargarNotificacionesEnPanel() {
                         iconClass = "icon_noti_info";
                     }
 
-                    // Boton de marcar como visto solo si estatus es 1
                     let btnVisto = "";
                     if (noti.estatus == 1) {
-                        btnVisto = `<button class="btn_marcar_visto" data-id="${noti.id_notificacion}" style="margin-top: 5px; cursor: pointer; padding: 2px 8px; border: none; border-radius: 4px; background: #3b82f6; color: white; font-size: 12px;">Marcar como visto</button>`;
+                        btnVisto = `<button class="btn_marcar_visto btn btn_azul" data-id="${noti.id_notificacion}">Marcar como visto</button>`;
                     }
 
                     const itemHTML = `
@@ -850,11 +835,34 @@ function cargarNotificacionesEnPanel() {
                                         badge.classList.add("ocultar");
                                     }
                                 }
+                                cargarNotificacionesEnPanel();
                             }
                         })
                         .catch(err => console.error("Error marcando visto:", err));
                     });
                 });
+
+                // Asignar evento al botón "Marcar todas como leídas"
+                const btnMarcarTodas = $('#marcar_todas_vistas');
+                if (btnMarcarTodas.length) {
+                    btnMarcarTodas.off('click').on('click', function(e) {
+                        e.stopPropagation(); // Evitar que el dropdown se cierre
+                        const formData = new FormData();
+                        formData.append("accion", "marcar_todas_vistas");
+
+                        fetch("Notificaciones", {
+                            method: "POST",
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exito) {
+                                cargarNotificacionesEnPanel(); // recarga y actualiza el badge
+                            }
+                        })
+                        .catch(err => console.error("Error al marcar todas como leídas:", err));
+                    });
+                }
 
             } else {
                 listaUl.innerHTML = `<li class="item_noti"><p class="noti_mensaje" style="padding: 10px; text-align: center; width: 100%;">No tienes notificaciones por ahora.</p></li>`;
