@@ -144,7 +144,7 @@ function generar($id_modulo, $bitacoraObj): void
 
         $objG = new GenerarReporteEstadistico();
         if ($formato === 'excel') {
-            $resultado = $objG->generarExcel($tipoReporte, $datos, 'Reportes');
+            $resultado = $objG->generarExcel($tipoReporte, $datos, 'Reportes', $grafico);
         } else {
             $resultado = $objG->generarPDF($nombreVista, $datos, 'Reportes', $grafico);
         }
