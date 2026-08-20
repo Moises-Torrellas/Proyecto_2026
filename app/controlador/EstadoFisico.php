@@ -7,7 +7,6 @@ require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_ESTADO_FISICO_;
 
-
 $permisos = procesarPermisos($id_modulo, 'ingresar_estfisico');
 
 $nombreClaseModelo = 'App\modelo\ModeloEstadoFisico';
@@ -22,6 +21,7 @@ $objModelo = new ModeloEstadoFisico();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
+    // Texto de la bitácora estandarizado
     registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
     $registro = $respuesta['datos'] ?? [];
@@ -35,7 +35,6 @@ if (comprobarAjax() && !empty($_POST)) {
     cargarVista($pagina, $variables);
 }
 
-
 function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
     try {
@@ -46,7 +45,6 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
-        // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
                 if (empty($permisos['ingresar_estfisico'])) throw new Exception('No tienes permisos para ingresar a consultar el estado físico.');
@@ -72,7 +70,6 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (empty($permisos['generar_estfisico'])) throw new Exception('No tienes permisos para generar reportes.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;    
-
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -138,14 +135,19 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         $datos = [
             'nombre'       => $_POST['nombre'],
-            'nivel_estado' => $_POST['nivel_estado']
+            'nivel_estado' => $_POST['nivel_estado'],
+            'accion'       => 'incluir'
         ];
-        $datos['accion'] = 'incluir';
 
         $resultado = $obj->procesarDatos($datos);
+        
+        $datos_previos = '';
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró el estado físico: " . $_POST['nombre']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró el estado físico: " . $_POST['nombre'], $datos_previos, $datos_nuevos);
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al registrar el estado físico: " . $_POST['nombre'] . " - " . ($resultado['mensaje'] ?? ''), $datos_previos, $datos_nuevos);
         }
 
         echo json_encode($resultado);
@@ -173,14 +175,21 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $datos = [
             'id_estado'    => $_POST['id_estado'],
             'nombre'       => $_POST['nombre'],
-            'nivel_estado' => $_POST['nivel_estado']
+            'nivel_estado' => $_POST['nivel_estado'],
+            'accion'       => 'modificar'
         ];
-        $datos['accion'] = 'modificar';
+
+        // BITÁCORA: Traer los datos previos antes de modificar
+        $consultar_datos_previos = $obj->Buscar($_POST['id_estado']);
+        $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
 
         $resultado = $obj->procesarDatos($datos);
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
-        if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') { // Ajustado a 'modificar' según el return del modelo
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el estado físico: " . $_POST['nombre']);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el estado físico: " . $_POST['nombre'], $datos_previos, $datos_nuevos);
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al modificar el estado físico: " . $_POST['nombre'] . " - " . ($resultado['mensaje'] ?? ''), $datos_previos, $datos_nuevos);
         }
 
         echo json_encode($resultado);
@@ -201,10 +210,19 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
 
+        // BITÁCORA: Tomar la foto antes de borrar
+        $consultar_datos_previos = $obj->Buscar($_POST['id_estado']);
+        $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+        $datos_nuevos = '';
+
         $resultado = $obj->procesarDatos($datos);
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'eliminar') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el Estado Físico: " . $_POST['id_estado']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el Estado Físico ID: " . $_POST['id_estado'], $datos_previos, $datos_nuevos);
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al eliminar el Estado Físico ID: " . $_POST['id_estado'] . " - " . ($resultado['mensaje'] ?? ''), $datos_previos, $datos_nuevos);
         }
+        
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('EstadoFisico', $e->getMessage(), 'Controlador_Eliminar');
@@ -216,7 +234,6 @@ function generar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $filtros = [];
-        // Si enviaron un nivel específico desde el modal, lo usamos
         if (!empty($_POST['nivel_estado'])) {
             $filtros['nivel_estado'] = filter_var($_POST['nivel_estado'], FILTER_SANITIZE_NUMBER_INT);
         }

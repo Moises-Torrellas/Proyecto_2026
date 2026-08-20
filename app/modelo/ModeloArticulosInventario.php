@@ -25,6 +25,7 @@ class ModeloArticulosInventario extends Conexion
         return match ($accion) {
             'consultar'     => $this->ConsultarAgrupado(), 
             'cargar_combos' => $this->CargarCombos(),
+            'buscar'        => $this->Buscar($datos['codigo_articulo'] ?? null), // <-- Añadimos el buscar
             'incluir'       => $this->IncluirArticulo($datos),
             'modificar'     => $this->ModificarArticulo($datos),
             'eliminar'      => $this->EliminarArticulo($datos['codigo_articulo'] ?? null),
@@ -33,10 +34,26 @@ class ModeloArticulosInventario extends Conexion
         };
     }
 
+    // NUEVO MÉTODO PARA LA BITÁCORA: Trae los datos antes de tocarlos
+    public function Buscar($id = null): array
+    {
+        try {
+            $conex = $this->conex();
+            $sentencia = "SELECT * FROM articulos_inventario WHERE codigo_articulo = :id";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return array('accion' => 'buscar', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Articulos Inventario', $e->getMessage(), 'Modelo_Buscar');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        }
+    }
+
     private function GenerarCodigoClub(): string
     {
         $conex = $this->conex();
-        // Buscamos el número más alto extrayendo los dígitos después de "CL-"
         $sql = "SELECT MAX(CAST(SUBSTRING(codigo_club, 4) AS UNSIGNED)) as max_num 
                 FROM articulos_inventario 
                 WHERE codigo_club LIKE 'CL-%'";
@@ -122,27 +139,41 @@ class ModeloArticulosInventario extends Conexion
     private function IncluirArticulo(array $datos): array
     {
         $conex = $this->conex();
+        
+        // Generamos el código club antes para poder adjuntarlo al JSON
+        $codigo_club = $this->GenerarCodigoClub();
+        $datos_nuevos = [
+            'id_catalogo' => $datos['id_catalogo'],
+            'id_estado'   => $datos['id_estado'],
+            'codigo_club' => $codigo_club,
+            'estatus'     => 1
+        ];
+
         try {
             $conex->beginTransaction();
-            
-            $codigo_club = $this->GenerarCodigoClub();
-
             $sql = "INSERT INTO articulos_inventario (id_catalogo, id_estado, codigo_club, estatus) VALUES (?, ?, ?, 1)";
             $stmt = $conex->prepare($sql);
             $stmt->execute([$datos['id_catalogo'], $datos['id_estado'], $codigo_club]);
             $conex->commit();
 
-            return ['accion' => 'exito', 'mensaje' => "Artículo registrado con el código $codigo_club."];
+            return ['accion' => 'exito', 'mensaje' => "Artículo registrado con el código $codigo_club.", 'datos_nuevos' => json_encode($datos_nuevos)];
         } catch (Exception $e) {
             if ($conex->inTransaction()) $conex->rollBack();
             logs('Articulos Inventario', $e->getMessage(), 'Modelo_Incluir');
-            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
+            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD', 'datos_nuevos' => json_encode($datos_nuevos)];
         }
     }
 
     private function ModificarArticulo(array $datos): array
     {
         $conex = $this->conex();
+        
+        $datos_nuevos = [
+            'codigo_articulo' => $datos['codigo_articulo'],
+            'id_catalogo'     => $datos['id_catalogo'],
+            'id_estado'       => $datos['id_estado']
+        ];
+
         try {
             $conex->beginTransaction();
             $sql = "UPDATE articulos_inventario SET id_catalogo = ?, id_estado = ? WHERE codigo_articulo = ?";
@@ -150,14 +181,15 @@ class ModeloArticulosInventario extends Conexion
             $stmt->execute([$datos['id_catalogo'], $datos['id_estado'], $datos['codigo_articulo']]);
             $conex->commit();
 
-            return ['accion' => 'exito', 'mensaje' => 'Artículo actualizado correctamente.'];
+            return ['accion' => 'exito', 'mensaje' => 'Artículo actualizado correctamente.', 'datos_nuevos' => json_encode($datos_nuevos)];
         } catch (Exception $e) {
             if ($conex->inTransaction()) $conex->rollBack();
             logs('Articulos Inventario', $e->getMessage(), 'Modelo_Modificar');
-            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
+            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD', 'datos_nuevos' => json_encode($datos_nuevos)];
         }
     }
-private function EliminarArticulo($id): array
+
+    private function EliminarArticulo($id): array
     {
         if (empty($id)) return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
 
@@ -200,7 +232,7 @@ private function EliminarArticulo($id): array
         }
     }
 
-public function ConsultarArticulosLibres(): array { 
+    public function ConsultarArticulosLibres(): array { 
         $conex = null;
         try {
             $conex = $this->conex();

@@ -101,6 +101,14 @@ class ModeloCatalogo extends Conexion
 
     private function Incluir(): array
     {
+        // BITÁCORA: Armamos el JSON con los datos nuevos
+        $datos_nuevos = [
+            'nombre'       => $this->nombre,
+            'stock_minimo' => $this->stock_minimo,
+            'id_categoria' => $this->id_categoria,
+            'talla'        => $this->talla
+        ];
+
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
@@ -120,13 +128,13 @@ class ModeloCatalogo extends Conexion
             $stmt->execute();
 
             $conex->commit();
-            return array('accion' => 'exito');
+            return array('accion' => 'exito', 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();
             }
             logs('Catalogo', $e->getMessage(), 'Modelo_Incluir');
-            return array('accion' => 'error', 'codigo' => $e->getMessage());
+            return array('accion' => 'error', 'codigo' => $e->getMessage(), 'datos_nuevos' => json_encode($datos_nuevos));
         } finally {
             $conex = NULL;
         }
@@ -134,6 +142,15 @@ class ModeloCatalogo extends Conexion
 
     private function Modificar(): array
     {
+        // BITÁCORA: Armamos el JSON con los datos nuevos
+        $datos_nuevos = [
+            'id_catalogo'  => $this->id_catalogo,
+            'nombre'       => $this->nombre,
+            'stock_minimo' => $this->stock_minimo,
+            'id_categoria' => $this->id_categoria,
+            'talla'        => $this->talla
+        ];
+
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
@@ -158,27 +175,29 @@ class ModeloCatalogo extends Conexion
             $stmt->execute();
 
             $conex->commit();
-            return array('accion' => 'exito');
+            return array('accion' => 'exito', 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();
             }
             logs('Catalogo', $e->getMessage(), 'Modelo_Modificar');
-            return array('accion' => 'error', 'codigo' => $e->getMessage());
+            return array('accion' => 'error', 'codigo' => $e->getMessage(), 'datos_nuevos' => json_encode($datos_nuevos));
         } finally {
             $conex = NULL;
         }
     }
 
-    function Buscar(): array
+    // BITÁCORA: Adaptamos para que reciba el id por parámetro para las fotos previas
+    function Buscar($id = null): array
     {
         try {
+            $codigo = ($id === null) ? $this->id_catalogo : $id;
             $conex = $this->conex();
             $sentencia = "SELECT * FROM catalogo WHERE id_catalogo = :id_catalogo";
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id_catalogo', $this->id_catalogo);
+            $stmt->bindParam(':id_catalogo', $codigo);
             $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Catalogo', $e->getMessage(), 'Modelo_Buscar');

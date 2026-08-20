@@ -1,10 +1,9 @@
 <?php
 use App\modelo\ModeloArticulosInventario;
-use App\servicios\GenerarReporte; // <-- 1. Importamos la clase de reportes
+use App\servicios\GenerarReporte; 
 
 require_once __DIR__ . '/Base.php';
 
-// Actualiza esta constante en tu archivo global si es necesario
 $id_modulo = _MD_ARTICULOS_INVENTARIO_;
 $permisos = procesarPermisos($id_modulo, 'ingresar_articulos');
 
@@ -20,7 +19,9 @@ $objModelo = new ModeloArticulosInventario();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudArticulo($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Artículos Inventario');
+    // Unificamos el texto para que la bitácora quede limpia como pediste
+    registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo');
+    
     $respuesta = $objModelo->ProcesarDatos(['accion' => 'consultar']);
     $registro = $respuesta['datos'] ?? [];
     $variables = ['registro' => $registro, 'permisos' => $permisos];
@@ -45,9 +46,11 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
                 $solo_lista = true;
                 include(__DIR__ . '/../vista/ArticulosInventario.php'); 
                 break;
+            
             case 'cargar_combos':
                 echo json_encode($obj->ProcesarDatos(['accion' => 'cargar_combos']));
                 break;
+            
             case 'incluir':
                 if (empty($permisos['registrar_articulo'])) throw new Exception('Sin permisos.');
                 if (!is_numeric($_POST['id_catalogo']) || !is_numeric($_POST['id_estado'])) throw new Exception('Datos inválidos.');
@@ -58,51 +61,89 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
                     'id_estado' => $_POST['id_estado']
                 ]);
                 
-                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Registró artículo en inventario.");
-                else $resultado['mensaje'] = traducirErrores($resultado['codigo']);
-                
+                $datos_previos = '';
+                $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+
+                if ($resultado['accion'] === 'exito') {
+                    registrarBitacora($bitacoraObj, $id_modulo, "Registró un nuevo artículo en inventario físico.", $datos_previos, $datos_nuevos);
+                } else {
+                    $resultado['mensaje'] = traducirErrores($resultado['codigo'] ?? '');
+                    registrarBitacora($bitacoraObj, $id_modulo, "Falló al registrar artículo: " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
+                }
                 echo json_encode($resultado);
                 break;
+            
             case 'modificar':
                 if (empty($permisos['modificar_articulo'])) throw new Exception('Sin permisos.');
                 if (!is_numeric($_POST['codigo_articulo'])) throw new Exception('ID Inválido.');
                 
+                // BITÁCORA: Traer los datos previos antes de modificar
+                $consultar_datos_previos = $obj->Buscar($_POST['codigo_articulo']);
+                $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+
                 $resultado = $obj->ProcesarDatos([
                     'accion' => 'modificar', 
                     'codigo_articulo' => $_POST['codigo_articulo'], 
                     'id_catalogo' => $_POST['id_catalogo'], 
                     'id_estado' => $_POST['id_estado']
                 ]);
-                
-                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Modificó artículo Código: " . $_POST['codigo_articulo']);
-                else $resultado['mensaje'] = traducirErrores($resultado['codigo']);
-                
+                $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+
+                if ($resultado['accion'] === 'exito') {
+                    registrarBitacora($bitacoraObj, $id_modulo, "Modificó artículo Código: " . $_POST['codigo_articulo'], $datos_previos, $datos_nuevos);
+                } else {
+                    $resultado['mensaje'] = traducirErrores($resultado['codigo'] ?? '');
+                    registrarBitacora($bitacoraObj, $id_modulo, "Falló al modificar artículo Código: " . $_POST['codigo_articulo'] . " - " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
+                }
                 echo json_encode($resultado);
                 break;
+            
             case 'eliminar':
                 if (empty($permisos['eliminar_articulo'])) throw new Exception('Sin permisos.');
                 
+                // BITÁCORA: Tomar foto antes de retirar
+                $consultar_datos_previos = $obj->Buscar($_POST['codigo_articulo']);
+                $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+                $datos_nuevos = '';
+
                 $resultado = $obj->ProcesarDatos(['accion' => 'eliminar', 'codigo_articulo' => $_POST['codigo_articulo']]);
                 
-                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Eliminó artículo Código: " . $_POST['codigo_articulo']);
-                else $resultado['mensaje'] = traducirErrores($resultado['codigo']);
-                
+                if ($resultado['accion'] === 'exito') {
+                    registrarBitacora($bitacoraObj, $id_modulo, "Retiró (Eliminó) artículo Código: " . $_POST['codigo_articulo'], $datos_previos, $datos_nuevos);
+                } else {
+                    $resultado['mensaje'] = traducirErrores($resultado['codigo'] ?? '');
+                    if (isset($resultado['mensaje']) && $resultado['mensaje'] === 'Ocurrió un error inesperado.') {
+                        $resultado['mensaje'] = $resultado['mensaje'] ?? 'No se pudo retirar.'; 
+                    }
+                    registrarBitacora($bitacoraObj, $id_modulo, "Falló al retirar artículo Código: " . $_POST['codigo_articulo'] . " - " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
+                }
                 echo json_encode($resultado);
                 break;
-                case 'reincorporar':
+
+            case 'reincorporar':
                 if (empty($permisos['eliminar_articulo'])) throw new Exception('Sin permisos.');
                 
+                // BITÁCORA: Tomar foto antes de reincorporar
+                $consultar_datos_previos = $obj->Buscar($_POST['codigo_articulo']);
+                $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+                $datos_nuevos = '';
+
                 $resultado = $obj->ProcesarDatos(['accion' => 'reincorporar', 'codigo_articulo' => $_POST['codigo_articulo']]);
                 
-                if ($resultado['accion'] === 'exito') registrarBitacora($bitacoraObj, $id_modulo, "Reincorporó artículo Código: " . $_POST['codigo_articulo']);
-                else $resultado['mensaje'] = traducirErrores($resultado['codigo']);
-                
+                if ($resultado['accion'] === 'exito') {
+                    registrarBitacora($bitacoraObj, $id_modulo, "Reincorporó artículo Código: " . $_POST['codigo_articulo'], $datos_previos, $datos_nuevos);
+                } else {
+                    $resultado['mensaje'] = traducirErrores($resultado['codigo'] ?? '');
+                    registrarBitacora($bitacoraObj, $id_modulo, "Falló al reincorporar artículo Código: " . $_POST['codigo_articulo'] . " - " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
+                }
                 echo json_encode($resultado);
                 break;
+            
             case 'generar': 
                 if (empty($permisos['generar_articulo'])) throw new Exception('No tienes permisos para generar reportes.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
+            
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -111,7 +152,6 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
     }
 }
 
-// 3. Función independiente para aislar la lógica del reporte, igual que en Catalogo
 function generar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
@@ -125,7 +165,7 @@ function generar($obj, $id_modulo, $bitacoraObj): void
         
         $nombreVista = 'R_ArticulosInventario'; 
         $objG = new GenerarReporte();
-        // Generamos el PDF pasándole la vista y los datos
+        
         $pdf = $objG->generarPDF($nombreVista, $datos, 'Inventario Fisico');
         
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
