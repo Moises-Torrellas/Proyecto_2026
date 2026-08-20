@@ -30,6 +30,11 @@
                             <!-- Tarjeta 1: Atletas -->
                             <div class="card_perfil">
                                 <h3><i data-lucide="users"></i> Atletas por Categorías</h3>
+                                <div class="chart_switcher" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;">
+                                    <button type="button" class="btn btn_azul btn-switch-grafico active" data-target="tipo_grafico_atletas" data-val="bar"><i data-lucide="bar-chart-2"></i> Barras</button>
+                                    <button type="button" class="btn btn-switch-grafico" style="background-color: #ddd; color: #333;" data-target="tipo_grafico_atletas" data-val="doughnut"><i data-lucide="pie-chart"></i> Dona</button>
+                                    <input type="hidden" name="tipo_grafico_atletas" id="tipo_grafico_atletas" value="bar">
+                                </div>
                                 <div class="canvas_reporte">
                                     <canvas id="chart_atletas"></canvas>
                                 </div>
@@ -63,15 +68,6 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        <div class="colum">
-                                            <div class="caja_formulario" style="margin-bottom: 0;">
-                                                <select name="tipo_grafico_atletas" id="tipo_grafico_atletas" class="formulario select">
-                                                    <option value="bar" selected>Gráfico de Barras</option>
-                                                    <option value="doughnut">Gráfico de Dona</option>
-                                                </select>
-                                                <label for="tipo_grafico_atletas" class="titulo_formulario">Tipo de Gráfico</label>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                                 <div class="row" style="margin-top: 20px;">
@@ -84,6 +80,11 @@
                             <!-- Tarjeta 2: Recaudacion -->
                             <div class="card_perfil">
                                 <h3><i data-lucide="dollar-sign"></i> Efectividad de Recaudación y Morosidad</h3>
+                                <div class="chart_switcher" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;">
+                                    <button type="button" class="btn btn_azul btn-switch-grafico active" data-target="tipo_grafico_recaudacion" data-val="bar"><i data-lucide="bar-chart-2"></i> Barras</button>
+                                    <button type="button" class="btn btn-switch-grafico" style="background-color: #ddd; color: #333;" data-target="tipo_grafico_recaudacion" data-val="line"><i data-lucide="activity"></i> Líneas</button>
+                                    <input type="hidden" name="tipo_grafico_recaudacion" id="tipo_grafico_recaudacion" value="bar">
+                                </div>
                                 <div class="canvas_reporte">
                                     <canvas id="chart_recaudacion"></canvas>
                                 </div>
@@ -119,15 +120,6 @@
                                                 <span class="mensaje" id="filtro_hasta_spam"></span>
                                             </div>
                                         </div>
-                                        <div class="colum">
-                                            <div class="caja_formulario" style="margin-bottom: 0;">
-                                                <select name="tipo_grafico_recaudacion" id="tipo_grafico_recaudacion" class="formulario select">
-                                                    <option value="bar" selected>Gráfico de Barras</option>
-                                                    <option value="line">Gráfico de Líneas</option>
-                                                </select>
-                                                <label for="tipo_grafico_recaudacion" class="titulo_formulario">Tipo de Gráfico</label>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                                 <div class="row" style="margin-top: 20px;">
@@ -140,6 +132,11 @@
                             <!-- Tarjeta 3: Inventario -->
                             <div class="card_perfil">
                                 <h3><i data-lucide="box"></i> Flujo y Estado de Implementos Asignados</h3>
+                                <div class="chart_switcher" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;">
+                                    <button type="button" class="btn btn_azul btn-switch-grafico active" data-target="tipo_grafico_inventario" data-val="bar"><i data-lucide="list"></i> Barras (Horizontal)</button>
+                                    <button type="button" class="btn btn-switch-grafico" style="background-color: #ddd; color: #333;" data-target="tipo_grafico_inventario" data-val="pie"><i data-lucide="pie-chart"></i> Pastel</button>
+                                    <input type="hidden" name="tipo_grafico_inventario" id="tipo_grafico_inventario" value="bar">
+                                </div>
                                 <div class="canvas_reporte">
                                     <canvas id="chart_inventario"></canvas>
                                 </div>
@@ -179,15 +176,6 @@
                                                 <span class="mensaje" id="filtro_inv_hasta_spam"></span>
                                             </div>
                                         </div>
-                                        <div class="colum">
-                                            <div class="caja_formulario" style="margin-bottom: 0;">
-                                                <select name="tipo_grafico_inventario" id="tipo_grafico_inventario" class="formulario select">
-                                                    <option value="bar" selected>Gráfico de Barras (Horizontal)</option>
-                                                    <option value="pie">Gráfico de Pastel (Pie)</option>
-                                                </select>
-                                                <label for="tipo_grafico_inventario" class="titulo_formulario">Tipo de Gráfico</label>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                                 <div class="row" style="margin-top: 20px;">
@@ -200,6 +188,11 @@
                             <!-- Tarjeta 4: Rendimiento -->
                             <div class="card_perfil">
                                 <h3><i data-lucide="activity"></i> Rendimiento Ofensivo por Atletas</h3>
+                                <div class="chart_switcher" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;">
+                                    <button type="button" class="btn btn_azul btn-switch-grafico active" data-target="tipo_grafico_rendimiento" data-val="bar"><i data-lucide="bar-chart-2"></i> Barras</button>
+                                    <button type="button" class="btn btn-switch-grafico" style="background-color: #ddd; color: #333;" data-target="tipo_grafico_rendimiento" data-val="line"><i data-lucide="activity"></i> Líneas</button>
+                                    <input type="hidden" name="tipo_grafico_rendimiento" id="tipo_grafico_rendimiento" value="bar">
+                                </div>
                                 <div class="canvas_reporte">
                                     <canvas id="chart_rendimiento"></canvas>
                                 </div>
@@ -218,15 +211,6 @@
                                                     <option value="todas" selected>Todos los Torneos</option>
                                                 </select>
                                                 <label for="filtro_temporada" class="titulo_formulario">Torneo</label>
-                                            </div>
-                                        </div>
-                                        <div class="colum">
-                                            <div class="caja_formulario" style="margin-bottom: 0;">
-                                                <select name="tipo_grafico_rendimiento" id="tipo_grafico_rendimiento" class="formulario select">
-                                                    <option value="bar" selected>Gráfico de Barras</option>
-                                                    <option value="line">Gráfico de Líneas</option>
-                                                </select>
-                                                <label for="tipo_grafico_rendimiento" class="titulo_formulario">Tipo de Gráfico</label>
                                             </div>
                                         </div>
                                     </div>
