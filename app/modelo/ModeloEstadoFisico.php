@@ -49,7 +49,6 @@ class ModeloEstadoFisico extends Conexion
             $params = [];
             $sentencia = "SELECT * FROM estado_fisico WHERE 1=1";
 
-            // Buscador General (texto)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
                 $sentencia .= " AND (nombre LIKE :f1 OR nivel_estado LIKE :f2)";
@@ -57,7 +56,6 @@ class ModeloEstadoFisico extends Conexion
                 $params[':f2'] = $p;
             }
 
-            // Filtro específico por nivel de estado (Para el Reporte)
             if (!empty($filtro['nivel_estado'])) {
                 $sentencia .= " AND nivel_estado = :filtro_nivel";
                 $params[':filtro_nivel'] = $filtro['nivel_estado'];
@@ -78,15 +76,17 @@ class ModeloEstadoFisico extends Conexion
         }
     }
 
-    function Buscar(): array
+    // BITÁCORA: Adaptamos para que reciba el id por parámetro para las fotos previas
+    function Buscar($id = null): array
     {
         try {
+            $codigo = ($id === null) ? $this->id_estado : $id;
             $conex = $this->conex();
             $sentencia = "SELECT * FROM estado_fisico WHERE id_estado = :id_estado";
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id_estado', $this->id_estado);
+            $stmt->bindParam(':id_estado', $codigo);
             $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(\PDO::FETCH_ASSOC); // Fetch Assoc para el JSON
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('EstadoFisico', $e->getMessage(), 'Modelo_Buscar');
@@ -98,9 +98,15 @@ class ModeloEstadoFisico extends Conexion
 
     private function Incluir(): array
     {
+        // BITÁCORA: Armamos el JSON con los datos nuevos
+        $datos_nuevos = [
+            'nombre'       => $this->nombre,
+            'nivel_estado' => $this->nivel_estado
+        ];
+
         try {
             if ($this->verificarExistencia('nombre', $this->nombre, 'estado_fisico', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'Ya existe un estado físico registrado con este nombre.');
+                return array('accion' => 'error', 'mensaje' => 'Ya existe un estado físico registrado con este nombre.', 'datos_nuevos' => json_encode($datos_nuevos));
             }
 
             $conex = $this->conex();
@@ -110,10 +116,10 @@ class ModeloEstadoFisico extends Conexion
             $stmt->bindParam(':nivel_estado', $this->nivel_estado);
             $stmt->execute();
 
-            return array('accion' => 'incluir', 'mensaje' => 'Estado físico registrado exitosamente.');
+            return array('accion' => 'incluir', 'mensaje' => 'Estado físico registrado exitosamente.', 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             logs('EstadoFisico', $e->getMessage(), 'Modelo_Incluir');
-            return array('accion' => 'error', 'mensaje' => 'Error al incluir: ' . $e->getMessage());
+            return array('accion' => 'error', 'mensaje' => 'Error al incluir: ' . $e->getMessage(), 'datos_nuevos' => json_encode($datos_nuevos));
         } finally {
             $conex = NULL;
         }
@@ -121,10 +127,17 @@ class ModeloEstadoFisico extends Conexion
 
     private function Modificar(): array
     {
+        // BITÁCORA: Armamos el JSON con los datos nuevos
+        $datos_nuevos = [
+            'id_estado'    => $this->id_estado,
+            'nombre'       => $this->nombre,
+            'nivel_estado' => $this->nivel_estado
+        ];
+
         try {
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id_estado, 'estado_fisico', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'estado_fisico', NULL)) {
-                    return array('accion' => 'error', 'mensaje' => 'Ya existe otro estado físico registrado con este nombre.');
+                    return array('accion' => 'error', 'mensaje' => 'Ya existe otro estado físico registrado con este nombre.', 'datos_nuevos' => json_encode($datos_nuevos));
                 }
             }
             $conex = $this->conex();
@@ -138,10 +151,10 @@ class ModeloEstadoFisico extends Conexion
             $stmt->bindParam(':id_estado', $this->id_estado);
             $stmt->execute();
 
-            return array('accion' => 'modificar', 'mensaje' => 'Estado físico modificado exitosamente.');
+            return array('accion' => 'modificar', 'mensaje' => 'Estado físico modificado exitosamente.', 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             logs('EstadoFisico', $e->getMessage(), 'Modelo_Modificar');
-            return array('accion' => 'error', 'mensaje' => 'Error al modificar: ' . $e->getMessage());
+            return array('accion' => 'error', 'mensaje' => 'Error al modificar: ' . $e->getMessage(), 'datos_nuevos' => json_encode($datos_nuevos));
         } finally {
             $conex = NULL;
         }
@@ -154,7 +167,6 @@ class ModeloEstadoFisico extends Conexion
                 return array('accion' => 'error', 'mensaje' => 'El estado físico no existe.');
             }
 
-            // Validación de llaves foráneas antes de eliminar
             if ($this->verificarExistencia('id_estado', $this->id_estado, 'articulos_inventario', NULL)) {
                 return array('accion' => 'error', 'mensaje' => 'No se puede eliminar: existen artículos de inventario asociados a este estado.');
             }

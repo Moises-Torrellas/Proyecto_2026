@@ -6,7 +6,7 @@ use Exception;
 
 class ModeloCategoriaCatalogo extends Conexion
 {
-    private $id_categoria; // Ajustado a id_categoria
+    private $id_categoria; 
     private $nombre;
     private $descripcion;
 
@@ -14,7 +14,7 @@ class ModeloCategoriaCatalogo extends Conexion
     {
         parent::__construct();
         $this->campoWhitelist = [
-            'id_categoria' => 'id_categoria', // Ajustado a id_categoria
+            'id_categoria' => 'id_categoria', 
             'nombre' => 'nombre'
         ];
         $this->llavePrimaria = 'id_categoria';
@@ -27,7 +27,7 @@ class ModeloCategoriaCatalogo extends Conexion
         }
         $this->ValidarExpresiones($datos);
         
-        $this->id_categoria = $datos['id_categoria'] ?? null; // Ajustado
+        $this->id_categoria = $datos['id_categoria'] ?? null; 
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->descripcion = $datos['descripcion'] ?? null;
         
@@ -78,9 +78,15 @@ class ModeloCategoriaCatalogo extends Conexion
 
     private function Incluir(): array
     {
+        // BITÁCORA: Armamos el JSON de los datos nuevos
+        $datos_nuevos = [
+            'nombre' => $this->nombre,
+            'descripcion' => $this->descripcion
+        ];
+
         try {
             if ($this->verificarExistencia('nombre', $this->nombre, 'categoria_catalogo', NULL)) {
-                return array('accion' => 'error', 'mensaje' => 'Ya existe una categoría registrada con este nombre.');
+                return array('accion' => 'error', 'mensaje' => 'Ya existe una categoría registrada con este nombre.', 'datos_nuevos' => json_encode($datos_nuevos));
             }
 
             $conex = $this->conex();
@@ -90,10 +96,10 @@ class ModeloCategoriaCatalogo extends Conexion
             $stmt->bindParam(':descripcion', $this->descripcion);
             $stmt->execute();
 
-            return array('accion' => 'incluir', 'mensaje' => 'Categoría registrada exitosamente.');
+            return array('accion' => 'incluir', 'mensaje' => 'Categoría registrada exitosamente.', 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             logs('CategoriaCatalogo', $e->getMessage(), 'Modelo_Incluir');
-            return array('accion' => 'error', 'mensaje' => 'Error al incluir: ' . $e->getMessage());
+            return array('accion' => 'error', 'mensaje' => 'Error al incluir: ' . $e->getMessage(), 'datos_nuevos' => json_encode($datos_nuevos));
         } finally {
             $conex = NULL;
         }
@@ -101,11 +107,17 @@ class ModeloCategoriaCatalogo extends Conexion
 
     private function Modificar(): array
     {
+        // BITÁCORA: Armamos el JSON de los datos a modificar
+        $datos_nuevos = [
+            'id_categoria' => $this->id_categoria,
+            'nombre' => $this->nombre,
+            'descripcion' => $this->descripcion
+        ];
+
         try {
-            // Ajustado a id_categoria
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id_categoria, 'categoria_catalogo', NULL)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'categoria_catalogo', NULL)) {
-                    return array('accion' => 'error', 'mensaje' => 'Ya existe otra categoría registrada con este nombre.');
+                    return array('accion' => 'error', 'mensaje' => 'Ya existe otra categoría registrada con este nombre.', 'datos_nuevos' => json_encode($datos_nuevos));
                 }
             }
             $conex = $this->conex();
@@ -116,27 +128,29 @@ class ModeloCategoriaCatalogo extends Conexion
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':descripcion', $this->descripcion);
-            $stmt->bindParam(':id_categoria', $this->id_categoria); // Ajustado
+            $stmt->bindParam(':id_categoria', $this->id_categoria); 
             $stmt->execute();
 
-            return array('accion' => 'modificar', 'mensaje' => 'Categoría modificada exitosamente.');
+            return array('accion' => 'modificar', 'mensaje' => 'Categoría modificada exitosamente.', 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             logs('CategoriaCatalogo', $e->getMessage(), 'Modelo_Modificar');
-            return array('accion' => 'error', 'mensaje' => 'Error al modificar: ' . $e->getMessage());
+            return array('accion' => 'error', 'mensaje' => 'Error al modificar: ' . $e->getMessage(), 'datos_nuevos' => json_encode($datos_nuevos));
         } finally {
             $conex = NULL;
         }
     }
 
-    function Buscar(): array
+    // BITÁCORA: Adaptamos para que pueda recibir el id por parámetro para las fotos previas
+    function Buscar($id = null): array
     {
         try {
+            $codigo = ($id === null) ? $this->id_categoria : $id;
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM categoria_catalogo WHERE id_categoria = :id_categoria"; // Ajustado
+            $sentencia = "SELECT * FROM categoria_catalogo WHERE id_categoria = :id_categoria"; 
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id_categoria', $this->id_categoria); // Ajustado
+            $stmt->bindParam(':id_categoria', $codigo); 
             $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(\PDO::FETCH_ASSOC); // Fetch_ASSOC para un JSON más limpio
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('CategoriaCatalogo', $e->getMessage(), 'Modelo_Buscar');
@@ -149,20 +163,18 @@ class ModeloCategoriaCatalogo extends Conexion
     private function Eliminar(): array
     {
         try {
-            // CORRECCIÓN 1: Ajustado a id_categoria
             if (!$this->verificarExistencia('id_categoria', $this->id_categoria, 'categoria_catalogo', NULL)) {
                 return array('accion' => 'error', 'mensaje' => 'La categoría no existe.');
             }
             
-            // CORRECCIÓN 2: Ajustado a la tabla catalogo según el diagrama
             if ($this->verificarExistencia('id_categoria', $this->id_categoria, 'catalogo', NULL)) {
                 return array('accion' => 'error', 'mensaje' => 'No se puede eliminar: la categoría tiene artículos del catálogo asociados.');
             }
 
             $conex = $this->conex();
-            $sentencia = "DELETE FROM categoria_catalogo WHERE id_categoria = :id_categoria"; // Ajustado
+            $sentencia = "DELETE FROM categoria_catalogo WHERE id_categoria = :id_categoria"; 
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id_categoria', $this->id_categoria); // Ajustado
+            $stmt->bindParam(':id_categoria', $this->id_categoria); 
             $stmt->execute();
             
             return array('accion' => 'eliminar', 'mensaje' => 'Categoría eliminada exitosamente.');
@@ -176,7 +188,6 @@ class ModeloCategoriaCatalogo extends Conexion
     
     private function ValidarExpresiones(array $datos): void
     {
-        // Ajustado a id_categoria
         if (!empty($datos['id_categoria']) && !preg_match('/^[0-9]+$/', $datos['id_categoria'])) {
             throw new Exception('Id inválido.');
         }

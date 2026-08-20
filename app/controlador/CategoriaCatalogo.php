@@ -7,7 +7,7 @@ $id_modulo = _MD_CATEGORIA_CAT_;
 
 $permisos = procesarPermisos($id_modulo, 'ingresar_catcatalogos');
 
-$nombreClaseModelo = 'App\modelo\ModeloCategoriaCatalogo'; // Ajustado
+$nombreClaseModelo = 'App\modelo\ModeloCategoriaCatalogo'; 
 
 if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
@@ -32,10 +32,6 @@ if (comprobarAjax() && !empty($_POST)) {
     cargarVista($pagina, $variables);
 }
 
-/**
- * --- FUNCIONES DEL CONTROLADOR ---
- */
-
 function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permisos): void
 {
     try {
@@ -46,7 +42,6 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
 
         $accion = isset($_POST['accion']) ? filter_var($_POST['accion'], FILTER_SANITIZE_SPECIAL_CHARS) : '';
 
-        // Seguridad centralizada
         switch ($accion) {
             case 'consultar':
              if (empty($permisos['ingresar_catcatalogos'])) throw new Exception('No tienes permisos para consultar categorias.');
@@ -68,7 +63,6 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
                 if (empty($permisos['modificar_catcatalogo'])) throw new Exception('No tienes permisos para modificar categorías.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
-
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -77,10 +71,6 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
-
-/**
- * Acciones específicas
- */
 
 function consultar($obj, $permisos): void
 {
@@ -106,11 +96,10 @@ function consultar($obj, $permisos): void
 function buscar($obj, $permisos): void
 {
     try {
-        // Ajustado a id_categoria
         validar_requeridos(['id_categoria']);
 
         $datos = [
-            'id_categoria' => $_POST['id_categoria'], // Ajustado
+            'id_categoria' => $_POST['id_categoria'], 
             'accion'       => 'buscar'
         ];
 
@@ -129,14 +118,19 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         $datos = [
             'nombre'      => $_POST['nombre'],
-            'descripcion' => $_POST['descripcion']
+            'descripcion' => $_POST['descripcion'],
+            'accion'      => 'incluir'
         ];  
-        $datos['accion'] = 'incluir';
 
         $resultado = $obj->procesarDatos($datos);
+        
+        $datos_previos = '';
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró la categoría: " . $_POST['nombre']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró la categoría: " . $_POST['nombre'], $datos_previos, $datos_nuevos);
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al registrar la categoría: " . $_POST['nombre'] . " - " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
         }
 
         echo json_encode($resultado);
@@ -149,20 +143,27 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        // Ajustado a id_categoria
         validar_requeridos(['id_categoria', 'nombre', 'descripcion']);
 
         $datos = [
-            'id_categoria' => $_POST['id_categoria'], // Ajustado
+            'id_categoria' => $_POST['id_categoria'], 
             'nombre'       => $_POST['nombre'],
             'descripcion'  => $_POST['descripcion'],
+            'accion'       => 'modificar'
         ];
-        $datos['accion'] = 'modificar';
 
+        // BITÁCORA: Traer los datos previos usando el método Buscar directamente
+        $consultar_datos_previos = $obj->Buscar($_POST['id_categoria']);
+        $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+
+        // Procesar la modificación
         $resultado = $obj->procesarDatos($datos);
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
-        if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') { // Corrección: el modelo devuelve 'modificar'
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó la categoría: " . $_POST['nombre']);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') { 
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó la categoría: " . $_POST['nombre'], $datos_previos, $datos_nuevos);
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al modificar la categoría: " . $_POST['nombre'] . " - " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
         }
 
         echo json_encode($resultado);
@@ -175,17 +176,24 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        // Ajustado a id_categoria
         validar_requeridos(['id_categoria']);
 
         $datos = [
-            'id_categoria' => $_POST['id_categoria'], // Ajustado
+            'id_categoria' => $_POST['id_categoria'], 
             'accion'       => 'eliminar'
         ];
 
+        // BITÁCORA: Tomar la foto de la categoría antes de borrarla
+        $consultar_datos_previos = $obj->Buscar($_POST['id_categoria']);
+        $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+        $datos_nuevos = '';
+
         $resultado = $obj->procesarDatos($datos);
+
         if (isset($resultado['accion']) && $resultado['accion'] === 'eliminar') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó la categoría: " . $_POST['id_categoria']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó la categoría ID: " . $_POST['id_categoria'], $datos_previos, $datos_nuevos);
+        } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al eliminar la categoría ID: " . $_POST['id_categoria'] . " - " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
