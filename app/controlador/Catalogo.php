@@ -21,7 +21,7 @@ $objModelo = new ModeloCatalogo();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudCatalogo($objModelo, $id_modulo, $bitacora ?? null, $permisos);
 } else {
-    registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo de Catálogo');
+    registrarBitacora($bitacora ?? null, $id_modulo, 'Ingreso al Modulo'); // Texto estandarizado
     $respuesta = $objModelo->Consultar();
     
     $error_bd = '';
@@ -137,12 +137,16 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         ];
 
         $resultado = $obj->procesarDatos($datos);
+        
+        $datos_previos = '';
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró un artículo en catálogo: " . $_POST['nombre']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró un artículo en catálogo: " . $_POST['nombre'], $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Artículo registrado exitosamente en el catálogo.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = 'Ocurrió un error inesperado en el registro.';
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al registrar artículo en catálogo: " . $_POST['nombre'], $datos_previos, $datos_nuevos);
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
@@ -165,13 +169,19 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'accion'       => 'modificar'
         ];
 
+        // BITÁCORA: Traer los datos previos antes de modificar
+        $consultar_datos_previos = $obj->Buscar($_POST['id_catalogo']);
+        $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+
         $resultado = $obj->procesarDatos($datos);
+        $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó artículo en catálogo ID: " . $_POST['id_catalogo']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó artículo en catálogo ID: " . $_POST['id_catalogo'], $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Catálogo modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = 'Ocurrió un error inesperado en la modificación.';
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al modificar artículo en catálogo ID: " . $_POST['id_catalogo'], $datos_previos, $datos_nuevos);
         }
 
         echo json_encode($resultado);
@@ -190,12 +200,19 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion'      => 'eliminar'
         ];
 
+        // BITÁCORA: Tomar la foto antes de borrar
+        $consultar_datos_previos = $obj->Buscar($_POST['id_catalogo']);
+        $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+        $datos_nuevos = '';
+
         $resultado = $obj->procesarDatos($datos);
+        
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el artículo del catálogo ID: " . $_POST['id_catalogo']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el artículo del catálogo ID: " . $_POST['id_catalogo'], $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Artículo eliminado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = $resultado['codigo'] ?? 'Error al eliminar. Verifica dependencias.';
+            registrarBitacora($bitacoraObj, $id_modulo, "Falló al eliminar el artículo del catálogo ID: " . $_POST['id_catalogo'] . " - " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
