@@ -63,11 +63,20 @@
                                                 </label>
                                             </div>
                                         </div>
+                                        <div class="colum">
+                                            <div class="caja_formulario" style="margin-bottom: 0;">
+                                                <select name="tipo_grafico_atletas" id="tipo_grafico_atletas" class="formulario select">
+                                                    <option value="bar" selected>Gráfico de Barras</option>
+                                                    <option value="doughnut">Gráfico de Dona</option>
+                                                </select>
+                                                <label for="tipo_grafico_atletas" class="titulo_formulario">Tipo de Gráfico</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row" style="margin-top: 20px;">
                                     <div class="colum" style="display: flex; justify-content: flex-end;">
-                                        <button type="button" class="btn btn_azul btn-generar" data-tipo="atletas">Generar PDF</button>
+                                        <button type="button" class="btn btn_azul btn-generar" data-tipo="atletas">Generar Reporte</button>
                                     </div>
                                 </div>
                             </div>
@@ -110,11 +119,20 @@
                                                 <span class="mensaje" id="filtro_hasta_spam"></span>
                                             </div>
                                         </div>
+                                        <div class="colum">
+                                            <div class="caja_formulario" style="margin-bottom: 0;">
+                                                <select name="tipo_grafico_recaudacion" id="tipo_grafico_recaudacion" class="formulario select">
+                                                    <option value="bar" selected>Gráfico de Barras</option>
+                                                    <option value="line">Gráfico de Líneas</option>
+                                                </select>
+                                                <label for="tipo_grafico_recaudacion" class="titulo_formulario">Tipo de Gráfico</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row" style="margin-top: 20px;">
                                     <div class="colum" style="display: flex; justify-content: flex-end;">
-                                        <button type="button" class="btn btn_azul btn-generar" data-tipo="recaudacion">Generar PDF</button>
+                                        <button type="button" class="btn btn_azul btn-generar" data-tipo="recaudacion">Generar Reporte</button>
                                     </div>
                                 </div>
                             </div>
@@ -161,11 +179,20 @@
                                                 <span class="mensaje" id="filtro_inv_hasta_spam"></span>
                                             </div>
                                         </div>
+                                        <div class="colum">
+                                            <div class="caja_formulario" style="margin-bottom: 0;">
+                                                <select name="tipo_grafico_inventario" id="tipo_grafico_inventario" class="formulario select">
+                                                    <option value="bar" selected>Gráfico de Barras (Horizontal)</option>
+                                                    <option value="pie">Gráfico de Pastel (Pie)</option>
+                                                </select>
+                                                <label for="tipo_grafico_inventario" class="titulo_formulario">Tipo de Gráfico</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row" style="margin-top: 20px;">
                                     <div class="colum" style="display: flex; justify-content: flex-end;">
-                                        <button type="button" class="btn btn_azul btn-generar" data-tipo="inventario">Generar PDF</button>
+                                        <button type="button" class="btn btn_azul btn-generar" data-tipo="inventario">Generar Reporte</button>
                                     </div>
                                 </div>
                             </div>
@@ -193,11 +220,20 @@
                                                 <label for="filtro_temporada" class="titulo_formulario">Torneo</label>
                                             </div>
                                         </div>
+                                        <div class="colum">
+                                            <div class="caja_formulario" style="margin-bottom: 0;">
+                                                <select name="tipo_grafico_rendimiento" id="tipo_grafico_rendimiento" class="formulario select">
+                                                    <option value="bar" selected>Gráfico de Barras</option>
+                                                    <option value="line">Gráfico de Líneas</option>
+                                                </select>
+                                                <label for="tipo_grafico_rendimiento" class="titulo_formulario">Tipo de Gráfico</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row" style="margin-top: 20px;">
                                     <div class="colum" style="display: flex; justify-content: flex-end;">
-                                        <button type="button" class="btn btn_azul btn-generar" data-tipo="rendimiento">Generar PDF</button>
+                                        <button type="button" class="btn btn_azul btn-generar" data-tipo="rendimiento">Generar Reporte</button>
                                     </div>
                                 </div>
                             </div>

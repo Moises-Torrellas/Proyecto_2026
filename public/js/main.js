@@ -464,7 +464,7 @@ function validarkeypress(er, e) {
     let a = er.test(tecla);
     if (!a) {
         e.preventDefault();
-        muestraMensajeMini('error', 2000, 'CarÃ¡cter no permitido');
+        muestraMensajeMini('error', 2000, 'Carácter no permitido');
     }
 }
 
