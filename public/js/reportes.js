@@ -98,6 +98,28 @@ $(document).ready(function () {
     $(document).on('change', '#tipo_grafico_rendimiento', function () {
         if (Datos['rendimiento']) cargarGraficoReporte(Datos['rendimiento'], 'rendimiento');
     });
+
+    // 5. Manejar los botones switch de los gráficos
+    $('.btn-switch-grafico').on('click', function() {
+        let $this = $(this);
+        let targetId = $this.data('target');
+        let val = $this.data('val');
+
+        // Reset all siblings in this group
+        $this.siblings('.btn-switch-grafico').removeClass('btn_azul active').css({
+            'background-color': '#ddd',
+            'color': '#333'
+        });
+
+        // Set active on this one
+        $this.addClass('btn_azul active').css({
+            'background-color': '',
+            'color': ''
+        });
+
+        // Update hidden input and trigger change
+        $('#' + targetId).val(val).trigger('change');
+    });
 });
 
 function cargarFiltrosIniciales() {
