@@ -338,7 +338,7 @@ class ModeloAsignaciones extends Conexion
         }
     }
 
-    private function ValidarExpresiones(array $datos): void
+   private function ValidarExpresiones(array $datos): void
     {
         // Se mantiene la regex original de IDs
         $regexId = '/^[0-9]+$/';
