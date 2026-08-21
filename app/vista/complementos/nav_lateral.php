@@ -197,7 +197,7 @@
                 <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
             </li>
             <li class="nav_opciones">
-                <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="info"></i> Preguntas Frecuentes</a>
+                <a type="button" href="PreguntasFrecuentes" class="opciones"><i class="opciones_i" data-lucide="info"></i> Preguntas Frecuentes</a>
                 <a type="button" href="#" class="opciones"><i class="opciones_i" data-lucide="book-open-text"></i> Manual De Usuario</a>
             </li>
 
