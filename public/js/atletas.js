@@ -45,12 +45,30 @@ $(document).ready(function () {
     });
 
     Validacion("fecha_nac", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "proceso");
+    Validacion("lugar_nacimiento", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, /^.{3,100}$/, "Mínimo 3 caracteres", "proceso");
     Validacion("nombre", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras, mínimo 3 caracteres", "proceso");
     Validacion("apellido", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras, mínimo 3 caracteres", "proceso");
     Validacion("doc_i", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Mínimo 7 máximo 8 dígitos, solo números", "proceso");
     Validacion("telefono", /^[0-9\b-]*$/, /^[0-9]{4}-[0-9]{7}$/, "Formato inválido (XXXX-XXXXXXX)", "proceso");
     Validacion("direccion", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, /^.{5,150}$/, "Dirección muy corta o inválida", "proceso");
+    Validacion("municipio", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^.{3,50}$/, "Mínimo 3 caracteres", "proceso");
+    Validacion("correo", /^[a-zA-Z0-9._%+-@]*$/, /^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})?$/, "Correo inválido", "proceso");
+    Validacion("instagram", /^[@a-zA-Z0-9._]*$/, /^[@a-zA-Z0-9._]{0,30}$/, "Usuario inválido", "proceso");
+    Validacion("talla_pantalon", /^[0-9a-zA-Z\s]*$/, /^.{1,10}$/, "Talla inválida", "proceso");
+    Validacion("talla_franela", /^[0-9a-zA-Z\s]*$/, /^.{1,10}$/, "Talla inválida", "proceso");
+    Validacion("talla_calzado", /^[0-9a-zA-Z\s]*$/, /^.{1,10}$/, "Talla inválida", "proceso");
+    Validacion("alergias_detalle", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, /^.{0,255}$/, "Detalle inválido", "proceso");
     Validacion("edad", /^[0-9\b]*$/, /^[0-9]{0,10}$/, "Solo numeros", "proceso");
+
+    $('#es_alergico').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('#alergias_detalle').prop('disabled', false).parent().removeClass('campo_deshabilitado');
+        } else {
+            $('#alergias_detalle').prop('disabled', true).parent().addClass('campo_deshabilitado');
+            $('#alergias_detalle').val('');
+            $('#alergias_detalle_spam').text('');
+        }
+    });
 
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
@@ -134,11 +152,8 @@ $(document).ready(function () {
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Atleta");
         $("#titulo_modal").text("Registrar Atleta");
-        $('#fecha_nac').closest('.colum').show();
-        $('#representante').closest('.colum').show();
-        $('#telefono').closest('.colum').show();
-        $('#direccion').closest('.colum').show();
-        $('#foto').closest('.colum').show();
+        $('.titulo_des').show();
+        $('#fecha_nac, #lugar_nacimiento, #representante, #telefono, #direccion, #municipio, #correo, #instagram, #dorsal, #peso, #estatura, #talla_pantalon, #talla_franela, #talla_calzado, #tipo_sangre, #es_alergico, #alergias_detalle, #foto').closest('.colum').show();
         $('#estatus').closest('.colum').hide().prop('disabled', true);
         $("#todos").prop('disabled', true);
         $("#genero").val("H").trigger('change');
@@ -152,6 +167,7 @@ $(document).ready(function () {
         $('#dorsal').val('');
         $('#peso').val('');
         $('#estatura').val('');
+        $('#es_alergico').prop('checked', false).trigger('change');
         abrirModal();
     });
 
@@ -161,11 +177,8 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
-        $('#fecha_nac').closest('.colum').hide();
-        $('#representante').closest('.colum').hide();
-        $('#telefono').closest('.colum').hide();
-        $('#direccion').closest('.colum').hide();
-        $('#foto').closest('.colum').hide();
+        $('.titulo_des').hide();
+        $('#fecha_nac, #lugar_nacimiento, #representante, #telefono, #direccion, #municipio, #correo, #instagram, #dorsal, #peso, #estatura, #talla_pantalon, #talla_franela, #talla_calzado, #tipo_sangre, #es_alergico, #alergias_detalle, #foto').closest('.colum').hide();
         $('#estatus').closest('.colum').show().prop('disabled', false);
         $('#edad').prop('readonly', false);
         $("#todos").prop('disabled', false);
@@ -424,42 +437,84 @@ function cerrarModalHistorial() {
     $("#contenedor_modal_historial").css('opacity', '0');
     $("#contenedor_modal_historial").css('visibility', 'hidden');
 }
-function GenerarCurriculum(id) {
-    confirmarConFecha('¿Generar el currículum del atleta a partir de una fecha específica?', function (confirmado, fechaSeleccionada) {
-        if (confirmado) {
-            var datos = new FormData();
-            datos.append('accion', 'generarCurriculum');
-            datos.append('id', id);
+function GenerarDocumentos(id) {
+    Swal.fire({
+        title: 'Seleccione el Documento a Generar',
+        html: `
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px; box-sizing: border-box; width: 100%; overflow: hidden;">
+                <button type="button" class="btn-doc-option" 
+                    onclick="document.querySelectorAll('.btn-doc-option').forEach(b => b.classList.remove('selected')); this.classList.add('selected'); Swal.getPopup().dataset.tipo='curriculum'; Swal.resetValidationMessage();">
+                    <i class="fi fi-sr-document" style="font-size: 1.2rem; display: flex; align-items: center;"></i> Generar Currículum (PDF)
+                </button>
+                <button type="button" class="btn-doc-option" 
+                    onclick="document.querySelectorAll('.btn-doc-option').forEach(b => b.classList.remove('selected')); this.classList.add('selected'); Swal.getPopup().dataset.tipo='ficha_alto_rendimiento'; Swal.resetValidationMessage();">
+                    <i class="fi fi-sr-document-signed" style="font-size: 1.2rem; display: flex; align-items: center;"></i> Generar Ficha Deportiva de Alto Rendimiento (Word)
+                </button>
+                <button type="button" class="btn-doc-option" 
+                    onclick="document.querySelectorAll('.btn-doc-option').forEach(b => b.classList.remove('selected')); this.classList.add('selected'); Swal.getPopup().dataset.tipo='ficha_tecnica'; Swal.resetValidationMessage();">
+                    <i class="fi fi-sr-clipboard-list-check" style="font-size: 1.2rem; display: flex; align-items: center;"></i> Generar Ficha Técnica (Word)
+                </button>
+            </div>
+        `,
+        showConfirmButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Siguiente',
+        cancelButtonText: 'Cancelar',
+        customClass: {
+            popup: "mi-popup",
+            title: "mi-titulo",
+            content: "mi-contenido",
+            confirmButton: "btn",
+            cancelButton: "btn_rojo"
+        },
+        didOpen: () => {
+            // Limpiar selección previa si existe
+            Swal.getPopup().dataset.tipo = '';
+        },
+        preConfirm: () => {
+            const tipo = Swal.getPopup().dataset.tipo;
+            if (!tipo) {
+                Swal.showValidationMessage('Debe seleccionar una opción primero');
+                return false;
+            }
+            return tipo;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const tipoDocumento = result.value;
 
-            // Agregamos la fecha al FormData que se enviará por AJAX
-            datos.append('fecha_inicio', fechaSeleccionada);
-
-            enviaAjax(datos);
-            abrirAlertaEspara('Generando Curriculum', 'Espere un momento');
+            if (tipoDocumento === 'curriculum' || tipoDocumento === 'ficha_alto_rendimiento') {
+                confirmarConAnio('¿A partir de qué año desea generar el historial?', function (confirmado, anioSeleccionado) {
+                    if (confirmado) {
+                        enviarPeticionDocumento(id, tipoDocumento, anioSeleccionado);
+                    }
+                });
+            } else {
+                enviarPeticionDocumento(id, tipoDocumento, '');
+            }
         }
     });
 }
 
-function confirmarConFecha(titulo, callback) {
+function confirmarConAnio(titulo, callback) {
     Swal.fire({
         icon: "question",
         title: titulo,
-        // Agregamos un texto aclarando que es opcional
         html: `
             <div style="margin-top: 15px;">
-                <label for="fecha_curriculum" style="display: block; margin-bottom: 5px; font-weight: bold;">
-                    Seleccione una fecha de inicio (Opcional):
+                <label for="anio_curriculum" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Seleccione un Año (Opcional):
                 </label>
                 <span style="font-size: 12px; color: #666; display: block; margin-bottom: 10px;">
                     Si se deja en blanco, se incluirá todo el historial.
                 </span>
-                <input type="date" id="fecha_curriculum" class="swal2-input" style="max-width: 100%;">
+                <input type="number" id="anio_curriculum" class="swal2-input" style="max-width: 100%;" placeholder="Ej. 2023" min="1990" max="2100">
             </div>
         `,
         showCancelButton: true,
-        confirmButtonText: "SI",
+        confirmButtonText: "Generar",
         confirmButtonColor: "#00a200",
-        cancelButtonText: "NO",
+        cancelButtonText: "Cancelar",
         cancelButtonColor: "#d30000",
         customClass: {
             popup: "mi-popup",
@@ -467,9 +522,8 @@ function confirmarConFecha(titulo, callback) {
             content: "mi-contenido"
         },
         preConfirm: () => {
-            // Ya no bloqueamos si está vacío, simplemente capturamos lo que haya
-            const fecha = Swal.getPopup().querySelector('#fecha_curriculum').value;
-            return fecha; // Retornará la fecha seleccionada o un string vacío ("")
+            const anio = Swal.getPopup().querySelector('#anio_curriculum').value;
+            return anio;
         }
     }).then((result) => {
         if (result.isConfirmed) {
@@ -481,6 +535,17 @@ function confirmarConFecha(titulo, callback) {
         alert("Error en la alerta: " + e.name);
         callback(false, null);
     });
+}
+
+function enviarPeticionDocumento(id, tipoDocumento, anio) {
+    var datos = new FormData();
+    datos.append('accion', 'generarDocumentos');
+    datos.append('id', id);
+    datos.append('tipo_documento', tipoDocumento);
+    datos.append('anio_inicio', anio);
+
+    enviaAjax(datos);
+    abrirAlertaEspara('Generando Documento', 'Espere un momento');
 }
 function modificar(datos) {
     limpia();
@@ -494,16 +559,14 @@ function modificar(datos) {
         $("#proceso").text("Modificar Atleta");
         $("#titulo_modal").text("Modificar Atleta");
     }
-    $('#fecha_nac').closest('.colum').show();
-    $('#representante').closest('.colum').show();
-    $('#telefono').closest('.colum').show();
-    $('#direccion').closest('.colum').show();
-    $('#foto').closest('.colum').show();
+    $('.titulo_des').show();
+    $('#fecha_nac, #lugar_nacimiento, #representante, #telefono, #direccion, #municipio, #correo, #instagram, #dorsal, #peso, #estatura, #talla_pantalon, #talla_franela, #talla_calzado, #tipo_sangre, #es_alergico, #alergias_detalle, #foto').closest('.colum').show();
     $('#estatus').closest('.colum').hide().prop('disabled', true);
     $('#edad').prop('readonly', true);
     $("#todos").prop('disabled', true);
 
     $('#fecha_nac').val(datos[0].fecha_nac);
+    $('#lugar_nacimiento').val(datos[0].lugar_nacimiento);
     $('#id').val(datos[0].id_atleta);
     $('#doc_i').val(datos[0].doc_identidad);
     $('#nombre').val(datos[0].nombres);
@@ -511,12 +574,27 @@ function modificar(datos) {
     $('#genero').val(datos[0].genero);
     $('#telefono').val(datos[0].telefono);
     $('#direccion').val(datos[0].direccion);
+    $('#municipio').val(datos[0].municipio);
+    $('#correo').val(datos[0].correo);
+    $('#instagram').val(datos[0].instagram);
     $('#representante').val(datos[0].id_representante).trigger('change');
     $('#posicion').val(datos[0].id_posicion).trigger('change');
     $('#categoria').val(datos[0].id_categoria).trigger('change');
     $('#dorsal').val(datos[0].dorsal);
     $('#peso').val(datos[0].peso_kg);
     $('#estatura').val(datos[0].estatura_cm);
+    $('#talla_pantalon').val(datos[0].talla_pantalon);
+    $('#talla_franela').val(datos[0].talla_franela);
+    $('#talla_calzado').val(datos[0].talla_calzado);
+    $('#tipo_sangre').val(datos[0].tipo_sangre).trigger('change');
+    
+    if (datos[0].es_alergico == 1) {
+        $('#es_alergico').prop('checked', true).trigger('change');
+        $('#alergias_detalle').val(datos[0].alergias_detalle);
+    } else {
+        $('#es_alergico').prop('checked', false).trigger('change');
+    }
+
     $("#proceso").data("foto_actual", datos[0].foto);
     const nombreFoto = datos[0].foto;
     if (nombreFoto && nombreFoto !== 'default.png') {

@@ -81,7 +81,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 </button>
                             <?php endif; ?>
                             <?php if (!empty($permisos['curriculum_atleta'])) : ?>
-                                <button id="cbt_sec" class="btn_t cbt_sec" onclick="GenerarCurriculum(<?= $dato['id_atleta'] ?>)" data-tippy-content="Generar Currículum">
+                                <button id="cbt_sec" class="btn_t cbt_sec" onclick="GenerarDocumentos(<?= $dato['id_atleta'] ?>)" data-tippy-content="Generar Documentos">
                                     <i class="fi fi-sr-clipboard-user"></i>
                                 </button>
                             <?php endif; ?>
@@ -325,7 +325,7 @@ endif;
                                                         </button>
                                                     <?php endif; ?>
                                                     <?php if (!empty($permisos['curriculum_atleta'])) : ?>
-                                                        <button id="cbt_sec" class="btn_t cbt_sec" onclick="GenerarCurriculum(<?= $dato['id_atleta'] ?>)" data-tippy-content="Generar Currículum">
+                                                        <button id="cbt_sec" class="btn_t cbt_sec" onclick="GenerarDocumentos(<?= $dato['id_atleta'] ?>)" data-tippy-content="Generar Documentos">
                                                             <i class="fi fi-sr-clipboard-user"></i>
                                                         </button>
                                                     <?php endif; ?>
@@ -465,6 +465,7 @@ endif;
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
+                    <h4 class="titulo_des" style="margin-top: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--color-primario); padding-bottom: 5px; color: var(--color-primario);">Datos Personales</h4>
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
@@ -475,9 +476,9 @@ endif;
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="edad" name="edad" readonly>
-                                <label for="edad" class="titulo_formulario">Edad (Año Calendario)</label>
-                                <span class="mensaje" id="edad_spam"></span>
+                                <input type="text" class="formulario" id="doc_i" name="doc_i">
+                                <label for="doc_i" class="titulo_formulario">Documento de Identidad</label>
+                                <span class="mensaje" id="doc_i_spam"></span>
                             </div>
                         </div>
                     </div>
@@ -497,6 +498,37 @@ endif;
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="lugar_nacimiento" name="lugar_nacimiento">
+                                <label for="lugar_nacimiento" class="titulo_formulario">Lugar de Nacimiento</label>
+                                <span class="mensaje" id="lugar_nacimiento_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="edad" name="edad" readonly>
+                                <label for="edad" class="titulo_formulario">Edad (Año Calendario)</label>
+                                <span class="mensaje" id="edad_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="genero" id="genero" class="formulario select">
+                                    <option id="todos" value="T" selected>Todos</option>
+                                    <option value="H">Hombre</option>
+                                    <option value="M">Mujer</option>
+                                </select>
+                                <label for="genero" class="titulo_formulario">Genero</label>
+                                <span class="mensaje" id="genero_span"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="titulo_des" style="margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid var(--color-primario); padding-bottom: 5px; color: var(--color-primario);">Datos Deportivos</h4>
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
@@ -520,13 +552,9 @@ endif;
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <select name="genero" id="genero" class="formulario select">
-                                    <option id="todos" value="T" selected>Todos</option>
-                                    <option value="H">Hombre</option>
-                                    <option value="M">Mujer</option>
-                                </select>
-                                <label for="genero" class="titulo_formulario">Genero</label>
-                                <span class="mensaje" id="genero_span"></span>
+                                <input type="number" class="formulario" id="dorsal" name="dorsal">
+                                <label for="dorsal" class="titulo_formulario">Dorsal</label>
+                                <span class="mensaje" id="dorsal_spam"></span>
                             </div>
                         </div>
                         <div class="colum">
@@ -541,6 +569,8 @@ endif;
                             </div>
                         </div>
                     </div>
+
+                    <h4 class="titulo_des" style="margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid var(--color-primario); padding-bottom: 5px; color: var(--color-primario);">Datos de Contacto</h4>
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
@@ -553,20 +583,29 @@ endif;
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="doc_i" name="doc_i">
-                                <label for="doc_i" class="titulo_formulario">Documento de Identidad</label>
-                                <span class="mensaje" id="doc_i_spam"></span>
+                                <input type="text" class="formulario" id="telefono" name="telefono">
+                                <label for="telefono" class="titulo_formulario">Telefono</label>
+                                <span class="mensaje" id="telefono_spam"></span>
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="telefono" name="telefono">
-                                <label for="telefono" class="titulo_formulario">Telefono</label>
-                                <span class="mensaje" id="telefono_spam"></span>
+                                <input type="text" class="formulario" id="correo" name="correo">
+                                <label for="correo" class="titulo_formulario">Correo Electrónico</label>
+                                <span class="mensaje" id="correo_spam"></span>
                             </div>
                         </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="instagram" name="instagram">
+                                <label for="instagram" class="titulo_formulario">Instagram (Opcional)</label>
+                                <span class="mensaje" id="instagram_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="direccion" name="direccion">
@@ -574,16 +613,16 @@ endif;
                                 <span class="mensaje" id="direccion_spam"></span>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="number" class="formulario" id="dorsal" name="dorsal">
-                                <label for="dorsal" class="titulo_formulario">Dorsal</label>
-                                <span class="mensaje" id="dorsal_spam"></span>
+                                <input type="text" class="formulario" id="municipio" name="municipio">
+                                <label for="municipio" class="titulo_formulario">Municipio</label>
+                                <span class="mensaje" id="municipio_spam"></span>
                             </div>
                         </div>
                     </div>
+
+                    <h4 class="titulo_des" style="margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid var(--color-primario); padding-bottom: 5px; color: var(--color-primario);">Salud y Medidas</h4>
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
@@ -600,6 +639,68 @@ endif;
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="talla_pantalon" name="talla_pantalon">
+                                <label for="talla_pantalon" class="titulo_formulario">Talla de Pantalón</label>
+                                <span class="mensaje" id="talla_pantalon_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="talla_franela" name="talla_franela">
+                                <label for="talla_franela" class="titulo_formulario">Talla de Franela</label>
+                                <span class="mensaje" id="talla_franela_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="talla_calzado" name="talla_calzado">
+                                <label for="talla_calzado" class="titulo_formulario">Talla de Calzado</label>
+                                <span class="mensaje" id="talla_calzado_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="tipo_sangre" id="tipo_sangre" class="formulario select">
+                                    <option value="" selected disabled>Seleccione...</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                                <label for="tipo_sangre" class="titulo_formulario">Tipo de Sangre</label>
+                                <span class="mensaje" id="tipo_sangre_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <label for="es_alergico" class="titulo_formulario">¿Es alérgico?</label>
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="es_alergico" name="es_alergico" class="checkbox" value="1">
+                                    <span class="custom-checkbox"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="colum" id="col_alergias_detalle">
+                            <div class="caja_formulario campo_deshabilitado">
+                                <input type="text" class="formulario" id="alergias_detalle" name="alergias_detalle" disabled>
+                                <label for="alergias_detalle" class="titulo_formulario">Detalle de alergias</label>
+                                <span class="mensaje" id="alergias_detalle_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="titulo_des" style="margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid var(--color-primario); padding-bottom: 5px; color: var(--color-primario);">Foto de Perfil</h4>
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario subir_foto">

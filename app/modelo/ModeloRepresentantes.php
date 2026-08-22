@@ -13,6 +13,8 @@ class ModeloRepresentantes extends Conexion
     private $telefono;
     private $direccion;
     private $nacionalidad;
+    private $correo;
+    private $instagram;
     public function __construct()
     {
         parent::__construct();
@@ -66,6 +68,8 @@ class ModeloRepresentantes extends Conexion
         $this->nacionalidad = $datos['nacionalidad'] ?? null;
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->apellido = mb_convert_case(trim($datos['apellido'] ?? ''), MB_CASE_TITLE, "UTF-8");
+        $this->correo = $datos['correo'] ?? '';
+        $this->instagram = $datos['instagram'] ?? '';
 
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
@@ -142,7 +146,9 @@ class ModeloRepresentantes extends Conexion
             'nombre' => $this->nombre,
             'apellido' => $this->apellido,
             'telefono' => $this->telefono,
-            'direccion' => $this->direccion
+            'direccion' => $this->direccion,
+            'correo' => $this->correo,
+            'instagram' => $this->instagram
         ];
         
         try {
@@ -155,7 +161,7 @@ class ModeloRepresentantes extends Conexion
                 throw new Exception(DUPLICATE_PHONE);
             }
 
-            $sentencia = "INSERT INTO representantes (`cedula`, `tipo_doc`, `nombre`, `apellido`, `telefono`, `direccion`) VALUES (:cedula, :nacionalidad,:nombre, :apellido,:telefono, :direccion)";
+            $sentencia = "INSERT INTO representantes (`cedula`, `tipo_doc`, `nombre`, `apellido`, `telefono`, `direccion`, `correo`, `instagram`) VALUES (:cedula, :nacionalidad,:nombre, :apellido,:telefono, :direccion, :correo, :instagram)";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':nacionalidad', $this->nacionalidad);
@@ -163,6 +169,8 @@ class ModeloRepresentantes extends Conexion
             $stmt->bindParam(':apellido', $this->apellido);
             $stmt->bindParam(':telefono', $this->telefono);
             $stmt->bindParam(':direccion', $this->direccion);
+            $stmt->bindParam(':correo', $this->correo);
+            $stmt->bindParam(':instagram', $this->instagram);
             $stmt->execute();
 
             $conex->commit();
@@ -187,7 +195,9 @@ class ModeloRepresentantes extends Conexion
             'nombre' => $this->nombre,
             'apellido' => $this->apellido,
             'telefono' => $this->telefono,
-            'direccion' => $this->direccion
+            'direccion' => $this->direccion,
+            'correo' => $this->correo,
+            'instagram' => $this->instagram
         ];
         
         try {
@@ -210,7 +220,9 @@ class ModeloRepresentantes extends Conexion
             nombre = :nombre, 
             apellido = :apellido, 
             telefono = :telefono, 
-            direccion = :direccion 
+            direccion = :direccion,
+            correo = :correo,
+            instagram = :instagram
             WHERE codigo_representante = :codigo_representante";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':cedula', $this->cedula);
@@ -219,6 +231,8 @@ class ModeloRepresentantes extends Conexion
             $stmt->bindParam(':apellido', $this->apellido);
             $stmt->bindParam(':telefono', $this->telefono);
             $stmt->bindParam(':direccion', $this->direccion);
+            $stmt->bindParam(':correo', $this->correo);
+            $stmt->bindParam(':instagram', $this->instagram);
             $stmt->bindParam(':codigo_representante', $this->id);
             $stmt->execute();
 

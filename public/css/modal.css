@@ -530,8 +530,69 @@
     /* Margen interno para que el texto no pegue de la orilla */
 }
 
-/* --- ESTILOS PARA SELECT MÚLTIPLE (Select2) --- */
+/* --- ESTILOS PARA SELECT (Select2) GENERAL --- */
+.select2-container--default .select2-selection--single {
+    border: 2px solid var(--borde-form) !important;
+    border-radius: 8px !important;
+    background-color: var(--fondo-form) !important;
+    height: 45px !important;
+    padding: 0px 10px;
+    display: flex;
+    align-items: center;
+    transition: .2s ease-in;
+}
 
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--texto-principal) !important;
+    font-size: .9rem;
+    font-weight: 600;
+    line-height: 40px !important;
+    padding-left: 0;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--open .select2-selection--single {
+    border: 2px solid var(--color-primario) !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 41px !important;
+    right: 10px !important;
+}
+
+/* Dropdown (Lista de opciones) */
+.select2-container--default .select2-dropdown {
+    background-color: var(--fondo-form) !important;
+    border: 2px solid var(--borde-form) !important;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Input de búsqueda */
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    background-color: var(--fondo-principal) !important;
+    border: 1px solid var(--borde-form) !important;
+    color: var(--texto-principal) !important;
+    border-radius: 4px;
+}
+
+/* Opciones individuales */
+.select2-container--default .select2-results__option {
+    color: var(--texto-principal);
+    background-color: var(--fondo-form);
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected],
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+    background-color: var(--color-primario) !important;
+    color: #fff !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: rgba(0, 0, 0, 0.2) !important; /* Ligeramente más oscuro si ya está seleccionado */
+}
+
+/* --- ESTILOS PARA SELECT MÚLTIPLE (Select2) --- */
 .colum_select_multiple {
     width: 520px;
     /* Ancho para ocupar las dos columnas */
@@ -628,4 +689,37 @@
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+/* Botones de Opciones para Modal Generar Documentos */
+.btn-doc-option {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 20px 15px;
+    border-radius: 8px;
+    border: 2px solid var(--borde-color, #ccc);
+    background-color: var(--fondo-contraste, #f9f9f9);
+    color: var(--texto-principal, #333);
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.btn-doc-option:hover {
+    opacity: 0.8;
+}
+
+.btn-doc-option.selected {
+    border-color: var(--color-primario, #32AF0A) !important;
+    background-color: var(--color-primario, #32AF0A) !important;
+    color: var(--boton-texto, #fff) !important;
+}
+
+.btn-doc-option.selected i {
+    color: var(--boton-texto, #fff) !important;
 }
