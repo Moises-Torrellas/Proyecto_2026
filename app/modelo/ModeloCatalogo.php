@@ -50,24 +50,26 @@ class ModeloCatalogo extends Conexion
         };
     }
 
-    public function Consultar(array $filtro = []): array
+   public function Consultar(array $filtro = []): array
     {
         try {
             $conex = $this->conex();
             $params = [];
 
+            // SUBCONSULTA 1: Para obtener el nombre de la categoría sin usar INNER JOIN
             $sentencia = "SELECT c.*, 
-                                 cat.nombre as categoria_nombre
+                                 (SELECT cat.nombre FROM categoria_catalogo cat WHERE cat.id_categoria = c.id_categoria) as categoria_nombre,
+                                 StockDisponibleCatalogo(c.id_catalogo) AS stock_actual
                           FROM catalogo c
-                          INNER JOIN categoria_catalogo cat ON c.id_categoria = cat.id_categoria
                           WHERE 1=1"; 
             
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
+                // SUBCONSULTA 2: Para buscar coincidencias dentro de la tabla de categorías
                 $sentencia .= " AND (
                     c.nombre LIKE :f1 OR 
-                    cat.nombre LIKE :f2 OR 
-                    c.talla LIKE :f3
+                    c.talla LIKE :f3 OR
+                    c.id_categoria IN (SELECT id_categoria FROM categoria_catalogo WHERE nombre LIKE :f2)
                 )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
@@ -209,36 +211,33 @@ class ModeloCatalogo extends Conexion
 
     private function Eliminar(): array
     {
+        $conex = null;
         try {
             $conex = $this->conex();
-            $conex->beginTransaction();
-
-            if (!$this->verificarExistencia('id_catalogo', $this->id_catalogo, 'catalogo', NULL, bloquear:true)) {
-                throw new Exception(INVALID_ID);
-            }
             
-            if ($this->verificarExistencia('id_catalogo', $this->id_catalogo, 'articulos_inventario', NULL, bloquear:true)) {
+            // Llamamos al proceso almacenado
+            $sql = "CALL EliminarCatalogoSeguro(?, @resultado)";
+            $stmt = $conex->prepare($sql);
+            $stmt->execute([$this->id_catalogo]);
+            
+            // Evaluamos la respuesta de la base de datos
+            $resQuery = $conex->query("SELECT @resultado AS res");
+            $resultado_sp = $resQuery->fetchColumn();
+
+            if ($resultado_sp == 1) {
+                return array('accion' => 'exito');
+            } else if ($resultado_sp == -2) {
                 throw new Exception("No se puede eliminar el catálogo porque tiene artículos en el inventario físico asociados.");
+            } else {
+                throw new Exception(defined('INVALID_ID') ? INVALID_ID : "ID inválido o inexistente.");
             }
-
-            $sentencia = "DELETE FROM catalogo WHERE id_catalogo = :id_catalogo";
-            $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id_catalogo', $this->id_catalogo);
-            $stmt->execute();
-
-            $conex->commit();
-            return array('accion' => 'exito');
         } catch (Exception $e) {
-            if ($conex && $conex->inTransaction()) {
-                $conex->rollback();
-            }
             logs('Catalogo', $e->getMessage(), 'Modelo_Eliminar');
             return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
     }
-
     private function ValidarExpresiones(array $datos): void
     {
         if (!empty($datos['id_catalogo']) && !preg_match('/^[0-9]+$/', $datos['id_catalogo'])) {
