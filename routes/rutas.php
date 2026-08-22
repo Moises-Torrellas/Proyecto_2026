@@ -71,6 +71,7 @@ function manejarRuta($pagina): void
         'Modulos' => 'Modulos',
         'Permisos' => 'Permisos',
         'EditarPerfil' => 'EditarPerfil',
+        'PreguntasFrecuentes' => 'PreguntasFrecuentes',
     ];
     // Verificamos si la página solicitada existe en las rutas definidas
     if (array_key_exists($pagina, $rutas)) {
