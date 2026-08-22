@@ -98,57 +98,39 @@ class ModeloAsignaciones extends Conexion
         }
     }
 
-    public function ConsultarAsignaciones(): array
+   public function ConsultarAsignaciones(): array
     {
         $conex = null;
         try {
             $conex = $this->conex();
 
-            $sql = "SELECT a.id_asignacion, 
-                           DATE_FORMAT(a.fecha_asignacion, '%d/%m/%Y') as fecha_vista,
-                           a.fecha_asignacion as fecha_real,
-                           a.estatus as estatus_asignacion,
-                           a.codigo_atleta,
-                           CONCAT(at.p_nombre, ' ', at.p_apellidos) as atleta,
-                           CASE 
-                               WHEN ia.numero_doc IS NOT NULL AND ia.numero_doc <> '' THEN ia.numero_doc
-                               ELSE CONCAT('R-', r.cedula)
-                           END AS doc_identidad,
-                           c.nombre as articulo,
-                           e.codigo_club,
-                           a.codigo_articulo
-                    FROM asignaciones a
-                    INNER JOIN atletas at ON a.codigo_atleta = at.codigo_atleta
-                    LEFT JOIN identidad_atleta ia ON at.codigo_atleta = ia.codigo_atleta
-                    LEFT JOIN atleta_representante ar ON at.codigo_atleta = ar.codigo_atleta
-                    LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
-                    INNER JOIN articulos_inventario e ON a.codigo_articulo = e.codigo_articulo
-                    INNER JOIN catalogo c ON e.id_catalogo = c.id_catalogo
-                    WHERE 1=1";
+            // 1. Llamamos directamente a la vista. El código queda súper limpio.
+            $sql = "SELECT * FROM vista_asignaciones_general WHERE 1=1";
 
+            // 2. Aplicamos los filtros usando los nombres de las columnas de la vista
             if (!empty($this->filtro)) {
-                $sql .= " AND (at.p_nombre LIKE :filtro OR at.p_apellidos LIKE :filtro OR ia.numero_doc LIKE :filtro OR c.nombre LIKE :filtro)";
+                $sql .= " AND (atleta LIKE :filtro OR doc_identidad LIKE :filtro OR articulo LIKE :filtro)";
             }
 
             if (!empty($this->codigo_atleta)) {
-                $sql .= " AND a.codigo_atleta = :codigo_atleta";
+                $sql .= " AND codigo_atleta = :codigo_atleta";
             }
             if (!empty($this->codigo_articulo)) {
-                $sql .= " AND a.codigo_articulo = :codigo_articulo";
+                $sql .= " AND codigo_articulo = :codigo_articulo";
             }
             if (!empty($this->fecha_inicio) && !empty($this->fecha_fin)) {
-                $sql .= " AND DATE(a.fecha_asignacion) BETWEEN :fecha_inicio AND :fecha_fin";
+                $sql .= " AND DATE(fecha_real) BETWEEN :fecha_inicio AND :fecha_fin";
             } else if (!empty($this->fecha_inicio)) {
-                $sql .= " AND DATE(a.fecha_asignacion) >= :fecha_inicio";
+                $sql .= " AND DATE(fecha_real) >= :fecha_inicio";
             } else if (!empty($this->fecha_fin)) {
-                $sql .= " AND DATE(a.fecha_asignacion) <= :fecha_fin";
+                $sql .= " AND DATE(fecha_real) <= :fecha_fin";
             }
 
             if ($this->accion_actual === 'generar' && empty($this->mostrar_inactivos)) {
-                $sql .= " AND a.estatus = 1";
+                $sql .= " AND estatus_asignacion = 1";
             }
 
-            $sql .= " ORDER BY at.p_nombre ASC, a.fecha_asignacion DESC";
+            $sql .= " ORDER BY atleta ASC, fecha_real DESC";
 
             $stmt = $conex->prepare($sql);
 

@@ -69,7 +69,7 @@ class ModeloArticulosInventario extends Conexion
         return 'CL-' . str_pad((string)$siguiente, 4, '0', STR_PAD_LEFT);
     }
 
-    private function ConsultarAgrupado(): array
+   private function ConsultarAgrupado(): array
     {
         try {
             $sql = "SELECT e.codigo_articulo, 
@@ -79,6 +79,7 @@ class ModeloArticulosInventario extends Conexion
                            ce.nombre as categoria, 
                            es.nombre as estado, 
                            es.nivel_estado,
+                           EsAptoParaUso(e.id_estado) AS apto_para_uso,
                            e.id_estado,
                            e.codigo_club,
                            e.estatus
@@ -108,6 +109,7 @@ class ModeloArticulosInventario extends Conexion
                     'estado_fisico' => $fila['estado'],
                     'id_estado' => $fila['id_estado'],
                     'nivel_estado' => $fila['nivel_estado'],
+                    'apto_para_uso' => $fila['apto_para_uso'],
                     'codigo_club' => $fila['codigo_club'],
                     'estatus' => $fila['estatus']
                 ];
@@ -189,30 +191,38 @@ class ModeloArticulosInventario extends Conexion
         }
     }
 
-    private function EliminarArticulo($id): array
+   private function EliminarArticulo($id): array
     {
         if (empty($id)) return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
 
-        $conex = $this->conex();
+        $conex = null;
         try {
-            $conex->beginTransaction();
-            $sql = "UPDATE articulos_inventario SET estatus = 3 WHERE codigo_articulo = ? AND estatus = 1";
+            $conex = $this->conex();
+            
+            // 1. Llamamos al proceso almacenado
+            $sql = "CALL RetirarArticuloSeguro(?, @resultado)";
             $stmt = $conex->prepare($sql);
             $stmt->execute([$id]);
             
-            if ($stmt->rowCount() > 0) {
-                $conex->commit();
+            // 2. Leemos la respuesta de MariaDB
+            $resQuery = $conex->query("SELECT @resultado AS res");
+            $resultado_sp = $resQuery->fetchColumn();
+
+            // 3. Devolvemos el mensaje según el código de la BD
+            if ($resultado_sp == 1) {
                 return ['accion' => 'exito', 'mensaje' => 'El artículo ha sido retirado del inventario.'];
+            } else if ($resultado_sp == -2) {
+                return ['accion' => 'error', 'mensaje' => 'El artículo no puede ser retirado porque está en uso o ya fue dado de baja.'];
             } else {
-                $conex->rollBack();
-                return ['accion' => 'error', 'mensaje' => 'El artículo no puede ser retirado porque está en uso.'];
+                return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
             }
         } catch (\PDOException $e) {
-            if ($conex->inTransaction()) $conex->rollBack();
+            logs('Articulos Inventario', $e->getMessage(), 'Modelo_Eliminar');
             return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
+        } finally {
+            $conex = null;
         }
     }
-
     private function ReincorporarArticulo($id): array
     {
         if (empty($id)) return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
@@ -232,11 +242,18 @@ class ModeloArticulosInventario extends Conexion
         }
     }
 
-    public function ConsultarArticulosLibres(): array { 
+public function ConsultarArticulosLibres(): array { 
         $conex = null;
         try {
             $conex = $this->conex();
-            $sql = "SELECT e.codigo_articulo, e.codigo_club, IFNULL(c.nombre, 'Artículo sin registrar') as articulo FROM articulos_inventario e LEFT JOIN catalogo c ON e.id_catalogo = c.id_catalogo WHERE e.estatus = 1";
+            
+            // APLICACIÓN DE SUBCONSULTA: Extraemos el nombre del catálogo consultando la tabla anidada
+            $sql = "SELECT e.codigo_articulo, 
+                           e.codigo_club, 
+                           IFNULL((SELECT nombre FROM catalogo c WHERE c.id_catalogo = e.id_catalogo), 'Artículo sin registrar') as articulo 
+                    FROM articulos_inventario e 
+                    WHERE e.estatus = 1";
+                    
             $articulos = $conex->query($sql)->fetchAll(PDO::FETCH_ASSOC);
             return ['accion' => 'exito', 'datos' => $articulos];
         } catch (Exception $e) {
