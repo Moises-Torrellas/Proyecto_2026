@@ -189,6 +189,22 @@ if (isset($solo_lista) && $solo_lista === true) :
                     </div>
                     <div class="row">
                         <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="correo" name="correo">
+                                <label for="correo" class="titulo_formulario">Correo Electrónico</label>
+                                <span class="mensaje" id="correo_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="instagram" name="instagram">
+                                <label for="instagram" class="titulo_formulario">Instagram (Opcional)</label>
+                                <span class="mensaje" id="instagram_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
                             <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
                         </div>

@@ -647,7 +647,7 @@ function limpia() {
     $('.campo_deshabilitado, .bloqueado, .btn_bloqueado').removeClass('campo_deshabilitado bloqueado btn_bloqueado');
 
     // 8. Ajustes de placeholders y visibilidad
-    $("#doc_i").attr("placeholder", "CÃ©dula");
+    $("#doc_i").attr("placeholder", "Cedula");
     formulario.find('.row, .col, div').show();
 }
 

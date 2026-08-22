@@ -97,9 +97,8 @@ function manejarSolicitudAtletas($obj, $id_modulo, $bitacoraObj, array $permisos
                 if (empty($permisos['generar_atletas'])) throw new Exception('No tienes permisos para generar un reporte de Atletas.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
-            case 'generarCurriculum':
-                if (empty($permisos['curriculum_atleta'])) throw new Exception('No tienes permisos para generar un curriculum de Atletas.');
-                generarCurriculum($id_modulo, $bitacoraObj);
+            case 'generarDocumentos':
+                generarDocumentos($id_modulo, $bitacoraObj);
                 break;
             case 'historial':
                 if (empty($permisos['ingresar_atleta'])) throw new Exception('No tienes permisos para ver el historial.');
@@ -196,6 +195,16 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         if (isset($_POST['doc_i'])) $datos['doc_identidad'] = $_POST['doc_i'];
         if (isset($_POST['telefono'])) $datos['telefono'] = $_POST['telefono'];
         if (isset($_POST['direccion'])) $datos['direccion'] = $_POST['direccion'];
+        if (isset($_POST['lugar_nacimiento'])) $datos['lugar_nacimiento'] = $_POST['lugar_nacimiento'];
+        if (isset($_POST['correo'])) $datos['correo'] = filter_var($_POST['correo'], FILTER_SANITIZE_EMAIL);
+        if (isset($_POST['municipio'])) $datos['municipio'] = $_POST['municipio'];
+        if (isset($_POST['instagram'])) $datos['instagram'] = $_POST['instagram'];
+        if (isset($_POST['talla_pantalon'])) $datos['talla_pantalon'] = $_POST['talla_pantalon'];
+        if (isset($_POST['talla_franela'])) $datos['talla_franela'] = $_POST['talla_franela'];
+        if (isset($_POST['talla_calzado'])) $datos['talla_calzado'] = $_POST['talla_calzado'];
+        if (isset($_POST['tipo_sangre'])) $datos['tipo_sangre'] = $_POST['tipo_sangre'];
+        if (isset($_POST['es_alergico'])) $datos['es_alergico'] = $_POST['es_alergico'];
+        if (isset($_POST['alergias_detalle'])) $datos['alergias_detalle'] = $_POST['alergias_detalle'];
 
         if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
             throw new Exception('La foto del atleta es obligatoria.');
@@ -288,6 +297,16 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         if (isset($_POST['doc_i'])) $datos['doc_identidad'] = $_POST['doc_i'];
         if (isset($_POST['telefono'])) $datos['telefono'] = $_POST['telefono'];
         if (isset($_POST['direccion'])) $datos['direccion'] = $_POST['direccion'];
+        if (isset($_POST['lugar_nacimiento'])) $datos['lugar_nacimiento'] = $_POST['lugar_nacimiento'];
+        if (isset($_POST['correo'])) $datos['correo'] = filter_var($_POST['correo'], FILTER_SANITIZE_EMAIL);
+        if (isset($_POST['municipio'])) $datos['municipio'] = $_POST['municipio'];
+        if (isset($_POST['instagram'])) $datos['instagram'] = $_POST['instagram'];
+        if (isset($_POST['talla_pantalon'])) $datos['talla_pantalon'] = $_POST['talla_pantalon'];
+        if (isset($_POST['talla_franela'])) $datos['talla_franela'] = $_POST['talla_franela'];
+        if (isset($_POST['talla_calzado'])) $datos['talla_calzado'] = $_POST['talla_calzado'];
+        if (isset($_POST['tipo_sangre'])) $datos['tipo_sangre'] = $_POST['tipo_sangre'];
+        if (isset($_POST['es_alergico'])) $datos['es_alergico'] = $_POST['es_alergico'];
+        if (isset($_POST['alergias_detalle'])) $datos['alergias_detalle'] = $_POST['alergias_detalle'];
 
         if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
             $foto_nombre = $_POST['foto_actual'];
@@ -493,44 +512,56 @@ function generar($obj, $id_modulo, $bitacoraObj): void
     }
 }
 
-function generarCurriculum($id_modulo, $bitacoraObj): void
+function generarDocumentos($id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id']);
+        validar_requeridos(['id', 'tipo_documento']);
         $id_atleta = (int)$_POST['id'];
-
-        // Capturamos la fecha enviada por JS. Si viene vacía o no existe, será un string vacío.
-        $fecha_inicio = $_POST['fecha_inicio'] ?? '';
+        $tipo_documento = $_POST['tipo_documento'];
+        $anio_inicio = $_POST['anio_inicio'] ?? '';
+        
+        $fecha_inicio = '';
+        if (!empty($anio_inicio)) {
+            $fecha_inicio = $anio_inicio . '-01-01';
+        }
 
         $modeloHistorial = new ModeloHistorial();
-
-        // Pasamos el id del atleta y la fecha de inicio al modelo
         $datosCurriculum = $modeloHistorial->consultarCurriculum($id_atleta, $fecha_inicio);
 
         if (empty($datosCurriculum) || empty($datosCurriculum['atleta'])) {
-            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontró información para generar el currículum de este atleta.']);
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontró información para generar el documento de este atleta.']);
             exit();
         }
 
-        $nombreVista = 'Curriculum';
         $nombres = $datosCurriculum['atleta']['nombres'];
         $apellidos = $datosCurriculum['atleta']['apellidos'];
         $docIdentidad = $datosCurriculum['atleta']['doc_identidad'];
-
         $nombreArchivoRaw = $nombres . '_' . $apellidos . '_' . $docIdentidad;
         $nombreArchivo = str_replace(' ', '_', $nombreArchivoRaw);
 
-        $pdf = \App\servicios\GenerarCurriculum::GenerarCu($nombreVista, $datosCurriculum, $nombreArchivo);
-
-        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            $atletaNombre = $datosCurriculum['atleta']['nombres'] . " " . $datosCurriculum['atleta']['apellidos'];
-            // Se envían strings vacíos para datos_previos y datos_nuevos
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó currículum deportivo del atleta: " . $atletaNombre, '', '');
+        $resultado = [];
+        if ($tipo_documento === 'curriculum') {
+            $nombreVista = 'Curriculum';
+            $resultado = \App\servicios\GenerarCurriculum::GenerarCu($nombreVista, $datosCurriculum, $nombreArchivo);
+        } else if ($tipo_documento === 'ficha_alto_rendimiento') {
+            require_once __DIR__ . '/../servicios/GenerarDocumentosWord.php';
+            $resultado = \App\servicios\GenerarDocumentosWord::GenerarFichaDeportiva($datosCurriculum, $nombreArchivo, $anio_inicio);
+        } else if ($tipo_documento === 'ficha_tecnica') {
+            require_once __DIR__ . '/../servicios/GenerarDocumentosWord.php';
+            $resultado = \App\servicios\GenerarDocumentosWord::GenerarFichaTecnica($datosCurriculum, $nombreArchivo);
+        } else {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'Tipo de documento no válido.']);
+            exit();
         }
 
-        echo json_encode($pdf);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'reporte') {
+            $atletaNombre = $datosCurriculum['atleta']['nombres'] . " " . $datosCurriculum['atleta']['apellidos'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó documento ($tipo_documento) del atleta: " . $atletaNombre, '', '');
+        }
+
+        echo json_encode($resultado);
     } catch (Exception $e) {
-        logs('Atletas', $e->getMessage(), 'Controlador_GenerarCurriculum');
+        logs('Atletas', $e->getMessage(), 'Controlador_GenerarDocumentos');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

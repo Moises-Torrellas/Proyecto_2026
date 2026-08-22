@@ -25,6 +25,16 @@ class ModeloAtletas extends Conexion
     private $peso_kg;
     private $estatura_cm;
     private $motivo_retiro;
+    private $lugar_nacimiento;
+    private $correo;
+    private $municipio;
+    private $instagram;
+    private $talla_pantalon;
+    private $talla_franela;
+    private $talla_calzado;
+    private $tipo_sangre;
+    private $es_alergico;
+    private $alergias_detalle;
 
     private $ObjCat;
     private $ObjRep;
@@ -79,6 +89,17 @@ class ModeloAtletas extends Conexion
         $this->peso_kg       = !empty($datos['peso']) ? $datos['peso'] : 0.0;
         $this->estatura_cm   = !empty($datos['estatura']) ? $datos['estatura'] : 0;
         $this->motivo_retiro = $datos['motivo_retiro'] ?? 'Retiro Voluntario';
+
+        $this->lugar_nacimiento = isset($datos['lugar_nacimiento']) ? mb_convert_case(trim($datos['lugar_nacimiento']), MB_CASE_TITLE, "UTF-8") : null;
+        $this->correo = isset($datos['correo']) ? trim($datos['correo']) : null;
+        $this->municipio = isset($datos['municipio']) ? mb_convert_case(trim($datos['municipio']), MB_CASE_TITLE, "UTF-8") : null;
+        $this->instagram = isset($datos['instagram']) ? trim($datos['instagram']) : null;
+        $this->talla_pantalon = isset($datos['talla_pantalon']) ? trim($datos['talla_pantalon']) : null;
+        $this->talla_franela = isset($datos['talla_franela']) ? trim($datos['talla_franela']) : null;
+        $this->talla_calzado = isset($datos['talla_calzado']) ? trim($datos['talla_calzado']) : null;
+        $this->tipo_sangre = isset($datos['tipo_sangre']) ? trim($datos['tipo_sangre']) : null;
+        $this->es_alergico = isset($datos['es_alergico']) && $datos['es_alergico'] == '1' ? 1 : 0;
+        $this->alergias_detalle = isset($datos['alergias_detalle']) ? trim($datos['alergias_detalle']) : null;
 
         $this->nombre   = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->apellido = mb_convert_case(trim($datos['apellido'] ?? ''), MB_CASE_TITLE, "UTF-8");
@@ -277,7 +298,8 @@ class ModeloAtletas extends Conexion
 
             // Llamamos al procedimiento almacenado pasando parámetros y declarando @resultado
             $sql = "CALL RegistrarAtletaCompleto(
-            :doc, :pn, :sn, :pa, :sa, :gen, :fn, :tel, :dir, :rep, :cat, :pos, :dor, :peso, :est, :foto, @resultado
+            :doc, :pn, :sn, :pa, :sa, :gen, :fn, :tel, :dir, :rep, :cat, :pos, :dor, :peso, :est, :foto, 
+            :lug, :cor, :mun, :ins, :tp, :tf, :tc, :ts, :ea, :ad, @resultado
         )";
 
             $stmt = $conex->prepare($sql);
@@ -297,7 +319,17 @@ class ModeloAtletas extends Conexion
                 ':dor'  => $this->dorsal,
                 ':peso' => $this->peso_kg,
                 ':est'  => $this->estatura_cm,
-                ':foto' => $this->foto
+                ':foto' => $this->foto,
+                ':lug'  => $this->lugar_nacimiento,
+                ':cor'  => $this->correo,
+                ':mun'  => $this->municipio,
+                ':ins'  => $this->instagram,
+                ':tp'   => $this->talla_pantalon,
+                ':tf'   => $this->talla_franela,
+                ':tc'   => $this->talla_calzado,
+                ':ts'   => $this->tipo_sangre,
+                ':ea'   => $this->es_alergico,
+                ':ad'   => $this->alergias_detalle
             ]);
 
             // ¡IMPORTANTE! Liberar el cursor para permitir ejecutar la siguiente consulta (SELECT @resultado)
@@ -392,7 +424,7 @@ class ModeloAtletas extends Conexion
             $s_apellidos = isset($apellidosArr[1]) ? $apellidosArr[1] : '';
 
             $sqlAtleta = "UPDATE atletas SET p_nombre = :pn, s_nombre = :sn, p_apellidos = :pa, s_apellidos = :sa, 
-                      genero = :gen, fecha_nac = :fn, foto = :foto WHERE codigo_atleta = :id";
+                      genero = :gen, fecha_nac = :fn, foto = :foto, lugar_nacimiento = :lug WHERE codigo_atleta = :id";
             $stmtAtleta = $conex->prepare($sqlAtleta);
             $stmtAtleta->execute([
                 ':pn' => $p_nombre,
@@ -402,6 +434,7 @@ class ModeloAtletas extends Conexion
                 ':gen' => $this->genero,
                 ':fn' => $this->fecha_nac,
                 ':foto' => $this->foto,
+                ':lug' => $this->lugar_nacimiento,
                 ':id' => $this->id
             ]);
 
@@ -409,14 +442,14 @@ class ModeloAtletas extends Conexion
             $stmtContacto = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE codigo_atleta = :id");
             $stmtContacto->execute([':id' => $this->id]);
             if ($stmtContacto->fetchColumn() > 0) {
-                $sqlC = "UPDATE contacto_atleta SET direccion = :dir, telefono = :tel WHERE codigo_atleta = :id";
+                $sqlC = "UPDATE contacto_atleta SET direccion = :dir, telefono = :tel, correo = :cor, municipio = :mun, instagram = :ins WHERE codigo_atleta = :id";
                 $stmtC = $conex->prepare($sqlC);
-                $stmtC->execute([':dir' => $this->direccion ?? '', ':tel' => $this->telefono ?? '', ':id' => $this->id]);
+                $stmtC->execute([':dir' => $this->direccion ?? '', ':tel' => $this->telefono ?? '', ':cor' => $this->correo, ':mun' => $this->municipio, ':ins' => $this->instagram, ':id' => $this->id]);
             } else {
-                if ($this->telefono || $this->direccion) {
-                    $sqlC = "INSERT INTO contacto_atleta (codigo_atleta, direccion, telefono) VALUES (:ca, :dir, :tel)";
+                if ($this->telefono || $this->direccion || $this->correo || $this->municipio || $this->instagram) {
+                    $sqlC = "INSERT INTO contacto_atleta (codigo_atleta, direccion, telefono, correo, municipio, instagram) VALUES (:ca, :dir, :tel, :cor, :mun, :ins)";
                     $stmtC = $conex->prepare($sqlC);
-                    $stmtC->execute([':ca' => $this->id, ':dir' => $this->direccion ?? '', ':tel' => $this->telefono ?? '']);
+                    $stmtC->execute([':ca' => $this->id, ':dir' => $this->direccion ?? '', ':tel' => $this->telefono ?? '', ':cor' => $this->correo, ':mun' => $this->municipio, ':ins' => $this->instagram]);
                 }
             }
 
@@ -451,7 +484,7 @@ class ModeloAtletas extends Conexion
             }
 
             // Update inscripciones (the latest one)
-            $sqlInsc = "UPDATE inscripciones SET codigo_categoria = :cc, codigo_posicion = :cp, dorsal = :dorsal, peso_kg = :peso, estatura_cm = :estatura 
+            $sqlInsc = "UPDATE inscripciones SET codigo_categoria = :cc, codigo_posicion = :cp, dorsal = :dorsal, peso_kg = :peso, estatura_cm = :estatura, talla_pantalon = :tp, talla_franela = :tf, talla_calzado = :tc 
                     WHERE codigo_atleta = :id AND codigo_inscripcion = (SELECT max_id FROM (SELECT MAX(codigo_inscripcion) as max_id FROM inscripciones WHERE codigo_atleta = :id2) AS temp)";
             $stmtInsc = $conex->prepare($sqlInsc);
             $stmtInsc->execute([
@@ -460,9 +493,25 @@ class ModeloAtletas extends Conexion
                 ':dorsal' => $this->dorsal,
                 ':peso' => $this->peso_kg,
                 ':estatura' => $this->estatura_cm,
+                ':tp' => $this->talla_pantalon,
+                ':tf' => $this->talla_franela,
+                ':tc' => $this->talla_calzado,
                 ':id' => $this->id,
                 ':id2' => $this->id
             ]);
+
+            // Update datos medicos
+            $stmtMed = $conex->prepare("SELECT COUNT(*) FROM datos_medicos WHERE codigo_atleta = :id");
+            $stmtMed->execute([':id' => $this->id]);
+            if ($stmtMed->fetchColumn() > 0) {
+                $sqlM = "UPDATE datos_medicos SET tipo_sangre = :ts, es_alergico = :ea, alergias_detalle = :ad WHERE codigo_atleta = :id";
+                $stmtM = $conex->prepare($sqlM);
+                $stmtM->execute([':ts' => $this->tipo_sangre, ':ea' => $this->es_alergico, ':ad' => $this->alergias_detalle, ':id' => $this->id]);
+            } else {
+                $sqlM = "INSERT INTO datos_medicos (codigo_atleta, tipo_sangre, es_alergico, alergias_detalle) VALUES (:id, :ts, :ea, :ad)";
+                $stmtM = $conex->prepare($sqlM);
+                $stmtM->execute([':id' => $this->id, ':ts' => $this->tipo_sangre, ':ea' => $this->es_alergico, ':ad' => $this->alergias_detalle]);
+            }
 
             $conex->commit();
 
@@ -487,7 +536,17 @@ class ModeloAtletas extends Conexion
         try {
             $codigo = ($id === null) ? $this->id : $id;
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM vista_atletas WHERE id_atleta = :id";
+            $sentencia = "SELECT v.*, 
+                                 a.lugar_nacimiento, 
+                                 c.correo, c.municipio, c.instagram,
+                                 i.talla_pantalon, i.talla_franela, i.talla_calzado,
+                                 dm.tipo_sangre, dm.es_alergico, dm.alergias_detalle
+                          FROM vista_atletas v
+                          JOIN atletas a ON v.id_atleta = a.codigo_atleta
+                          LEFT JOIN contacto_atleta c ON v.id_atleta = c.codigo_atleta
+                          LEFT JOIN inscripciones i ON v.id_atleta = i.codigo_atleta AND i.estatus = 1
+                          LEFT JOIN datos_medicos dm ON v.id_atleta = dm.codigo_atleta
+                          WHERE v.id_atleta = :id";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id', $codigo);
             $stmt->execute();

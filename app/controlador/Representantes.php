@@ -130,6 +130,8 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             'apellido'     => $_POST['apellido'],
             'telefono'     => $_POST['telefono'],
             'direccion'    => $_POST['direccion'],
+            'correo'       => isset($_POST['correo']) ? filter_var($_POST['correo'], FILTER_SANITIZE_EMAIL) : '',
+            'instagram'    => $_POST['instagram'] ?? '',
             'accion'       => 'incluir'
         ];
 
@@ -172,6 +174,8 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'apellido'     => $_POST['apellido'],
             'telefono'     => $_POST['telefono'],
             'direccion'    => $_POST['direccion'],
+            'correo'       => isset($_POST['correo']) ? filter_var($_POST['correo'], FILTER_SANITIZE_EMAIL) : '',
+            'instagram'    => $_POST['instagram'] ?? '',
             'accion'       => 'modificar'
         ];
 

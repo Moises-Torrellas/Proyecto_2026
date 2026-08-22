@@ -50,6 +50,8 @@ $(document).ready(function () {
     Validacion("nacionalidad", /^[VEP]$/, /^[VEP]$/, "Solo puede ingresar V, E o P", "proceso");
 
     Validacion("direccion", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/, "Solo letras entre 3 y 150 caracteres", "proceso");
+    Validacion("correo", /^[a-zA-Z0-9._%+-@]*$/, /^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})?$/, "Correo inválido", "proceso");
+    Validacion("instagram", /^[@a-zA-Z0-9._]*$/, /^[@a-zA-Z0-9._]{0,30}$/, "Usuario inválido", "proceso");
 
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
@@ -95,6 +97,8 @@ $(document).ready(function () {
         $("#titulo_modal").text("Registrar Representante");
         $('#direccion').closest('.colum').show();
         $('#telefono').closest('.colum').show();
+        $('#correo').closest('.colum').show();
+        $('#instagram').closest('.colum').show();
         $('#apellido').closest('.colum').show();
         $('#nombre').closest('.colum').show();
         abrirModal();
@@ -108,6 +112,8 @@ $(document).ready(function () {
         $("#titulo_modal").text("Generar Reporte");
         $('#telefono').closest('.colum').hide();
         $('#direccion').closest('.colum').hide();
+        $('#correo').closest('.colum').hide();
+        $('#instagram').closest('.colum').hide();
         $('#apellido').closest('.colum').hide();
         $('#nombre').closest('.colum').hide();
         $('#nacionalidad').val(null).trigger('change');
@@ -216,6 +222,8 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Representante");
     $('#direccion').closest('.colum').show();
     $('#telefono').closest('.colum').show();
+    $('#correo').closest('.colum').show();
+    $('#instagram').closest('.colum').show();
     $('#apellido').closest('.colum').show();
     $('#nombre').closest('.colum').show();
     $('#id').val(datos[0].codigo_representante);
@@ -224,6 +232,8 @@ function modificar(datos) {
     $('#apellido').val(datos[0].apellido);
     $('#telefono').val(datos[0].telefono);
     $('#direccion').val(datos[0].direccion);
+    $('#correo').val(datos[0].correo);
+    $('#instagram').val(datos[0].instagram);
 
     abrirModal();
 }
