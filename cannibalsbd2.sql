@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 12-07-2026 a las 19:36:37
+-- Tiempo de generación: 23-08-2026 a las 00:37:00
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -27,74 +27,152 @@ DELIMITER $$
 --
 -- Procedimientos
 --
+DROP PROCEDURE IF EXISTS `EliminarCatalogoSeguro`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarCatalogoSeguro` (IN `p_id_catalogo` INT, OUT `p_resultado` INT)   BEGIN
+    DECLARE v_existe INT;
+    DECLARE v_en_uso INT;
+
+    -- Si hay un fallo de integridad, se deshace todo
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_resultado = 0; 
+    END;
+
+    START TRANSACTION;
+
+    -- Validar si el catálogo existe
+    SELECT COUNT(*) INTO v_existe FROM catalogo WHERE id_catalogo = p_id_catalogo FOR UPDATE;
+    
+    -- Validar si tiene artículos físicos amarrados en el inventario
+    SELECT COUNT(*) INTO v_en_uso FROM articulos_inventario WHERE id_catalogo = p_id_catalogo;
+
+    IF v_existe = 0 THEN
+        SET p_resultado = -1; -- -1: No existe
+        ROLLBACK;
+    ELSEIF v_en_uso > 0 THEN
+        SET p_resultado = -2; -- -2: No se puede borrar, tiene artículos físicos
+        ROLLBACK;
+    ELSE
+        -- Todo en orden, procedemos a eliminar
+        DELETE FROM catalogo WHERE id_catalogo = p_id_catalogo;
+        COMMIT;
+        SET p_resultado = 1; -- 1: Éxito
+    END IF;
+END$$
+
 DROP PROCEDURE IF EXISTS `RegistrarAtletaCompleto`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `RegistrarAtletaCompleto` (IN `p_doc_identidad` VARCHAR(20), IN `p_p_nombre` VARCHAR(50), IN `p_s_nombre` VARCHAR(50), IN `p_p_apellidos` VARCHAR(50), IN `p_s_apellidos` VARCHAR(50), IN `p_genero` CHAR(1), IN `p_fecha_nac` DATE, IN `p_telefono` VARCHAR(20), IN `p_direccion` VARCHAR(255), IN `p_representante` INT, IN `p_categoria` INT, IN `p_posicion` INT, IN `p_dorsal` INT, IN `p_peso_kg` DECIMAL(5,2), IN `p_estatura_cm` DECIMAL(5,2), IN `p_foto` VARCHAR(255), OUT `p_resultado` INT)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `RegistrarAtletaCompleto` (IN `p_doc_identidad` VARCHAR(20), IN `p_p_nombre` VARCHAR(50), IN `p_s_nombre` VARCHAR(50), IN `p_p_apellidos` VARCHAR(50), IN `p_s_apellidos` VARCHAR(50), IN `p_genero` CHAR(1), IN `p_fecha_nac` DATE, IN `p_telefono` VARCHAR(20), IN `p_direccion` VARCHAR(255), IN `p_representante` INT, IN `p_categoria` INT, IN `p_posicion` INT, IN `p_dorsal` INT, IN `p_peso_kg` DECIMAL(5,2), IN `p_estatura_cm` DECIMAL(5,2), IN `p_foto` VARCHAR(255), IN `p_lugar_nacimiento` VARCHAR(255), IN `p_correo` VARCHAR(255), IN `p_municipio` VARCHAR(255), IN `p_instagram` VARCHAR(255), IN `p_talla_pantalon` VARCHAR(10), IN `p_talla_franela` VARCHAR(10), IN `p_talla_calzado` VARCHAR(10), IN `p_tipo_sangre` VARCHAR(5), IN `p_es_alergico` TINYINT(1), IN `p_alergias_detalle` TEXT, OUT `p_resultado` INT)   BEGIN
     DECLARE v_codigo_atleta INT;
 
-    -- Manejador de errores: Si algo falla a nivel de SQL, hace ROLLBACK
+    
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
         SET p_resultado = 0;
     END;
 
-    -- Validaciones previas de duplicados
+    
     SET p_resultado = NULL;
 
     IF p_doc_identidad IS NOT NULL AND p_doc_identidad != '' THEN
         IF (SELECT COUNT(*) FROM identidad_atleta WHERE numero_doc = p_doc_identidad) > 0 THEN
-            SET p_resultado = -1; -- Código para cédula duplicada
+            SET p_resultado = -1; 
         END IF;
     END IF;
 
     IF p_resultado IS NULL AND p_telefono IS NOT NULL AND p_telefono != '' THEN
         IF (SELECT COUNT(*) FROM contacto_atleta WHERE telefono = p_telefono) > 0 THEN
-            SET p_resultado = -2; -- Código para teléfono duplicado
+            SET p_resultado = -2; 
         END IF;
     END IF;
 
-    -- Si no hubo duplicados, procedemos con la transacción
+    
     IF p_resultado IS NULL THEN
         START TRANSACTION;
 
-        -- 1. Insertar atleta
-        INSERT INTO atletas (p_nombre, s_nombre, p_apellidos, s_apellidos, genero, fecha_nac, foto) 
-        VALUES (p_p_nombre, p_s_nombre, p_p_apellidos, p_s_apellidos, p_genero, p_fecha_nac, p_foto);
         
-        -- Obtener el ID del atleta recién insertado
+        INSERT INTO atletas (p_nombre, s_nombre, p_apellidos, s_apellidos, genero, fecha_nac, foto, lugar_nacimiento) 
+        VALUES (p_p_nombre, p_s_nombre, p_p_apellidos, p_s_apellidos, p_genero, p_fecha_nac, p_foto, p_lugar_nacimiento);
+        
+        
         SET v_codigo_atleta = LAST_INSERT_ID();
 
-        -- 2. Insertar contacto (solo si hay datos)
-        IF p_telefono != '' OR p_direccion != '' THEN
-            INSERT INTO contacto_atleta (codigo_atleta, direccion, telefono) 
-            VALUES (v_codigo_atleta, IFNULL(p_direccion, ''), IFNULL(p_telefono, ''));
+        
+        IF p_telefono != '' OR p_direccion != '' OR p_correo != '' OR p_municipio != '' OR p_instagram != '' THEN
+            INSERT INTO contacto_atleta (codigo_atleta, direccion, telefono, correo, municipio, instagram) 
+            VALUES (v_codigo_atleta, IFNULL(p_direccion, ''), IFNULL(p_telefono, ''), p_correo, p_municipio, p_instagram);
         END IF;
 
-        -- 3. Insertar identidad
+        
         IF p_doc_identidad != '' THEN
             INSERT INTO identidad_atleta (codigo_atleta, tipo_doc, numero_doc) 
             VALUES (v_codigo_atleta, 'V', p_doc_identidad);
         END IF;
 
-        -- 4. Insertar representante (si es válido)
+        
         IF p_representante IS NOT NULL AND p_representante != 0 THEN
             INSERT INTO atleta_representante (codigo_atleta, codigo_representante) 
             VALUES (v_codigo_atleta, p_representante);
         END IF;
 
-        -- 5. Insertar inscripción
-        INSERT INTO inscripciones (codigo_atleta, codigo_categoria, codigo_posicion, dorsal, peso_kg, estatura_cm, fecha_inscripcion, estatus) 
-        VALUES (v_codigo_atleta, p_categoria, p_posicion, p_dorsal, p_peso_kg, p_estatura_cm, CURDATE(), 1);
+        
+        INSERT INTO inscripciones (codigo_atleta, codigo_categoria, codigo_posicion, dorsal, peso_kg, estatura_cm, fecha_inscripcion, estatus, talla_pantalon, talla_franela, talla_calzado) 
+        VALUES (v_codigo_atleta, p_categoria, p_posicion, p_dorsal, p_peso_kg, p_estatura_cm, CURDATE(), 1, p_talla_pantalon, p_talla_franela, p_talla_calzado);
 
-        -- Guardar los cambios
+        
+        INSERT INTO datos_medicos (codigo_atleta, tipo_sangre, es_alergico, alergias_detalle)
+        VALUES (v_codigo_atleta, p_tipo_sangre, p_es_alergico, p_alergias_detalle);
+
+        
         COMMIT;
-        SET p_resultado = 1; -- Código de éxito
+        SET p_resultado = 1; 
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `RetirarArticuloSeguro`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `RetirarArticuloSeguro` (IN `p_articulo` INT, OUT `p_resultado` INT)   BEGIN
+    DECLARE v_estatus TINYINT;
+
+    -- Manejador de errores: Si la base de datos falla, se hace ROLLBACK automático
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_resultado = 0; -- 0: Error de BD
+    END;
+
+    -- Iniciamos la transacción segura
+    START TRANSACTION;
+
+    -- Consultamos y bloqueamos el registro momentáneamente
+    SELECT estatus INTO v_estatus FROM articulos_inventario WHERE codigo_articulo = p_articulo FOR UPDATE;
+
+    IF v_estatus IS NULL THEN
+        SET p_resultado = -1; -- -1: El equipo no existe
+        ROLLBACK;
+    ELSEIF v_estatus != 1 THEN
+        SET p_resultado = -2; -- -2: El equipo está en uso o ya fue retirado
+        ROLLBACK;
+    ELSE
+        -- Retiramos el artículo (estatus 3 según tu lógica)
+        UPDATE articulos_inventario SET estatus = 3 WHERE codigo_articulo = p_articulo;
+        
+        COMMIT; -- Guardamos cambios
+        SET p_resultado = 1; -- 1: Éxito
     END IF;
 END$$
 
 --
 -- Funciones
 --
+DROP FUNCTION IF EXISTS `EsAptoParaUso`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `EsAptoParaUso` (`p_id_estado` INT) RETURNS TINYINT(4) READS SQL DATA BEGIN
+    DECLARE v_nivel TINYINT;
+    SELECT nivel_estado INTO v_nivel FROM estado_fisico WHERE id_estado = p_id_estado;
+    -- Si el nivel del estado es 1 (Excelente), retorna 1 (Sí). Si no, retorna 0 (No).
+    RETURN IF(v_nivel = 1, 1, 0);
+END$$
+
 DROP FUNCTION IF EXISTS `ObtenerMontoAbonado`$$
 CREATE DEFINER=`root`@`localhost` FUNCTION `ObtenerMontoAbonado` (`p_codigo_cargo` INT) RETURNS DECIMAL(10,2) READS SQL DATA BEGIN
     DECLARE total DECIMAL(10,2);
@@ -106,6 +184,15 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `ObtenerMontoAbonado` (`p_codigo_carg
     AND p.estatus = 1;
     
     RETURN total;
+END$$
+
+DROP FUNCTION IF EXISTS `StockDisponibleCatalogo`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `StockDisponibleCatalogo` (`p_id_catalogo` INT) RETURNS INT(11) READS SQL DATA BEGIN
+    DECLARE v_total INT;
+    -- Cuenta cuántos artículos físicos de ese catálogo están libres (estatus 1) y en excelente estado (id_estado 1)
+    SELECT COUNT(*) INTO v_total FROM articulos_inventario 
+    WHERE id_catalogo = p_id_catalogo AND estatus = 1 AND id_estado = 1;
+    RETURN v_total;
 END$$
 
 DELIMITER ;
@@ -131,6 +218,21 @@ CREATE TABLE `articulos_inventario` (
 
 INSERT INTO `articulos_inventario` (`codigo_articulo`, `id_estado`, `id_catalogo`, `codigo_club`, `estatus`) VALUES
 (4, 1, 1, 'CL-0001', 2);
+
+--
+-- Disparadores `articulos_inventario`
+--
+DROP TRIGGER IF EXISTS `trg_bloquear_articulos_danados`;
+DELIMITER $$
+CREATE TRIGGER `trg_bloquear_articulos_danados` BEFORE UPDATE ON `articulos_inventario` FOR EACH ROW BEGIN
+    -- Si el nuevo estado físico es 2 (Dañado)
+    IF NEW.id_estado = 2 THEN
+        -- Lo pasamos a estatus 3 (Retirado) para que no salga en la lista de disponibles
+        SET NEW.estatus = 3;
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -173,18 +275,19 @@ CREATE TABLE `atletas` (
   `s_apellidos` varchar(50) DEFAULT NULL,
   `genero` enum('H','M') NOT NULL,
   `fecha_nac` date NOT NULL,
-  `foto` varchar(255) NOT NULL
+  `foto` varchar(255) NOT NULL,
+  `lugar_nacimiento` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
 -- Volcado de datos para la tabla `atletas`
 --
 
-INSERT INTO `atletas` (`codigo_atleta`, `p_nombre`, `s_nombre`, `p_apellidos`, `s_apellidos`, `genero`, `fecha_nac`, `foto`) VALUES
-(2, 'Moises', 'Jesus', 'Torrellas', '', 'H', '2002-07-25', 'atleta_2002-07-25_1782057957.png'),
-(3, 'Maria', 'J', 'Perez', 'Perez', 'M', '2019-02-22', 'atleta_2019-02-22_1783802489.jpg'),
-(7, 'Jose', 'Jose', 'Perez', 'Perez', 'H', '2020-06-09', 'atleta_2020-06-09_1783571646.png'),
-(8, 'Rosa', 'Maria', 'Lopez', 'Perez', 'M', '2017-06-07', 'atleta_2017-06-07_1783821293.jpg');
+INSERT INTO `atletas` (`codigo_atleta`, `p_nombre`, `s_nombre`, `p_apellidos`, `s_apellidos`, `genero`, `fecha_nac`, `foto`, `lugar_nacimiento`) VALUES
+(2, 'Moises', 'Jesus', 'Torrellas', '', 'H', '2002-07-25', 'atleta_2002-07-25_1782057957.png', 'Moran, El Tocuyo'),
+(3, 'Maria', 'J', 'Perez', 'Perez', 'M', '2019-02-22', 'atleta_2019-02-22_1783802489.jpg', NULL),
+(7, 'Jose', 'Jose', 'Perez', 'Perez', 'H', '2020-06-09', 'atleta_2020-06-09_1784584218.jpg', NULL),
+(8, 'Rosa', 'Maria', 'Lopez', 'Perez', 'M', '2017-06-07', 'atleta_2017-06-07_1783821293.jpg', NULL);
 
 -- --------------------------------------------------------
 
@@ -233,17 +336,26 @@ CREATE TABLE `cargos` (
 INSERT INTO `cargos` (`codigo_cargo`, `codigo_concepto`, `codigo_atleta`, `monto_total`, `fecha_emision`, `estatus`, `codigo_moneda`, `multado`) VALUES
 (8, 1, 2, 30.00, '2026-07-08', 2, 2, 0),
 (9, 2, 2, 25.00, '2026-07-08', 2, 2, 0),
-(10, 2, 3, 25.00, '2026-07-08', 1, 2, 0),
+(10, 2, 3, 25.00, '2026-07-08', 1, 2, 1),
 (11, 1, 3, 30.00, '2026-07-08', 2, 2, 1),
 (12, 5, 3, 5.00, '2026-07-14', 2, 2, 0),
-(13, 2, 7, 25.00, '2026-07-09', 1, 2, 0),
+(13, 2, 7, 25.00, '2026-07-09', 1, 2, 1),
 (14, 1, 7, 30.00, '2026-07-09', 2, 2, 0),
-(15, 2, 8, 25.00, '2026-07-10', 1, 2, 0),
-(16, 1, 8, 30.00, '2026-07-10', 1, 2, 0),
+(15, 2, 8, 25.00, '2026-07-10', 1, 2, 1),
+(16, 1, 8, 30.00, '2026-07-10', 1, 2, 1),
 (17, 3, 8, 25.00, '2004-03-18', 1, 2, 1),
 (18, 3, 2, 25.00, '1987-06-24', 2, 2, 1),
 (19, 5, 8, 5.00, '2026-07-10', 1, 2, 0),
-(20, 5, 2, 5.00, '2026-07-10', 2, 2, 0);
+(20, 5, 2, 5.00, '2026-07-10', 2, 2, 0),
+(21, 5, 8, 5.00, '2026-07-16', 1, 2, 0),
+(22, 5, 3, 5.00, '2026-07-20', 1, 2, 0),
+(23, 5, 7, 5.00, '2026-07-20', 1, 2, 0),
+(24, 5, 8, 5.00, '2026-07-30', 1, 2, 0),
+(25, 1, 2, 30.00, '2026-08-17', 1, 2, 0),
+(26, 1, 3, 30.00, '2026-08-17', 1, 2, 0),
+(27, 1, 7, 30.00, '2026-08-17', 1, 2, 0),
+(28, 1, 8, 30.00, '2026-08-17', 1, 2, 0),
+(29, 3, 3, 25.00, '2026-08-18', 1, 2, 0);
 
 -- --------------------------------------------------------
 
@@ -350,15 +462,39 @@ DROP TABLE IF EXISTS `contacto_atleta`;
 CREATE TABLE `contacto_atleta` (
   `codigo_atleta` int(11) NOT NULL,
   `direccion` varchar(255) NOT NULL,
-  `telefono` varchar(255) NOT NULL
+  `telefono` varchar(255) NOT NULL,
+  `correo` varchar(255) DEFAULT NULL,
+  `municipio` varchar(255) DEFAULT NULL,
+  `instagram` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
 -- Volcado de datos para la tabla `contacto_atleta`
 --
 
-INSERT INTO `contacto_atleta` (`codigo_atleta`, `direccion`, `telefono`) VALUES
-(2, 'El Tocuyo', '0412-0565231');
+INSERT INTO `contacto_atleta` (`codigo_atleta`, `direccion`, `telefono`, `correo`, `municipio`, `instagram`) VALUES
+(2, 'El Tocuyo', '0412-0565231', 'moises', 'Moran', '');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `datos_medicos`
+--
+
+DROP TABLE IF EXISTS `datos_medicos`;
+CREATE TABLE `datos_medicos` (
+  `codigo_atleta` int(11) NOT NULL,
+  `tipo_sangre` varchar(5) DEFAULT NULL,
+  `es_alergico` tinyint(1) NOT NULL DEFAULT 0,
+  `alergias_detalle` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `datos_medicos`
+--
+
+INSERT INTO `datos_medicos` (`codigo_atleta`, `tipo_sangre`, `es_alergico`, `alergias_detalle`) VALUES
+(2, 'B+', 1, 'Penicilina');
 
 -- --------------------------------------------------------
 
@@ -536,25 +672,28 @@ CREATE TABLE `inscripciones` (
   `peso_kg` decimal(10,0) NOT NULL,
   `estatura_cm` int(11) NOT NULL,
   `fecha_inscripcion` date NOT NULL,
-  `estatus` tinyint(4) NOT NULL DEFAULT 1
+  `estatus` tinyint(4) NOT NULL DEFAULT 1,
+  `talla_pantalon` varchar(10) DEFAULT NULL,
+  `talla_franela` varchar(10) DEFAULT NULL,
+  `talla_calzado` varchar(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
 -- Volcado de datos para la tabla `inscripciones`
 --
 
-INSERT INTO `inscripciones` (`codigo_inscripcion`, `codigo_atleta`, `codigo_categoria`, `codigo_posicion`, `dorsal`, `peso_kg`, `estatura_cm`, `fecha_inscripcion`, `estatus`) VALUES
-(2, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
-(3, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
-(4, 2, 7, 1, 12, 90, 185, '2026-06-21', 2),
-(5, 2, 7, 1, 12, 90, 185, '2026-06-21', 1),
-(6, 3, 2, 1, 34, 60, 150, '2026-06-23', 2),
-(7, 3, 2, 1, 34, 60, 150, '2026-06-27', 2),
-(8, 3, 2, 1, 34, 60, 150, '2026-07-06', 2),
-(9, 3, 2, 1, 34, 60, 150, '2026-07-07', 1),
-(10, 7, 1, 1, 19, 60, 160, '2026-07-09', 2),
-(11, 7, 1, 1, 19, 60, 160, '2026-07-09', 1),
-(12, 8, 3, 1, 45, 50, 150, '2026-07-10', 1);
+INSERT INTO `inscripciones` (`codigo_inscripcion`, `codigo_atleta`, `codigo_categoria`, `codigo_posicion`, `dorsal`, `peso_kg`, `estatura_cm`, `fecha_inscripcion`, `estatus`, `talla_pantalon`, `talla_franela`, `talla_calzado`) VALUES
+(2, 2, 7, 1, 12, 90, 185, '2026-06-21', 2, NULL, NULL, NULL),
+(3, 2, 7, 1, 12, 90, 185, '2026-06-21', 2, NULL, NULL, NULL),
+(4, 2, 7, 1, 12, 90, 185, '2026-06-21', 2, NULL, NULL, NULL),
+(5, 2, 7, 1, 12, 90, 185, '2026-06-21', 1, 'L', 'L', '42'),
+(6, 3, 2, 1, 34, 60, 150, '2026-06-23', 2, NULL, NULL, NULL),
+(7, 3, 2, 1, 34, 60, 150, '2026-06-27', 2, NULL, NULL, NULL),
+(8, 3, 2, 1, 34, 60, 150, '2026-07-06', 2, NULL, NULL, NULL),
+(9, 3, 2, 1, 34, 60, 150, '2026-07-07', 1, NULL, NULL, NULL),
+(10, 7, 1, 1, 19, 60, 160, '2026-07-09', 2, NULL, NULL, NULL),
+(11, 7, 1, 1, 19, 60, 160, '2026-07-09', 1, NULL, NULL, NULL),
+(12, 8, 3, 1, 45, 50, 150, '2026-07-10', 1, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -740,15 +879,17 @@ CREATE TABLE `representantes` (
   `direccion` varchar(255) NOT NULL,
   `nombre` varchar(255) NOT NULL,
   `apellido` varchar(255) NOT NULL,
-  `tipo_doc` enum('V','E','P') NOT NULL
+  `tipo_doc` enum('V','E','P') NOT NULL,
+  `correo` varchar(255) DEFAULT NULL,
+  `instagram` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
 -- Volcado de datos para la tabla `representantes`
 --
 
-INSERT INTO `representantes` (`codigo_representante`, `cedula`, `telefono`, `direccion`, `nombre`, `apellido`, `tipo_doc`) VALUES
-(2, '13197214', '0232-1334423', 'El Tocuyo', 'Jessica', 'Aguilar', 'V');
+INSERT INTO `representantes` (`codigo_representante`, `cedula`, `telefono`, `direccion`, `nombre`, `apellido`, `tipo_doc`, `correo`, `instagram`) VALUES
+(2, '13197214', '0232-1334423', 'El Tocuyo', 'Jessica', 'Aguilar', 'V', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -805,7 +946,8 @@ INSERT INTO `tasa_cambios` (`codigo_tasa`, `codigo_moneda`, `fecha`, `valor_tasa
 (9, 1, '2026-07-08', '685.9427', 'automatica'),
 (10, 1, '2026-07-09', '709.6935', 'automatica'),
 (11, 2, '2026-07-09', '1', 'automatica'),
-(12, 2, '2026-07-10', '1', 'manual');
+(12, 2, '2026-07-10', '1', 'manual'),
+(13, 1, '2026-08-21', '779.9522', 'automatica');
 
 -- --------------------------------------------------------
 
@@ -830,7 +972,27 @@ CREATE TABLE `torneos` (
 INSERT INTO `torneos` (`codigo_torneo`, `nombre`, `fecha_inicio`, `fecha_fin`, `ubicacion`, `estatus`) VALUES
 (1, 'BARQUISIMETO 2026', '2026-06-22', '2026-06-24', 'Barquisimeto', 3),
 (2, 'TOCUYO 2026', '2026-07-06', '2026-07-10', 'El Tocuyo Estado Lara', 3),
-(3, 'QUIBOR 2026', '2026-07-15', '2026-07-18', 'Quibor Estado Lara', 1);
+(3, 'QUIBOR 2026', '2026-07-15', '2026-07-18', 'Quibor Estado Lara', 3);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `vista_asignaciones_general`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `vista_asignaciones_general`;
+CREATE TABLE `vista_asignaciones_general` (
+`id_asignacion` int(11)
+,`fecha_vista` varchar(10)
+,`fecha_real` date
+,`estatus_asignacion` tinyint(4)
+,`codigo_atleta` int(11)
+,`atleta` varchar(101)
+,`doc_identidad` varchar(257)
+,`articulo` varchar(255)
+,`codigo_club` varchar(20)
+,`codigo_articulo` int(11)
+);
 
 -- --------------------------------------------------------
 
@@ -960,6 +1122,16 @@ INSERT INTO `vueltos` (`codigo_vuelto`, `codigo_metodo`, `codigo_pago`, `codigo_
 -- --------------------------------------------------------
 
 --
+-- Estructura para la vista `vista_asignaciones_general`
+--
+DROP TABLE IF EXISTS `vista_asignaciones_general`;
+
+DROP VIEW IF EXISTS `vista_asignaciones_general`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_asignaciones_general`  AS SELECT `a`.`id_asignacion` AS `id_asignacion`, date_format(`a`.`fecha_asignacion`,'%d/%m/%Y') AS `fecha_vista`, `a`.`fecha_asignacion` AS `fecha_real`, `a`.`estatus` AS `estatus_asignacion`, `a`.`codigo_atleta` AS `codigo_atleta`, concat(`at`.`p_nombre`,' ',`at`.`p_apellidos`) AS `atleta`, CASE WHEN `ia`.`numero_doc` is not null AND `ia`.`numero_doc` <> '' THEN `ia`.`numero_doc` ELSE concat('R-',`r`.`cedula`) END AS `doc_identidad`, `c`.`nombre` AS `articulo`, `e`.`codigo_club` AS `codigo_club`, `a`.`codigo_articulo` AS `codigo_articulo` FROM ((((((`asignaciones` `a` join `atletas` `at` on(`a`.`codigo_atleta` = `at`.`codigo_atleta`)) left join `identidad_atleta` `ia` on(`at`.`codigo_atleta` = `ia`.`codigo_atleta`)) left join `atleta_representante` `ar` on(`at`.`codigo_atleta` = `ar`.`codigo_atleta`)) left join `representantes` `r` on(`ar`.`codigo_representante` = `r`.`codigo_representante`)) join `articulos_inventario` `e` on(`a`.`codigo_articulo` = `e`.`codigo_articulo`)) join `catalogo` `c` on(`e`.`id_catalogo` = `c`.`id_catalogo`)) ;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura para la vista `vista_atletas`
 --
 DROP TABLE IF EXISTS `vista_atletas`;
@@ -997,7 +1169,9 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_pagos`  AS SELECT `p
 ALTER TABLE `articulos_inventario`
   ADD PRIMARY KEY (`codigo_articulo`),
   ADD KEY `id_estado` (`id_estado`),
-  ADD KEY `id_catalogo` (`id_catalogo`);
+  ADD KEY `id_catalogo` (`id_catalogo`),
+  ADD KEY `idx_inventario_club` (`codigo_club`),
+  ADD KEY `idx_inventario_estatus` (`estatus`,`id_estado`);
 
 --
 -- Indices de la tabla `asignaciones`
@@ -1035,7 +1209,9 @@ ALTER TABLE `cargos`
 --
 ALTER TABLE `catalogo`
   ADD PRIMARY KEY (`id_catalogo`),
-  ADD KEY `Id_categoria` (`Id_categoria`);
+  ADD KEY `Id_categoria` (`Id_categoria`),
+  ADD KEY `idx_catalogo_busqueda` (`nombre`,`talla`),
+  ADD KEY `idx_catalogo_categoria` (`Id_categoria`);
 
 --
 -- Indices de la tabla `categorias`
@@ -1061,6 +1237,12 @@ ALTER TABLE `conceptos`
 --
 ALTER TABLE `contacto_atleta`
   ADD PRIMARY KEY (`codigo_atleta`);
+
+--
+-- Indices de la tabla `datos_medicos`
+--
+ALTER TABLE `datos_medicos`
+  ADD KEY `fk_datos_medicos_atleta` (`codigo_atleta`);
 
 --
 -- Indices de la tabla `detalles_equipos`
@@ -1244,7 +1426,7 @@ ALTER TABLE `atleta_representante`
 -- AUTO_INCREMENT de la tabla `cargos`
 --
 ALTER TABLE `cargos`
-  MODIFY `codigo_cargo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `codigo_cargo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT de la tabla `catalogo`
@@ -1388,7 +1570,7 @@ ALTER TABLE `retiros`
 -- AUTO_INCREMENT de la tabla `tasa_cambios`
 --
 ALTER TABLE `tasa_cambios`
-  MODIFY `codigo_tasa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `codigo_tasa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `torneos`
@@ -1446,6 +1628,12 @@ ALTER TABLE `catalogo`
 --
 ALTER TABLE `contacto_atleta`
   ADD CONSTRAINT `contacto_atleta_ibfk_1` FOREIGN KEY (`codigo_atleta`) REFERENCES `atletas` (`codigo_atleta`);
+
+--
+-- Filtros para la tabla `datos_medicos`
+--
+ALTER TABLE `datos_medicos`
+  ADD CONSTRAINT `fk_datos_medicos_atleta` FOREIGN KEY (`codigo_atleta`) REFERENCES `atletas` (`codigo_atleta`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `detalles_equipos`
