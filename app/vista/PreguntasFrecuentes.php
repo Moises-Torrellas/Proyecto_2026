@@ -92,6 +92,73 @@
                             </div>
                         </div>
 
+                        <div class="faq_section">
+                            <h3 class="faq_category">Inventario</h3>
+                            <div class="faq_accordion">
+                                
+                                <!-- Preguntas de Inventario -->
+                                <div class="faq_item">
+                                    <button class="faq_question">
+                                        ¿Cómo registrar un nuevo artículo en el inventario?
+                                        <i class="fi fi-rr-angle-down"></i>
+                                    </button>
+                                    <div class="faq_answer">
+                                        <p>Para añadir un artículo, dirígete al módulo de <strong>Inventario de Artículos</strong> y haz clic en el botón verde <strong>"Nuevo Artículo"</strong>. Se abrirá una ventana donde deberás seleccionar el tipo de artículo desde el catálogo y especificar su condición o estado físico actual. Finalmente, presiona <strong>"Guardar"</strong>.</p>
+                                    </div>
+                                </div>
+
+                                <div class="faq_item">
+                                    <button class="faq_question">
+                                        ¿Cómo generar un reporte del inventario?
+                                        <i class="fi fi-rr-angle-down"></i>
+                                    </button>
+                                    <div class="faq_answer">
+                                        <p>Ingresa a <strong>Inventario de Artículos</strong> y haz clic en el botón oscuro <strong>"Generar Reporte"</strong>. En la ventana emergente, puedes filtrar los resultados seleccionando un artículo específico del catálogo y su estado físico. Al terminar, haz clic en el botón verde <strong>"Generar Reporte"</strong> para visualizar el documento.</p>
+                                    </div>
+                                </div>
+
+                                <div class="faq_item">
+                                    <button class="faq_question">
+                                        ¿Cómo registrar un nuevo artículo en el catálogo?
+                                        <i class="fi fi-rr-angle-down"></i>
+                                    </button>
+                                    <div class="faq_answer">
+                                        <p>Para añadir un nuevo tipo de artículo, dirígete al módulo de <strong>Catálogo</strong> y haz clic en el botón verde <strong>"Nuevo Artículo"</strong>. Se abrirá un formulario donde debes ingresar el Nombre del Artículo, seleccionar su Categoría, definir el Stock Mínimo y, opcionalmente, indicar la Talla. Al finalizar, presiona el botón verde <strong>"Registrar Artículo"</strong>.</p>
+                                    </div>
+                                </div>
+
+                                <div class="faq_item">
+                                <button class="faq_question">
+                                    ¿Cómo registrar una nueva categoría?
+                                    <i class="fi fi-rr-angle-down"></i>
+                                </button>
+                                <div class="faq_answer">
+                                    <p>Para añadir una nueva categoría, dirígete al módulo de <strong>Categorías de Catálogo</strong> y haz clic en el botón verde <strong>"Nueva Categoría"</strong>. Aparecerá una ventana donde debes ingresar el Nombre de la categoría y una breve Descripción. Para finalizar, presiona el botón verde <strong>"Registrar Categoría"</strong>.</p>
+                                </div>
+                            </div>
+                            <div class="faq_item">
+                                <button class="faq_question">
+                                ¿Cómo registrar un nuevo estado físico?
+                                    <i class="fi fi-rr-angle-down"></i>
+                                </button>
+                                <div class="faq_answer">
+                                    <p>Para añadir un nuevo estado físico, dirígete al módulo de <strong>Estado Físico</strong> y haz clic en el botón verde <strong>"Nuevo Estado Físico"</strong>. Aparecerá un formulario donde debes ingresar el Nombre del estado y seleccionar su Nivel de Condición en la lista desplegable. Para finalizar, presiona el botón verde <strong>"Registrar Estado"</strong>.</p>
+                                </div>
+                            </div>
+
+                            <div class="faq_item">
+                                <button class="faq_question">
+                                    ¿Cómo registrar una nueva asignación de equipo?
+                                    <i class="fi fi-rr-angle-down"></i>
+                                </button>
+                                <div class="faq_answer">
+                                    <p>Para prestar o asignar un equipo, dirígete al módulo de <strong>Asignaciones</strong> y haz clic en el botón verde <strong>"Nueva Asignación"</strong>. En la ventana emergente, selecciona el Atleta, escoge el Artículo del Inventario que se le entregará y define la Fecha de Asignación. Finalmente, presiona el botón verde <strong>"Registrar Asignación"</strong>.</p>
+                                </div>
+                            </div>
+                            
+                            </div>
+                        </div>
+
                         <!-- Agrega más secciones según sea necesario -->
                         <div class="faq_no_results" style="display: none;">
                             <p>No se encontraron resultados para tu búsqueda.</p>
