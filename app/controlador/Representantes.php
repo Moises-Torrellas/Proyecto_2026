@@ -20,7 +20,7 @@ $objModelo = new ModeloRepresentantes();
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitud($objModelo, $id_modulo, $bitacora, $permisos);
 } else {
-    //registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
+    registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
     $respuesta = $objModelo->Consultar();
 
     $registro = [];
@@ -180,9 +180,11 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         ];
 
         $consultar_datos_previos = $obj->Buscar($_POST['id']);
-        $resultado = $obj->procesarDatos($datos);
+        $rep_previo = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($rep_previo['codigo_representante'])) unset($rep_previo['codigo_representante']);
+        $datos_previos = json_encode($rep_previo);
 
-        $datos_previos = json_encode($consultar_datos_previos['datos']);
+        $resultado = $obj->procesarDatos($datos);
         $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
@@ -276,12 +278,18 @@ function generar($obj, $id_modulo, $bitacoraObj): void
 
         $nombreVista = 'R_Representante';
         $objG = new GenerarReporte();
-        $pdf = $objG->generarPDF($nombreVista, $datos, 'Representantes');
-
-        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de representantes.");
+        
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Representantes');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Representantes');
         }
-        echo json_encode($pdf);
+
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de representantes en " . strtoupper($formato));
+        }
+        echo json_encode($reporte);
     } catch (Exception $e) {
         logs('Representantes', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);

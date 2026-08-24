@@ -94,13 +94,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -117,6 +116,7 @@ $(document).ready(function () {
 
     $("#incluir").on("click", function () {
         limpia();
+        $('#seccion_metricas').show();
         $('#goles, #asistencias, #penalizaciones, #goles_c, #partido, #average').val("0");
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Estadísticas");
@@ -126,7 +126,7 @@ $(document).ready(function () {
 
     $("#generar").on("click", function () {
         limpia();
-
+        $('#seccion_metricas').hide();
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
@@ -152,13 +152,29 @@ $(document).ready(function () {
                 popover: { title: 'Estadísticas Registradas', description: 'Aquí se mostrarán todas las estadísticas agrupadas por atletas.', position: 'top' }
             },
             {
-                element: '#rowsPerPage',
-                popover: { title: 'Registros Deseados', description: 'Aquí podrá seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+                element: '.listado_contenedor_grupal:first-child .listado_item',
+                popover: { title: 'Ver Registros', description: 'Permite extender o comprimir la lista de estadísticas asociadas al atleta.', position: 'top' }
             },
             {
-                element: '#botonera',
-                popover: { title: 'Cambiar de Página', description: 'Botones para cambiar de página.', position: 'top' }
+                element: '.listado_contenedor_grupal:first-child .cbt_v',
+                popover: { title: 'Modificar Estadística', description: 'Permite editar el registro de estadística seleccionado.', position: 'left' }
             },
+            {
+                element: '.listado_contenedor_grupal:first-child .cbt_r',
+                popover: { title: 'Eliminar Estadística', description: 'Permite eliminar el registro de estadística seleccionado.', position: 'left' }
+            },
+            {
+                element: '.c_paginacion',
+                popover: { title: 'Registros a Mostrar', description: 'Permite seleccionar cuántas filas ver por página.', position: 'top' }
+            },
+            {
+                element: '.c_paginacion_botonera',
+                popover: { title: 'Botonera de Paginación', description: 'Botones para cambiar entre páginas.', position: 'top' }
+            },
+            {
+                element: '.cantidad_registros',
+                popover: { title: 'Total Registros', description: 'Muestra el número total de atletas listados.', position: 'top' }
+            }
         ];
 
         const driver = iniciarTourConPasos(pasos);
@@ -260,6 +276,7 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Estadística");
 
     // 2. Asegurar la visibilidad de todas las columnas del formulario
+    $('#seccion_metricas').show();
     $('#participacion').closest('.colum').show();
     $('#atleta').closest('.colum').show();
     $('#goles').closest('.colum').show();

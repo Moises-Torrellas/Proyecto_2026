@@ -1,6 +1,7 @@
 <?php
 
 use App\modelo\ModeloCategorias;
+use App\servicios\GenerarReporte;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -68,6 +69,10 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
                 if (empty($permisos['modificar_categoria'])) throw new Exception('No tienes permisos para modificar categorías.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar':
+                if (empty($permisos['generar_categorias'])) throw new Exception('No tienes permisos para generar un reporte de categorías.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -126,11 +131,17 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró la categoría: " . $_POST['nombre']);
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'edad_minima' => $_POST['edad_min'],
+                'edad_maxima' => $_POST['edad_max']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró la categoría: " . $_POST['nombre'], '', $datos_nuevos_json);
             $resultado = ['accion' => 'incluir', 'mensaje' => 'Categoría registrada exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 'Ya existe una categoría registrada con este nombre.' => $resultado['codigo'],
+                'Ya existe una categoría que cubre este rango de edad.' => $resultado['codigo'],
                 default => 'Ocurrió un error inesperado en el registro de la categoría.'
             };
         }
@@ -155,14 +166,25 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'accion'      => 'modificar'
         ];
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $categoria_previa = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($categoria_previa['codigo_categoria'])) unset($categoria_previa['codigo_categoria']);
+        $datos_previos_json = json_encode($categoria_previa);
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó la categoría: " . $_POST['nombre']);
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'edad_minima' => $_POST['edad_min'],
+                'edad_maxima' => $_POST['edad_max']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó la categoría: " . $_POST['nombre'], $datos_previos_json, $datos_nuevos_json);
             $resultado = ['accion' => 'modificar', 'mensaje' => 'Categoría modificada exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 'Ya existe otra categoría registrada con este nombre.' => $resultado['codigo'],
+                'Ya existe otra categoría que cubre este rango de edad.' => $resultado['codigo'],
                 default => 'Ocurrió un error inesperado al modificar la categoría.'
             };
         }
@@ -184,10 +206,16 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $categoria_previa = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($categoria_previa['codigo_categoria'])) unset($categoria_previa['codigo_categoria']);
+        $datos_previos_json = json_encode($categoria_previa);
+
         $resultado = $obj->procesarDatos($datos);
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó la categoría con ID: " . $_POST['id']);
+            $nombre_cat = $categoria_previa['nombre'] ?? $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó la categoría: " . $nombre_cat, $datos_previos_json, '');
             $resultado = ['accion' => 'eliminar', 'mensaje' => 'Categoría eliminada exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -200,6 +228,41 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Categorias', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj)
+{
+    try {
+        $datosFiltro = ['accion' => 'generar'];
+        
+        // El modelo necesita procesar datos como array, pasamos el request si tiene datos o solo generar
+        $respuesta = $obj->procesarDatos($datosFiltro);
+        $datos = $respuesta['datos'] ?? [];
+
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron categorías para hacer el reporte.']);
+            exit();
+        }
+
+        $nombreVista = 'R_Categorias';
+        $objG = new GenerarReporte();
+        
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Categorías');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Categorías');
+        }
+
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de categorías en " . strtoupper($formato));
+        }
+        
+        echo json_encode($reporte);
+    } catch (Exception $e) {
+        logs('Categorias', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

@@ -311,51 +311,53 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="goles" name="goles">
-                                <label for="goles" class="titulo_formulario">Goles</label>
-                                <span class="mensaje" id="goles_spam"></span>
+                    <div id="seccion_metricas">
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="goles" name="goles">
+                                    <label for="goles" class="titulo_formulario">Goles</label>
+                                    <span class="mensaje" id="goles_spam"></span>
+                                </div>
+                            </div>
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="asistencias" name="asistencias">
+                                    <label for="asistencias" class="titulo_formulario">Asistencias</label>
+                                    <span class="mensaje" id="asistencias_spam"></span>
+                                </div>
                             </div>
                         </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="asistencias" name="asistencias">
-                                <label for="asistencias" class="titulo_formulario">Asistencias</label>
-                                <span class="mensaje" id="asistencias_spam"></span>
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="penalizaciones" name="penalizaciones">
+                                    <label for="penalizaciones" class="titulo_formulario">Penalizaciones</label>
+                                    <span class="mensaje" id="penalizaciones_spam"></span>
+                                </div>
+                            </div>
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="goles_c" name="goles_c">
+                                    <label for="goles_c" class="titulo_formulario">Goles en Contra</label>
+                                    <span class="mensaje" id="goles_c_spam"></span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="penalizaciones" name="penalizaciones">
-                                <label for="penalizaciones" class="titulo_formulario">Penalizaciones</label>
-                                <span class="mensaje" id="penalizaciones_spam"></span>
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="partido" name="partido">
+                                    <label for="partido" class="titulo_formulario">Partidos Jugados</label>
+                                    <span class="mensaje" id="partido_spam"></span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="goles_c" name="goles_c">
-                                <label for="goles_c" class="titulo_formulario">Goles en Contra</label>
-                                <span class="mensaje" id="goles_c_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="partido" name="partido">
-                                <label for="partido" class="titulo_formulario">Partidos Jugados</label>
-                                <span class="mensaje" id="partido_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="average" name="average">
-                                <label for="average" class="titulo_formulario">Average</label>
-                                <span class="mensaje" id="average_spam"></span>
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="average" name="average">
+                                    <label for="average" class="titulo_formulario">Average</label>
+                                    <span class="mensaje" id="average_spam"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -369,8 +371,8 @@
             </div>
         </div>
     </section>
-    <script src="js/main.js"></script>
-    <script src="js/Estadisticas.js"></script>
+    <script src="js/main.js?v=2"></script>
+    <script src="js/Estadisticas.js?v=2"></script>
 </body>
 
 </html>

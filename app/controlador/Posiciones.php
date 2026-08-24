@@ -132,7 +132,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró la pasición: " . $_POST['nombre']);
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'abreviatura' => $_POST['abreviatura'],
+                'descripcion' => $_POST['descripcion']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró la posición: " . $_POST['nombre'], '', $datos_nuevos_json);
         }
 
         echo json_encode($resultado);
@@ -152,9 +157,15 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $posicion_previa = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($posicion_previa['codigo_posicion'])) unset($posicion_previa['codigo_posicion']);
+        $datos_previos_json = json_encode($posicion_previa);
+
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'eliminar') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó la posición: " . $_POST['id']);
+            $nombre_pos = $posicion_previa['nombre'] ?? $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó la posición: " . $nombre_pos, $datos_previos_json, '');
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
@@ -180,10 +191,20 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         ];
         $datos['accion'] = 'modificar';
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $posicion_previa = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($posicion_previa['codigo_posicion'])) unset($posicion_previa['codigo_posicion']);
+        $datos_previos_json = json_encode($posicion_previa);
+
         $resultado = $obj->procesarDatos($datos);
 
-        if (isset($resultado['accion']) && $resultado['accion'] === 'incluir') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó la pasición: " . $_POST['id']);
+        if (isset($resultado['accion']) && $resultado['accion'] === 'modificar') {
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'abreviatura' => $_POST['abreviatura'],
+                'descripcion' => $_POST['descripcion']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó la posición: " . $_POST['nombre'], $datos_previos_json, $datos_nuevos_json);
         }
 
         echo json_encode($resultado);
@@ -218,11 +239,18 @@ function generar($obj, $id_modulo, $bitacoraObj)
         }
         $nombreVista = 'R_Posiciones';
         $objG = new GenerarReporte();
-        $pdf = $objG->generarPDF($nombreVista, $datos, 'Posiciones');
-        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de posiciones.");
+        
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Posiciones');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Posiciones');
         }
-        echo json_encode($pdf);
+
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de posiciones en " . strtoupper($formato));
+        }
+        echo json_encode($reporte);
     } catch (Exception $e) {
         logs('Posiciones', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);

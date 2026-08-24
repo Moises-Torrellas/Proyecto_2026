@@ -91,13 +91,14 @@ class ModeloPosiciones extends Conexion
         }
     }
 
-    private function Buscar(): array
+    public function Buscar($id = null): array
     {
         try {
+            $codigo = ($id === null) ? $this->id : $id;
             $conex = $this->conex();
             $sentencia = "SELECT * FROM posiciones WHERE codigo_posicion = :id";
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':id', $codigo);
             $stmt->execute();
             $datos = $stmt->fetchAll();
             return array('accion' => 'buscar', 'datos' => $datos);

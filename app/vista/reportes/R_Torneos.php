@@ -7,7 +7,7 @@
         /* 1. Forzar a que la hoja no tenga ningún margen exterior */
         @page {
             margin: 130px 0px 80px 0px;
-            size: A4;
+            size: A4 landscape; /* Cambiado a landscape para que quepan mejor las columnas */
         }
 
         body {
@@ -18,13 +18,13 @@
             background-color: #ffffff;
         }
 
-        /* 2. Header: Ahora sí ocupará el 100% real de la hoja sin dejar bordes blancos */
+        /* 2. Header */
         .header {
             position: fixed;
-            top: -130px; /* Sube al espacio reservado */
+            top: -130px; 
             left: 0px;
             right: 0px;
-            height: 60px; /* Fijamos altura interna para que cuadre exacto en los 140px */
+            height: 60px; 
             background-color: #1a202c;
             color: white;
             padding: 20px 40px;
@@ -44,7 +44,6 @@
             color: #a0aec0;
         }
 
-        /* Ajuste fino del logo superior derecho */
         .logo-mascota {
             position: absolute;
             right: 40px;
@@ -52,7 +51,7 @@
             width: 60px;
         }
 
-        /* 3. Contenedor de datos: Maneja los espacios de la tabla hacia los bordes de la hoja */
+        /* 3. Contenedor de datos */
         .content {
             padding: 10px 40px;
         }
@@ -92,6 +91,7 @@
             padding: 10px;
             border-bottom: 1px solid #e2e8f0;
             font-size: 12px;
+            word-wrap: break-word; 
         }
 
         .info-grid {
@@ -105,15 +105,10 @@
             font-size: 13px;
         }
 
-        .grafico-placeholder { border: 1px dashed #cbd5e0; padding: 5px; text-align: center; margin-bottom: 30px; }
-
-        .chart { width: 100%; }
-
-        /* 4. Footer: Posicionado abajo del todo de forma fija, alineado con los lados del contenido */
+        /* 4. Footer */
         .footer {
             position: fixed;
             bottom: -50px;
-            /* Pequeño despegue estético del borde inferior del papel */
             left: 40px;
             right: 40px;
             height: 50px;
@@ -123,7 +118,6 @@
             background-color: #ffffff;
         }
 
-        /* Contenedor del logo centrado en el footer */
         .footer-logo-container {
             text-align: center;
             margin-bottom: 12px;
@@ -134,7 +128,6 @@
             display: inline-block;
         }
 
-        /* Estructura para separar los textos informativos a los extremos */
         .footer-meta {
             width: 100%;
             border-collapse: collapse; table-layout: fixed; word-wrap: break-word;
@@ -146,70 +139,91 @@
             color: #4a5568;
         }
 
-        .text-left {
-            text-align: left;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .page-number:before {
-            content: "Página " counter(page);
-        }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .page-number:before { content: "Página " counter(page); }
     </style>
 </head>
 
 <body>
 
     <div class="header">
-        <h1>REPORTE DE REPRESENTANTES</h1>
+        <h1>REPORTE DE TORNEOS</h1>
         <p>Sistema de Gestión Administrativo - Cannibals Lara</p>
-        <img src="<?= $logo ?>" class="logo-mascota" alt="Logo">
+        <img src="<?= $logo ?? '' ?>" class="logo-mascota" alt="Logo">
     </div>
 
     <div class="content">
         <div class="info-grid">
-            <div class="info-item"><strong>FECHA DE EMISIÓN</strong><br><?= $fecha_reporte ?></div>
-            <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?></div>
+            <div class="info-item"><strong>FECHA DE EMISIÓN</strong><br><?= $fecha_reporte ?? date('d/m/Y') ?></div>
+            <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?? 'Administrador' ?></div>
         </div>
+        
         <div class="resumen-ejecutivo">
-            <strong>Resumen Ejecutivo:</strong> El presente documento contiene el registro detallado de los representantes legales asociados a los atletas del club. Esta información es fundamental para la gestión administrativa, el contacto de emergencia y la validación de responsabilidades.
+            <strong>Resumen Ejecutivo:</strong> El presente documento detalla la información de los torneos registrados, especificando sus fechas, ubicaciones y su estado actual (Por Disputarse, En Curso, Finalizado).
         </div>
 
-        <div class="section-title">Desglose por Tabla</div>
+        <div class="section-title">Torneos Registrados</div>
 
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Nombre Y Apellido</th>
-                    <th>Cédula</th>
-                    <th>Teléfono</th>
-                    <th>Dirección</th>
-                    <th>Correo</th>
-                    <th>Instagram</th>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 25%;">Torneo</th>
+                    <th style="width: 15%;">Fecha de Inicio</th>
+                    <th style="width: 15%;">Fecha de Fin</th>
+                    <th style="width: 25%;">Ubicación</th>
+                    <th style="width: 15%;">Estatus</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($datos as $r) : ?>
+                <?php
+                $id = 0;
+                if (!empty($datos)) {
+                    foreach ($datos as $r): 
+                        $id++; 
+                        $nombre = htmlspecialchars($r['nombre']);
+                        $fecha_inicio = date('d/m/Y', strtotime($r['fecha_inicio']));
+                        $fecha_fin = date('d/m/Y', strtotime($r['fecha_fin']));
+                        $ubicacion = htmlspecialchars($r['ubicacion']);
+                        
+                        $estatus = htmlspecialchars($r['estatus']);
+                        $estatus_texto = '';
+                        $color_estatus = '';
+                        if ($estatus == 1) {
+                            $estatus_texto = 'Por Disputarse';
+                            $color_estatus = '#f59e0b'; // Naranja
+                        } else if ($estatus == 2) {
+                            $estatus_texto = 'En Curso';
+                            $color_estatus = '#3b82f6'; // Azul
+                        } else if ($estatus == 3) {
+                            $estatus_texto = 'Finalizado';
+                            $color_estatus = '#ef4444'; // Rojo
+                        } else {
+                            $estatus_texto = $estatus;
+                            $color_estatus = '#2d3748';
+                        }
+                ?>
                     <tr>
-                        <td class="data-cell"><?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['tipo_doc'] . '-' . $r['cedula']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['telefono']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['direccion']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['correo'] ?: 'No Aplica') ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['instagram'] ?: 'No Aplica') ?></td>
+                        <td class="data-cell"><?= $id ?></td>
+                        <td class="data-cell"><strong><?= $nombre ?></strong></td>
+                        <td class="data-cell"><?= $fecha_inicio ?></td>
+                        <td class="data-cell"><?= $fecha_fin ?></td>
+                        <td class="data-cell"><?= $ubicacion ?></td>
+                        <td class="data-cell" style="color: <?= $color_estatus ?>; font-weight: bold;"><?= $estatus_texto ?></td>
                     </tr>
-                <?php endforeach; ?>
+                <?php 
+                    endforeach; 
+                } 
+                ?>
             </tbody>
         </table>
     </div>
 
     <div class="footer">
         <div class="footer-logo-container">
-            <img src="<?= $logo_footer ?>" alt="Cannibals">
+            <img src="<?= $logo_footer ?? '' ?>" alt="Cannibals">
         </div>
-
         <table class="footer-meta">
             <tr>
                 <td class="text-left">Cannibals Lara - Reporte Automatizado</td>

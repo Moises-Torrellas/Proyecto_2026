@@ -227,3 +227,64 @@ public function Consultar(array $filtro = []): array
         }
     }
 */
+
+-- Vista Atletas (Actualizada con datos médicos, contacto y tallas)
+CREATE OR REPLACE VIEW vista_atletas AS 
+SELECT 
+    a.codigo_atleta AS id_atleta, 
+    concat(a.p_nombre, if(a.s_nombre is not null and a.s_nombre <> '', concat(' ', a.s_nombre), '')) AS nombres, 
+    concat(a.p_apellidos, if(a.s_apellidos is not null and a.s_apellidos <> '', concat(' ', a.s_apellidos), '')) AS apellidos, 
+    a.p_nombre, 
+    a.s_nombre, 
+    a.p_apellidos, 
+    a.s_apellidos, 
+    a.genero, 
+    a.fecha_nac, 
+    a.foto, 
+    a.lugar_nacimiento,
+    ia.numero_doc AS doc_identidad, 
+    ca.telefono, 
+    ca.direccion, 
+    ca.correo,
+    ca.municipio,
+    ca.instagram,
+    r.codigo_representante AS id_representante, 
+    r.nombre AS nombre_rep, 
+    r.apellido AS apellido_rep, 
+    r.cedula AS cedula_rep, 
+    r.telefono AS telefono_rep, 
+    r.direccion AS direccion_rep, 
+    i.codigo_categoria AS id_categoria, 
+    c.nombre AS nombre_categoria, 
+    c.edad_min, 
+    c.edad_max, 
+    i.codigo_posicion AS id_posicion, 
+    p.nombre AS nombre_posicion, 
+    i.dorsal, 
+    i.peso_kg, 
+    i.estatura_cm, 
+    i.talla_pantalon,
+    i.talla_franela,
+    i.talla_calzado,
+    ifnull(i.estatus, 1) AS estatus, 
+    primer_ingreso.fecha_inscripcion AS fecha_ingreso, 
+    CASE WHEN primer_ingreso.codigo_inscripcion <> i.codigo_inscripcion THEN i.fecha_inscripcion ELSE NULL END AS fecha_reingreso, 
+    ret.fecha_retiro, 
+    ret.motivo AS motivo_retiro,
+    dm.tipo_sangre,
+    dm.es_alergico,
+    dm.alergias_detalle
+FROM atletas a 
+LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta 
+LEFT JOIN contacto_atleta ca ON a.codigo_atleta = ca.codigo_atleta 
+LEFT JOIN atleta_representante ar ON a.codigo_atleta = ar.codigo_atleta 
+LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante 
+LEFT JOIN datos_medicos dm ON a.codigo_atleta = dm.codigo_atleta
+LEFT JOIN (SELECT inscripciones.codigo_atleta, max(inscripciones.codigo_inscripcion) AS max_id FROM inscripciones GROUP BY inscripciones.codigo_atleta) max_i ON a.codigo_atleta = max_i.codigo_atleta 
+LEFT JOIN inscripciones i ON max_i.max_id = i.codigo_inscripcion 
+LEFT JOIN categorias c ON i.codigo_categoria = c.codigo_categoria 
+LEFT JOIN posiciones p ON i.codigo_posicion = p.codigo_posicion 
+LEFT JOIN (SELECT inscripciones.codigo_atleta, min(inscripciones.codigo_inscripcion) AS min_id FROM inscripciones GROUP BY inscripciones.codigo_atleta) min_i ON a.codigo_atleta = min_i.codigo_atleta 
+LEFT JOIN inscripciones primer_ingreso ON min_i.min_id = primer_ingreso.codigo_inscripcion 
+LEFT JOIN (SELECT ins.codigo_atleta, max(r_1.codigo_inscripcion) AS ultima_inscripcion_retirada FROM retiros r_1 JOIN inscripciones ins ON r_1.codigo_inscripcion = ins.codigo_inscripcion GROUP BY ins.codigo_atleta) ultimo_retiro_id ON a.codigo_atleta = ultimo_retiro_id.codigo_atleta 
+LEFT JOIN retiros ret ON ultimo_retiro_id.ultima_inscripcion_retirada = ret.codigo_inscripcion;

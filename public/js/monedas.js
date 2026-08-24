@@ -53,13 +53,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -94,19 +93,31 @@ $(document).ready(function () {
             },
             {
                 element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
+                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira una alerta para generar un reporte en PDF o EXCEL.', position: 'left' }
             },
             {
                 element: '#resultadoconsulta',
                 popover: { title: 'Monedas Registradas', description: 'Aqui se mostraran todos las monedas registradas.', position: 'top' }
             },
             {
-                element: '#cbt_v',
-                popover: { title: 'Modificar Moneda', description: 'Si pulsa aqui se abrira un modal para modificar la moneda seleccionada.', position: 'left' }
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child',
+                popover: { title: 'Registro de Moneda', description: 'Este es un registro individual de moneda. Aqui puedes ver sus detalles y acciones.', position: 'top' }
             },
             {
-                element: '#cbt_r',
-                popover: { title: 'Eliminar Moneda', description: 'Si pulsa aqui eliminara la moneda seleccionada.', position: 'left' }
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .listado_col_acciones button:nth-of-type(1)',
+                popover: { title: 'Moneda Base', description: 'Si pulsa aqui seleccionará esta moneda como la moneda base del sistema.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .listado_col_acciones button:nth-of-type(2)',
+                popover: { title: 'Modificar Moneda', description: 'Si pulsa aqui se abrira un modal para modificar esta moneda.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .listado_col_acciones button:nth-of-type(3)',
+                popover: { title: 'Eliminar Moneda', description: 'Si pulsa aqui eliminara esta moneda.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .listado_col_acciones button:nth-of-type(4)',
+                popover: { title: 'Bloquear/Desbloquear Moneda', description: 'Si pulsa aqui bloqueará o desbloqueará esta moneda.', position: 'left' }
             },
             {
                 element: '#rowsPerPage',
@@ -261,24 +272,18 @@ function enviaAjax(datos) {
                 } else if (lee.accion == "select") {
                     muestraMensaje("success", 2000, "Cambio Exitoso", lee.mensaje);
                     consultar();
-                } else if (lee.accion == "generar") {
-                    // Cerramos la alerta de espera de SweetAlert
-                    if (typeof Swal !== 'undefined') Swal.close(); 
-                    
-                    if (lee.pdf) {
-                        const byteCharacters = atob(lee.pdf);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                        }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const file = new Blob([byteArray], { type: 'application/pdf' });
-                        
-                        const fileURL = URL.createObjectURL(file);
-                        window.open(fileURL, '_blank');
-                        
-                        muestraMensaje("success", 2000, "Éxito", "Reporte generado correctamente");
-                    }
+                } else if (lee.accion == "reporte") {
+                    cerrarAlertaEspara();
+                    cerrarModal();
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
                 } else if (lee.accion == "error") {
                     // Cerramos cualquier alerta de carga en caso de error
                     if (typeof Swal !== 'undefined') Swal.close(); 

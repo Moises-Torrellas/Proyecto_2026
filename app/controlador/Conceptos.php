@@ -141,8 +141,13 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró el Concepto de Pago: " . $_POST['nombre'] . ' ' . $_POST['monto']);
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'monto' => $_POST['monto'],
+                'frecuencia' => $_POST['frecuencia'],
+                'dias' => $_POST['dias']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró el Concepto de Pago: " . $_POST['nombre'] . ' ' . $_POST['monto'], '', $datos_nuevos_json);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Concepto de pago registrado exitosamente.');
 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
@@ -175,11 +180,21 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         ];
         $datos['accion'] = 'modificar';
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $concepto_previo = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($concepto_previo['codigo_concepto'])) unset($concepto_previo['codigo_concepto']);
+        $datos_previos_json = json_encode($concepto_previo);
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico el proceso de pago: " . $_POST['nombre'] . ' ' . $_POST['monto']);
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'monto' => $_POST['monto'],
+                'frecuencia' => $_POST['frecuencia'],
+                'dias' => $_POST['dias']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico el proceso de pago: " . $_POST['nombre'] . ' ' . $_POST['monto'], $datos_previos_json, $datos_nuevos_json);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Proceso de pago modificado exitosamente.');
 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
@@ -209,10 +224,15 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $concepto_previo = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($concepto_previo['codigo_concepto'])) unset($concepto_previo['codigo_concepto']);
+        $datos_previos_json = json_encode($concepto_previo);
+
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino el concepto de pago: " . $_POST['id']);
+            $nombre_concepto = $concepto_previo['nombre'] ?? $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino el concepto de pago: " . $nombre_concepto, $datos_previos_json, '');
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Concepto de pago eliminado exitosamente.');
 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
@@ -295,31 +315,21 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             return;
         }
 
-        registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Conceptos");
-
-        $fecha_reporte = date('d/m/Y h:i A');
-        $usuario = $_SESSION['nombre_usuario'] ?? 'Administrador';
+        $nombreVista = 'R_Conceptos';
+        $objG = new \App\servicios\GenerarReporte();
         
-        $logo = __DIR__ . '/../../public/img/logo.png'; 
-        $logo_footer = __DIR__ . '/../../public/img/logo_footer.png';
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Conceptos');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Conceptos');
+        }
 
-        // 3. Incluimos la vista del PDF
-        ob_start();
-        include(__DIR__ . '/../vista/reportes/R_Conceptos.php'); 
-        $html = ob_get_clean();
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Conceptos en " . strtoupper($formato));
+        }
 
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
-        $pdfBase64 = base64_encode($dompdf->output());
-        
-        echo json_encode([
-            'accion' => 'generar', 
-            'mensaje' => 'Reporte procesado con éxito.',
-            'pdf' => $pdfBase64
-        ]);
+        echo json_encode($reporte);
 
     } catch (Exception $e) {
         logs('Conceptos', $e->getMessage(), 'Controlador_Generar');

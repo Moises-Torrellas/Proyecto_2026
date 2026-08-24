@@ -78,13 +78,13 @@ $(document).ready(function () {
                 });
             }
         } else if (accion === 'generar') {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                datos.append('tipo_palmares_reporte', $('#tipo_palmares').val());
+                enviaAjax(datos);
             });
         }
     });
@@ -142,6 +142,14 @@ $(document).ready(function () {
             {
                 element: '.resultadoconsulta',
                 popover: { title: 'Historial de Palmarés', description: 'Aquí se muestran agrupados los premios.', position: 'top' }
+            },
+            {
+                element: '.pestana-content.activa .listado_contenedor_grupal:first-child .cbt_v',
+                popover: { title: 'Modificar Palmarés', description: 'Permite editar un registro de palmarés.', position: 'left' }
+            },
+            {
+                element: '.pestana-content.activa .listado_contenedor_grupal:first-child .cbt_r',
+                popover: { title: 'Eliminar Palmarés', description: 'Permite eliminar el registro de palmarés seleccionado.', position: 'left' }
             }
         ];
 

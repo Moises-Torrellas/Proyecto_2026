@@ -30,18 +30,17 @@ class ModeloPremios extends Conexion
 
         $this->codigo_premio = $datos['codigo_premio'] ?? null; // Ajustado
 
-        $this->tipo = isset($datos['tipo']) ? strtoupper(trim($datos['tipo'])) : null;
-        
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
+        $this->tipo   = isset($datos['tipo']) ? trim($datos['tipo']) : null;
         
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
             'incluir'   => $this->Incluir(),
+            'modificar' => $this->Modificar(),
             'eliminar'  => $this->Eliminar(),
             'buscar'    => $this->Buscar(),
-            'modificar' => $this->Modificar(),
-            'generar'   => $this->Consultar(),
-            default     => throw new Exception('La accion no es valida')
+            'generar'   => $this->Consultar($datos),
+            default     => throw new Exception('La acción solicitada no es válida para Premios.')
         };
     }
 
@@ -148,15 +147,16 @@ class ModeloPremios extends Conexion
         }
     }
 
-    public function Buscar(): array
+    public function Buscar(int $id = null): array
     {
         try {
+            $idBuscar = $id ?? $this->codigo_premio;
             $conex = $this->conex();
             $sentencia = "SELECT * FROM premios WHERE codigo_premio = :codigo_premio"; // Ajustado a la BD
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':codigo_premio', $this->codigo_premio); // Ajustado
+            $stmt->bindParam(':codigo_premio', $idBuscar); // Ajustado
             $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Premios', $e->getMessage(), 'Modelo_Buscar');

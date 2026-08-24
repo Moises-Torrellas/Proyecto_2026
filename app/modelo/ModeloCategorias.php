@@ -97,6 +97,16 @@ class ModeloCategorias extends Conexion
                 throw new Exception('Ya existe una categoría registrada con este nombre.');
             }
 
+            // Validar solapamiento de rangos de edad
+            $sqlRango = "SELECT COUNT(*) FROM categorias WHERE edad_min <= :max AND edad_max >= :min";
+            $stmtRango = $conex->prepare($sqlRango);
+            $stmtRango->bindParam(':min', $this->edad_min);
+            $stmtRango->bindParam(':max', $this->edad_max);
+            $stmtRango->execute();
+            if ($stmtRango->fetchColumn() > 0) {
+                throw new Exception('Ya existe una categoría que cubre este rango de edad.');
+            }
+
             $sentencia = "INSERT INTO categorias (`nombre`, `edad_min`, `edad_max`) VALUES (:nombre, :edad_min, :edad_max)";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
@@ -126,6 +136,17 @@ class ModeloCategorias extends Conexion
                 }
             }
 
+            // Validar solapamiento de rangos de edad (excluyendo la actual)
+            $sqlRango = "SELECT COUNT(*) FROM categorias WHERE edad_min <= :max AND edad_max >= :min AND codigo_categoria != :id";
+            $stmtRango = $conex->prepare($sqlRango);
+            $stmtRango->bindParam(':min', $this->edad_min);
+            $stmtRango->bindParam(':max', $this->edad_max);
+            $stmtRango->bindParam(':id', $this->id);
+            $stmtRango->execute();
+            if ($stmtRango->fetchColumn() > 0) {
+                throw new Exception('Ya existe otra categoría que cubre este rango de edad.');
+            }
+
             $sentencia = "UPDATE categorias SET 
             nombre = :nombre, 
             edad_min = :edad_min, 
@@ -148,13 +169,14 @@ class ModeloCategorias extends Conexion
         }
     }
 
-    function Buscar(): array
+    public function Buscar($id = null): array
     {
         try {
+            $codigo = ($id === null) ? $this->id : $id;
             $conex = $this->conex();
             $sentencia = "SELECT * FROM categorias WHERE codigo_categoria = :id";
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':id', $codigo);
             $stmt->execute();
             $datos = $stmt->fetchAll();
 

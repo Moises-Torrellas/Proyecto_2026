@@ -51,14 +51,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte con este criterio?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
-                    // Enviamos todo el formulario (incluye el nombre y la frecuencia seleccionada)
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -83,10 +81,11 @@ $(document).ready(function () {
         const pasos = [
             { element: '#busqueda', popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar el Concepto de Pago que necesites.', position: 'bottom' } },
             { element: '#incluir', popover: { title: 'Nuevo Concepto de pago', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevo Concepto de Pago', position: 'bottom' } },
-            { element: '#generar', popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' } },
+            { element: '#generar', popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira una alerta para generar un reporte en PDF o EXCEL.', position: 'left' } },
             { element: '#resultadoconsulta', popover: { title: 'Conceptos de Pago Registrados', description: 'Aqui se mostraran todos los Conceptos de pago registrados.', position: 'top' } },
             { element: '#cbt_v', popover: { title: 'Modificar Concepto de Pago', description: 'Si pulsa aqui se abrira un modal para modificar el Conceptos de Pago seleccionado.', position: 'left' } },
             { element: '#cbt_r', popover: { title: 'Eliminar Concepto de Pago', description: 'Si pulsa aqui eliminara el Concepto de Pago seleccionado.', position: 'left' } },
+            { element: '#cbt_t', popover: { title: 'Desactivar Concepto de Pago', description: 'Si pulsa aqui desactivará o activará el Concepto de Pago seleccionado.', position: 'left' } },
             { element: '#rowsPerPage', popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' } },
             { element: '#botonera', popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' } },
             { element: '#cantidad', popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de Concepto de Pagos cargados.', position: 'top' } },
@@ -206,23 +205,18 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
-                } else if (lee.accion == "generar") {
-                    if (typeof Swal !== 'undefined') Swal.close(); 
-                    
-                    if (lee.pdf) {
-                        const byteCharacters = atob(lee.pdf);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                        }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const file = new Blob([byteArray], { type: 'application/pdf' });
-                        
-                        const fileURL = URL.createObjectURL(file);
-                        window.open(fileURL, '_blank');
-                        
-                        muestraMensaje("success", 2000, "Éxito", "Reporte generado correctamente");
-                    }
+                } else if (lee.accion == "reporte") {
+                    cerrarAlertaEspara();
+                    cerrarModal();
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
                 } else if (lee.accion == "error") {
                     if (typeof Swal !== 'undefined') Swal.close(); 
                     muestraMensaje("error", 2000, "Error", lee.mensaje);

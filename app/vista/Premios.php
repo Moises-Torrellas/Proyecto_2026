@@ -160,8 +160,8 @@ if (isset($solo_lista) && $solo_lista === true) :
             </div>
         </div>
     </section>
-    <script src="js/main.js"></script>
-    <script src="js/premios.js"></script>
+    <script src="js/main.js?v=2"></script>
+    <script src="js/premios.js?v=2"></script>
 </body>
 
 </html>

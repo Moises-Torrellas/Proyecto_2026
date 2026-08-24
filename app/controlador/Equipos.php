@@ -150,7 +150,13 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
         // Control flexible si el modelo responde exitosamente sin importar el string exacto
         if (isset($resultado['accion']) && $resultado['accion'] !== 'error') {
-            try { registrarBitacora($bitacoraObj, $id_modulo, "Registró al Equipo: " . $_POST['nombre']); } catch (Exception $e) {}
+            $datos_nuevos = [
+                'nombre' => $_POST['nombre'],
+                'atletas' => $atletas
+            ];
+            $datos_nuevos_json = json_encode($datos_nuevos);
+            
+            try { registrarBitacora($bitacoraObj, $id_modulo, "Registró al Equipo: " . $_POST['nombre'], '', $datos_nuevos_json); } catch (Exception $e) {}
             enviarJSON(['accion' => 'incluir', 'mensaje' => 'Equipo registrado exitosamente.']);
         }
 
@@ -181,7 +187,6 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             throw new Exception('Para modificar un equipo debe asignar al menos 1 atleta.');
         }
 
-        // Estructura limpia enviada al modelo
         $datos = [
             'id'      => $_POST['id'],
             'nombre'  => $_POST['nombre'],
@@ -189,10 +194,21 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'accion'  => 'modificar'
         ];
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $datos_previos = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($datos_previos['id_equipos'])) unset($datos_previos['id_equipos']);
+        $datos_previos_json = json_encode($datos_previos);
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] !== 'error') {
-            try { registrarBitacora($bitacoraObj, $id_modulo, "Modificó al equipo: " . $_POST['nombre']); } catch (Exception $e) {}
+            $datos_nuevos = [
+                'nombre' => $_POST['nombre'],
+                'atletas' => $atletas
+            ];
+            $datos_nuevos_json = json_encode($datos_nuevos);
+
+            try { registrarBitacora($bitacoraObj, $id_modulo, "Modificó al equipo: " . $_POST['nombre'], $datos_previos_json, $datos_nuevos_json); } catch (Exception $e) {}
             enviarJSON(['accion' => 'modificar', 'mensaje' => 'Equipo modificado exitosamente.']);
         }
 
@@ -216,10 +232,17 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
     try {
         validar_requeridos(['id']);
         $datos = ['id' => $_POST['id'], 'accion' => 'eliminar'];
+
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $datos_previos = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($datos_previos['id_equipos'])) unset($datos_previos['id_equipos']);
+        $datos_previos_json = json_encode($datos_previos);
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] !== 'error') {
-            try { registrarBitacora($bitacoraObj, $id_modulo, "Eliminó al equipo ID: " . $_POST['id']); } catch (Exception $e) {}
+            $nombre_equipo = $datos_previos['nombre'] ?? $_POST['id'];
+            try { registrarBitacora($bitacoraObj, $id_modulo, "Eliminó al equipo: " . $nombre_equipo, $datos_previos_json, ''); } catch (Exception $e) {}
             enviarJSON(['accion' => 'eliminar', 'mensaje' => 'Equipo eliminado exitosamente.']);
         }
 
@@ -240,18 +263,33 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 
 function generar($obj, $id_modulo, $bitacoraObj): void
 {
-    $respuesta = $obj->procesarDatos(['accion' => 'generar']);
+    $id_equipo = $_POST['id_equipo'] ?? '';
+    if (empty($id_equipo)) {
+        enviarJSON(['accion' => 'error', 'mensaje' => 'Debe seleccionar un equipo para el reporte.']);
+    }
+
+    $respuesta = $obj->ConsultarAtletasAsignadosEquipo((int)$id_equipo);
     $datos = $respuesta['datos'] ?? [];
 
     if (empty($datos)) {
-        enviarJSON(['accion' => 'error', 'mensaje' => 'No se encontraron equipos para hacer el reporte.']);
+        enviarJSON(['accion' => 'error', 'mensaje' => 'No se encontraron atletas para el equipo seleccionado.']);
     }
+
+    $info_equipo = $obj->Buscar($id_equipo);
+    $nombre_equipo = $info_equipo['datos'][0]['nombre'] ?? 'Desconocido';
+    $_SESSION['nombre_equipo_reporte'] = $nombre_equipo;
 
     $objG = new GenerarReporte();
-    $pdf = $objG->generarPDF('R_Equipos', $datos, 'Equipos');
-
-    if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-        try { registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de equipos."); } catch (Exception $e) {}
+    
+    $formato = $_POST['formato'] ?? 'pdf';
+    if ($formato === 'excel') {
+        $reporte = $objG->generarExcel('R_Equipos', $datos, 'Equipos');
+    } else {
+        $reporte = $objG->generarPDF('R_Equipos', $datos, 'Equipos');
     }
-    enviarJSON($pdf);
+
+    if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+        try { registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de equipos en " . strtoupper($formato)); } catch (Exception $e) {}
+    }
+    enviarJSON($reporte);
 }

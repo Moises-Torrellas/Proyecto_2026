@@ -422,7 +422,7 @@ class ModeloPalmares extends Conexion
             ");
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return ['accion' => 'buscar', 'datos' => $datos];
         } catch (Exception $e) {
             logs('Palmares', $e->getMessage(), 'Modelo_BuscarIndividual');
@@ -448,7 +448,7 @@ class ModeloPalmares extends Conexion
             ");
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return ['accion' => 'buscar', 'datos' => $datos];
         } catch (Exception $e) {
             logs('Palmares', $e->getMessage(), 'Modelo_BuscarGrupal');

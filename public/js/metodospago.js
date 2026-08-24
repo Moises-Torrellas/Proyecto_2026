@@ -52,13 +52,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -79,6 +78,54 @@ $(document).ready(function () {
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
         abrirModal();
+    });
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            {
+                element: '#busqueda',
+                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar el método de pago que necesites.', position: 'bottom' }
+            },
+            {
+                element: '#incluir',
+                popover: { title: 'Nuevo Método', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevo método de pago', position: 'bottom' }
+            },
+            {
+                element: '#generar',
+                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira una alerta para generar un reporte en PDF o EXCEL.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta',
+                popover: { title: 'Métodos Registrados', description: 'Aqui se mostraran todos los métodos de pago registrados.', position: 'top' }
+            },
+            {
+                element: '#cbt_v',
+                popover: { title: 'Modificar Método', description: 'Si pulsa aqui se abrira un modal para modificar el método seleccionado.', position: 'left' }
+            },
+            {
+                element: '#cbt_r',
+                popover: { title: 'Eliminar Método', description: 'Si pulsa aqui eliminara el método seleccionado.', position: 'left' }
+            },
+            {
+                element: '#cbt_t',
+                popover: { title: 'Bloquear Método', description: 'Si pulsa aqui bloqueará o desbloqueará el método seleccionado.', position: 'left' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de métodos cargados.', position: 'top' }
+            }
+        ];
+
+        const driver = iniciarTourConPasos(pasos);
+        driver.start();
     });
 });
 
@@ -220,31 +267,18 @@ function enviaAjax(datos) {
                 else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }
-                else if (lee.accion == "generar") {
-                    // Cerramos la alerta de espera de SweetAlert (o la que uses)
-                    if (typeof Swal !== 'undefined') {
-                        Swal.close(); 
-                    } else if (typeof cerrarModal === 'function') {
-                        cerrarModal(); 
-                    }
-
-                    // Decodificamos y abrimos el PDF
-                    if (lee.pdf) {
-                        const byteCharacters = atob(lee.pdf);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                        }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const file = new Blob([byteArray], { type: 'application/pdf' });
-                        
-                        const fileURL = URL.createObjectURL(file);
-                        window.open(fileURL, '_blank');
-                        
-                        muestraMensaje("success", 2000, "Éxito", "Reporte generado correctamente");
-                    } else {
-                        muestraMensaje("error", 3000, "Error", "No se recibió el PDF");
-                    }
+                else if (lee.accion == "reporte") {
+                    cerrarAlertaEspara();
+                    cerrarModal();
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
                 }
                 else if (lee.accion == "error") {
                     if (typeof Swal !== 'undefined') Swal.close(); 

@@ -279,7 +279,7 @@ class ModeloAtletas extends Conexion
             if (!$this->ObjPos->verificarPosiciones($this->posicion)) {
                 throw new Exception(INVALID_ID . '0');
             }
-            if ($this->representante !== null && $this->representante !== '0') {
+            if (!empty($this->representante) && $this->representante !== '0') {
                 if (!$this->ObjRep->verificarRepresentantes($this->representante)) {
                     throw new Exception(INVALID_ID . '1');
                 }
@@ -389,7 +389,7 @@ class ModeloAtletas extends Conexion
             if (!$this->verificarExistencia('posicion', $this->posicion, 'posiciones', NULL)) {
                 throw new Exception(INVALID_ID . '0');
             }
-            if ($this->representante !== null) {
+            if (!empty($this->representante) && $this->representante !== '0') {
                 if (!$this->verificarExistencia('representante', $this->representante, 'representantes', NULL)) {
                     throw new Exception(INVALID_ID . '1');
                 }
@@ -469,7 +469,7 @@ class ModeloAtletas extends Conexion
             }
 
             // Update atleta_representante
-            if ($this->representante && $this->representante !== '0') {
+            if (!empty($this->representante) && $this->representante !== '0') {
                 $stmtRep = $conex->prepare("SELECT COUNT(*) FROM atleta_representante WHERE codigo_atleta = :id");
                 $stmtRep->execute([':id' => $this->id]);
                 if ($stmtRep->fetchColumn() > 0) {
@@ -481,6 +481,10 @@ class ModeloAtletas extends Conexion
                     $stmtAr = $conex->prepare($sqlAr);
                     $stmtAr->execute([':cr' => $this->representante, ':id' => $this->id]);
                 }
+            } else {
+                $sqlAr = "DELETE FROM atleta_representante WHERE codigo_atleta = :id";
+                $stmtAr = $conex->prepare($sqlAr);
+                $stmtAr->execute([':id' => $this->id]);
             }
 
             // Update inscripciones (the latest one)
@@ -755,7 +759,7 @@ class ModeloAtletas extends Conexion
         if (!empty($datos['telefono']) && !preg_match('/^[0-9]{4}[-]{1}[0-9]{7}$/', $datos['telefono'])) {
             throw new Exception('Telefono invalido.');
         }
-        if (!empty($datos['direccion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', $datos['direccion'])) {
+        if (!empty($datos['direccion']) && !preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-\/]{5,150}$/', $datos['direccion'])) {
             throw new Exception('Direccion inválida.');
         }
         if (!empty($datos['foto_actual']) && !preg_match('/^atleta_\d{4}-\d{2}-\d{2}_\d+\.(png|jpg|jpeg|webp)$/', $datos['foto_actual'])) {

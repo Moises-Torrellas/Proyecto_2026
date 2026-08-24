@@ -160,7 +160,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="detalle_card_icon"><i data-lucide="shirt"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Dorsal</label>
-                                    <span><?= htmlspecialchars($dato['dorsal'] ?? 'N/A') ?></span>
+                                    <span><?= htmlspecialchars($dato['dorsal'] ?? 'No Aplica') ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card">
@@ -171,6 +171,57 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 </div>
                             </div>
                         </div>
+                        <div class="detalle_fila">
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Lugar de Nacimiento</label>
+                                    <span><?= htmlspecialchars($dato['lugar_nacimiento'] ?? 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="mail"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Correo</label>
+                                    <span><?= htmlspecialchars($dato['correo'] ?? 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="instagram"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Instagram</label>
+                                    <span><?= htmlspecialchars($dato['instagram'] ?? 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detalle_fila">
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="shirt"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Tallas</label>
+                                    <span>Pant. <?= htmlspecialchars($dato['talla_pantalon'] ?? 'No Aplica') ?> / Fran. <?= htmlspecialchars($dato['talla_franela'] ?? 'No Aplica') ?> / Calz. <?= htmlspecialchars($dato['talla_calzado'] ?? 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="activity"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Médico</label>
+                                    <span>Sangre: <?= htmlspecialchars($dato['tipo_sangre'] ?? 'No Aplica') ?></span>
+                                    <small <?= (isset($dato['es_alergico']) && $dato['es_alergico'] == 1) ? 'style="color: #ef4444;"' : '' ?>>
+                                        Alergias: <?= (isset($dato['es_alergico']) && $dato['es_alergico'] == 1) ? htmlspecialchars($dato['alergias_detalle'] ?? 'No Aplica') : 'Ninguna' ?>
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="map"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Municipio</label>
+                                    <span><?= htmlspecialchars($dato['municipio'] ?? 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="detalle_fila">
                             <?php if (!empty($dato['fecha_retiro'])) : ?>
                                 <div class="detalle_card">
@@ -194,7 +245,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                         </div>
 
                         <div class="detalle_fila" style="justify-content: center; margin-top: 15px;">
-                            <button class="btn btn_azul" onclick="verHistorial(<?= $dato['id_atleta'] ?>)">
+                            <button id="cbt_historial" class="btn btn_azul" onclick="verHistorial(<?= $dato['id_atleta'] ?>)">
                                 <i class="fi fi-sr-time-past"></i> Historial de Inscripción
                             </button>
                         </div>
@@ -404,7 +455,7 @@ endif;
                                                         <div class="detalle_card_icon"><i data-lucide="shirt"></i></div>
                                                         <div class="detalle_card_txt">
                                                             <label>Dorsal</label>
-                                                            <span><?= htmlspecialchars($dato['dorsal'] ?? 'N/A') ?></span>
+                                                            <span><?= htmlspecialchars($dato['dorsal'] ?? 'No Aplica') ?></span>
                                                         </div>
                                                     </div>
                                                     <div class="detalle_card">
@@ -416,31 +467,82 @@ endif;
                                                     </div>
                                                 </div>
                                                 <div class="detalle_fila">
-                                                    <?php if (!empty($dato['fecha_retiro'])) : ?>
-                                                        <div class="detalle_card">
-                                                            <div class="detalle_card_icon" style="color:#ef4444;"><i data-lucide="calendar-minus"></i></div>
-                                                            <div class="detalle_card_txt">
-                                                                <label>Fecha de Retiro</label>
-                                                                <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_retiro']))) ?></span>
-                                                                <small style="color:#ef4444;">Motivo: <?= htmlspecialchars($dato['motivo_retiro'] ?? 'No especificado') ?></small>
-                                                            </div>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                    <?php if (!empty($dato['fecha_reingreso'])) : ?>
-                                                        <div class="detalle_card">
-                                                            <div class="detalle_card_icon" style="color:#22c55e;"><i data-lucide="calendar-sync"></i></div>
-                                                            <div class="detalle_card_txt">
-                                                                <label>Fecha de Re-Ingreso</label>
-                                                                <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_reingreso']))) ?></span>
-                                                            </div>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Lugar de Nacimiento</label>
+                                    <span><?= htmlspecialchars($dato['lugar_nacimiento'] ?? 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="mail"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Correo</label>
+                                    <span><?= htmlspecialchars($dato['correo'] ?? 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="instagram"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Instagram</label>
+                                    <span><?= htmlspecialchars($dato['instagram'] ?? 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                        </div>
 
-                                                <div class="detalle_fila" style="justify-content: center; margin-top: 15px;">
-                                                    <button class="btn btn_azul" onclick="verHistorial(<?= $dato['id_atleta'] ?>)">
-                                                        <i class="fi fi-sr-time-past"></i> Historial de Inscripción
-                                                    </button>
+                        <div class="detalle_fila">
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="shirt"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Tallas</label>
+                                    <span>Pant. <?= htmlspecialchars($dato['talla_pantalon'] ?? 'No Aplica') ?> / Fran. <?= htmlspecialchars($dato['talla_franela'] ?? 'No Aplica') ?> / Calz. <?= htmlspecialchars($dato['talla_calzado'] ?? 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="activity"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Médico</label>
+                                    <span>Sangre: <?= htmlspecialchars($dato['tipo_sangre'] ?? 'No Aplica') ?></span>
+                                    <small <?= (isset($dato['es_alergico']) && $dato['es_alergico'] == 1) ? 'style="color: #ef4444;"' : '' ?>>
+                                        Alergias: <?= (isset($dato['es_alergico']) && $dato['es_alergico'] == 1) ? htmlspecialchars($dato['alergias_detalle'] ?? 'No Aplica') : 'Ninguna' ?>
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="map"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Municipio</label>
+                                    <span><?= htmlspecialchars($dato['municipio'] ?? 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detalle_fila">
+                            <?php if (!empty($dato['fecha_retiro'])) : ?>
+                                <div class="detalle_card">
+                                    <div class="detalle_card_icon" style="color:#ef4444;"><i data-lucide="calendar-minus"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Fecha de Retiro</label>
+                                        <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_retiro']))) ?></span>
+                                        <small style="color:#ef4444;">Motivo: <?= htmlspecialchars($dato['motivo_retiro'] ?? 'No especificado') ?></small>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($dato['fecha_reingreso'])) : ?>
+                                <div class="detalle_card">
+                                    <div class="detalle_card_icon" style="color:#22c55e;"><i data-lucide="calendar-sync"></i></div>
+                                    <div class="detalle_card_txt">
+                                        <label>Fecha de Re-Ingreso</label>
+                                        <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_reingreso']))) ?></span>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="detalle_fila" style="justify-content: center; margin-top: 15px;">
+                            <button id="cbt_historial" class="btn btn_azul" onclick="verHistorial(<?= $dato['id_atleta'] ?>)">
+                                <i class="fi fi-sr-time-past"></i> Historial de Inscripción
+                            </button>
                                                 </div>
                                             </div>
                                         </div>

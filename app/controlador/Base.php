@@ -45,7 +45,7 @@ function comprobarAjax(): bool
 function registrarBitacora($bitacora, int $id_modulo, string $mensaje, string $datos_previos = '', string $datos_nuevos = ''): void
 {
     if (isset($_SESSION['id']) && $bitacora !== null) {
-        $entorno = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
+        $entorno = substr($_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido', 0, 50);
         $bitacora->RegistrarAccion($id_modulo, $mensaje, $_SESSION['id'], $datos_previos, $datos_nuevos, $entorno);
     }
 }

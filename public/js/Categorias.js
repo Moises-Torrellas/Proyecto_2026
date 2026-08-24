@@ -62,13 +62,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -89,6 +88,50 @@ $(document).ready(function () {
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
         abrirModal();
+    });
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            {
+                element: '#busqueda',
+                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar la categoría que necesites.', position: 'bottom' }
+            },
+            {
+                element: '#incluir',
+                popover: { title: 'Nueva Categoría', description: 'Si pulsa aqui se abrira un modal para ingresar una nueva categoría', position: 'bottom' }
+            },
+            {
+                element: '#generar',
+                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira una alerta para generar un reporte en PDF o EXCEL.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta',
+                popover: { title: 'Categorías Registradas', description: 'Aqui se mostraran todas las categorías registradas.', position: 'top' }
+            },
+            {
+                element: '#cbt_v',
+                popover: { title: 'Modificar Categoría', description: 'Si pulsa aqui se abrira un modal para modificar la categoría seleccionada.', position: 'left' }
+            },
+            {
+                element: '#cbt_r',
+                popover: { title: 'Eliminar Categoría', description: 'Si pulsa aqui eliminara la categoría seleccionada.', position: 'left' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de categorías cargadas.', position: 'top' }
+            }
+        ];
+
+        const driver = iniciarTourConPasos(pasos);
+        driver.start();
     });
 });
 

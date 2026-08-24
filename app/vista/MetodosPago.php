@@ -30,7 +30,7 @@
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_metodo'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
                             <?php if (!empty($permisos['bloquear_metodop'])) : ?>
-                                <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['codigo_metodo'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
+                                <button id="cbt_t" class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['codigo_metodo'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -107,7 +107,7 @@
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_metodo'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                     <?php endif; ?>
                                                     <?php if (!empty($permisos['bloquear_metodop'])) : ?>
-                                                        <button class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['codigo_metodo'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
+                                                        <button id="cbt_t" class="btn_t <?= $color ?>" onclick="bloquear(<?= $dato['codigo_metodo'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>

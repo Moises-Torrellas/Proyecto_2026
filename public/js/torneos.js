@@ -52,13 +52,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -71,6 +70,8 @@ $(document).ready(function () {
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Torneo");
         $("#titulo_modal").text("Registrar Nuevo Torneo");
+        $('#nombre').closest('.colum').show();
+        $('#ubicacion').closest('.colum').show();
         abrirModal();
     });
 
@@ -79,7 +80,45 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
+        $('#nombre').closest('.colum').hide();
+        $('#ubicacion').closest('.colum').hide();
         abrirModal();
+    });
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            {
+                element: '#busqueda',
+                popover: { title: 'Barra de Búsqueda', description: 'Aquí puedes buscar el torneo que necesites.', position: 'bottom' }
+            },
+            {
+                element: '#incluir',
+                popover: { title: 'Nuevo Torneo', description: 'Si pulsa aquí se abrirá un modal para registrar un nuevo torneo.', position: 'bottom' }
+            },
+            {
+                element: '#generar',
+                popover: { title: 'Generar Reportes', description: 'Si pulsa aquí se abrirá un modal para generar un reporte en PDF o EXCEL.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta',
+                popover: { title: 'Torneos Registrados', description: 'Aquí se mostrarán todos los torneos registrados.', position: 'top' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child',
+                popover: { title: 'Registro de Torneo', description: 'Este es un registro individual de un torneo. Aquí puedes ver sus detalles y acciones.', position: 'top' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .listado_col_acciones button:nth-of-type(1)',
+                popover: { title: 'Modificar Torneo', description: 'Si pulsa aquí se abrirá un modal para modificar este torneo.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .listado_col_acciones button:nth-of-type(2)',
+                popover: { title: 'Eliminar Torneo', description: 'Si pulsa aquí eliminará este torneo.', position: 'left' }
+            }
+        ];
+
+        const driver = iniciarTourConPasos(pasos);
+        driver.start();
     });
 });
 
@@ -146,6 +185,9 @@ function modificar(datos) {
     $("#proceso").data("accion", "modificar");
     $("#proceso").text("Modificar Torneo");
     $("#titulo_modal").text("Modificar Torneo");
+    
+    $('#nombre').closest('.colum').show();
+    $('#ubicacion').closest('.colum').show();
     
     // Llenamos el formulario con los datos de la BD ajustado a codigo_torneo
     $('#codigo_torneo').val(datos[0].codigo_torneo);
@@ -222,6 +264,19 @@ function enviaAjax(datos) {
                 } 
                 else if (lee.accion == "buscar") {
                     modificar(lee.datos);
+                }
+                else if (lee.accion == "reporte") {
+                    cerrarAlertaEspara();
+                    cerrarModal();
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
                 }
                 else if (lee.accion == "error") {
                     muestraMensaje("error", 3000, "Error", lee.mensaje);

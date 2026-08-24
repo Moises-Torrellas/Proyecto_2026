@@ -46,7 +46,7 @@
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_concepto'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
                             <?php if (!empty($permisos['bloquear_concepto'])) : ?>
-                                <button class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['codigo_concepto'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
+                                <button id="cbt_t" class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['codigo_concepto'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -141,7 +141,7 @@
 
                                                     <!-- Si no tienes un permiso "otros" en tu BD, puedes usar "modificar_concepto" para bloquear/desbloquear -->
                                                     <?php if (!empty($permisos['bloquear_concepto'])) : ?>
-                                                        <button class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['codigo_concepto'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
+                                                        <button id="cbt_t" class="btn_t <?= $color ?>" onclick="cambiarEstatus(<?= $dato['codigo_concepto'] ?>, <?= $dato['estatus'] ?>, this)" data-tippy-content="Bloquear"><i class="fi <?= $icon ?>"></i></button>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>

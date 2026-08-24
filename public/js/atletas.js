@@ -50,7 +50,7 @@ $(document).ready(function () {
     Validacion("apellido", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras, mínimo 3 caracteres", "proceso");
     Validacion("doc_i", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Mínimo 7 máximo 8 dígitos, solo números", "proceso");
     Validacion("telefono", /^[0-9\b-]*$/, /^[0-9]{4}-[0-9]{7}$/, "Formato inválido (XXXX-XXXXXXX)", "proceso");
-    Validacion("direccion", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, /^.{5,150}$/, "Dirección muy corta o inválida", "proceso");
+    Validacion("direccion", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.\-\/]*$/, /^.{5,150}$/, "Dirección muy corta o inválida", "proceso");
     Validacion("municipio", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^.{3,50}$/, "Mínimo 3 caracteres", "proceso");
     Validacion("correo", /^[a-zA-Z0-9._%+-@]*$/, /^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})?$/, "Correo inválido", "proceso");
     Validacion("instagram", /^[@a-zA-Z0-9._]*$/, /^[@a-zA-Z0-9._]{0,30}$/, "Usuario inválido", "proceso");
@@ -116,13 +116,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -197,7 +196,7 @@ $(document).ready(function () {
             },
             {
                 element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
+                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF o Excel.', position: 'left' }
             },
             {
                 element: '#resultadoconsulta',
@@ -205,7 +204,13 @@ $(document).ready(function () {
             },
             {
                 element: '#registro',
-                popover: { title: 'Registro de un Atleta', description: 'Aqui se mostrara la informacion de un Atleta si pulsa el registro se desplegara mas informacion.', position: 'bottom' }
+                popover: { title: 'Registro de un Atleta', description: 'Aqui se mostrara la informacion de un Atleta si pulsa el registro se desplegara mas informacion.', position: 'bottom' },
+                onNext: function() {
+                    const primerRegistro = document.querySelector('.listado_item');
+                    if (primerRegistro && !primerRegistro.closest('.listado_contenedor_grupal').classList.contains('expandido')) {
+                        toggleDetalles(primerRegistro);
+                    }
+                }
             },
             {
                 element: '#cbt_v',
@@ -218,6 +223,10 @@ $(document).ready(function () {
             {
                 element: '#cbt_sec',
                 popover: { title: 'Generar Curriculum', description: 'Si pulsa aqui generara un curriculum del Atleta seleccionado.', position: 'left' }
+            },
+            {
+                element: '#cbt_historial',
+                popover: { title: 'Historial de Inscripción', description: 'Si pulsa aqui podrá ver el historial de acciones del Atleta.', position: 'top' }
             },
             {
                 element: '#rowsPerPage',
@@ -286,17 +295,17 @@ function validarEdadAtleta(fechaValor) {
         $doc_i.attr("placeholder", "Cédula del atleta");
     }
 
-    // 3. Regla: Representante (SOLO DESHABILITAR, NO OCULTAR)
+    // 3. Regla: Representante
     if (edad < 18) {
-        // Es menor: Requiere representante
+        // Es menor: Requiere representante (habilitado)
         $representante.prop("disabled", false).parent().removeClass("campo_deshabilitado");
 
         // Deshabilita tlf y dirección propios
         $telefono.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
         $direccion.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
     } else {
-        // Es adulto: Se deshabilita representante pero permanece visible
-        $representante.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
+        // Es adulto: El representante es opcional (se deja habilitado)
+        $representante.prop("disabled", false).parent().removeClass("campo_deshabilitado");
 
         // Habilita tlf y dirección propios
         $telefono.prop("disabled", false).parent().removeClass("campo_deshabilitado");
@@ -348,8 +357,11 @@ function validarEnvio(proceso) {
         return false;
     }
 
-    // 7. Representante (Solo si NO está deshabilitado)
-    if (!$("#representante").prop("disabled")) {
+    // Calculamos edad para las validaciones
+    const edadAtleta = $('#edad').val() || 0;
+
+    // 7. Representante (Obligatorio solo para menores de edad)
+    if (edadAtleta < 18) {
         if ($('#representante').val() == "" || $('#representante').val() == null) {
             muestraMensaje("error", 2000, "Error", "Debe seleccionar un representante");
             return false;
@@ -566,6 +578,11 @@ function modificar(datos) {
     $("#todos").prop('disabled', true);
 
     $('#fecha_nac').val(datos[0].fecha_nac);
+    if ($('#fecha_nac')[0]._flatpickr) {
+        $('#fecha_nac')[0]._flatpickr.setDate(datos[0].fecha_nac);
+    } else {
+        $('#fecha_nac')[0].dispatchEvent(new Event('change'));
+    }
     $('#lugar_nacimiento').val(datos[0].lugar_nacimiento);
     $('#id').val(datos[0].id_atleta);
     $('#doc_i').val(datos[0].doc_identidad);

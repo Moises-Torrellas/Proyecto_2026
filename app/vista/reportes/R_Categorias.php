@@ -163,7 +163,7 @@
 <body>
 
     <div class="header">
-        <h1>REPORTE DE REPRESENTANTES</h1>
+        <h1>REPORTE DE CATEGORÍAS</h1>
         <p>Sistema de Gestión Administrativo - Cannibals Lara</p>
         <img src="<?= $logo ?>" class="logo-mascota" alt="Logo">
     </div>
@@ -174,7 +174,7 @@
             <div class="info-item"><strong>GENERADO POR</strong><br><?= $usuario ?></div>
         </div>
         <div class="resumen-ejecutivo">
-            <strong>Resumen Ejecutivo:</strong> El presente documento contiene el registro detallado de los representantes legales asociados a los atletas del club. Esta información es fundamental para la gestión administrativa, el contacto de emergencia y la validación de responsabilidades.
+            <strong>Resumen Ejecutivo:</strong> El presente documento contiene el registro detallado de las categorías asociadas a los atletas del club.
         </div>
 
         <div class="section-title">Desglose por Tabla</div>
@@ -182,23 +182,17 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Nombre Y Apellido</th>
-                    <th>Cédula</th>
-                    <th>Teléfono</th>
-                    <th>Dirección</th>
-                    <th>Correo</th>
-                    <th>Instagram</th>
+                    <th>Categoría</th>
+                    <th>Edad Mínima</th>
+                    <th>Edad Máxima</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($datos as $r) : ?>
                     <tr>
-                        <td class="data-cell"><?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['tipo_doc'] . '-' . $r['cedula']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['telefono']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['direccion']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['correo'] ?: 'No Aplica') ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['instagram'] ?: 'No Aplica') ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['nombre']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['edad_minima']) ?> años</td>
+                        <td class="data-cell"><?= htmlspecialchars($r['edad_maxima']) ?> años</td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

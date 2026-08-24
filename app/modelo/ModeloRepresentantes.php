@@ -278,7 +278,7 @@ class ModeloRepresentantes extends Conexion
             if (!$this->verificarExistencia('id', $this->id, 'representantes', NULL, bloquear: true)) {
                 throw new Exception(INVALID_ID);
             }
-            if ($this->verificarExistencia('id', $this->id, 'atletas', NULL, bloquear: true)) {
+            if ($this->verificarExistencia('id', $this->id, 'atleta_representante', NULL, bloquear: false)) {
                 throw new Exception(ASSOCIATES);
             }
             $sentencia = "DELETE FROM representantes WHERE codigo_representante = :id";

@@ -554,7 +554,7 @@ function confirmarAnulacion(titulo, callback) {
         icon: "warning",
         title: titulo,
         input: "text",
-        inputPlaceholder: "Escribe el motivo aquÃ­...",
+        inputPlaceholder: "Escribe el motivo aqui...",
         showCancelButton: true,
         confirmButtonText: "SI",
         confirmButtonColor: "#00a200",
@@ -1124,3 +1124,31 @@ $(document).ready(function() {
     });
 });
 
+function opcionesReporte(callback) {
+    Swal.fire({
+        title: 'Generar Reporte',
+        text: '¿En qué formato desea generar el reporte?',
+        icon: 'question',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'PDF',
+        denyButtonText: 'Excel',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545', // Rojo para PDF
+        denyButtonColor: '#198754', // Verde para Excel
+        customClass: {
+            popup: "mi-popup",
+            title: "mi-titulo",
+            content: "mi-contenido",
+            confirmButton: "btn",
+            denyButton: "btn",
+            cancelButton: "btn btn_gris"
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            callback('pdf');
+        } else if (result.isDenied) {
+            callback('excel');
+        }
+    });
+}

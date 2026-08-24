@@ -312,15 +312,16 @@ class ModeloEquipos extends Conexion
         }
     }
 
-    private function Buscar(): array
+    public function Buscar($id = null): array
     {
         try {
+            $codigo = ($id === null) ? $this->id : $id;
             $sentencia = "SELECT codigo_equipo AS id_equipos, nombre 
                           FROM equipos 
                           WHERE codigo_equipo = :id";
 
             $stmt = $this->conex()->prepare($sentencia);
-            $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
+            $stmt->bindValue(':id', $codigo, PDO::PARAM_INT);
             $stmt->execute();
             
             return ['accion' => 'buscar', 'datos' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
