@@ -379,6 +379,21 @@
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
 
+                    <div class="row" id="rango_fechas" style="display: none;">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_inicio" name="fecha_inicio">
+                                <label for="fecha_inicio" class="titulo_formulario">Fecha Inicio</label>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_fin" name="fecha_fin">
+                                <label for="fecha_fin" class="titulo_formulario">Fecha Fin</label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="colum colum_select_multiple">
                             <div class="caja_formulario">
@@ -399,6 +414,11 @@
                                 <span class="mensaje" id="id_concepto_span"></span>
                             </div>
                         </div>
+                    </div>
+
+                    <div id="campos_cargo">
+
+                    <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="monto_total" name="monto_total" placeholder="Ej: 50.00">
@@ -430,6 +450,7 @@
                                 <span class="mensaje" id="estatus_span"></span>
                             </div>
                         </div>
+                    </div>
                     </div>
 
                     <div class="row">

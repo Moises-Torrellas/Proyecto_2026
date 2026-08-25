@@ -173,6 +173,15 @@ class GenerarReporte
                         'goles_contra' => 'Goles Contra',
                         'penalizaciones' => 'Penalizaciones',
                         'average' => 'Average'
+                    ],
+                    'CuentasCobrar' => [
+                        'atleta_nombre' => 'Nombres',
+                        'atleta_apellido' => 'Apellidos',
+                        'concepto_nombre' => 'Concepto',
+                        'fecha_emision' => 'Emisión',
+                        'monto_total' => 'Monto Total',
+                        'monto_pendiente' => 'Pendiente',
+                        'estatus' => 'Estatus'
                     ]
                 ];
 
@@ -310,8 +319,28 @@ class GenerarReporte
                         }
 
                         // Lógica general de Estatus
-                        if ($key == 'estatus' && is_numeric($val) && $moduloOriginal != 'Torneos') {
+                        if ($key == 'estatus' && is_numeric($val) && $moduloOriginal != 'Torneos' && $moduloOriginal != 'CuentasCobrar') {
                             $val = ($val == 1) ? 'Activo' : 'Inactivo/Retirado';
+                        }
+                        
+                        // Lógica específica para CuentasCobrar
+                        if ($moduloOriginal == 'CuentasCobrar') {
+                            if ($key == 'estatus') {
+                                if ((int)$val === 3) {
+                                    $val = 'Anulado';
+                                } elseif ((int)$val === 2 || (float)($d['monto_pendiente'] ?? 0) == 0) {
+                                    $val = 'Pagado';
+                                } elseif ((float)($d['monto_pendiente'] ?? 0) < (float)($d['monto_total'] ?? 0)) {
+                                    $val = 'Abonado';
+                                } else {
+                                    $val = 'Pendiente';
+                                }
+                            } elseif ($key == 'monto_total' || $key == 'monto_pendiente') {
+                                $simbolo = $d['moneda_simbolo'] ?? '';
+                                $val = number_format((float)$val, 2, ',', '.') . ' ' . $simbolo;
+                            } elseif ($key == 'fecha_emision') {
+                                $val = date('d/m/Y', strtotime($val));
+                            }
                         }
                         
                         $sheet->setCellValue($colString . $row, $val);

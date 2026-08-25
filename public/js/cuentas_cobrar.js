@@ -42,22 +42,22 @@ function calcularVencimientoAutomatico(fechaEmisionValor) {
     if (!fechaEmisionValor) return;
     let fecha = new Date(fechaEmisionValor + 'T00:00:00');
     fecha.setDate(fecha.getDate() + 30);
-    let año = fecha.getFullYear();
+    let anio = fecha.getFullYear();
     let mes = String(fecha.getMonth() + 1).padStart(2, '0');
     let dia = String(fecha.getDate()).padStart(2, '0');
-    $('#fecha_vencimiento').val(`${año}-${mes}-${dia}`);
+    $('#fecha_vencimiento').val(`${anio}-${mes}-${dia}`);
 }
 
 
 $(document).ready(function () {
     inicializarPaginador();
     $('#id_atleta').select2({
-        placeholder: "Selecciona una opción",
+        placeholder: "Selecciona una opcion",
         allowClear: true,
         dropdownParent: $('.contenedor_modal'),
     });
     $('#id_concepto').select2({
-        placeholder: "Selecciona una opción",
+        placeholder: "Selecciona una opcion",
         allowClear: true,
         dropdownParent: $('.contenedor_modal'),
     });
@@ -87,13 +87,13 @@ $(document).ready(function () {
         $(this).val(input);
     });
 
-    Validacion("monto_total", /^[0-9.]*$/, /^[0-9]+(\.[0-9]{1,2})?$/, "Monto inválido (Ej: 50 o 50.50)", "proceso");
+    Validacion("monto_total", /^[0-9.]*$/, /^[0-9]+(\.[0-9]{1,2})?$/, "Monto invÃƒÂ¡lido (Ej: 50 o 50.50)", "proceso");
 
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere generar esta(s) cuenta(s) por cobrar?', function (confirmado) {
+                confirmar('¿Esta seguro que quiere generar esta(s) cuenta(s) por cobrar?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'incluir');
@@ -103,7 +103,7 @@ $(document).ready(function () {
             }
         } else if (accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar este cargo?', function (confirmado) {
+                confirmar('¿Esta seguro que quiere modificar este cargo?', function (confirmado) {
                     if (confirmado) {
                         $('#estatus').prop('disabled', false);
                         $('#id_atleta').prop('disabled', false);
@@ -124,13 +124,12 @@ $(document).ready(function () {
                 });
             }
         } else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte de cuentas por cobrar?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -148,15 +147,24 @@ $(document).ready(function () {
         $('#fecha_emision').prop('readonly', false);
         $('#fecha_vencimiento').prop('readonly', false);
         let fechaLocal = new Date();
-        let año = fechaLocal.getFullYear();
+        let anio = fechaLocal.getFullYear();
         let mes = String(fechaLocal.getMonth() + 1).padStart(2, '0');
         let dia = String(fechaLocal.getDate()).padStart(2, '0');
-        let hoy = `${año}-${mes}-${dia}`;
-        $('#fecha_emision').val(hoy);
+        let hoy = `${anio}-${mes}-${dia}`;
+        let fp_fecha = document.querySelector("#fecha_emision")._flatpickr;
+        if (fp_fecha) {
+            fp_fecha.set("minDate", "today");
+            fp_fecha.setDate(hoy);
+        } else {
+            $('#fecha_emision').val(hoy).attr('min', hoy);
+        }
         calcularVencimientoAutomatico(hoy);
         $('#estatus').val('Pendiente');
         $('#estatus').prop('disabled', true);
         $('#monto_pendiente').prop('readonly', true);
+        
+        $('#campos_cargo').show();
+        $('#rango_fechas').hide();
         abrirModal();
     });
 
@@ -165,7 +173,38 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Reporte de Cuentas");
+        
+        $('#campos_cargo').hide();
+        $('#rango_fechas').show();
+        
+        // Habilitar atletas y concepto para filtros
+        $('#id_atleta').prop('disabled', false);
+        $('#id_concepto').prop('disabled', false);
+
         abrirModal();
+    });
+
+    // Validación en tiempo real de la fecha de emisión
+    $('#fecha_emision').on('change', function() {
+        if ($("#proceso").data("accion") === "incluir") {
+            let selectedDate = $(this).val();
+            // Calcular fecha local 'hoy' sin considerar zonas horarias UTC
+            let fechaLocal = new Date();
+            let anio = fechaLocal.getFullYear();
+            let mes = String(fechaLocal.getMonth() + 1).padStart(2, '0');
+            let dia = String(fechaLocal.getDate()).padStart(2, '0');
+            let today = `${anio}-${mes}-${dia}`;
+            
+            if (selectedDate && selectedDate < today) {
+                muestraMensaje("error", 3000, "Error", "La fecha del cargo no puede ser una fecha pasada.");
+                let fp = this._flatpickr;
+                if (fp) {
+                    fp.setDate("today");
+                } else {
+                    $(this).val(today);
+                }
+            }
+        }
     });
 });
 
@@ -201,7 +240,7 @@ function buscar(id) {
 }
 
 function anular(id) {
-    confirmar('¿Desea bloquear este cargo? Se marcará como Anulado y no podrá ser modificado.', function (confirmado) {
+    confirmar('Ã‚Â¿Desea bloquear este cargo? Se marcara como Anulado y no podrÃƒÂ¡ ser modificado.', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('id', id);
@@ -221,7 +260,14 @@ function modificar(datos) {
     $('#id_concepto').val(datos[0].id_concepto).trigger('change');
     $('#monto_total').val(datos[0].monto_total ?? datos[0].monto_personalizado);
     let fechaEmi = datos[0].fecha_emision.split(' ')[0];
-    $('#fecha_emision').val(fechaEmi);
+    let fp_fecha = document.querySelector("#fecha_emision")._flatpickr;
+    if (fp_fecha) {
+        fp_fecha.set("minDate", null);
+        fp_fecha.setDate(fechaEmi);
+    } else {
+        $('#fecha_emision').val(fechaEmi).removeAttr('min');
+    }
+
     let estatusBD = parseInt(datos[0].estatus, 10);
     let estatusTexto = estatusBD === 3 ? 'Anulado' : (estatusBD === 2 ? 'Pagado' : 'Pendiente');
     $('#estatus').val(estatusTexto).trigger('change');
@@ -229,6 +275,10 @@ function modificar(datos) {
     $('#estatus').prop('disabled', true);
     $('#id_atleta').prop('disabled', true);
     $('#id_concepto').prop('disabled', true);
+    
+    $('#campos_cargo').show();
+    $('#rango_fechas').hide();
+    
     abrirModal();
 }
 
@@ -296,18 +346,24 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } else if (lee.accion == "eliminar") {
                     consultar();
-                    muestraMensaje("success", 2000, "Anulación Exitosa", lee.mensaje);
+                    muestraMensaje("success", 2000, "AnulaciÃƒÂ³n Exitosa", lee.mensaje);
                 } else if (lee.accion == "modificar") {
                     consultar();
                     limpia();
                     cerrarModal();
-                    muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
+                    muestraMensaje("success", 2000, "ModificaciÃƒÂ³n Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
+                } else if (lee.accion == "reporte") {
+                    cerrarAlertaEspara();
+                    window.open(lee.archivo, '_blank');
+                    cerrarModal();
                 } else if (lee.accion == "error") {
+                    if (Swal.isVisible()) { cerrarAlertaEspara(); }
                     muestraMensaje("error", 2000, "Error", lee.mensaje);
                 }
             } catch (e) {
+                if (Swal.isVisible()) { cerrarAlertaEspara(); }
                 alert("Error en JSON: " + e.message);
             }
         },
@@ -336,3 +392,58 @@ function limpia() {
     $("#proceso").data("accion", "incluir");
     $("#proceso").text("Registrar Cargo");
 }
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            {
+                element: '#busqueda',
+                popover: { title: 'Barra de Busqueda', description: 'AquÃƒÂ­ puedes buscar los cargos por nombre de atleta o concepto.', position: 'bottom' }
+            },
+            {
+                element: '#incluir',
+                popover: { title: 'Nuevo Cargo', description: 'Si pulsa aqui se abrira un modal para generar una nueva cuenta por cobrar.', position: 'bottom' }
+            },
+            {
+                element: '#generar',
+                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF o Excel.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta',
+                popover: { title: 'Cargos Registrados', description: 'AquÃƒÂ­ se mostraran todos los cargos registrados, agrupados por atleta.', position: 'top' }
+            },
+            {
+                element: '.listado_item',
+                popover: { title: 'Registro del Atleta', description: 'AquÃ­ se mostrará la informaciÃ³n del estado de cuenta del atleta. Si pulsa el registro, se desplegarán las facturas detalladas.', position: 'bottom' },
+                onNext: function() {
+                    const primerRegistro = document.querySelector('.listado_item');
+                    if (primerRegistro) {
+                        const contenedor = $(primerRegistro).closest('.listado_contenedor_grupal');
+                        if (!contenedor.hasClass('expandido')) {
+                            contenedor.addClass('expandido');
+                            contenedor.find('.listado_detalle_oculto').show(); // Show instantÃ¡neo sin animaciÃ³n
+                        }
+                    }
+                }
+            },
+            {
+                element: '.sub_item_acciones',
+                popover: { title: 'Acciones de los Cargos', description: 'Si el cargo no tiene abonos ni ha sido pagado, aquí aparecerÃ¡n los botones para modificar o anular.', position: 'left' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'AquÃƒÂ­ podrÃƒÂ¡ seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de PÃƒÂ¡gina', description: 'Botones para cambiar de pagina.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'AquÃƒÂ­ puedes ver la cantidad de cargos mostrados actualmente.', position: 'top' }
+            }
+        ];
+
+        const driver = iniciarTourConPasos(pasos);
+        driver.start();
+    });
+

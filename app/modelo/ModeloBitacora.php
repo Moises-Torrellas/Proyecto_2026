@@ -4,6 +4,7 @@ namespace App\modelo;
 
 use App\interface\InterBitacora;
 use Exception;
+use PDO;
 
 class ModeloBitacora extends Conexion implements InterBitacora
 {
@@ -87,8 +88,19 @@ class ModeloBitacora extends Conexion implements InterBitacora
 
         $sentencia .= " ORDER BY b.id_bitacora DESC";
 
+        $limit = isset($filtro['limit']) ? (int) $filtro['limit'] : 100;
+        $offset = isset($filtro['offset']) ? (int) $filtro['offset'] : 0;
+        $sentencia .= " LIMIT :limit OFFSET :offset";
+
         $stmt = $conex->prepare($sentencia);
-        $stmt->execute($params);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
 
         $datos = $stmt->fetchAll();
 

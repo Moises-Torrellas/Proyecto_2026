@@ -383,33 +383,19 @@ class ModeloPagos extends Conexion
         $conex = null;
         try {
             $conex = $this->conex();
-            $conex->beginTransaction();
-
-            $codigo_pago = $datos['codigo_pago'];
-            $codigo_metodo = $datos['codigo_metodo'];
-            $codigo_moneda = $datos['codigo_moneda'];
-            $monto_vuelto = $datos['monto_vuelto'];
-            $referencia = $datos['referencia'] ?? null;
-            $fecha_vuelto = $datos['fecha_vuelto'] ?? date('Y-m-d');
-
-            $sql = "INSERT INTO vueltos (codigo_metodo, codigo_pago, codigo_moneda, monto_vuelto, fecha_vuelto, referencia) 
-                    VALUES (:metodo, :pago, :moneda, :monto, :fecha, :referencia)";
-            $stmt = $conex->prepare($sql);
+            
+            $stmt = $conex->prepare("CALL RegistrarVueltoSeguro(:metodo, :pago, :moneda, :monto, :fecha, :referencia)");
             $stmt->execute([
-                ':metodo' => $codigo_metodo,
-                ':pago' => $codigo_pago,
-                ':moneda' => $codigo_moneda,
-                ':monto' => $monto_vuelto,
-                ':fecha' => $fecha_vuelto,
-                ':referencia' => $referencia
+                ':metodo' => $datos['codigo_metodo'],
+                ':pago' => $datos['codigo_pago'],
+                ':moneda' => $datos['codigo_moneda'],
+                ':monto' => $datos['monto_vuelto'],
+                ':fecha' => $datos['fecha_vuelto'] ?? date('Y-m-d'),
+                ':referencia' => $datos['referencia'] ?? null
             ]);
 
-            $conex->commit();
-            return ['accion' => 'exito_vuelto', 'mensaje' => 'Vuelto registrado exitosamente'];
+            return ['accion' => 'exito_vuelto', 'mensaje' => 'Vuelto registrado exitosamente (SP)'];
         } catch (Exception $e) {
-            if ($conex && $conex->inTransaction()) {
-                $conex->rollBack();
-            }
             logs('Pagos', $e->getMessage(), 'Modelo_RegistrarVuelto');
             return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         } finally {

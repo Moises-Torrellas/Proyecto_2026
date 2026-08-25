@@ -74,6 +74,20 @@ class ModeloCuentasCobrar extends Conexion
                 $params[':f5'] = $p;
             }
 
+            if (!empty($filtro['atleta'])) {
+                $sentencia .= " AND FIND_IN_SET(id_atleta, :atleta)";
+                $params[':atleta'] = $filtro['atleta'];
+            }
+            if (!empty($filtro['concepto'])) {
+                $sentencia .= " AND id_concepto = :concepto";
+                $params[':concepto'] = $filtro['concepto'];
+            }
+            if (!empty($filtro['fecha_inicio']) && !empty($filtro['fecha_fin'])) {
+                $sentencia .= " AND fecha_emision BETWEEN :fecha_inicio AND :fecha_fin";
+                $params[':fecha_inicio'] = $filtro['fecha_inicio'];
+                $params[':fecha_fin'] = $filtro['fecha_fin'];
+            }
+
             $sentencia .= " ORDER BY id_atleta, fecha_emision DESC";
 
             $stmt = $conex->prepare($sentencia);

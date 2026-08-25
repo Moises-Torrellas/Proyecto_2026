@@ -1,22 +1,41 @@
+let offset_bitacora = 0;
+let isCargarMas = false;
+
 $('#busqueda').off('keyup').on('keyup', busqueda);
 let timerBusqueda;
 function consultar() {
+    offset_bitacora = 0;
+    isCargarMas = false;
     let datos = new FormData();
     datos.append('accion', 'consultar');
+    datos.append('offset', offset_bitacora);
     enviaAjax(datos);
 }
 function busqueda() {
     clearTimeout(timerBusqueda);
     timerBusqueda = setTimeout(function () {
+        offset_bitacora = 0;
+        isCargarMas = false;
         let valorBusqueda = $('#busqueda').val();
         let datos = new FormData();
         datos.append('accion', 'consultar');
         datos.append('filtro', valorBusqueda);
-
+        datos.append('offset', offset_bitacora);
         enviaAjax(datos);
     }, 500);
 }
 $(document).ready(function () {
+    $(document).on('click', '#btn_cargar_mas', function() {
+        offset_bitacora += 100;
+        isCargarMas = true;
+        let valorBusqueda = $('#busqueda').val();
+        let datos = new FormData();
+        datos.append('accion', 'consultar');
+        datos.append('filtro', valorBusqueda);
+        datos.append('offset', offset_bitacora);
+        enviaAjax(datos);
+    });
+
     inicializarPaginador();
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
@@ -93,7 +112,25 @@ function eliminar(id) {
 
 function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
-    contenedor.html(htmlRecibido);
+    if (isCargarMas) {
+        contenedor.append(htmlRecibido);
+    } else {
+        contenedor.html(htmlRecibido);
+    }
+
+    let divMas = $('#tiene_mas_datos').last();
+    if (divMas.length > 0) {
+        let count = parseInt(divMas.attr('data-count'));
+        if (count === 100) {
+            $('#btn_cargar_mas').css('display', 'inline-block');
+        } else {
+            $('#btn_cargar_mas').css('display', 'none');
+        }
+        divMas.remove();
+    } else {
+        $('#btn_cargar_mas').css('display', 'none');
+    }
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
     if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });

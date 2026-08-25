@@ -42,9 +42,9 @@
                             <small>Usuario</small>
                             <span><?= htmlspecialchars($dato['nombreUsuario']) ?> <?= htmlspecialchars($dato['apellidoUsuario']) ?></span>
                         </div>
-                        <div class="listado_dato_grupo">
+                        <div class="listado_dato_grupo" style="flex: 1; min-width: 0;">
                             <small>Acción</small>
-                            <span><?= htmlspecialchars($dato['acciones']) ?></span>
+                            <span style="display: block; overflow-wrap: break-word; word-break: break-word; white-space: normal; max-width: 100%;"><?= htmlspecialchars($dato['acciones']) ?></span>
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Fecha y Hora</small>
@@ -74,16 +74,16 @@
                         <div class="detalle_fila">
                             <div class="detalle_card" style="width: 100%;">
                                 <div class="detalle_card_icon"><i data-lucide="history"></i></div>
-                                <div class="detalle_card_txt">
+                                <div class="detalle_card_txt" style="overflow: hidden;">
                                     <label>Datos Previos</label>
-                                    <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555;"><?= $datosPrevios ?></span>
+                                    <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555; overflow-wrap: break-word; word-break: break-all; display: block;"><?= $datosPrevios ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card" style="width: 100%;">
                                 <div class="detalle_card_icon"><i data-lucide="file-diff"></i></div>
-                                <div class="detalle_card_txt">
+                                <div class="detalle_card_txt" style="overflow: hidden;">
                                     <label>Datos Nuevos</label>
-                                    <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745;"><?= $datosNuevos ?></span>
+                                    <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745; overflow-wrap: break-word; word-break: break-all; display: block;"><?= $datosNuevos ?></span>
                                 </div>
                             </div>
                         </div>
@@ -92,6 +92,7 @@
             </div>
 
         <?php endforeach; ?>
+        <div id="tiene_mas_datos" style="display:none;" data-count="<?= count($registro) ?>"></div>
     <?php endif;
     exit(); ?>
 <?php endif; ?>
@@ -121,6 +122,7 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
+                            <button class="btn btn_azul" id="btn_cargar_mas" style="display: <?= (isset($registro) && count($registro) == 100) ? 'inline-block' : 'none' ?>;">Cargar +100</button>
                             <?php if(!empty($permisos['generar_bitacora'])) : ?>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
@@ -171,9 +173,9 @@
                                                     <small>Usuario</small>
                                                     <span><?= htmlspecialchars($dato['nombreUsuario']) ?> <?= htmlspecialchars($dato['apellidoUsuario']) ?></span>
                                                 </div>
-                                                <div class="listado_dato_grupo">
+                                                <div class="listado_dato_grupo" style="flex: 1; min-width: 0;">
                                                     <small>Acción</small>
-                                                    <span><?= htmlspecialchars($dato['acciones']) ?></span>
+                                                    <span style="display: block; overflow-wrap: break-word; word-break: break-word; white-space: normal; max-width: 100%;"><?= htmlspecialchars($dato['acciones']) ?></span>
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Fecha y Hora</small>
@@ -203,16 +205,16 @@
                                                 <div class="detalle_fila">
                                                     <div class="detalle_card" style="width: 100%;">
                                                         <div class="detalle_card_icon"><i data-lucide="history"></i></div>
-                                                        <div class="detalle_card_txt">
+                                                        <div class="detalle_card_txt" style="overflow: hidden;">
                                                             <label>Datos Previos</label>
-                                                            <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555;"><?= $datosPrevios ?></span>
+                                                            <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555; overflow-wrap: break-word; word-break: break-all; display: block;"><?= $datosPrevios ?></span>
                                                         </div>
                                                     </div>
                                                     <div class="detalle_card" style="width: 100%;">
                                                         <div class="detalle_card_icon"><i data-lucide="file-diff"></i></div>
-                                                        <div class="detalle_card_txt">
+                                                        <div class="detalle_card_txt" style="overflow: hidden;">
                                                             <label>Datos Nuevos</label>
-                                                            <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745;"><?= $datosNuevos ?></span>
+                                                            <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745; overflow-wrap: break-word; word-break: break-all; display: block;"><?= $datosNuevos ?></span>
                                                         </div>
                                                     </div>
                                                 </div>

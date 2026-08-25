@@ -68,6 +68,8 @@ function consultar($obj): void
 {
   try {
         $filtro['filtro'] = $_POST['filtro'] ?? '';
+        $filtro['offset'] = isset($_POST['offset']) ? (int)$_POST['offset'] : 0;
+        $filtro['limit'] = 100;
         $respuesta = $obj->Consultar($filtro);
 
         if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
