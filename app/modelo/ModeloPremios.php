@@ -3,6 +3,7 @@
 namespace App\modelo;
 
 use Exception;
+use PDO;
 
 class ModeloPremios extends Conexion
 {
@@ -218,6 +219,23 @@ class ModeloPremios extends Conexion
             if ($premio['tipo'] !== $tipoEsperado) {
                 throw new Exception(VALIDATION);
             }
+        } finally {
+            $conex = null;
+        }
+    }
+
+    public function AsignarPremioAtleta(int $id_atleta, string $descripcion, float $monto): array
+    {
+        $conex = null;
+        try {
+            $conex = $this->conex();
+            $stmt = $conex->prepare("CALL RegistrarPremioSeguro(?, ?, ?)");
+            $stmt->execute([$id_atleta, $descripcion, $monto]);
+            
+            return ['accion' => 'exito', 'mensaje' => 'Premio registrado exitosamente para el atleta.'];
+        } catch (Exception $e) {
+            logs('Premios', $e->getMessage(), 'ModeloPremios_AsignarPremioAtleta');
+            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         } finally {
             $conex = null;
         }

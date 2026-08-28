@@ -36,26 +36,40 @@ $(document).ready(function () {
         enviaAjax(datos);
     });
 
+    cargarUsuarios();
+    cargarModulos();
+
+    $('#filtro_usuario').select2({
+        placeholder: "Todos los Usuarios",
+        allowClear: true,
+        dropdownParent: $('#contenedor_modal'),
+    });
+
+    $('#filtro_modulo').select2({
+        placeholder: "Todos los Módulos",
+        allowClear: true,
+        dropdownParent: $('#contenedor_modal'),
+    });
+
     inicializarPaginador();
     $('#proceso').on('click', function () {
-        accion = $(this).data("accion");
+        let accion = $(this).data("accion");
         if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                let datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
+    
     $("#generar").on("click", function () {
         limpia();
-        limpia_Tablas();
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
-        $("#titulo_modal").text("Generar Reporte");
+        $("#titulo_modal").text("Filtros del Reporte de Bitácora");
         abrirModal();
     });
 
@@ -67,11 +81,47 @@ $(document).ready(function () {
             },
             {
                 element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
+                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF o Excel.', position: 'left' }
             },
             {
-                element: '#resultadoconsulta',
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child',
                 popover: { title: 'Registros', description: 'Aqui se mostraran todos los registros.', position: 'top' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .icono_flecha_detalle',
+                popover: { title: 'Detalles', description: 'Si pulsas aqui podras ver los detalles de la acción en la bitácora, incluyendo datos previos y nuevos.', position: 'left' },
+                onNext: () => {
+                    const el = document.querySelector('#resultadoconsulta .listado_contenedor_grupal:first-child .listado_item');
+                    if(el) {
+                        el.click(); // Abre el detalle
+                    }
+                }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .listado_detalle_oculto',
+                popover: { title: 'Información del Registro', description: 'Acá podras ver que campos fueron alterados por la acción del usuario.', position: 'top' },
+                onPrevious: () => {
+                    const el = document.querySelector('#resultadoconsulta .listado_contenedor_grupal:first-child .listado_item');
+                    if(el && document.querySelector('#resultadoconsulta .listado_contenedor_grupal:first-child .listado_detalle_oculto').style.display === 'block') {
+                        el.click(); // Cierra el detalle si retrocede
+                    }
+                },
+                onNext: () => {
+                    const el = document.querySelector('#resultadoconsulta .listado_contenedor_grupal:first-child .listado_item');
+                    if(el && document.querySelector('#resultadoconsulta .listado_contenedor_grupal:first-child .listado_detalle_oculto').style.display === 'block') {
+                        el.click(); // Cierra el detalle para continuar
+                    }
+                }
+            },
+            {
+                element: '#btn_cargar_mas',
+                popover: { title: 'Cargar Más', description: 'Si hay muchos registros, este botón te permitirá cargar los siguientes 100 registros de la bitácora.', position: 'top' },
+                onPrevious: () => {
+                    const el = document.querySelector('#resultadoconsulta .listado_contenedor_grupal:first-child .listado_item');
+                    if(el && document.querySelector('#resultadoconsulta .listado_contenedor_grupal:first-child .listado_detalle_oculto').style.display !== 'block') {
+                        el.click(); // Vuelve a abrir si retrocede
+                    }
+                }
             },
             {
                 element: '#rowsPerPage',
@@ -83,7 +133,7 @@ $(document).ready(function () {
             },
             {
                 element: '#cantidad',
-                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de usuarios registrados.', position: 'top' }
+                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de registros en pantalla.', position: 'top' }
             },
         ];
 
@@ -93,22 +143,7 @@ $(document).ready(function () {
     });
 });
 
-function eliminar(id) {
-    if (window.permisos.eliminar) {
-        confirmar('¿Está seguro que quiere eliminar este Usuario?', function (confirmado) {
-            if (confirmado) {
-                var datos = new FormData();
-                datos.append('accion', 'eliminar');
-                datos.append('token', $("#token").val());
-                datos.append('id', id);
-                enviaAjax(datos);
-            }
-        });
-    } else {
-        muestraMensaje("error", 3000, "Error", 'No tienes los permisos para eliminar un usuario.');
-    }
 
-}
 
 function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
@@ -147,6 +182,40 @@ function escapeHTML(texto) {
     };
     return texto.replace(/[&<>"']/g, m => caracteres[m]);
 }
+
+function cargarUsuarios() {
+    let datos = new FormData();
+    datos.append('accion', 'consultar_usuarios');
+    enviaAjax(datos);
+}
+
+function cargarModulos() {
+    let datos = new FormData();
+    datos.append('accion', 'consultar_modulos');
+    enviaAjax(datos);
+}
+
+function construirSelectUsuario(datos) {
+    var select = $('#filtro_usuario');
+    select.empty();
+    select.append('<option value="">Todos los Usuarios</option>');
+    datos.forEach(dato => {
+        var linea = `<option value="${dato.idUsuario}">${escapeHTML(dato.cedulaUsuario)} - ${escapeHTML(dato.nombreUsuario)} ${escapeHTML(dato.apellidoUsuario)}</option>`;
+        select.append(linea);
+    });
+    select.trigger('change');
+}
+
+function construirSelectModulo(datos) {
+    var select = $('#filtro_modulo');
+    select.empty();
+    select.append('<option value="">Todos los Módulos</option>');
+    datos.forEach(dato => {
+        var linea = `<option value="${dato.id_modulo}">${escapeHTML(dato.nombre_modulo)}</option>`;
+        select.append(linea);
+    });
+    select.trigger('change');
+}
 var token = $('meta[name="csrf-token"]').attr('content');
 function enviaAjax(datos) {
     $.ajax({
@@ -168,9 +237,27 @@ function enviaAjax(datos) {
             }
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "eliminar") {
+                if (lee.accion == "consultar") {
+                    crearConsulta(lee.datos);
+                }
+                else if (lee.accion == "consultar_usuarios") {
+                    construirSelectUsuario(lee.datos);
+                }
+                else if (lee.accion == "consultar_modulos") {
+                    construirSelectModulo(lee.datos);
+                }
+                else if (lee.accion == "reporte") {
+                    cerrarAlertaEspara();
+                    muestraMensaje("success", 2000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        window.open(lee.archivo, '_blank');
+                    }, 2000);
+                    cerrarModal();
+                    limpia();
+                }
+                else if (lee.accion == "eliminar") {
                     if (lee.resultado == 1) {
-                        muestraMensaje("success", 2000, "Correcto", lee.mensaje);
+                        muestraMensaje("success", 2000, "Eliminacion Exitosa", lee.mensaje);
                         consultar();
                     } else {
                         muestraMensaje("error", 2000, "Error", lee.mensaje);

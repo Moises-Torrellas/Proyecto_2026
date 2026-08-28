@@ -4,14 +4,18 @@ if (isset($solo_lista) && $solo_lista === true) :
         <div class="listado_vacio">
             <p>No se encontraron registros de pagos</p>
         </div>
-        <?php else :
+        <?php else : ?>
+        <?php
         foreach ($registro as $dato) :
-            $fechaPago = date('d/m/Y', strtotime($dato['fecha_pago']));
+            $meses_p = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            $timePago = strtotime($dato['fecha_pago']);
+            $mesIndex_p = (int)date('m', $timePago) - 1;
+            $fechaPago = date('d', $timePago) . ' de ' . $meses_p[$mesIndex_p] . ' de ' . date('Y', $timePago);
             $simboloMoneda = htmlspecialchars($dato['simbolo'] . ' ' . $dato['abre']);
             $montoFormateado = number_format($dato['monto_pagado'], 2, ',', '.');
 
             $esAnulado = ((int)$dato['estatus']) !== 1;
-            $estiloGris = $esAnulado ? 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"' : '';
+            $claseAnulado = $esAnulado ? 'fila_anulada' : '';
 
             if ($esAnulado) {
                 $estatusHTML = '<span class="estatus_r">Anulado</span>';
@@ -21,12 +25,23 @@ if (isset($solo_lista) && $solo_lista === true) :
 
 
                 $botonesAccion = '';
-                if (!empty($permisos['anular_pago'])) {
-                    $botonesAccion = '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
+            if (!empty($permisos['anular_pago'])) {
+                $botonesAccion .= '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
+            }
+            
+            $vueltoPendiente = 0;
+            if ((float)($dato['vuelto_esperado'] ?? 0) > 0) {
+                if (empty($dato['vueltos'])) {
+                    $vueltoPendiente = (float)$dato['vuelto_esperado'];
                 }
             }
+            
+            if ($vueltoPendiente > 0) {
+                $botonesAccion .= '<button class="btn_t cbt_v" onclick="abrirModalVuelto(' . $dato['id_pago'] . ', ' . $vueltoPendiente . ', \'' . htmlspecialchars($dato['simbolo'] . ' ' . $dato['abre']) . '\')" data-tippy-content="Registrar Vuelto"><i class="fi fi-sr-hand-holding-usd"></i></button>';
+            }
+        }    
         ?>
-            <div id="registro" class="listado_contenedor_grupal" <?= $estiloGris ?>>
+            <div id="registro" class="listado_contenedor_grupal <?= $claseAnulado ?>">
                 <div class="listado_item" onclick="toggleDetalles(this)">
 
                     <div class="listado_col_principal">
@@ -180,12 +195,15 @@ endif;
                                 </div>
                                 <?php else :
                                 foreach ($registro as $dato) :
-                                    $fechaPago = date('d/m/Y', strtotime($dato['fecha_pago']));
+                                    $meses_p = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                                    $timePago = strtotime($dato['fecha_pago']);
+                                    $mesIndex_p = (int)date('m', $timePago) - 1;
+                                    $fechaPago = date('d', $timePago) . ' de ' . $meses_p[$mesIndex_p] . ' de ' . date('Y', $timePago);
                                     $simboloMoneda = htmlspecialchars($dato['simbolo'] . ' ' . $dato['abre']);
                                     $montoFormateado = number_format($dato['monto_pagado'], 2, ',', '.');
 
                                     $esAnulado = ((int)$dato['estatus']) !== 1;
-                                    $estiloGris = $esAnulado ? 'style="filter: grayscale(1); opacity: 0.6; background-color: #f4f4f4;"' : '';
+                                    $claseAnulado = $esAnulado ? 'fila_anulada' : '';
 
                                     if ($esAnulado) {
                                         $estatusHTML = '<span class="estatus_r">Anulado</span>';
@@ -196,11 +214,22 @@ endif;
 
                                         $botonesAccion = '';
                                         if (!empty($permisos['anular_pago'])) {
-                                            $botonesAccion = '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
+                                            $botonesAccion .= '<button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(' . $dato['id_pago'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
+                                        }
+
+                                        $vueltoPendiente = 0;
+                                        if ((float)($dato['vuelto_esperado'] ?? 0) > 0) {
+                                            if (empty($dato['vueltos'])) {
+                                                $vueltoPendiente = (float)$dato['vuelto_esperado'];
+                                            }
+                                        }
+                                        
+                                        if ($vueltoPendiente > 0) {
+                                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="abrirModalVuelto(' . $dato['id_pago'] . ', ' . $vueltoPendiente . ', \'' . htmlspecialchars($dato['simbolo'] . ' ' . $dato['abre']) . '\')" data-tippy-content="Registrar Vuelto"><i class="fi fi-sr-hand-holding-usd"></i></button>';
                                         }
                                     }
                                 ?>
-                                    <div id="registro" class="listado_contenedor_grupal" <?= $estiloGris ?>>
+                                    <div id="registro" class="listado_contenedor_grupal <?= $claseAnulado ?>">
                                         <div class="listado_item" onclick="toggleDetalles(this)">
 
                                             <div class="listado_col_principal">
@@ -394,7 +423,7 @@ endif;
                                 <select class="formulario select" id="tasa" name="tasa">
                                     <option value="" disabled selected>Seleccione una tasa</option>
                                 </select>
-                                <label for="tasa" class="titulo_formulario">Tasa de Cambio (Si aplica)</label>
+                                <label for="tasa" class="titulo_formulario" id="label_tasa">Tasa de Cambio (Si aplica)</label>
                                 <span class="mensaje" id="tasa_spam"></span>
                             </div>
                         </div>

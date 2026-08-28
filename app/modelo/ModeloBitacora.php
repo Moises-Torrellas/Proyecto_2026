@@ -86,19 +86,40 @@ class ModeloBitacora extends Conexion implements InterBitacora
             $params[':f4'] = $p;
         }
 
-        $sentencia .= " ORDER BY b.id_bitacora DESC";
+        if (!empty($filtro['id_modulo'])) {
+            $sentencia .= " AND b.id_modulo = :id_modulo";
+            $params[':id_modulo'] = $filtro['id_modulo'];
+        }
+        if (!empty($filtro['idUsuario'])) {
+            $sentencia .= " AND b.idUsuario = :idUsuario";
+            $params[':idUsuario'] = $filtro['idUsuario'];
+        }
+        if (!empty($filtro['fecha_inicio']) && !empty($filtro['fecha_fin'])) {
+            $sentencia .= " AND DATE(b.fecha_hora) BETWEEN :fecha_inicio AND :fecha_fin";
+            $params[':fecha_inicio'] = $filtro['fecha_inicio'];
+            $params[':fecha_fin'] = $filtro['fecha_fin'];
+        }
 
-        $limit = isset($filtro['limit']) ? (int) $filtro['limit'] : 100;
-        $offset = isset($filtro['offset']) ? (int) $filtro['offset'] : 0;
-        $sentencia .= " LIMIT :limit OFFSET :offset";
+        // Limit and Offset only if it's not a report
+        if (isset($filtro['accion']) && $filtro['accion'] === 'reporte') {
+            $sentencia .= " ORDER BY b.id_bitacora DESC";
+        } else {
+            $sentencia .= " ORDER BY b.id_bitacora DESC";
+            $limit = isset($filtro['limit']) ? (int) $filtro['limit'] : 100;
+            $offset = isset($filtro['offset']) ? (int) $filtro['offset'] : 0;
+            $sentencia .= " LIMIT :limit OFFSET :offset";
+        }
 
         $stmt = $conex->prepare($sentencia);
         
         foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        
+        if (!isset($filtro['accion']) || $filtro['accion'] !== 'reporte') {
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        }
         
         $stmt->execute();
 
@@ -113,5 +134,37 @@ class ModeloBitacora extends Conexion implements InterBitacora
     } finally {
         $conex = NULL;
     }
-}
+    }
+
+    public function consultarUsuarios()
+    {
+        try {
+            $conex = $this->conexSG();
+            $sentencia = "SELECT idUsuario, cedulaUsuario, nombreUsuario, apellidoUsuario FROM usuarios ORDER BY nombreUsuario ASC";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute();
+            return array('accion' => 'consultar_usuarios', 'datos' => $stmt->fetchAll());
+        } catch (Exception $e) {
+            logs('Bitacora', $e->getMessage(), 'Modelo_consultarUsuarios');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
+        }
+    }
+
+    public function consultarModulos()
+    {
+        try {
+            $conex = $this->conexSG();
+            $sentencia = "SELECT id_modulo, nombre_modulo FROM modulos ORDER BY nombre_modulo ASC";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute();
+            return array('accion' => 'consultar_modulos', 'datos' => $stmt->fetchAll());
+        } catch (Exception $e) {
+            logs('Bitacora', $e->getMessage(), 'Modelo_consultarModulos');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
+        }
+    }
 }

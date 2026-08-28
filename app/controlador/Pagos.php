@@ -4,7 +4,6 @@ use App\modelo\ModeloPagos;
 use App\modelo\ModeloCuentasCobrar;
 use App\modelo\ModeloMonedas;
 use App\modelo\ModeloMetodosPago;
-use App\modelo\ModeloTasaCambios;
 
 use App\servicios\GenerarReporte;
 
@@ -152,6 +151,21 @@ function MultiConsulta(): void
     }
 }
 
+function validarLimitesFecha($fecha) {
+    if (empty($fecha)) return;
+    $time_ingresado = strtotime($fecha);
+    $time_actual = strtotime(date('Y-m-d'));
+    
+    if ($time_ingresado > $time_actual) {
+        throw new Exception('La fecha ingresada no puede ser futura.');
+    }
+    
+    $time_limite = strtotime('-2 months', $time_actual);
+    if ($time_ingresado < $time_limite) {
+        throw new Exception('La fecha ingresada no puede tener más de 2 meses de atraso.');
+    }
+}
+
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
@@ -176,7 +190,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         ];
 
         if (!empty($_POST['referencia'])) {
-            $validaciones['referencia'] = ['regla' => '/^[a-zA-Z0-9\-\_]+$/', 'mensaje' => 'Referencia inválida. Solo alfanuméricos y guiones.'];
+            $validaciones['referencia'] = ['regla' => '/^\d{4,12}$/', 'mensaje' => 'La referencia del pago debe tener entre 4 y 12 dígitos numéricos.'];
             $datos['referencia'] = trim($_POST['referencia']);
         }
 
@@ -184,26 +198,37 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             $validaciones['fecha'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
         }
 
-        validar_datos($validaciones);
+        if (isset($_POST['monto_vuelto']) && (float)$_POST['monto_vuelto'] > 0) {
+            $datos['monto_vuelto'] = trim($_POST['monto_vuelto']);
+            $datos['codigo_metodo_vuelto'] = trim($_POST['codigo_metodo_vuelto'] ?? '');
+            $datos['codigo_moneda_vuelto'] = trim($_POST['codigo_moneda_vuelto'] ?? '');
+            $datos['referencia_vuelto'] = trim($_POST['referencia_vuelto'] ?? '');
+            $datos['fecha_vuelto'] = trim($_POST['fecha_vuelto'] ?? date('Y-m-d'));
 
-        if (!empty($_POST['fecha'])) {
-            $fecha_ingresada = strtotime($_POST['fecha']);
-            $fecha_actual = strtotime(date('Y-m-d'));
-            if ($fecha_ingresada > $fecha_actual) {
-                throw new Exception('La fecha del pago no puede ser futura.');
+            if (!empty($_POST['referencia_vuelto'])) {
+                $validaciones['referencia_vuelto'] = ['regla' => '/^\d{4,12}$/', 'mensaje' => 'La referencia del vuelto debe tener entre 4 y 12 dígitos numéricos.'];
             }
         }
 
-        $obj->setMonedas(new ModeloMonedas());
-        $obj->setTasa(new ModeloTasaCambios());
-        $obj->setCuentas(new ModeloCuentasCobrar());
+        validar_datos($validaciones);
+
+        if (!empty($_POST['fecha'])) {
+            validarLimitesFecha($_POST['fecha']);
+        }
+        
+        if (isset($_POST['monto_vuelto']) && (float)$_POST['monto_vuelto'] > 0 && !empty($_POST['fecha_vuelto'])) {
+            validarLimitesFecha($_POST['fecha_vuelto']);
+        }
 
         $datos['accion'] = 'incluir';
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             $cuentas_str = is_array($datos['cuenta']) ? implode(', ', $datos['cuenta']) : $datos['cuenta'];
-            registrarBitacora($bitacoraObj, $id_modulo, "Registro de Pago a las cuentas por cobrar: " . $cuentas_str);
+            $desc_bitacora = $resultado['desc_bitacora'] ?? "Registro de Pago a las cuentas por cobrar: " . $cuentas_str;
+            $datos_previos = '';
+            $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+            registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, $datos_previos, $datos_nuevos);
             $resultado = array(
                 'accion' => 'incluir', 
                 'mensaje' => 'Pago registrado exitosamente.', 
@@ -243,12 +268,14 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
 
-        $obj->setCuentas(new ModeloCuentasCobrar());
-
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Anulación del Pago: " . $datos['id'] . ' Motivo: ' . $_POST['motivo_anulacion']);
+            $desc_bitacora = $resultado['desc_bitacora'] ?? "Anulación del Pago: " . $datos['id'];
+            $desc_bitacora .= ' Motivo: ' . $_POST['motivo_anulacion'];
+            $datos_previos = $resultado['datos_previos'] ?? '';
+            $datos_nuevos = '';
+            registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Pago anulado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -275,7 +302,16 @@ function registrar_vuelto($obj, $id_modulo, $bitacoraObj): void
             'codigo_moneda' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Moneda inválida.'],
             'monto_vuelto' => ['regla' => '/^\d+(\.\d{1,2})?$/', 'mensaje' => 'Monto inválido.']
         ];
+        
+        if (!empty($_POST['referencia_vuelto'])) {
+            $validaciones['referencia_vuelto'] = ['regla' => '/^\d{4,12}$/', 'mensaje' => 'La referencia del vuelto debe tener entre 4 y 12 dígitos numéricos.'];
+        }
+        
         validar_datos($validaciones);
+
+        if (!empty($_POST['fecha_vuelto'])) {
+            validarLimitesFecha($_POST['fecha_vuelto']);
+        }
 
         $datos = [
             'codigo_pago' => $_POST['codigo_pago'],
@@ -339,11 +375,18 @@ function generar($obj, $id_modulo, $bitacoraObj): void
         }
         $nombreVista = 'R_Pagos';
         $objG = new GenerarReporte();
-        $pdf = $objG->generarPDF($nombreVista, $datos, 'Pagos');
-        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Pagos.");
+        
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Pagos');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Pagos');
         }
-        echo json_encode($pdf);
+
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Pagos en " . strtoupper($formato));
+        }
+        echo json_encode($reporte);
     } catch (Exception $e) {
         logs('Pagos', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);

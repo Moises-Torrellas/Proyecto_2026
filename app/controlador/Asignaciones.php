@@ -77,7 +77,8 @@ function manejarSolicitudAsignacion($obj, $id_modulo, $bitacoraObj, array $permi
 }
 
 function consultar($obj, $permisos): void {
-    $respuesta = $obj->ConsultarAsignaciones();
+    $datos = ['accion' => 'consultar', 'filtro' => $_POST['filtro'] ?? ''];
+    $respuesta = $obj->ProcesarDatos($datos);
     $registro = $respuesta['datos'] ?? []; 
     $solo_lista = true;
     include (__DIR__.'/../vista/Asignaciones.php');
@@ -252,13 +253,18 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             exit();
         }
 
+        $formato = filter_input(INPUT_POST, 'formato', FILTER_SANITIZE_SPECIAL_CHARS) ?? 'pdf';
         $nombreVista = 'R_Asignaciones'; 
         
-        $objG = new GenerarReporte();
-        $pdf = $objG->generarPDF($nombreVista, $datos, 'Asignaciones');
+        if ($formato === 'excel') {
+            $pdf = \App\servicios\GenerarReporte::generarExcel($nombreVista, $datos, 'Asignaciones');
+        } else {
+            $objG = new GenerarReporte();
+            $pdf = $objG->generarPDF($nombreVista, $datos, 'Asignaciones');
+        }
         
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte PDF de Asignaciones.");
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Asignaciones en formato " . strtoupper($formato));
         }
         
         echo json_encode($pdf);

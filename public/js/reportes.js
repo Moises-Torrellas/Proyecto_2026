@@ -74,11 +74,19 @@ $(document).ready(function () {
     });
 
     $(document).on('change', '#filtro_moneda, #filtro_concepto, #filtro_desde, #filtro_hasta', function () {
-        if (!cargandoFiltros) filtrarReporte('recaudacion');
+        if (!cargandoFiltros) {
+            if (validarFechas('filtro_desde', 'filtro_hasta')) {
+                filtrarReporte('recaudacion');
+            }
+        }
     });
 
     $(document).on('change', '#filtro_cat_inventario, #filtro_estado_fisico, #filtro_inv_desde, #filtro_inv_hasta', function () {
-        if (!cargandoFiltros) filtrarReporte('inventario');
+        if (!cargandoFiltros) {
+            if (validarFechas('filtro_inv_desde', 'filtro_inv_hasta')) {
+                filtrarReporte('inventario');
+            }
+        }
     });
 
     $(document).on('change', '#filtro_atleta, #filtro_temporada', function () {
@@ -126,6 +134,61 @@ function cargarFiltrosIniciales() {
     let datosFiltros = new FormData();
     datosFiltros.append('accion', 'MultiConsulta');
     enviaAjax(datosFiltros);
+}
+
+function validarFechas(idDesde, idHasta) {
+    let desdeVal = $('#' + idDesde).val();
+    let hastaVal = $('#' + idHasta).val();
+    if (!desdeVal && !hastaVal) return true;
+
+    let hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    let minDate = new Date(2022, 0, 1); // 1 Jan 2022
+
+    let parseDate = (d) => {
+        if (!d) return null;
+        let parts = d.split('/');
+        if (parts.length !== 3) return null;
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    };
+
+    let objDesde = parseDate(desdeVal);
+    let objHasta = parseDate(hastaVal);
+
+    if (objDesde) {
+        if (objDesde < minDate) {
+            Swal.fire('Error', 'No se permiten fechas menores al año 2022.', 'error');
+            $('#' + idDesde).val('');
+            return false;
+        }
+        if (objDesde > hoy) {
+            Swal.fire('Error', 'No se pueden ingresar fechas futuras.', 'error');
+            $('#' + idDesde).val('');
+            return false;
+        }
+    }
+
+    if (objHasta) {
+        if (objHasta < minDate) {
+            Swal.fire('Error', 'No se permiten fechas menores al año 2022.', 'error');
+            $('#' + idHasta).val('');
+            return false;
+        }
+        if (objHasta > hoy) {
+            Swal.fire('Error', 'No se pueden ingresar fechas futuras.', 'error');
+            $('#' + idHasta).val('');
+            return false;
+        }
+    }
+
+    if (objDesde && objHasta && objDesde > objHasta) {
+        Swal.fire('Error', 'La fecha de inicio no puede ser mayor a la fecha de fin.', 'error');
+        $('#' + idDesde).val('');
+        $('#' + idHasta).val('');
+        return false;
+    }
+    
+    return true;
 }
 
 function filtrarReporte(tipoReporte) {

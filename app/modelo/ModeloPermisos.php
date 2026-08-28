@@ -271,4 +271,68 @@ class ModeloPermisos extends Conexion
             $conex = null;
         }
     }
+
+
+    public function permisosRoles($id): array {
+        try {
+            $conex = $this->conexSG();
+            $sentencia = 'SELECT 
+                            :id1 AS id_rol, 
+                            (SELECT nombre_rol FROM roles WHERE id_rol = :id2) AS nombre_rol, 
+                            m.id_modulo, m.nombre_modulo,m.icono, m.estatus AS estatus_modulo,
+                            p.id_permiso, p.nombre AS nombre_permiso, p.descripcion, p.clave,
+                            CASE WHEN pr.id_permiso_rol IS NOT NULL THEN 1 ELSE 0 END AS asignado
+                        FROM modulos m
+                        INNER JOIN permisos p ON p.id_modulo = m.id_modulo
+                        LEFT JOIN permisos_rol pr ON pr.id_permiso = p.id_permiso AND pr.id_rol = :id3
+                        WHERE m.id_modulo NOT IN (4, 5, 8, 1, 2, 3)
+                        ORDER BY m.id_modulo ASC, p.id_permiso ASC';
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindParam(':id1', $id);
+            $stmt->bindParam(':id2', $id);
+            $stmt->bindParam(':id3', $id);
+            $stmt->execute();
+            $datos = $stmt->fetchAll();
+            $resultado = array('accion' => 'CargarPermisos', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Roles', $e->getMessage(), 'Modelo_CargarPermisos');
+            $resultado = array('accion' => 'error', 'mensaje' => $e->getMessage());
+        }
+        return $resultado;
+    }
+
+    public function permisosUsuarios($id): array {
+        try {
+            $conex = $this->conexSG();
+            $sentencia = 'SELECT 
+                            :id1 AS idUsuario, 
+                            (SELECT id_rol FROM usuarios WHERE idUsuario = :id2) AS id_rol,
+                            m.id_modulo, m.nombre_modulo, m.icono, m.estatus AS estatus_modulo,
+                            p.id_permiso, p.nombre AS nombre_permiso, p.descripcion, p.clave,
+                            CASE 
+                                WHEN e.id_permiso IS NOT NULL THEN e.tipo
+                                WHEN pr.id_permiso_rol IS NOT NULL THEN 1 
+                                ELSE 0 
+                            END AS asignado,
+                            CASE WHEN e.id_excepcion IS NOT NULL THEN e.tipo ELSE 2 END AS excepcion
+                        FROM modulos m
+                        INNER JOIN permisos p ON p.id_modulo = m.id_modulo
+                        LEFT JOIN permisos_rol pr ON pr.id_permiso = p.id_permiso AND pr.id_rol = (SELECT id_rol FROM usuarios WHERE idUsuario = :id3)
+                        LEFT JOIN excepciones e ON e.id_permiso = p.id_permiso AND e.id_usuario = :id4
+                        WHERE m.id_modulo NOT IN (4, 5, 8, 1, 2, 3)
+                        ORDER BY m.id_modulo ASC, p.id_permiso ASC';
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindParam(':id1', $id);
+            $stmt->bindParam(':id2', $id);
+            $stmt->bindParam(':id3', $id);
+            $stmt->bindParam(':id4', $id);
+            $stmt->execute();
+            $datos = $stmt->fetchAll();
+            $resultado = array('accion' => 'CargarPermisosUsuario', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Usuarios', $e->getMessage(), 'Modelo_CargarPermisosUsuario');
+            $resultado = array('accion' => 'error', 'mensaje' => $e->getMessage());
+        }
+        return $resultado;
+    }
 }

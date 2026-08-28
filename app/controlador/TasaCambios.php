@@ -93,8 +93,9 @@ function sincronizar($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            $datos_nuevos = json_encode(['codigo_moneda' => $_POST['codigo_moneda']]);
-            registrarBitacora($bitacoraObj, $id_modulo, "Sincronizó tasa de cambio para moneda ID: " . $_POST['codigo_moneda'], '', $datos_nuevos);
+            $desc_bitacora = $resultado['desc_bitacora'] ?? "Sincronizó tasa de cambio para moneda ID: " . $_POST['codigo_moneda'];
+            $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+            registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, '', $datos_nuevos);
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
@@ -115,8 +116,9 @@ function registrar($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            $datos_nuevos = json_encode(['codigo_moneda' => $_POST['codigo_moneda'], 'valor_tasa' => $_POST['tasa_bolivares']]);
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró tasa manual para moneda ID: " . $_POST['codigo_moneda'], '', $datos_nuevos);
+            $desc_bitacora = $resultado['desc_bitacora'] ?? "Registró tasa manual para moneda ID: " . $_POST['codigo_moneda'];
+            $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+            registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, '', $datos_nuevos);
         }
         echo json_encode($resultado);
     } catch (Exception $e) {

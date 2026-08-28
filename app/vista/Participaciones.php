@@ -92,16 +92,18 @@
                             }
                             if (!empty($permisos['eliminar_partici'])) {
                                 // Ajustado a codigo_participacion
-                                $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
+                                $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-trash-xmark"></i></button>';
                             }
                         }
                             ?>
                             <div class="sub_item_fila">
                                 <div class="sub_item_info">
                                     <span class="sub_item_titulo"><?= htmlspecialchars($dato['equipo_nombre']) ?></span>
-                                    <span class="sub_item_fechas" style="font-size: 13px; color: var(--color-texto-secundario); margin-top: 4px; display: block;">
-                                        Atletas Asignados: <strong class="estatus_v" style="padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 5px;"><?= $dato['cantidad_atletas'] ?? '0' ?></strong>
-                                    </span>
+                                    <div class="sub_item_fechas">
+                                        <span class="sub_item_fechas" style="font-size: 13px; color: var(--color-texto-secundario); margin-top: 4px; display: block;">
+                                            Atletas Asignados: <strong class="estatus_v" style="padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 5px;"><?= $dato['cantidad_atletas'] ?? '0' ?></strong>
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <div class="sub_item_centro">
@@ -251,7 +253,7 @@
                                         }
                                         if (!empty($permisos['eliminar_partici'])) {
                                             // Ajustado a codigo_participacion
-                                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-cross-circle"></i></button>';
+                                            $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['codigo_participacion'] . ')" data-tippy-content="Eliminar Inscripción"><i class="fi fi-sr-trash-xmark"></i></button>';
                                         }
                                     }
 
@@ -259,9 +261,11 @@
                     <div class="sub_item_fila">
                         <div class="sub_item_info">
                             <span class="sub_item_titulo"><?= htmlspecialchars($dato['equipo_nombre']) ?></span>
-                            <span class="sub_item_fechas" style="font-size: 13px; color: var(--color-texto-secundario); margin-top: 4px; display: block;">
-                                Atletas Asignados: <strong class="estatus_v" style="padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 5px;"><?= $dato['cantidad_atletas'] ?? '0' ?></strong>
-                            </span>
+                            <div class="sub_item_fechas">
+                                <span class="sub_item_fechas" style="font-size: 13px; color: var(--color-texto-secundario); margin-top: 4px; display: block;">
+                                    Atletas Asignados: <strong class="estatus_v" style="padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 5px;"><?= $dato['cantidad_atletas'] ?? '0' ?></strong>
+                                </span>
+                            </div>
                         </div>
 
                         <div class="sub_item_centro">

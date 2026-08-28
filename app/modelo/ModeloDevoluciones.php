@@ -55,6 +55,28 @@ class ModeloDevoluciones extends Conexion
         };
     }
 
+    public function Buscar($id = null): array
+    {
+        try {
+            $conex = $this->conex();
+            $sentencia = "SELECT 
+                            d.fecha_devolucion, d.observacion,
+                            va.atleta, va.doc_identidad, va.articulo, ee.nombre as estado_fisico
+                          FROM devoluciones d
+                          INNER JOIN vista_asignaciones_general va ON d.id_asignacion = va.id_asignacion
+                          INNER JOIN estado_fisico ee ON d.id_estado = ee.id_estado
+                          WHERE d.id_devolucion = :id";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return array('accion' => 'buscar', 'datos' => $datos);
+        } catch (Exception $e) {
+            logs('Devoluciones', $e->getMessage(), 'Modelo_Buscar');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        }
+    }
+
     public function ConsultarDevoluciones(array $filtros = []): array
     {
         $conex = null;
@@ -62,32 +84,59 @@ class ModeloDevoluciones extends Conexion
             $conex = $this->conex();
             
             $sql = "SELECT 
-                        d.id_devolucion, 
-                        DATE_FORMAT(d.fecha_devolucion, '%Y-%m-%d') as fecha_vista,
-                        d.fecha_devolucion, d.id_asignacion, d.id_estado, d.observacion, 
-                        ee.nombre as estado_fisico, ee.nivel_estado, at.codigo_atleta, at.p_nombre as atleta_nombre,
-                        at.p_apellidos as atleta_apellido, cat.nombre as articulo_nombre,
-                        (SELECT COUNT(*) FROM devoluciones d2 
-                         INNER JOIN asignaciones a2 ON d2.id_asignacion = a2.id_asignacion 
-                         WHERE a2.codigo_atleta = at.codigo_atleta) as total_devoluciones_atleta
-                    FROM devoluciones d
-                    INNER JOIN asignaciones asig ON d.id_asignacion = asig.id_asignacion
-                    INNER JOIN atletas at ON asig.codigo_atleta = at.codigo_atleta
-                    INNER JOIN estado_fisico ee ON d.id_estado = ee.id_estado
-                    INNER JOIN articulos_inventario eq ON asig.codigo_articulo = eq.codigo_articulo
-                    INNER JOIN catalogo cat ON eq.id_catalogo = cat.id_catalogo
+                        id_devolucion, 
+                        DATE_FORMAT(fecha_devolucion, '%d/%m/%Y') as fecha_vista,
+                        fecha_devolucion, id_asignacion, id_estado, observacion, 
+                        estado_fisico, nivel_estado, 
+                        codigo_atleta, atleta_nombre, atleta_apellido, doc_identidad,
+                        articulo_nombre, codigo_club, total_devoluciones_atleta
+                    FROM vista_resumen_devoluciones
                     WHERE 1=1 "; 
             
             $params = [];
-            if (!empty($filtros['id_asignacion'])) { $sql .= " AND d.id_asignacion = ? "; $params[] = $filtros['id_asignacion']; }
-            if (!empty($filtros['id_estado'])) { $sql .= " AND d.id_estado = ? "; $params[] = $filtros['id_estado']; }
-            if (!empty($filtros['fecha_devolucion'])) { $sql .= " AND d.fecha_devolucion = ? "; $params[] = $filtros['fecha_devolucion']; }
             
-            $sql .= " ORDER BY at.codigo_atleta ASC, d.fecha_devolucion DESC";
+            if (!empty($filtros['filtro'])) {
+                $sql .= " AND (atleta_nombre LIKE ? OR atleta_apellido LIKE ? OR articulo_nombre LIKE ? OR DATE_FORMAT(fecha_devolucion, '%d/%m/%Y') LIKE ? OR fecha_devolucion LIKE ?)";
+                $p = '%' . $filtros['filtro'] . '%';
+                $params = array_merge($params, [$p, $p, $p, $p, $p]);
+            }
+            if (!empty($filtros['id_asignacion'])) { $sql .= " AND id_asignacion = ? "; $params[] = $filtros['id_asignacion']; }
+            if (!empty($filtros['id_estado'])) { $sql .= " AND id_estado = ? "; $params[] = $filtros['id_estado']; }
+            if (!empty($filtros['fecha_devolucion'])) { $sql .= " AND fecha_devolucion = ? "; $params[] = $filtros['fecha_devolucion']; }
+            
+            $sql .= " ORDER BY atleta_nombre ASC, fecha_devolucion DESC";
 
             $stmt = $conex->prepare($sql);
             $stmt->execute($params);
-            return ['accion' => 'consultar', 'datos' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $agrupado = [];
+            foreach ($datos as $fila) {
+                $id = $fila['codigo_atleta'];
+                if (!isset($agrupado[$id])) {
+                    $agrupado[$id] = [
+                        'codigo_atleta' => $id,
+                        'nombre_completo' => $fila['atleta_nombre'] . ' ' . $fila['atleta_apellido'],
+                        'doc_identidad' => $fila['doc_identidad'] ?? 'Sin CI',
+                        'total_devoluciones_atleta' => $fila['total_devoluciones_atleta'],
+                        'devoluciones' => []
+                    ];
+                }
+                $agrupado[$id]['devoluciones'][] = [
+                    'id_devolucion' => $fila['id_devolucion'],
+                    'id_asignacion' => $fila['id_asignacion'],
+                    'id_estado' => $fila['id_estado'],
+                    'fecha_vista' => $fila['fecha_vista'],
+                    'fecha_devolucion' => $fila['fecha_devolucion'],
+                    'articulo_nombre' => $fila['articulo_nombre'],
+                    'codigo_club' => $fila['codigo_club'],
+                    'estado_fisico' => $fila['estado_fisico'],
+                    'nivel_estado' => $fila['nivel_estado'],
+                    'observacion' => $fila['observacion']
+                ];
+            }
+
+            return ['accion' => 'consultar', 'datos' => array_values($agrupado)];
         } catch (Exception $e) {
             return ['accion' => 'error', 'codigo' => $e->getMessage()];
         }
@@ -123,31 +172,17 @@ class ModeloDevoluciones extends Conexion
                 throw new Exception("La asignación no existe, no es válida o ya fue devuelta.");
             }
 
-            $conex->beginTransaction();
+            // El procedimiento almacenado maneja la transacción de forma segura y el trigger maneja el inventario
+            $stmt = $conex->prepare("CALL ProcesarDevolucionSegura(?, ?, ?)");
+            $stmt->execute([$this->id_asignacion, $this->id_estado, $this->observacion]);
 
-            $stmtAsig = $conex->prepare("SELECT codigo_articulo FROM asignaciones WHERE id_asignacion = ? FOR UPDATE");
-            $stmtAsig->execute([$this->id_asignacion]);
-            $codigoArticulo = $stmtAsig->fetchColumn();
+            $stmtId = $conex->prepare("SELECT id_devolucion FROM devoluciones WHERE id_asignacion = ? ORDER BY id_devolucion DESC LIMIT 1");
+            $stmtId->execute([$this->id_asignacion]);
+            $id_insertado = $stmtId->fetchColumn();
 
-            if ($this->objAsignaciones) {
-                $this->objAsignaciones->CambiarEstatusAsignacion($this->id_asignacion, 2, $conex);
-            } else {
-                $conex->prepare("UPDATE asignaciones SET estatus = 0 WHERE id_asignacion = ?")->execute([$this->id_asignacion]);
-            }
-
-            $stmtEqUpd = $conex->prepare("UPDATE articulos_inventario SET estatus = 1, id_estado = ? WHERE codigo_articulo = ?");
-            $stmtEqUpd->execute([$this->id_estado, $codigoArticulo]);
-
-            $stmtInsert = $conex->prepare("INSERT INTO devoluciones (id_asignacion, id_estado, fecha_devolucion, observacion) VALUES (?, ?, ?, ?)");
-            $stmtInsert->execute([$this->id_asignacion, $this->id_estado, $this->fecha_devolucion, $this->observacion]);
-
-            $conex->commit();
-            return ['accion' => 'exito', 'mensaje' => 'Devolución procesada y equipo liberado.'];
+            return ['accion' => 'exito', 'mensaje' => 'Devolución procesada y equipo liberado.', 'id_devolucion' => $id_insertado];
 
         } catch (Exception $e) {
-            if ($conex && $conex->inTransaction()) {
-                $conex->rollBack();
-            }
             return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         } finally {
             $conex = null;
@@ -210,12 +245,12 @@ class ModeloDevoluciones extends Conexion
             $stmtEq->execute([$idAsig]);
             $codigoArticulo = $stmtEq->fetchColumn();
 
-            $stmtEstadoEq = $conex->prepare("SELECT estatus FROM articulos_inventario WHERE codigo_articulo = ? FOR UPDATE");
-            $stmtEstadoEq->execute([$codigoArticulo]);
-            $estadoEq = $stmtEstadoEq->fetchColumn();
+            $stmtCheck = $conex->prepare("SELECT COUNT(*) FROM asignaciones WHERE codigo_articulo = ? AND estatus = 1");
+            $stmtCheck->execute([$codigoArticulo]);
+            $enUso = $stmtCheck->fetchColumn();
 
-            if ($estadoEq != 1) {
-                throw new Exception("No se puede anular la devolución. El artículo ya ha sido asignado a otro atleta o no se encuentra disponible.");
+            if ($enUso > 0) {
+                throw new Exception("No se puede anular la devolución. El artículo ya ha sido reasignado a otro atleta y está en uso.");
             }
 
             $conex->prepare("DELETE FROM devoluciones WHERE id_devolucion = ?")->execute([$this->id_devolucion]);

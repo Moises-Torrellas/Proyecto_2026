@@ -65,7 +65,7 @@
                                 <div class="detalle_card_icon"><i data-lucide="info"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Información Adicional</label>
-                                    <span>Cédula: <b><?= htmlspecialchars($dato['cedulaUsuario']) ?></b></span>
+                                    <span>Cédula del Usuario: <b><?= htmlspecialchars($dato['cedulaUsuario']) ?></b></span>
                                     <span>Entorno: <b><?= htmlspecialchars($dato['entorno'] ?? 'N/A') ?></b></span>
                                 </div>
                             </div>
@@ -196,7 +196,7 @@
                                                         <div class="detalle_card_icon"><i data-lucide="info"></i></div>
                                                         <div class="detalle_card_txt">
                                                             <label>Información Adicional</label>
-                                                            <span>Cédula: <b><?= htmlspecialchars($dato['cedulaUsuario']) ?></b></span>
+                                                            <span>Cédula del Usuario: <b><?= htmlspecialchars($dato['cedulaUsuario']) ?></b></span>
                                                             <span>Entorno: <b><?= htmlspecialchars($dato['entorno'] ?? 'N/A') ?></b></span>
                                                         </div>
                                                     </div>
@@ -240,6 +240,46 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off" enctype="multipart/form-data">
                     <input type="hidden" id="id" name="id">
+                    <!-- Fila 1: Filtro de Módulo y Usuario -->
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="filtro_modulo" id="filtro_modulo" class="formulario select">
+                                    <option value="">Todos los Módulos</option>
+                                    <!-- Options will be populated via AJAX -->
+                                </select>
+                                <label for="filtro_modulo" class="titulo_formulario">Módulo</label>
+                                <span class="mensaje" id="filtro_modulo_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="filtro_usuario" id="filtro_usuario" class="formulario select">
+                                    <option value="">Todos los Usuarios</option>
+                                    <!-- Options will be populated via AJAX -->
+                                </select>
+                                <label for="filtro_usuario" class="titulo_formulario">Usuario</label>
+                                <span class="mensaje" id="filtro_usuario_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Fila 2: Rango de Fechas -->
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_inicio" name="fecha_inicio">
+                                <label for="fecha_inicio" class="titulo_formulario">Fecha Inicio</label>
+                                <span class="mensaje" id="fecha_inicio_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_fin" name="fecha_fin">
+                                <label for="fecha_fin" class="titulo_formulario">Fecha Fin</label>
+                                <span class="mensaje" id="fecha_fin_spam"></span>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>

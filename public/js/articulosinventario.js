@@ -64,34 +64,87 @@ $(document).ready(function () {
         else if (accion === "modificar") textoConfirmacion = '¿Guardar los cambios?';
         else if (accion === "generar") textoConfirmacion = '¿Desea generar el reporte con los filtros seleccionados?';
 
-        confirmar(textoConfirmacion, function(confirma) {
-            if (confirma) {
-                // Si es un reporte, mostramos la alerta de espera estilo Catálogo
-                if (accion === "generar" && typeof abrirAlertaEspara === 'function') {
+        if (accion === "generar") {
+            opcionesReporte(function(formato) {
+                if (typeof abrirAlertaEspara === 'function') {
                     abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
                 }
-                
                 let datos = new FormData($('#f')[0]);
                 datos.append('accion', accion);
+                datos.append('formato', formato);
                 enviaAjax(datos);
-            }
-        });
+            });
+        } else {
+            confirmar(textoConfirmacion, function(confirma) {
+                if (confirma) {
+                    let datos = new FormData($('#f')[0]);
+                    datos.append('accion', accion);
+                    enviaAjax(datos);
+                }
+            });
+        }
     });
 
     $('#ayuda').on('click', function () {
         const pasos = [
-            { element: '#busqueda', popover: { title: 'Búsqueda', description: 'Filtra el inventario.' } },
-            { element: '#btn_nuevo', popover: { title: 'Registrar', description: 'Añade un nuevo artículo físico al inventario.' } },
-            { element: '#generar', popover: { title: 'Reporte', description: 'Abre el panel para filtrar y descargar un PDF.' } },
-            { element: '#resultadoconsulta', popover: { title: 'Inventario', description: 'Haz clic en un artículo para ver sus unidades individuales.' } }
+            {
+                element: '#busqueda',
+                popover: { title: 'Búsqueda', description: 'Filtra el inventario por nombre o código.', position: 'bottom' }
+            },
+            {
+                element: '#btn_nuevo',
+                popover: { title: 'Registrar', description: 'Añade un nuevo artículo físico al inventario.', position: 'bottom' }
+            },
+            {
+                element: '#generar',
+                popover: { title: 'Reporte', description: 'Abre el panel para filtrar y descargar un PDF o Excel.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta',
+                popover: { title: 'Inventario', description: 'Aquí se mostrarán todos los artículos agrupados por catálogo.', position: 'top' }
+            },
+            {
+                element: '.listado_item',
+                popover: { title: 'Registro de Catálogo', description: 'Haz clic en el registro para desplegar y ver las unidades individuales (físicas) de este artículo.', position: 'bottom' },
+                onNext: function() {
+                    const primerRegistro = document.querySelector('.listado_item');
+                    if (primerRegistro) {
+                        const contenedor = $(primerRegistro).closest('.listado_contenedor_grupal');
+                        if (!contenedor.hasClass('expandido')) {
+                            contenedor.addClass('expandido');
+                            contenedor.find('.listado_detalle_oculto').show();
+                        }
+                    }
+                }
+            },
+            {
+                element: '.sub_item_acciones',
+                popover: { title: 'Acciones de Unidades', description: 'Aquí podrás modificar el estado físico de la unidad, o retirarla/reincorporarla del inventario.', position: 'left' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aquí podrá seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Página', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aquí puedes ver la cantidad de artículos mostrados actualmente.', position: 'top' }
+            }
         ];
-        if (typeof iniciarTourConPasos === 'function') iniciarTourConPasos(pasos).start();
+        if (typeof iniciarTourConPasos === 'function') {
+            const driver = iniciarTourConPasos(pasos);
+            driver.start();
+        }
     });
 });
 
 function consultar() {
     let datos = new FormData();
     datos.append('accion', 'consultar');
+    datos.append('filtro', $('#busqueda').val() || '');
     enviaAjax(datos);
 }
 

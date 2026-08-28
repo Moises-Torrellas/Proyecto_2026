@@ -87,7 +87,7 @@ $(document).ready(function () {
         $(this).val(input);
     });
 
-    Validacion("monto_total", /^[0-9.]*$/, /^[0-9]+(\.[0-9]{1,2})?$/, "Monto invÃƒÂ¡lido (Ej: 50 o 50.50)", "proceso");
+    Validacion("monto_total", /^[0-9.]*$/, /^[0-9]+(\.[0-9]{1,2})?$/, "Monto inválido (Ej: 50 o 50.50)", "proceso");
 
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
@@ -240,7 +240,7 @@ function buscar(id) {
 }
 
 function anular(id) {
-    confirmar('Ã‚Â¿Desea bloquear este cargo? Se marcara como Anulado y no podrÃƒÂ¡ ser modificado.', function (confirmado) {
+    confirmar('¿Desea bloquear este cargo? Se marcara como Anulado y no podrá ser modificado.', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('id', id);
@@ -346,12 +346,12 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } else if (lee.accion == "eliminar") {
                     consultar();
-                    muestraMensaje("success", 2000, "AnulaciÃƒÂ³n Exitosa", lee.mensaje);
+                    muestraMensaje("success", 2000, "Anulación Exitosa", lee.mensaje);
                 } else if (lee.accion == "modificar") {
                     consultar();
                     limpia();
                     cerrarModal();
-                    muestraMensaje("success", 2000, "ModificaciÃƒÂ³n Exitosa", lee.mensaje);
+                    muestraMensaje("success", 2000, "Modificación Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 } else if (lee.accion == "reporte") {
@@ -397,7 +397,7 @@ function limpia() {
         const pasos = [
             {
                 element: '#busqueda',
-                popover: { title: 'Barra de Busqueda', description: 'AquÃƒÂ­ puedes buscar los cargos por nombre de atleta o concepto.', position: 'bottom' }
+                popover: { title: 'Barra de Busqueda', description: 'Aquí puedes buscar los cargos por nombre de atleta o concepto.', position: 'bottom' }
             },
             {
                 element: '#incluir',
@@ -409,37 +409,37 @@ function limpia() {
             },
             {
                 element: '#resultadoconsulta',
-                popover: { title: 'Cargos Registrados', description: 'AquÃƒÂ­ se mostraran todos los cargos registrados, agrupados por atleta.', position: 'top' }
+                popover: { title: 'Cargos Registrados', description: 'Aquí se mostraran todos los cargos registrados, agrupados por atleta.', position: 'top' }
             },
             {
                 element: '.listado_item',
-                popover: { title: 'Registro del Atleta', description: 'AquÃ­ se mostrará la informaciÃ³n del estado de cuenta del atleta. Si pulsa el registro, se desplegarán las facturas detalladas.', position: 'bottom' },
+                popover: { title: 'Registro del Atleta', description: 'Aquí se mostrará la información del estado de cuenta del atleta. Si pulsa el registro, se desplegarán las facturas detalladas.', position: 'bottom' },
                 onNext: function() {
                     const primerRegistro = document.querySelector('.listado_item');
                     if (primerRegistro) {
                         const contenedor = $(primerRegistro).closest('.listado_contenedor_grupal');
                         if (!contenedor.hasClass('expandido')) {
                             contenedor.addClass('expandido');
-                            contenedor.find('.listado_detalle_oculto').show(); // Show instantÃ¡neo sin animaciÃ³n
+                            contenedor.find('.listado_detalle_oculto').show(); // Show instantáneo sin animación
                         }
                     }
                 }
             },
             {
                 element: '.sub_item_acciones',
-                popover: { title: 'Acciones de los Cargos', description: 'Si el cargo no tiene abonos ni ha sido pagado, aquí aparecerÃ¡n los botones para modificar o anular.', position: 'left' }
+                popover: { title: 'Acciones de los Cargos', description: 'Si el cargo no tiene abonos ni ha sido pagado, aquí aparecerán los botones para modificar o anular.', position: 'left' }
             },
             {
                 element: '#rowsPerPage',
-                popover: { title: 'Registros Deseados', description: 'AquÃƒÂ­ podrÃƒÂ¡ seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+                popover: { title: 'Registros Deseados', description: 'Aquí podrá seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
             },
             {
                 element: '#botonera',
-                popover: { title: 'Cambiar de PÃƒÂ¡gina', description: 'Botones para cambiar de pagina.', position: 'top' }
+                popover: { title: 'Cambiar de Página', description: 'Botones para cambiar de pagina.', position: 'top' }
             },
             {
                 element: '#cantidad',
-                popover: { title: 'Cantidad', description: 'AquÃƒÂ­ puedes ver la cantidad de cargos mostrados actualmente.', position: 'top' }
+                popover: { title: 'Cantidad', description: 'Aquí puedes ver la cantidad de cargos mostrados actualmente.', position: 'top' }
             }
         ];
 

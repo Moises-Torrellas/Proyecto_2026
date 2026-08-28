@@ -72,6 +72,17 @@ $(document).ready(function () {
         $("#titulo_modal").text("Registrar Nuevo Torneo");
         $('#nombre').closest('.colum').show();
         $('#ubicacion').closest('.colum').show();
+        
+        let localDate = new Date();
+        localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset());
+        let hoy = localDate.toISOString().split('T')[0];
+        
+        let fpInicio = document.querySelector("#fecha_inicio")._flatpickr;
+        if (fpInicio) { fpInicio.setDate(hoy); } else { $('#fecha_inicio').val(hoy); }
+        
+        let fpFin = document.querySelector("#fecha_fin")._flatpickr;
+        if (fpFin) { fpFin.setDate(hoy); } else { $('#fecha_fin').val(hoy); }
+
         abrirModal();
     });
 
@@ -114,7 +125,19 @@ $(document).ready(function () {
             {
                 element: '#resultadoconsulta .listado_contenedor_grupal:first-child .listado_col_acciones button:nth-of-type(2)',
                 popover: { title: 'Eliminar Torneo', description: 'Si pulsa aquí eliminará este torneo.', position: 'left' }
-            }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de representantes cargados.', position: 'top' }
+            },
         ];
 
         const driver = iniciarTourConPasos(pasos);
@@ -192,8 +215,14 @@ function modificar(datos) {
     // Llenamos el formulario con los datos de la BD ajustado a codigo_torneo
     $('#codigo_torneo').val(datos[0].codigo_torneo);
     $('#nombre').val(datos[0].nombre);
-    $('#fecha_inicio').val(datos[0].fecha_inicio);
-    $('#fecha_fin').val(datos[0].fecha_fin);
+    let fInicio = datos[0].fecha_inicio ? datos[0].fecha_inicio.split(' ')[0] : '';
+    let fFin = datos[0].fecha_fin ? datos[0].fecha_fin.split(' ')[0] : '';
+    
+    let fpInicio = document.querySelector("#fecha_inicio")._flatpickr;
+    if (fpInicio) { fpInicio.setDate(fInicio); } else { $('#fecha_inicio').val(fInicio); }
+    
+    let fpFin = document.querySelector("#fecha_fin")._flatpickr;
+    if (fpFin) { fpFin.setDate(fFin); } else { $('#fecha_fin').val(fFin); }
     $('#ubicacion').val(datos[0].ubicacion);
     $('#estatus').val(datos[0].estatus).trigger('change');
 

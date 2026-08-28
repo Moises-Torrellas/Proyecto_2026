@@ -9,20 +9,25 @@ CREATE INDEX indice_fecha_devolucion ON devoluciones (fecha_devolucion);
 
 -- 2. Vistas (2)
 
-DROP VIEW IF EXISTS ista_resumen_devoluciones;
+DROP VIEW IF EXISTS vista_resumen_devoluciones;
 CREATE VIEW vista_resumen_devoluciones AS
 SELECT 
     d.id_devolucion, 
     DATE_FORMAT(d.fecha_devolucion, '%Y-%m-%d') as fecha_vista,
     d.fecha_devolucion, d.id_asignacion, d.id_estado, d.observacion, 
     ee.nombre as estado_fisico, ee.nivel_estado, at.codigo_atleta, at.p_nombre as atleta_nombre,
-    at.p_apellidos as atleta_apellido, cat.nombre as articulo_nombre,
+    at.p_apellidos as atleta_apellido, 
+    CASE WHEN ia.numero_doc IS NOT NULL AND ia.numero_doc <> '' THEN ia.numero_doc ELSE CONCAT('R-', r.cedula) END as doc_identidad, 
+    cat.nombre as articulo_nombre,
     (SELECT COUNT(*) FROM devoluciones d2 
      INNER JOIN asignaciones a2 ON d2.id_asignacion = a2.id_asignacion 
      WHERE a2.codigo_atleta = at.codigo_atleta) as total_devoluciones_atleta
 FROM devoluciones d
 INNER JOIN asignaciones asig ON d.id_asignacion = asig.id_asignacion
 INNER JOIN atletas at ON asig.codigo_atleta = at.codigo_atleta
+LEFT JOIN identidad_atleta ia ON at.codigo_atleta = ia.codigo_atleta
+LEFT JOIN atleta_representante ar ON at.codigo_atleta = ar.codigo_atleta
+LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
 INNER JOIN estado_fisico ee ON d.id_estado = ee.id_estado
 INNER JOIN articulos_inventario eq ON asig.codigo_articulo = eq.codigo_articulo
 INNER JOIN catalogo cat ON eq.id_catalogo = cat.id_catalogo;
@@ -39,40 +44,58 @@ BEGIN
 END;
 //
 
-CREATE TRIGGER trg_antes_actualizar_moneda
-BEFORE UPDATE ON monedas
-FOR EACH ROW
-BEGIN
-    IF OLD.abreviatura != NEW.abreviatura THEN
-        SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'No se permite modificar la abreviatura de la moneda\';
-    END IF;
-END;
-//
-DELIMITER ;
 
 -- 4. Procesos Almacenados con Transacciones (2)
+DROP PROCEDURE IF EXISTS ProcesarDevolucionSegura;
+
 DELIMITER //
-CREATE PROCEDURE ProcesarDevolucionSegura (
+
+CREATE PROCEDURE ProcesarDevolucionSegura(
     IN p_id_asignacion INT, 
     IN p_id_estado INT,
     IN p_observacion VARCHAR(255)
 )
 BEGIN
+    DECLARE v_estatus INT;
+    
+    -- Manejador de errores para hacer rollback automático si algo falla
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
+        RESIGNAL; -- Reenvía el error a PHP para que lo capture
     END;
 
     START TRANSACTION;
     
-    UPDATE asignaciones SET estatus = 0 WHERE id_asignacion = p_id_asignacion;
+    -- 1. Consultamos el estatus actual bloqueando la fila (FOR UPDATE)
+    SELECT estatus INTO v_estatus 
+    FROM asignaciones 
+    WHERE id_asignacion = p_id_asignacion 
+    FOR UPDATE;
     
-    INSERT INTO devoluciones (id_asignacion, id_estado, fecha_devolucion, observacion) 
-    VALUES (p_id_asignacion, p_id_estado, CURDATE(), p_observacion);
-    
-    COMMIT;
-END;
-//
+    -- 2. Validamos que la asignación siga estando activa (Estatus 1 = En Uso)
+    IF v_estatus = 1 THEN
+        
+        -- Cambiamos el estatus (asumiendo que 2 significa "Devuelto" o inactivo)
+        UPDATE asignaciones SET estatus = 2 WHERE id_asignacion = p_id_asignacion;
+        
+        -- Registramos la devolución
+        INSERT INTO devoluciones (id_asignacion, id_estado, fecha_devolucion, observacion) 
+        VALUES (p_id_asignacion, p_id_estado, CURDATE(), p_observacion);
+        
+        COMMIT;
+        
+    ELSE
+        -- Si el estatus no es 1, abortamos lanzando una alerta que atrapará PHP
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Error de Concurrencia: Esta asignación ya fue devuelta o procesada por otro usuario.';
+    END IF;
+
+END //
+
+DELIMITER ;
+
 
 CREATE PROCEDURE RegistrarPremioSeguro (
     IN p_id_atleta INT,
@@ -97,6 +120,7 @@ DELIMITER ;
 
 
 
+DELIMITER //
 CREATE FUNCTION TotalDevolucionesMes (p_mes INT, p_anio INT) 
 RETURNS INT DETERMINISTIC
 BEGIN

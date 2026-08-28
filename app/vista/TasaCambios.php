@@ -1,4 +1,10 @@
-<?php if (isset($solo_lista) && $solo_lista === true) : ?>
+<?php 
+$formatearFecha = function($fechaStr) {
+    $meses = ['01'=>'Enero','02'=>'Febrero','03'=>'Marzo','04'=>'Abril','05'=>'Mayo','06'=>'Junio','07'=>'Julio','08'=>'Agosto','09'=>'Septiembre','10'=>'Octubre','11'=>'Noviembre','12'=>'Diciembre'];
+    $t = strtotime($fechaStr);
+    return date('d', $t) . ' de ' . strtolower($meses[date('m', $t)]) . ' del ' . date('Y', $t);
+};
+if (isset($solo_lista) && $solo_lista === true) : ?>
     <?php if (empty($registro)) : ?>
         <div class="listado_vacio">
             <p>No se encontraron registros de tasas de cambio</p>
@@ -10,7 +16,7 @@
                     <div class="listado_col_datos">
                         <div class="listado_dato_grupo">
                             <small>Fecha</small>
-                            <span><?= explode(' ', $dato['fecha'])[0] ?></span>
+                            <span><?= $formatearFecha($dato['fecha']) ?></span>
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Moneda</small>
@@ -75,7 +81,7 @@
                                             <div class="listado_col_datos">
                                                 <div class="listado_dato_grupo">
                                                     <small>Fecha</small>
-                                                    <span><?= explode(' ', $dato['fecha'])[0] ?></span>
+                                                    <span><?= $formatearFecha($dato['fecha']) ?></span>
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Moneda</small>

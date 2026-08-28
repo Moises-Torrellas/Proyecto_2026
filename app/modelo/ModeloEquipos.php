@@ -51,7 +51,8 @@ class ModeloEquipos extends Conexion
             
             // Los equipos ya no tienen id_categoria, solo consultamos sus datos básicos
             $sentencia = "SELECT e.codigo_equipo AS id_equipos, e.nombre, 
-                                 (SELECT COUNT(DISTINCT de.codigo_atleta) FROM detalles_equipos de WHERE de.codigo_equipo = e.codigo_equipo) AS cantidad_atletas 
+                                 (SELECT COUNT(DISTINCT de.codigo_atleta) FROM detalles_equipos de WHERE de.codigo_equipo = e.codigo_equipo) AS cantidad_atletas,
+                                 ObtenerTotalPremiosEquipo(e.codigo_equipo) AS total_premios 
                           FROM equipos e 
                           WHERE 1=1";
 
@@ -74,7 +75,7 @@ class ModeloEquipos extends Conexion
     public function ConsultarEquipos(): array
     {
         try {
-            $stmt = $this->conex()->query("SELECT e.codigo_equipo AS id_equipos, e.nombre, (SELECT COUNT(DISTINCT de.codigo_atleta) FROM detalles_equipos de WHERE de.codigo_equipo = e.codigo_equipo) AS cantidad_atletas FROM equipos e");
+            $stmt = $this->conex()->query("SELECT e.codigo_equipo AS id_equipos, e.nombre, (SELECT COUNT(DISTINCT de.codigo_atleta) FROM detalles_equipos de WHERE de.codigo_equipo = e.codigo_equipo) AS cantidad_atletas, ObtenerTotalPremiosEquipo(e.codigo_equipo) AS total_premios FROM equipos e");
             return ['accion' => 'buscar', 'datos' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
         } catch (Exception $e) {
             logs('Equipos', $e->getMessage(), 'Modelo_ConsultarEquipos');
@@ -89,28 +90,17 @@ class ModeloEquipos extends Conexion
             $params = [];
 
             // Se obtiene la categoría y posición de la tabla inscripciones
-            $sentencia = "SELECT a.codigo_atleta AS id_atleta,
-                                 MAX(ia.numero_doc) AS doc_identidad,
-                                 MAX(a.p_nombre) AS nombres,
-                                 MAX(a.p_apellidos) AS apellidos,
-                                 MAX(c.nombre) AS nombre_categoria,
-                                 MAX(p.nombre) AS nombre_posicion
-                          FROM atletas a
-                          LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta
-                          INNER JOIN inscripciones i ON a.codigo_atleta = i.codigo_atleta
-                          INNER JOIN categorias c ON c.codigo_categoria = i.codigo_categoria
-                          INNER JOIN posiciones p ON p.codigo_posicion = i.codigo_posicion
-                          WHERE i.estatus = 1"; // Solo consideramos inscripciones activas
+            $sentencia = "SELECT * FROM vista_atletas_asignacion WHERE 1=1";
 
             if (!empty($filtro['filtro'])) {
                 $p = '%' . trim($filtro['filtro']) . '%';
-                $sentencia .= " AND (ia.numero_doc LIKE :f1 OR a.p_nombre LIKE :f2 OR a.p_apellidos LIKE :f3)";
+                $sentencia .= " AND (doc_identidad LIKE :f1 OR nombres LIKE :f2 OR apellidos LIKE :f3)";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
                 $params[':f3'] = $p;
             }
 
-            $sentencia .= " GROUP BY a.codigo_atleta ORDER BY apellidos ASC, nombres ASC";
+            $sentencia .= " ORDER BY apellidos ASC, nombres ASC";
             
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -133,20 +123,7 @@ class ModeloEquipos extends Conexion
     public function ConsultarAtletasAsignadosEquipo(int $idEquipo): array
     {
         try {
-            $sentencia = "SELECT a.codigo_atleta AS id_atleta,
-                                 MAX(ia.numero_doc) AS doc_identidad,
-                                 MAX(a.p_nombre) AS nombres,
-                                 MAX(a.p_apellidos) AS apellidos,
-                                 MAX(c.nombre) AS nombre_categoria,
-                                 MAX(p.nombre) AS nombre_posicion
-                          FROM detalles_equipos de
-                          INNER JOIN atletas a ON a.codigo_atleta = de.codigo_atleta
-                          LEFT JOIN identidad_atleta ia ON a.codigo_atleta = de.codigo_atleta
-                          INNER JOIN inscripciones i ON a.codigo_atleta = i.codigo_atleta
-                          INNER JOIN categorias c ON c.codigo_categoria = i.codigo_categoria
-                          INNER JOIN posiciones p ON p.codigo_posicion = i.codigo_posicion
-                          WHERE de.codigo_equipo = :idEquipo AND i.estatus = 1
-                          GROUP BY a.codigo_atleta";
+            $sentencia = "SELECT * FROM vista_atletas_equipo WHERE id_equipo = :idEquipo";
 
             $stmt = $this->conex()->prepare($sentencia);
             $stmt->bindValue(':idEquipo', $idEquipo, PDO::PARAM_INT);
@@ -368,8 +345,8 @@ class ModeloEquipos extends Conexion
         if (!empty($datos['id']) && filter_var($datos['id'], FILTER_VALIDATE_INT) === false) {
             throw new Exception('Id inválido.');
         }
-        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]{3,30}$/u', $datos['nombre'])) {
-            throw new Exception('Nombre inválido.');
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\-\s]{3,30}$/u', $datos['nombre'])) {
+            throw new Exception('Nombre inválido. Solo se permiten letras, números, espacios y guiones.');
         }
     }
 }

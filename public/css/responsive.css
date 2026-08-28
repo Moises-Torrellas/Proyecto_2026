@@ -619,3 +619,59 @@
     }
 }
 
+/* ======================================================== */
+/* RESPONSIVE MODAL PERMISOS                                */
+/* ======================================================== */
+@media screen and (max-width: 992px) {
+    .modal_permisos {
+        width: 90% !important;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .modal_permisos {
+        width: 95% !important;
+        height: 90vh;
+    }
+
+    .permisos_tabs {
+        gap: 0;
+    }
+
+    .permisos_tab {
+        padding: 8px 10px;
+        font-size: 0.82rem;
+    }
+
+    .permisos_tab_badge {
+        min-width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
+        margin-left: 4px;
+    }
+
+    .permisos_buscador {
+        font-size: 0.85rem;
+        padding: 8px 12px 8px 34px;
+    }
+
+    #tabla_permisos_container {
+        max-width: 100%;
+        padding: 5px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .permisos_tab {
+        padding: 7px 6px;
+        font-size: 0.78rem;
+    }
+
+    .permisos_tab_badge {
+        min-width: 16px;
+        height: 16px;
+        font-size: 0.65rem;
+        padding: 0 4px;
+    }
+}
+

@@ -120,13 +120,18 @@
                                 $botonesAccion .= '<button class="btn_t cbt_r" onclick="anular(' . $dato['id_cobrar'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
                             }
                         }
+                            $meses_c = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                            $t_emi = strtotime($dato['fecha_emision']);
+                            $emi_fmt = date('d', $t_emi) . ' ' . $meses_c[(int)date('m', $t_emi) - 1] . ' ' . date('Y', $t_emi);
+                            $t_ven = strtotime($dato['fecha_vencimiento']);
+                            $ven_fmt = date('d', $t_ven) . ' ' . $meses_c[(int)date('m', $t_ven) - 1] . ' ' . date('Y', $t_ven);
                             ?>
                             <div class="sub_item_fila <?= $claseFila ?>">
                                 <div class="sub_item_info">
                                     <span class="sub_item_titulo"><?= htmlspecialchars($dato['concepto_nombre']) ?></span>
                                     <div class="sub_item_fechas">
-                                        <span>Emi: <?= explode(' ', $dato['fecha_emision'])[0] ?></span>
-                                        <span>Venc: <?= explode(' ', $dato['fecha_vencimiento'])[0] ?></span>
+                                        <span>Emi: <?= $emi_fmt ?></span>
+                                        <span>Venc: <?= $ven_fmt ?></span>
                                     </div>
                                 </div>
 
@@ -320,13 +325,18 @@
                                             $botonesAccion .= '<button class="btn_t cbt_r" onclick="anular(' . $dato['id_cobrar'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
                                         }
                                     }
+                    $meses_c = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                    $t_emi = strtotime($dato['fecha_emision']);
+                    $emi_fmt = date('d', $t_emi) . ' ' . $meses_c[(int)date('m', $t_emi) - 1] . ' ' . date('Y', $t_emi);
+                    $t_ven = strtotime($dato['fecha_vencimiento']);
+                    $ven_fmt = date('d', $t_ven) . ' ' . $meses_c[(int)date('m', $t_ven) - 1] . ' ' . date('Y', $t_ven);
                     ?>
                     <div class="sub_item_fila <?= $claseFila ?>">
                         <div class="sub_item_info">
                             <span class="sub_item_titulo"><?= htmlspecialchars($dato['concepto_nombre']) ?></span>
                             <div class="sub_item_fechas">
-                                <span>Emi: <?= explode(' ', $dato['fecha_emision'])[0] ?></span>
-                                <span>Venc: <?= explode(' ', $dato['fecha_vencimiento'])[0] ?></span>
+                                <span>Emi: <?= $emi_fmt ?></span>
+                                <span>Venc: <?= $ven_fmt ?></span>
                             </div>
                         </div>
 

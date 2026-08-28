@@ -163,6 +163,12 @@ function incluirData($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            $datosNuevos = json_encode([
+                'nombre' => $_POST['nombre'],
+                'descripcion' => $_POST['descripcion'] ?? '',
+                'clave' => $_POST['clave']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró el Permiso: " . $_POST['nombre'], '', $datosNuevos);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Permiso registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -194,9 +200,24 @@ function modificarData($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'modificar'
         ];
 
+        $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+        $datosPrevios = '';
+        if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
+            $viejo = $respuestaVieja['datos'][0];
+            $datosPrevios = json_encode([
+                'nombre' => $viejo['nombre'],
+                'descripcion' => $viejo['descripcion'] ?? ''
+            ]);
+        }
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            $datosNuevos = json_encode([
+                'nombre' => $_POST['nombre'],
+                'descripcion' => $_POST['descripcion'] ?? ''
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el Permiso: " . $_POST['nombre'], $datosPrevios, $datosNuevos);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Permiso modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -224,11 +245,27 @@ function bloquear($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'bloquear'
         ];
 
+        $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+        $nombrePermiso = $_POST['id'];
+        $estadoAnterior = '';
+        if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
+            $viejo = $respuestaVieja['datos'][0];
+            $nombrePermiso = $viejo['nombre'];
+            $estadoAnterior = ($viejo['bloqueo'] == 1) ? 'Activo' : 'Bloqueado';
+        }
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             $nuevoEstado = ($_POST['bloqueo'] == 1) ? 2 : 1;
+            $nuevoEstadoStr = ($nuevoEstado == 2) ? 'Bloqueado' : 'Activo';
             $mensajeExito = ($nuevoEstado == 2) ? "Permiso bloqueada exitosamente." : "Permiso desbloqueada exitosamente.";
+
+            $datosPrevios = json_encode(['estado' => $estadoAnterior]);
+            $datosNuevos = json_encode(['estado' => $nuevoEstadoStr]);
+            $accionStr = ($nuevoEstado == 2) ? "Bloqueó el Permiso: " : "Desbloqueó el Permiso: ";
+
+            registrarBitacora($bitacoraObj, $id_modulo, $accionStr . $nombrePermiso, $datosPrevios, $datosNuevos);
             $resultado = array('accion' => 'bloquear', 'mensaje' => $mensajeExito);
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {

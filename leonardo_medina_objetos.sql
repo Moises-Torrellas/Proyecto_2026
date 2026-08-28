@@ -8,7 +8,7 @@ CREATE INDEX indice_torneo_participaciones ON participaciones (codigo_torneo);
 CREATE INDEX indice_equipo_participaciones ON participaciones (codigo_equipo);
 
 -- 2. Vistas (4)
-DROP VIEW IF EXISTS ista_atletas_asignacion;
+DROP VIEW IF EXISTS vista_atletas_asignacion;
 CREATE VIEW vista_atletas_asignacion AS
 SELECT a.codigo_atleta AS id_atleta,
        MAX(ia.numero_doc) AS doc_identidad,
@@ -84,11 +84,38 @@ INNER JOIN torneos t ON part.codigo_torneo = t.codigo_torneo;
 
 -- 3. Triggers (2)
 DELIMITER //
-CREATE TRIGGER trg_despues_insertar_participacion
-AFTER INSERT ON participaciones
+CREATE TRIGGER trg_antes_insertar_palmares_individual
+BEFORE INSERT ON palmares_individual
 FOR EACH ROW
 BEGIN
-    UPDATE equipos SET nombre = UPPER(nombre) WHERE codigo_equipo = NEW.codigo_equipo;
+    DECLARE v_estatus TINYINT;
+    
+    SELECT t.estatus INTO v_estatus
+    FROM torneos t
+    INNER JOIN participaciones p ON t.codigo_torneo = p.codigo_torneo
+    INNER JOIN detalles_participacion dp ON p.codigo_participacion = dp.codigo_participacion
+    WHERE dp.codigo_dtll_prtc = NEW.codigo_dtll_prtc;
+    
+    IF v_estatus != 3 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: No se puede registrar palmarés en un torneo que no ha finalizado.';
+    END IF;
+END;
+//
+
+CREATE TRIGGER trg_antes_insertar_palmares_grupal
+BEFORE INSERT ON palmares_grupal
+FOR EACH ROW
+BEGIN
+    DECLARE v_estatus TINYINT;
+    
+    SELECT t.estatus INTO v_estatus
+    FROM torneos t
+    INNER JOIN participaciones p ON t.codigo_torneo = p.codigo_torneo
+    WHERE p.codigo_participacion = NEW.codigo_participacion;
+    
+    IF v_estatus != 3 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: No se puede registrar palmarés en un torneo que no ha finalizado.';
+    END IF;
 END;
 //
 

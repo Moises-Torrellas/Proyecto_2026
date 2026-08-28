@@ -52,11 +52,9 @@ $(document).ready(function () {
     Validacion("telefono", /^[0-9\b-]*$/, /^[0-9]{4}-[0-9]{7}$/, "Formato inválido (XXXX-XXXXXXX)", "proceso");
     Validacion("direccion", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.\-\/]*$/, /^.{5,150}$/, "Dirección muy corta o inválida", "proceso");
     Validacion("municipio", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^.{3,50}$/, "Mínimo 3 caracteres", "proceso");
-    Validacion("correo", /^[a-zA-Z0-9._%+-@]*$/, /^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})?$/, "Correo inválido", "proceso");
+    Validacion("correo", /^[a-zA-Z0-9@._\-]*$/, /^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, "Ejemplo: usuario@dominio.com", "proceso");
     Validacion("instagram", /^[@a-zA-Z0-9._]*$/, /^[@a-zA-Z0-9._]{0,30}$/, "Usuario inválido", "proceso");
-    Validacion("talla_pantalon", /^[0-9a-zA-Z\s]*$/, /^.{1,10}$/, "Talla inválida", "proceso");
-    Validacion("talla_franela", /^[0-9a-zA-Z\s]*$/, /^.{1,10}$/, "Talla inválida", "proceso");
-    Validacion("talla_calzado", /^[0-9a-zA-Z\s]*$/, /^.{1,10}$/, "Talla inválida", "proceso");
+    Validacion("talla_calzado", /^[0-9]*$/, /^(1[0-9]|[2-4][0-9]|50)$/, "Solo números del 10 al 50", "proceso");
     Validacion("alergias_detalle", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, /^.{0,255}$/, "Detalle inválido", "proceso");
     Validacion("edad", /^[0-9\b]*$/, /^[0-9]{0,10}$/, "Solo numeros", "proceso");
 
@@ -392,6 +390,43 @@ function validarEnvio(proceso) {
             return false;
         }
     }
+
+    if ($('#lugar_nacimiento').val() != "" && $('#lugar_nacimiento').val() != null) {
+        if (validarkeyup(/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, $('#lugar_nacimiento'), $("#lugar_nacimiento_spam"), "Mínimo 3 caracteres", true) || validarkeyup(/^.{3,100}$/, $('#lugar_nacimiento'), $("#lugar_nacimiento_spam"), "Mínimo 3 caracteres", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un lugar de nacimiento válido");
+            return false;
+        }
+    }
+
+    if ($('#municipio').val() != "" && $('#municipio').val() != null) {
+        if (validarkeyup(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, $('#municipio'), $("#municipio_spam"), "Mínimo 3 caracteres", true) || validarkeyup(/^.{3,50}$/, $('#municipio'), $("#municipio_spam"), "Mínimo 3 caracteres", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un municipio válido");
+            return false;
+        }
+    }
+
+    if ($('#instagram').val() != "" && $('#instagram').val() != null) {
+        if (validarkeyup(/^[@a-zA-Z0-9._]*$/, $('#instagram'), $("#instagram_spam"), "Usuario inválido", true) || validarkeyup(/^[@a-zA-Z0-9._]{0,30}$/, $('#instagram'), $("#instagram_spam"), "Usuario inválido", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un instagram válido");
+            return false;
+        }
+    }
+
+
+    if ($('#correo').val() != "" && $('#correo').val() != null) {
+        if (validarkeyup(/^[a-zA-Z0-9@._\-]*$/, $('#correo'), $("#correo_spam"), "Ejemplo: usuario@dominio.com", true) || validarkeyup(/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, $('#correo'), $("#correo_spam"), "Ejemplo: usuario@dominio.com", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un correo válido");
+            return false;
+        }
+    }
+
+    if ($('#talla_calzado').val() != "" && $('#talla_calzado').val() != null) {
+        if (validarkeyup(/^(1[0-9]|[2-4][0-9]|50)$/, $('#talla_calzado'), $("#talla_calzado_spam"), "Solo números del 10 al 50", true)) {
+            muestraMensaje("error", 2000, "Error", "La talla de calzado debe ser un número del 10 al 50");
+            return false;
+        }
+    }
+
     if (proceso == "incluir") {
         if ($('#foto').val() == "" || $('#foto')[0].files.length === 0) {
             muestraMensaje("error", 2000, "Error", "Debe seleccionar una foto para el atleta");

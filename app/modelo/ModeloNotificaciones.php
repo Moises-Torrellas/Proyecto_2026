@@ -71,7 +71,7 @@ class ModeloNotificaciones extends Conexion
         $conex = $this->conexSG();
         $sql = "SELECT COUNT(*) FROM notificaciones 
                 WHERE DATE(creado_en) = CURDATE() 
-                AND tipo IN (1, 2, 3)";
+                AND tipo IN (1, 2, 3, 4)";
         $stmt = $conex->query($sql);
         if (!$stmt) {
             return false;

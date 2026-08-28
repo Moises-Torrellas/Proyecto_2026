@@ -235,8 +235,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
                 unset($dn['codigo_grupal']);
                 $datos_nuevos_json = json_encode($dn);
             }
+            $descLog = ($tipo_palmares === 'individual') 
+                ? "para: {$dn['nombres']} {$dn['apellidos']} ({$dn['cedula']})" 
+                : "para: {$dn['nombre_equipo']}";
 
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró un palmarés {$tipo_palmares} {$desc}", '', $datos_nuevos_json);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró un palmarés {$tipo_palmares} {$descLog}", '', $datos_nuevos_json);
             echo json_encode(['accion' => 'incluir', 'mensaje' => 'Palmarés registrado exitosamente.', 'tipo_palmares' => $tipo_palmares]);
             return;
         }
@@ -322,8 +325,11 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
                 unset($dn['codigo_grupal']);
                 $datos_nuevos_json = json_encode($dn);
             }
+            $descLog = ($tipo_palmares === 'individual') 
+                ? "para: {$dn['nombres']} {$dn['apellidos']} ({$dn['cedula']})" 
+                : "para: {$dn['nombre_equipo']}";
 
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó un palmarés {$tipo_palmares} {$desc}", $datos_previos_json, $datos_nuevos_json);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó un palmarés {$tipo_palmares} {$descLog}", $datos_previos_json, $datos_nuevos_json);
             echo json_encode(['accion' => 'modificar', 'mensaje' => 'Palmarés modificado exitosamente.', 'tipo_palmares' => $tipo_palmares]);
             return;
         }
@@ -376,7 +382,11 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->ProcesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el palmarés {$tipo_palmares} con ID: {$_POST['id']}", $datos_previos_json, '');
+            $descLog = ($tipo_palmares === 'individual') 
+                ? "para: {$dp['nombres']} {$dp['apellidos']} ({$dp['cedula']})" 
+                : "para: {$dp['nombre_equipo']}";
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó un palmarés {$tipo_palmares} {$descLog}", $datos_previos_json, '');
             echo json_encode(['accion' => 'eliminar', 'mensaje' => 'Palmarés eliminado exitosamente.', 'tipo_palmares' => $tipo_palmares]);
             return;
         }

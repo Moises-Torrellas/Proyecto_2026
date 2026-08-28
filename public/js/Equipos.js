@@ -16,7 +16,7 @@ $(document).ready(function () {
     inicializarPaginador();
 
     // Configuración inicial de componentes UI
-    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
+    Validacion("nombre", /^[A-Za-z0-9\-\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z0-9\-\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras, números, guiones y espacios (3-30 caracteres)", "proceso");
 
     $('#categoria').select2({
         placeholder: "Selecciona una opción",
@@ -274,7 +274,7 @@ function validarEnvio(proceso) {
         }
         return true;
     }
-    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
+    if (validarkeyup(/^[A-Za-z0-9\-\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras, números, guiones y espacios (3-30 caracteres)", true)) {
         muestraMensaje("error", 2000, "Error de Validación", "Tiene que ingresar un nombre válido.");
         return false;
     }

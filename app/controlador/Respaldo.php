@@ -1,6 +1,7 @@
 <?php
 
 use App\modelo\ModeloRespaldo;
+use App\modelo\ModeloBitacora;
 
 require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_RESPALDO_; 
@@ -13,12 +14,21 @@ if (!class_exists($nombreClaseModelo)) {
 }
 
 $objModelo = new ModeloRespaldo();
+$bitacoraObj = new ModeloBitacora();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudRespaldo($objModelo, $id_modulo, $bitacora ?? null, $permisos);
+    manejarSolicitudRespaldo($objModelo, $id_modulo, $bitacoraObj, $permisos);
 } else {
-    registrarBitacora($bitacora ?? null , $id_modulo, 'Ingreso al Modulo');
-    cargarVista($pagina);
+    registrarBitacora($bitacoraObj, $id_modulo, 'Ingreso al Modulo');
+    $respuesta = $objModelo->ProcesarDatos(['accion' => 'consultar']);
+    
+    $registro = [];
+    if (!isset($respuesta['accion']) || $respuesta['accion'] !== 'error') {
+        $registro = $respuesta['datos'] ?? [];
+    }
+    
+    $variables = ['registro' => $registro, 'permisos' => $permisos];
+    cargarVista($pagina, $variables);
 }
 
 function manejarSolicitudRespaldo($obj, $id_modulo, $bitacoraObj, array $permisos): void
@@ -56,11 +66,21 @@ function manejarSolicitudRespaldo($obj, $id_modulo, $bitacoraObj, array $permiso
 }
 
 function consultarBackups($obj, $permisos): void {
-    $respuesta = $obj->ProcesarDatos(['accion' => 'consultar']);
-    if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
-        $respuesta['mensaje'] = 'Error al leer el directorio de respaldos.';
+    try {
+        $filtro['filtro'] = $_POST['filtro'] ?? '';
+        $respuesta = $obj->ProcesarDatos(['accion' => 'consultar', 'filtro' => $filtro['filtro']]);
+        
+        if (isset($respuesta['accion']) && $respuesta['accion'] == 'error') {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'Error al leer el directorio de respaldos.']);
+            return;
+        }
+
+        $registro = $respuesta['datos'] ?? [];
+        $solo_lista = true;
+        include(__DIR__ . '/../vista/Respaldo.php');
+    } catch (Exception $e) {
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
-    echo json_encode($respuesta);
 }
 
 function generarBackup($obj, $id_modulo, $bitacoraObj): void {

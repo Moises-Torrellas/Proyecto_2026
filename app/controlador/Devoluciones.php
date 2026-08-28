@@ -82,7 +82,8 @@ function manejarSolicitudDevolucion($obj, $id_modulo, $bitacoraObj, array $permi
 
 function consultar($obj, $permisos): void {
     try {
-        $respuesta = $obj->ConsultarDevoluciones();
+        $filtros = ['filtro' => $_POST['filtro'] ?? ''];
+        $respuesta = $obj->ConsultarDevoluciones($filtros);
         $registro = $respuesta['datos'] ?? [];
         
         $solo_lista = true;
@@ -138,10 +139,28 @@ function procesarFormulario($obj, $accion, $id_modulo, $bitacoraObj): void {
             throw new Exception("Faltan campos obligatorios por completar.");
         }
 
+        $datos_previos = '';
+        if ($accion === 'modificar') {
+            $consultar_datos_previos = $obj->Buscar($datos['id_devolucion']);
+            $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+        }
+
         $resultado = $obj->ProcesarDatos($datos);
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, ($accion === 'incluir' ? "Registró" : "Modificó") . " devolución ID Asig: " . $datos['id_asignacion']);
+            $id_log = ($accion === 'incluir') ? $resultado['id_devolucion'] : $datos['id_devolucion'];
+            $consultar_datos_nuevos = $obj->Buscar($id_log);
+            $nueva_fila = $consultar_datos_nuevos['datos'][0] ?? [];
+            $datos_nuevos = json_encode($nueva_fila);
+            
+            $articulo = $nueva_fila['articulo'] ?? 'Desconocido';
+            $atleta = $nueva_fila['atleta'] ?? 'Desconocido';
+            $cedula = $nueva_fila['doc_identidad'] ?? 'S/N';
+            
+            $texto_log = ($accion === 'incluir' ? "Registró devolución de: " : "Modificó devolución de: ") . "$articulo - Atleta: $atleta (CI: $cedula)";
+            
+            // A petición del usuario: No registrar datos_previos ni datos_nuevos
+            registrarBitacora($bitacoraObj, $id_modulo, $texto_log, "", "");
             echo json_encode(['accion' => 'exito', 'mensaje' => $resultado['mensaje'] ?? 'Operación realizada correctamente.']);
         } else {
             throw new Exception($resultado['mensaje'] ?? 'Error desconocido al procesar la solicitud.');
@@ -163,10 +182,19 @@ function anular($obj, $id_modulo, $bitacoraObj): void {
             throw new Exception("ID de devolución no válido.");
         }
         
+        $consultar_datos_previos = $obj->Buscar($datos['id_devolucion']);
+        $fila_previa = $consultar_datos_previos['datos'][0] ?? [];
+        $datos_previos = json_encode($fila_previa);
+
         $resultado = $obj->ProcesarDatos($datos);
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Anuló devolución ID: " . $datos['id_devolucion']);
+            $articulo = $fila_previa['articulo'] ?? 'Desconocido';
+            $atleta = $fila_previa['atleta'] ?? 'Desconocido';
+            $cedula = $fila_previa['doc_identidad'] ?? 'S/N';
+            $texto_log = "Anuló devolución de: $articulo - Atleta: $atleta (CI: $cedula)";
+            
+            registrarBitacora($bitacoraObj, $id_modulo, $texto_log, $datos_previos, '');
             echo json_encode(['accion' => 'exito', 'mensaje' => $resultado['mensaje'] ?? 'Anulación exitosa.']);
         } else {
             throw new Exception($resultado['mensaje'] ?? 'No se pudo anular el registro.');
@@ -183,6 +211,7 @@ function generarReporte($obj, $id_modulo, $bitacoraObj): void {
             'id_asignacion' => !empty($_POST['id_asignacion']) ? filter_var($_POST['id_asignacion'], FILTER_SANITIZE_NUMBER_INT) : null,
             'id_estado' => !empty($_POST['id_estado']) ? filter_var($_POST['id_estado'], FILTER_SANITIZE_NUMBER_INT) : null,
             'fecha_devolucion' => !empty($_POST['fecha_devolucion']) ? filter_var($_POST['fecha_devolucion'], FILTER_SANITIZE_SPECIAL_CHARS) : null,
+            'filtro' => filter_var($_POST['filtro'] ?? '', FILTER_SANITIZE_SPECIAL_CHARS)
         ];
 
         $respuesta = $obj->ProcesarDatos($datosFiltro);
@@ -192,11 +221,17 @@ function generarReporte($obj, $id_modulo, $bitacoraObj): void {
             throw new Exception('No hay registros con los filtros seleccionados.');
         }
         
-        $objG = new \App\servicios\GenerarReporte();
-        $pdf = $objG->generarPDF('R_Devoluciones', $datos, 'Devoluciones');
+        $formato = filter_input(INPUT_POST, 'formato', FILTER_SANITIZE_SPECIAL_CHARS) ?? 'pdf';
+        
+        if ($formato === 'excel') {
+            $pdf = \App\servicios\GenerarReporte::generarExcel('R_Devoluciones', $datos, 'Devoluciones');
+        } else {
+            $objG = new \App\servicios\GenerarReporte();
+            $pdf = $objG->generarPDF('R_Devoluciones', $datos, 'Devoluciones');
+        }
         
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte filtrado de devoluciones.");
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte filtrado de devoluciones en formato " . strtoupper($formato));
             echo json_encode($pdf);
         } else {
             throw new Exception("Error al generar el documento PDF.");

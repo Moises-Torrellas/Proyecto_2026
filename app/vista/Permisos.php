@@ -79,11 +79,11 @@
 
                         $botonesAccion = '';
                         if (!empty($permisos['modificar_permisos'])) {
-                            $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_permiso'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
+                            $botonesAccion .= '<button id="cbt_v" class="btn_t cbt_v" onclick="buscar(' . $dato['id_permiso'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                         }
                         if (!empty($permisos['bloquear_permisos'])) {
                             // Se asume que el cambio de estatus a inactivo funge como eliminar
-                            $botonesAccion .= '<button class="btn_t ' . $color . '" onclick="bloquear(' . $dato['id_permiso'] . ','.$dato['estatus_permiso'].')" data-tippy-content="Bloquear"><i class="fi ' . $icon . '"></i></button>';
+                            $botonesAccion .= '<button id="cbt_r" class="btn_t ' . $color . '" onclick="bloquear(' . $dato['id_permiso'] . ','.$dato['estatus_permiso'].')" data-tippy-content="Bloquear"><i class="fi ' . $icon . '"></i></button>';
                         }
 
                         // Lógica de estatus individual para el permiso

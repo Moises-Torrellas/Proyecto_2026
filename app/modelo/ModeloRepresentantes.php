@@ -32,23 +32,29 @@ class ModeloRepresentantes extends Conexion
         if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
             throw new Exception('Id inválido.');
         }
-        if (!empty($datos['cedula']) && !preg_match('/^[0-9]{1,8}$/', $datos['cedula'])) {
+        if (!empty($datos['cedula']) && !preg_match('/^[0-9]{7,8}$/', $datos['cedula'])) {
             throw new Exception('Cédula inválida.');
         }
-        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', $datos['nombre'])) {
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/', $datos['nombre'])) {
             throw new Exception('Nombre inválido.');
         }
-        if (!empty($datos['apellido']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', $datos['apellido'])) {
+        if (!empty($datos['apellido']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/', $datos['apellido'])) {
             throw new Exception('Apellido inválido.');
         }
         if (!empty($datos['telefono']) && !preg_match('/^[0-9]{4}[-]{1}[0-9]{7}$/', $datos['telefono'])) {
             throw new Exception('Teléfono inválido.');
         }
-        if (!empty($datos['direccion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', $datos['direccion'])) {
+        if (!empty($datos['direccion']) && !preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-\/]{5,150}$/', $datos['direccion'])) {
             throw new Exception('Dirección inválida.');
         }
         if (!empty($datos['nacionalidad']) && !preg_match('/^[VEP]$/', $datos['nacionalidad'])) {
             throw new Exception('Nacionalidad inválida. Solo se permite V, E o P.');
+        }
+        if (!empty($datos['correo']) && !preg_match('/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i', $datos['correo'])) {
+            throw new Exception('Correo inválido.');
+        }
+        if (!empty($datos['instagram']) && !preg_match('/^[@a-zA-Z0-9._]{0,30}$/', $datos['instagram'])) {
+            throw new Exception('Instagram inválido.');
         }
     }
 
@@ -137,6 +143,25 @@ class ModeloRepresentantes extends Conexion
         }
     }
 
+    private function verificarEdadAtleta(\PDO $conex): void
+    {
+        if (empty($this->cedula)) return;
+
+        $stmt = $conex->prepare("SELECT fecha_nac FROM vista_atletas WHERE doc_identidad = :cedula LIMIT 1");
+        $stmt->bindParam(':cedula', $this->cedula);
+        $stmt->execute();
+        $atleta = $stmt->fetch();
+
+        if ($atleta && !empty($atleta['fecha_nac'])) {
+            $anio_nac = (int)date('Y', strtotime($atleta['fecha_nac']));
+            $anio_act = (int)date('Y');
+            $edad_cal = $anio_act - $anio_nac;
+            if ($edad_cal < 18) {
+                throw new Exception('UNDER_AGE_ATHLETE');
+            }
+        }
+    }
+
     private function Incluir(): array
     {
         $conex=null;
@@ -160,6 +185,8 @@ class ModeloRepresentantes extends Conexion
             if ($this->verificarExistencia('telefono', $this->telefono, 'representantes', NULL, bloquear: true)) {
                 throw new Exception(DUPLICATE_PHONE);
             }
+
+            $this->verificarEdadAtleta($conex);
 
             $sentencia = "INSERT INTO representantes (`cedula`, `tipo_doc`, `nombre`, `apellido`, `telefono`, `direccion`, `correo`, `instagram`) VALUES (:cedula, :nacionalidad,:nombre, :apellido,:telefono, :direccion, :correo, :instagram)";
             $stmt = $conex->prepare($sentencia);
@@ -214,8 +241,12 @@ class ModeloRepresentantes extends Conexion
                     throw new Exception(DUPLICATE_PHONE);
                 }
             }
+
+            $this->verificarEdadAtleta($conex);
+
             $sentencia = "UPDATE representantes SET 
             cedula = :cedula, 
+
             tipo_doc = :nacionalidad, 
             nombre = :nombre, 
             apellido = :apellido, 

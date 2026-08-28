@@ -781,6 +781,38 @@ class ModeloAtletas extends Conexion
             throw new Exception('Estatura inválida.');
         }
 
+        if (!empty($datos['lugar_nacimiento']) && !preg_match('/^.{3,100}$/', $datos['lugar_nacimiento'])) {
+            throw new Exception('Lugar de nacimiento inválido.');
+        }
+        if (!empty($datos['correo']) && !preg_match('/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i', $datos['correo'])) {
+            throw new Exception('Correo inválido.');
+        }
+        if (!empty($datos['instagram']) && !preg_match('/^[@a-zA-Z0-9._]{0,30}$/', $datos['instagram'])) {
+            throw new Exception('Instagram inválido.');
+        }
+        if (!empty($datos['municipio']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]{3,50}$/', $datos['municipio'])) {
+            throw new Exception('Municipio inválido.');
+        }
+        if (!empty($datos['talla_pantalon']) && !preg_match('/^(XS|S|M|L|XL|XXL)$/', $datos['talla_pantalon'])) {
+            throw new Exception('Talla de pantalón inválida.');
+        }
+        if (!empty($datos['talla_franela']) && !preg_match('/^(XS|S|M|L|XL|XXL)$/', $datos['talla_franela'])) {
+            throw new Exception('Talla de franela inválida.');
+        }
+        if (!empty($datos['talla_calzado']) && !preg_match('/^(1[0-9]|[2-4][0-9]|50)$/', $datos['talla_calzado'])) {
+            throw new Exception('Talla de calzado inválida. Solo números del 10 al 50.');
+        }
+        if (!empty($datos['tipo_sangre']) && !preg_match('/^(A\+|A\-|B\+|B\-|AB\+|AB\-|O\+|O\-)$/', $datos['tipo_sangre'])) {
+            throw new Exception('Tipo de sangre inválido.');
+        }
+        if (isset($datos['es_alergico']) && !preg_match('/^[0-1]$/', $datos['es_alergico'])) {
+            throw new Exception('Dato es_alergico inválido.');
+        }
+        if (!empty($datos['alergias_detalle']) && !preg_match('/^.{0,255}$/', $datos['alergias_detalle'])) {
+            throw new Exception('Detalle de alergias demasiado largo.');
+        }
+
+
         if ($accion === 'incluir' || $accion === 'modificar' || $accion === 'reinscribir') {
             if (!empty($datos['fecha_nac'])) {
                 $fecha_nac = $datos['fecha_nac'];

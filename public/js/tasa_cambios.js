@@ -83,7 +83,7 @@ $(document).ready(function () {
             },
             {
                 element: '#actualizar_btn',
-                popover: { title: 'Actualizar Monto Manual', description: 'Si pulsa aquí se abrirá un modal para ingresar manualmente la tasa de cambio.', position: 'bottom' }
+                popover: { title: 'Actualizar Monto Manual', description: 'Si pulsa aquí se abrirá un modal para ingresar manualmente la tasa de cambio.', position: 'left' }
             },
             {
                 element: '#resultadoconsulta',

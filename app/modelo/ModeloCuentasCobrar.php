@@ -189,7 +189,34 @@ class ModeloCuentasCobrar extends Conexion
             }
 
             $conex->commit();
-            return array('accion' => 'exito');
+            
+            // Construir una descripción más amigable para la bitácora
+            $stmtConcepto = $conex->prepare("SELECT nombre FROM conceptos WHERE codigo_concepto = :concepto LIMIT 1");
+            $stmtConcepto->bindParam(':concepto', $this->codigo_concepto);
+            $stmtConcepto->execute();
+            $nombreConcepto = $stmtConcepto->fetchColumn();
+            
+            $desc_atletas = count($this->codigo_atleta) . " atleta(s)";
+            if (count($this->codigo_atleta) === 1) {
+                $stmtAtleta = $conex->prepare("SELECT p_nombre, p_apellidos FROM atletas WHERE codigo_atleta = :atleta LIMIT 1");
+                $stmtAtleta->bindParam(':atleta', $this->codigo_atleta[0]);
+                $stmtAtleta->execute();
+                $aInfo = $stmtAtleta->fetch(PDO::FETCH_ASSOC);
+                if ($aInfo) {
+                    $desc_atletas = $aInfo['p_nombre'] . " " . $aInfo['p_apellidos'];
+                }
+            }
+            
+            $desc_bitacora = "Generó el Cargo: {$nombreConcepto} De {$desc_atletas} para la fecha {$this->fecha_emision}";
+            
+            $datos_nuevos = [
+                'id_concepto' => $this->codigo_concepto,
+                'id_atleta' => $this->codigo_atleta,
+                'monto_total' => $this->monto_total,
+                'fecha_emision' => $this->fecha_emision
+            ];
+
+            return array('accion' => 'exito', 'desc_bitacora' => $desc_bitacora, 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();
@@ -211,6 +238,8 @@ class ModeloCuentasCobrar extends Conexion
                 throw new Exception(INVALID_ID);
             }
 
+            $b_previo = $this->Buscar($this->codigo_cargo);
+
             $sentencia = "UPDATE cargos SET 
                           codigo_concepto = :codigo_concepto, 
                           codigo_atleta = :codigo_atleta, 
@@ -231,7 +260,26 @@ class ModeloCuentasCobrar extends Conexion
             $stmt->execute();
 
             $conex->commit();
-            return array('accion' => 'exito');
+            
+            // Obtener descripción para bitácora
+            $b_nuevo = $this->Buscar($this->codigo_cargo);
+            $desc_bitacora = "Modificó el Cargo ID " . $this->codigo_cargo;
+            if (isset($b_nuevo['datos'][0])) {
+                $fila = $b_nuevo['datos'][0];
+                $desc_bitacora = "Modificó el Cargo: {$fila['concepto_nombre']} De {$fila['atleta_nombre']} {$fila['atleta_apellido']} y la fecha {$fila['fecha_emision']}";
+            }
+
+            // Limpiar datos para la bitácora
+            $previos_clean = [];
+            foreach (($b_previo['datos'][0] ?? []) as $k => $v) {
+                if (!is_numeric($k) && $k !== 'id_cobrar') $previos_clean[$k] = $v;
+            }
+            $nuevos_clean = [];
+            foreach (($b_nuevo['datos'][0] ?? []) as $k => $v) {
+                if (!is_numeric($k) && $k !== 'id_cobrar') $nuevos_clean[$k] = $v;
+            }
+
+            return array('accion' => 'exito', 'desc_bitacora' => $desc_bitacora, 'datos_previos' => json_encode($previos_clean), 'datos_nuevos' => json_encode($nuevos_clean));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();
@@ -277,6 +325,8 @@ class ModeloCuentasCobrar extends Conexion
                 throw new Exception(INVALID_ID);
             }
 
+            $b_previo = $this->Buscar($this->codigo_cargo);
+
             if ($this->verificarExistencia('id', $this->codigo_cargo, 'detalles_pagos', NULL, bloquear: true)) {
                 throw new Exception(ASSOCIATES);
             }
@@ -287,7 +337,20 @@ class ModeloCuentasCobrar extends Conexion
             $stmt->execute();
 
             $conex->commit();
-            return array('accion' => 'exito');
+            
+            $desc_bitacora = "Anuló el Cargo ID " . $this->codigo_cargo;
+            if (isset($b_previo['datos'][0])) {
+                $fila = $b_previo['datos'][0];
+                $desc_bitacora = "Anuló el Cargo: {$fila['concepto_nombre']} De {$fila['atleta_nombre']} {$fila['atleta_apellido']} y la fecha {$fila['fecha_emision']}";
+            }
+
+            // Limpiar datos para la bitácora
+            $previos_clean = [];
+            foreach (($b_previo['datos'][0] ?? []) as $k => $v) {
+                if (!is_numeric($k) && $k !== 'id_cobrar') $previos_clean[$k] = $v;
+            }
+
+            return array('accion' => 'exito', 'desc_bitacora' => $desc_bitacora, 'datos_previos' => json_encode($previos_clean));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();

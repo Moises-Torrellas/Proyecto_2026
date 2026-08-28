@@ -55,7 +55,7 @@
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>PARTICIPACIÓN</small>
-                                <span><?= $totalParticipaciones ?> Torneo(s)</span>
+                                <span><?= $dato['total_torneos_jugados'] ?? '0' ?> Torneo(s)</span>
                             </div>
                         </div>
 
@@ -213,7 +213,7 @@
                     </div>
                     <div class="listado_dato_grupo">
                         <small>PARTICIPACIÓN</small>
-                        <span><?= $totalParticipaciones ?> Torneo(s)</span>
+                        <span><?= $dato['total_torneos_jugados'] ?? '0' ?> Torneo(s)</span>
                     </div>
                 </div>
 
@@ -245,7 +245,7 @@
                                         $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_estadisticas'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                                     }
                                     if (!empty($permisos['eliminar_estadistica'])) {
-                                        $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['id_estadisticas'] . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-cross-circle"></i></button>';
+                                        $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['id_estadisticas'] . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>';
                                     }
                     ?>
                     <div class="sub_item_fila_estadistica">

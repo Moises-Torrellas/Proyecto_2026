@@ -110,14 +110,16 @@ class ModeloReportes extends Conexion
             }
 
             // Filtros de fechas
-            if (!empty($filtros['fecha_desde'])) {
+            $fechas = $this->validateDateRange($filtros['fecha_desde'] ?? '', $filtros['fecha_hasta'] ?? '');
+
+            if ($fechas['desde']) {
                 $sentencia .= " AND c.fecha_emision >= :fecha_desde";
-                $params[':fecha_desde'] = $filtros['fecha_desde'];
+                $params[':fecha_desde'] = $fechas['desde'];
             }
 
-            if (!empty($filtros['fecha_hasta'])) {
+            if ($fechas['hasta']) {
                 $sentencia .= " AND c.fecha_emision <= :fecha_hasta";
-                $params[':fecha_hasta'] = $filtros['fecha_hasta'];
+                $params[':fecha_hasta'] = $fechas['hasta'];
             }
 
             $sentencia .= " GROUP BY con.codigo_concepto, con.nombre, m.abreviatura";
@@ -214,13 +216,15 @@ class ModeloReportes extends Conexion
             }
 
             // Filtros por Rango de Fechas (fecha_asignacion)
-            if (!empty($filtros['fecha_desde'])) {
+            $fechas = $this->validateDateRange($filtros['fecha_desde'] ?? '', $filtros['fecha_hasta'] ?? '');
+
+            if ($fechas['desde']) {
                 $sentencia .= " AND a.fecha_asignacion >= :fecha_desde";
-                $params[':fecha_desde'] = $filtros['fecha_desde'];
+                $params[':fecha_desde'] = $fechas['desde'];
             }
-            if (!empty($filtros['fecha_hasta'])) {
+            if ($fechas['hasta']) {
                 $sentencia .= " AND a.fecha_asignacion <= :fecha_hasta";
-                $params[':fecha_hasta'] = $filtros['fecha_hasta'];
+                $params[':fecha_hasta'] = $fechas['hasta'];
             }
 
             // Agrupamos por el ID real del catálogo
@@ -315,4 +319,44 @@ class ModeloReportes extends Conexion
         return $stmt->fetchAll();
     }
     
+    private function parseAndValidateDate($dateString)
+    {
+        if (empty($dateString)) return null;
+        
+        $parts = explode('/', $dateString);
+        if (count($parts) === 3) {
+            $formattedDate = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+        } else {
+            // Assume it might already be Y-m-d
+            $formattedDate = $dateString;
+        }
+
+        $dateObj = new \DateTime($formattedDate);
+        $minDate = new \DateTime('2022-01-01');
+        $today = new \DateTime();
+        $today->setTime(0,0,0);
+
+        if ($dateObj < $minDate) {
+            throw new Exception("No se permiten fechas menores al año 2022.");
+        }
+        if ($dateObj > $today) {
+            throw new Exception("No se pueden ingresar fechas futuras.");
+        }
+
+        return $formattedDate;
+    }
+
+    private function validateDateRange($desdeStr, $hastaStr)
+    {
+        $desde = $this->parseAndValidateDate($desdeStr);
+        $hasta = $this->parseAndValidateDate($hastaStr);
+
+        if ($desde && $hasta) {
+            if (new \DateTime($desde) > new \DateTime($hasta)) {
+                throw new Exception("La fecha de inicio no puede ser mayor a la fecha de fin.");
+            }
+        }
+
+        return ['desde' => $desde, 'hasta' => $hasta];
+    }
 }

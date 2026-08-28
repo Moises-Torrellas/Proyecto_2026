@@ -7,7 +7,7 @@ use Dompdf\Options;
 
 class GenerarReporte
 {
-    public static function generarPDF(string $nombreVista, array $datos, string $modulo)
+    public static function generarPDF(string $nombreVista, array $datos, string $modulo, array $parametrosExtra = [], string $orientacion = 'portrait')
     {
         $modulo = preg_replace('/[^a-zA-Z0-9]/', '', $modulo);
         try {
@@ -28,11 +28,14 @@ class GenerarReporte
             $ruta_logo_footer =  __DIR__ . '/../../public/img/logo_2.png';
             $logo = file_exists($ruta_logo) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ruta_logo)) : '';
             $logo_footer = file_exists($ruta_logo_footer) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ruta_logo_footer)) : '';
+            
+            extract($parametrosExtra); // Extrae titulo, filtros, etc.
+            
             include __DIR__ . "/../vista/reportes/{$nombreVista}.php";
             $html = ob_get_clean();
 
             $dompdf->loadHtml($html);
-            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->setPaper('A4', $orientacion);
             $dompdf->render();
 
             // 1. Definimos la estructura: public/docs/reportes/{modulo}
@@ -56,7 +59,7 @@ class GenerarReporte
         }
     }
 
-    public static function generarExcel(string $nombreVista, array $datos, string $modulo)
+    public static function generarExcel(string $nombreVista, array $datos, string $modulo, array $parametrosExtra = [])
     {
         $moduloOriginal = $modulo;
         $modulo = preg_replace('/[^a-zA-Z0-9]/', '', $modulo);
@@ -73,7 +76,7 @@ class GenerarReporte
             $fecha_reporte = $formateador->format(new \DateTime());
             $usuario = $_SESSION['nombre'] . ' ' . $_SESSION['apellido'] . ' - ' . $_SESSION['rol'];
 
-            $titulo_excel = 'Reporte de ' . $modulo;
+            $titulo_excel = $parametrosExtra['titulo'] ?? ('Reporte de ' . $modulo);
             if ($moduloOriginal == 'Equipos' && isset($_SESSION['nombre_equipo_reporte'])) {
                 $titulo_excel = 'Integrantes del Equipo: ' . $_SESSION['nombre_equipo_reporte'];
             }
@@ -182,6 +185,51 @@ class GenerarReporte
                         'monto_total' => 'Monto Total',
                         'monto_pendiente' => 'Pendiente',
                         'estatus' => 'Estatus'
+                    ],
+                    'Pagos' => [
+                        'fecha_pago' => 'Fecha de Pago',
+                        'referencia' => 'Referencia General',
+                        'nombre_metodo_pago' => 'Método de Pago',
+                        'monto_pagado' => 'Monto Pagado',
+                        'concepto_pago' => 'Concepto',
+                        'atleta' => 'Atleta',
+                        'concepto_detalle' => 'Concepto Abonado',
+                        'monto_abono' => 'Monto Abonado',
+                        'estatus' => 'Estatus'
+                    ],
+                    'InventarioFisico' => [
+                        'codigo_club' => 'Código Interno',
+                        'articulo' => 'Artículo',
+                        'categoria' => 'Categoría',
+                        'estado_fisico' => 'Condición Física',
+                        'estatus_txt' => 'Estatus'
+                    ],
+                    'Catalogo' => [
+                        'id_catalogo' => 'Código',
+                        'nombre' => 'Nombre del Artículo',
+                        'categoria_nombre' => 'Categoría',
+                        'talla' => 'Talla',
+                        'stock_minimo' => 'Stock Mínimo',
+                        'stock_actual' => 'Stock Actual'
+                    ],
+                    'Bitacora' => [
+                        'fecha' => 'Fecha',
+                        'hora' => 'Hora',
+                        'cedulaUsuario' => 'Doc. Usuario',
+                        'nombreUsuario' => 'Nom. Usuario',
+                        'apellidoUsuario' => 'Ape. Usuario',
+                        'nombre_modulo' => 'Módulo',
+                        'acciones' => 'Acción',
+                        'datos_previos' => 'Datos Previos',
+                        'datos_nuevos' => 'Datos Nuevos'
+                    ],
+                    'Asignaciones' => [
+                        'doc_identidad' => 'Cédula/Doc.',
+                        'atleta' => 'Atleta',
+                        'articulo' => 'Artículo',
+                        'codigo_club' => 'Código Interno',
+                        'fecha_asignacion' => 'Fecha de Asignación',
+                        'estatus_txt' => 'Estatus'
                     ]
                 ];
 
@@ -240,6 +288,74 @@ class GenerarReporte
                             $subFila['nombre_torneo'] = $premio['nombre_torneo'];
                             $subFila['fecha_torneo'] = $premio['fecha_torneo'];
                             $datosEstructurados[] = $subFila;
+                        }
+                    }
+                } elseif ($moduloOriginal === 'Pagos') {
+                    foreach ($datos as $r) {
+                        if (!empty($r['detalles'])) {
+                            foreach ($r['detalles'] as $det) {
+                                $subFila = $r;
+                                $subFila['atleta'] = $det['atleta'] ?? 'N/A';
+                                $subFila['concepto_detalle'] = $det['concepto'] ?? 'N/A';
+                                $subFila['monto_abono'] = number_format($det['monto'] ?? 0, 2, ',', '.') . ' ' . ($det['moneda'] ?? '');
+                                $datosEstructurados[] = $subFila;
+                            }
+                        } else {
+                            $r['atleta'] = 'N/A';
+                            $r['concepto_detalle'] = 'N/A';
+                            $r['monto_abono'] = '0,00';
+                            $datosEstructurados[] = $r;
+                        }
+                    }
+                } elseif ($moduloOriginal === 'InventarioFisico') {
+                    foreach ($datos as $grupo) {
+                        if (!empty($grupo['piezas'])) {
+                            foreach ($grupo['piezas'] as $pieza) {
+                                $subFila = [];
+                                $subFila['codigo_club'] = $pieza['codigo_club'] ?? 'S/C';
+                                $subFila['articulo'] = $grupo['articulo'] ?? 'S/N';
+                                $subFila['categoria'] = $grupo['categoria'] ?? 'S/C';
+                                $subFila['estado_fisico'] = $pieza['estado_fisico'] ?? 'S/E';
+                                
+                                if (isset($pieza['estatus'])) {
+                                    if ($pieza['estatus'] == 1) {
+                                        $subFila['estatus_txt'] = 'Disponible';
+                                    } elseif ($pieza['estatus'] == 2) {
+                                        $subFila['estatus_txt'] = 'En Uso';
+                                    } else {
+                                        $subFila['estatus_txt'] = 'Inactivo';
+                                    }
+                                } else {
+                                    $subFila['estatus_txt'] = 'S/E';
+                                }
+                                $datosEstructurados[] = $subFila;
+                            }
+                        }
+                    }
+                } elseif ($moduloOriginal === 'Asignaciones') {
+                    foreach ($datos as $grupo) {
+                        if (!empty($grupo['asignaciones'])) {
+                            foreach ($grupo['asignaciones'] as $asig) {
+                                $subFila = [];
+                                $subFila['doc_identidad'] = $grupo['doc_identidad'] ?? 'S/C';
+                                $subFila['atleta'] = $grupo['nombre_completo'] ?? 'S/N';
+                                $subFila['articulo'] = $asig['articulo'] ?? 'S/A';
+                                $subFila['codigo_club'] = $asig['codigo_club'] ?? 'S/C';
+                                $subFila['fecha_asignacion'] = $asig['fecha_real'] ?? ($asig['fecha_vista'] ?? '');
+                                
+                                if (isset($asig['estatus'])) {
+                                    if ($asig['estatus'] == 3) {
+                                        $subFila['estatus_txt'] = 'Anulado';
+                                    } elseif ($asig['estatus'] == 2) {
+                                        $subFila['estatus_txt'] = 'Devuelto';
+                                    } else {
+                                        $subFila['estatus_txt'] = 'En Uso';
+                                    }
+                                } else {
+                                    $subFila['estatus_txt'] = 'S/E';
+                                }
+                                $datosEstructurados[] = $subFila;
+                            }
                         }
                     }
                 } else {
@@ -319,7 +435,7 @@ class GenerarReporte
                         }
 
                         // Lógica general de Estatus
-                        if ($key == 'estatus' && is_numeric($val) && $moduloOriginal != 'Torneos' && $moduloOriginal != 'CuentasCobrar') {
+                        if ($key == 'estatus' && is_numeric($val) && !in_array($moduloOriginal, ['Torneos', 'CuentasCobrar', 'Pagos'])) {
                             $val = ($val == 1) ? 'Activo' : 'Inactivo/Retirado';
                         }
                         
@@ -339,6 +455,17 @@ class GenerarReporte
                                 $simbolo = $d['moneda_simbolo'] ?? '';
                                 $val = number_format((float)$val, 2, ',', '.') . ' ' . $simbolo;
                             } elseif ($key == 'fecha_emision') {
+                                $val = date('d/m/Y', strtotime($val));
+                            }
+                        }
+                        
+                        // Lógica específica para Pagos
+                        if ($moduloOriginal == 'Pagos') {
+                            if ($key == 'estatus') {
+                                $val = ((int)$val === 1) ? 'Realizado' : 'Anulado';
+                            } elseif ($key == 'monto_pagado') {
+                                $val = number_format((float)$val, 2, ',', '.') . ' ' . ($d['abre'] ?? '');
+                            } elseif ($key == 'fecha_pago') {
                                 $val = date('d/m/Y', strtotime($val));
                             }
                         }

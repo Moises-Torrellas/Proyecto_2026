@@ -201,7 +201,25 @@ class ModeloTasaCambios extends Conexion
             }
 
             $conex->commit();
-            return array('accion' => 'exito', 'mensaje' => $mensaje);
+
+            $stmtNombre = $conex->prepare("SELECT nombre, simbolo FROM monedas WHERE codigo_moneda = :moneda");
+            $stmtNombre->execute([':moneda' => $this->codigo_moneda]);
+            $monedaInfo = $stmtNombre->fetch(PDO::FETCH_ASSOC);
+            $nombre_moneda = $monedaInfo ? $monedaInfo['nombre'] : 'Desconocida';
+            $simbolo_moneda = $monedaInfo ? $monedaInfo['simbolo'] : '';
+
+            $desc_bitacora = ($this->tipo === 'automatica') ? 
+                "Sincronizó tasa de cambio para la moneda: $nombre_moneda ($simbolo_moneda)" : 
+                "Registró tasa manual para la moneda: $nombre_moneda ($simbolo_moneda)";
+            
+            $datos_nuevos = [
+                'moneda' => "$nombre_moneda ($simbolo_moneda)",
+                'tasa' => $this->valor_tasa,
+                'fecha' => $this->fecha,
+                'tipo' => $this->tipo
+            ];
+
+            return array('accion' => 'exito', 'mensaje' => $mensaje, 'desc_bitacora' => $desc_bitacora, 'datos_nuevos' => json_encode($datos_nuevos));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollback();

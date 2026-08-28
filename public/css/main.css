@@ -1001,7 +1001,9 @@ option {
 /* Filas Internas (Sub-ítems listados dentro de un detalle oculto) */
 .lista_sub_items { display: flex; flex-direction: column; gap: 10px; }
 .sub_item_fila { display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid var(--borde-color, #eaeaea); border-radius: 8px; background: var(--fondo-principal, #fff); }
-.sub_item_fila.fila_anulada { filter: grayscale(1); opacity: 0.6; background-color: #f9f9f9; }
+.sub_item_fila.fila_anulada, .listado_contenedor_grupal.fila_anulada, .listado_contenedor_grupal.fila_anulada .listado_item { filter: grayscale(1); opacity: 0.7; background-color: #f9f9f9 !important; border-color: #e0e0e0 !important; }
+[data-tema="oscuro"] .sub_item_fila.fila_anulada, [data-tema="oscuro"] .listado_contenedor_grupal.fila_anulada, [data-tema="oscuro"] .listado_contenedor_grupal.fila_anulada .listado_item { filter: none; opacity: 1; background-color: #1a222c !important; border-color: #2a3441 !important; color: #94a3b8 !important; }
+[data-tema="oscuro"] .sub_item_fila.fila_anulada :not(.estatus_r), [data-tema="oscuro"] .listado_contenedor_grupal.fila_anulada :not(.estatus_r) { color: #94a3b8; }
 
 /* Columnas del Sub-ítem */
 .sub_item_info { flex: 2; display: flex; flex-direction: column; gap: 4px; }

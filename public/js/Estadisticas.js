@@ -152,28 +152,34 @@ $(document).ready(function () {
                 popover: { title: 'Estadísticas Registradas', description: 'Aquí se mostrarán todas las estadísticas agrupadas por atletas.', position: 'top' }
             },
             {
-                element: '.listado_contenedor_grupal:first-child .listado_item',
-                popover: { title: 'Ver Registros', description: 'Permite extender o comprimir la lista de estadísticas asociadas al atleta.', position: 'top' }
+                element: '.listado_item',
+                popover: { title: 'Ver Registros', description: 'Permite extender o comprimir la lista de estadísticas asociadas al atleta.', position: 'bottom' },
+                onNext: function() {
+                    const primerRegistro = document.querySelector('.listado_item');
+                    if (primerRegistro) {
+                        const contenedor = $(primerRegistro).closest('.listado_contenedor_grupal');
+                        if (!contenedor.hasClass('expandido')) {
+                            contenedor.addClass('expandido');
+                            contenedor.find('.listado_detalle_oculto').show(); // Show instantáneo sin animación
+                        }
+                    }
+                }
             },
             {
-                element: '.listado_contenedor_grupal:first-child .cbt_v',
-                popover: { title: 'Modificar Estadística', description: 'Permite editar el registro de estadística seleccionado.', position: 'left' }
+                element: '.sub_item_acciones_estadistica',
+                popover: { title: 'Acciones de Estadística', description: 'Aquí aparecerán los botones para modificar o eliminar las estadísticas.', position: 'left' }
             },
             {
-                element: '.listado_contenedor_grupal:first-child .cbt_r',
-                popover: { title: 'Eliminar Estadística', description: 'Permite eliminar el registro de estadística seleccionado.', position: 'left' }
-            },
-            {
-                element: '.c_paginacion',
+                element: '#rowsPerPage',
                 popover: { title: 'Registros a Mostrar', description: 'Permite seleccionar cuántas filas ver por página.', position: 'top' }
             },
             {
-                element: '.c_paginacion_botonera',
+                element: '#botonera',
                 popover: { title: 'Botonera de Paginación', description: 'Botones para cambiar entre páginas.', position: 'top' }
             },
             {
-                element: '.cantidad_registros',
-                popover: { title: 'Total Registros', description: 'Muestra el número total de atletas listados.', position: 'top' }
+                element: '#cantidad',
+                popover: { title: 'Total Registros', description: 'Muestra el número total de registros listados.', position: 'top' }
             }
         ];
 

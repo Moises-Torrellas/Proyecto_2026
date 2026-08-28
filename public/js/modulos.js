@@ -40,31 +40,19 @@ $(document).ready(function () {
         }
     });
 
-    /* $('#ayuda').on('click', function () {
+    $('#ayuda').on('click', function () {
         const pasos = [
             {
                 element: '#busqueda',
-                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar al representante que necesites.', position: 'bottom' }
+                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar al módulo que necesites.', position: 'bottom' }
             },
             {
-                element: '#incluir',
-                popover: { title: 'Nuevo Representante', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevo representante', position: 'bottom' }
-            },
-            {
-                element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
-            },
-            {
-                element: '#resultadoconsulta',
-                popover: { title: 'Representantes Registrados', description: 'Aqui se mostraran todos los representantes registrados.', position: 'top' }
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child',
+                popover: { title: 'Módulos Registrados', description: 'Aqui se mostraran todos los módulos registrados en el sistema.', position: 'top' }
             },
             {
                 element: '#cbt_v',
-                popover: { title: 'Modificar Representantes', description: 'Si pulsa aqui se abrira un modal para modificar el representante seleccionado.', position: 'left' }
-            },
-            {
-                element: '#cbt_r',
-                popover: { title: 'Eliminar Representante', description: 'Si pulsa aqui eliminara el representante seleccionado.', position: 'left' }
+                popover: { title: 'Modificar Módulo', description: 'Si pulsa aqui se abrira un modal para modificar los datos del módulo.', position: 'left' }
             },
             {
                 element: '#rowsPerPage',
@@ -76,13 +64,13 @@ $(document).ready(function () {
             },
             {
                 element: '#cantidad',
-                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de representantes cargados.', position: 'top' }
+                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de módulos registrados.', position: 'top' }
             },
         ];
 
         const driver = iniciarTourConPasos(pasos);
         driver.start();
-    }); */
+    });
 
 });
 

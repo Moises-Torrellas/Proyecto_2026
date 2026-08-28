@@ -39,18 +39,18 @@ $(document).ready(function () {
     Validacion("cedula", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Minimo 7 maximo 8 digitos, solo numeros", "proceso");
 
     // Validación de Nombre
-    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
+    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras entre 3 y 60 caracteres", "proceso");
 
     // Validación de Apellido
-    Validacion("apellido", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
+    Validacion("apellido", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras entre 3 y 60 caracteres", "proceso");
 
     // Validación de Teléfono
     Validacion("telefono", /^[0-9\-\b]*$/, /^[0-9]{4}[-]{1}[0-9]{7}$/, "El formato es 0400-0000000");
 
     Validacion("nacionalidad", /^[VEP]$/, /^[VEP]$/, "Solo puede ingresar V, E o P", "proceso");
 
-    Validacion("direccion", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/, "Solo letras entre 3 y 150 caracteres", "proceso");
-    Validacion("correo", /^[a-zA-Z0-9._%+-@]*$/, /^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})?$/, "Correo inválido", "proceso");
+    Validacion("direccion", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.\-\/]*$/, /^.{5,150}$/, "Dirección muy corta o inválida", "proceso");
+    Validacion("correo", /^[a-zA-Z0-9@._\-]*$/, /^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, "Ejemplo: usuario@dominio.com", "proceso");
     Validacion("instagram", /^[@a-zA-Z0-9._]*$/, /^[@a-zA-Z0-9._]{0,30}$/, "Usuario inválido", "proceso");
 
     $('#proceso').on('click', function () {
@@ -192,13 +192,13 @@ function validarEnvio(proceso) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar una cedula valida");
         return false;
     }
-    else if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-        $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres", true)) {
+    else if (validarkeyup(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/,
+        $("#nombre"), $("#nombre_spam"), "Solo letras entre 3 y 60 caracteres", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
         return false;
     }
-    else if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-        $('#apellido'), $("#apellido_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
+    else if (validarkeyup(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/,
+        $('#apellido'), $("#apellido_spam"), "Solo letras entre 3 y 60 caracteres", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar un apellido valido");
         return false;
     }
@@ -207,9 +207,13 @@ function validarEnvio(proceso) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar un telefono valido");
         return false;
     }
-    else if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,100}$/,
-        $('#direccion'), $("#direccion_spam"), "Solo letras entre 3 y 100 caracteres", true)) {
+    else if (validarkeyup(/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-\/]{5,150}$/,
+        $('#direccion'), $("#direccion_spam"), "Dirección inválida", true)) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar una direccion valida");
+        return false;
+    }
+    else if ($('#correo').val() != "" && $('#correo').val() != null && (validarkeyup(/^[a-zA-Z0-9@._\-]*$/, $('#correo'), $("#correo_spam"), "Ejemplo: usuario@dominio.com", true) || validarkeyup(/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, $('#correo'), $("#correo_spam"), "Ejemplo: usuario@dominio.com", true))) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un correo válido");
         return false;
     }
     return true;

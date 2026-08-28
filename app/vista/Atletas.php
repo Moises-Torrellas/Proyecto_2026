@@ -1,4 +1,5 @@
 <?php
+$meses = ['01'=>'Enero', '02'=>'Febrero', '03'=>'Marzo', '04'=>'Abril', '05'=>'Mayo', '06'=>'Junio', '07'=>'Julio', '08'=>'Agosto', '09'=>'Septiembre', '10'=>'Octubre', '11'=>'Noviembre', '12'=>'Diciembre'];
 if (isset($solo_lista) && $solo_lista === true) :
     if (empty($registro)) : ?>
         <div class="listado_vacio">
@@ -144,7 +145,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="detalle_card_icon"><i data-lucide="calendar-1"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Fecha de Nacimiento</label>
-                                    <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_nac']))) ?></span>
+                                    <span><?= htmlspecialchars(date('d', strtotime($dato['fecha_nac'])) . ' de ' . $meses[date('m', strtotime($dato['fecha_nac']))] . ' de ' . date('Y', strtotime($dato['fecha_nac']))) ?></span>
                                 </div>
                             </div>
                         </div>
@@ -167,7 +168,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="detalle_card_icon"><i data-lucide="calendar-plus"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Fecha de Ingreso</label>
-                                    <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_ingreso']))) ?></span>
+                                    <span><?= htmlspecialchars(date('d', strtotime($dato['fecha_ingreso'])) . ' de ' . $meses[date('m', strtotime($dato['fecha_ingreso']))] . ' de ' . date('Y', strtotime($dato['fecha_ingreso']))) ?></span>
                                 </div>
                             </div>
                         </div>
@@ -176,21 +177,21 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Lugar de Nacimiento</label>
-                                    <span><?= htmlspecialchars($dato['lugar_nacimiento'] ?? 'No Aplica') ?></span>
+                                    <span><?= htmlspecialchars(!empty($dato['lugar_nacimiento']) ? $dato['lugar_nacimiento'] : 'No Aplica') ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card">
                                 <div class="detalle_card_icon"><i data-lucide="mail"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Correo</label>
-                                    <span><?= htmlspecialchars($dato['correo'] ?? 'No Aplica') ?></span>
+                                    <span><?= htmlspecialchars(!empty($dato['correo']) ? $dato['correo'] : 'No Aplica') ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card">
                                 <div class="detalle_card_icon"><i data-lucide="instagram"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Instagram</label>
-                                    <span><?= htmlspecialchars($dato['instagram'] ?? 'No Aplica') ?></span>
+                                    <span><?= htmlspecialchars(!empty($dato['instagram']) ? $dato['instagram'] : 'No Aplica') ?></span>
                                 </div>
                             </div>
                         </div>
@@ -200,16 +201,16 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="detalle_card_icon"><i data-lucide="shirt"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Tallas</label>
-                                    <span>Pant. <?= htmlspecialchars($dato['talla_pantalon'] ?? 'No Aplica') ?> / Fran. <?= htmlspecialchars($dato['talla_franela'] ?? 'No Aplica') ?> / Calz. <?= htmlspecialchars($dato['talla_calzado'] ?? 'No Aplica') ?></span>
+                                    <span>Pant. <?= htmlspecialchars(!empty($dato['talla_pantalon']) ? $dato['talla_pantalon'] : 'No Aplica') ?> / Fran. <?= htmlspecialchars(!empty($dato['talla_franela']) ? $dato['talla_franela'] : 'No Aplica') ?> / Calz. <?= htmlspecialchars(!empty($dato['talla_calzado']) ? $dato['talla_calzado'] : 'No Aplica') ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card">
                                 <div class="detalle_card_icon"><i data-lucide="activity"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Médico</label>
-                                    <span>Sangre: <?= htmlspecialchars($dato['tipo_sangre'] ?? 'No Aplica') ?></span>
+                                    <span>Sangre: <?= htmlspecialchars(!empty($dato['tipo_sangre']) ? $dato['tipo_sangre'] : 'No Aplica') ?></span>
                                     <small <?= (isset($dato['es_alergico']) && $dato['es_alergico'] == 1) ? 'style="color: #ef4444;"' : '' ?>>
-                                        Alergias: <?= (isset($dato['es_alergico']) && $dato['es_alergico'] == 1) ? htmlspecialchars($dato['alergias_detalle'] ?? 'No Aplica') : 'Ninguna' ?>
+                                        Alergias: <?= (isset($dato['es_alergico']) && $dato['es_alergico'] == 1) ? htmlspecialchars(!empty($dato['alergias_detalle']) ? $dato['alergias_detalle'] : 'No Aplica') : 'Ninguna' ?>
                                     </small>
                                 </div>
                             </div>
@@ -217,7 +218,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <div class="detalle_card_icon"><i data-lucide="map"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Municipio</label>
-                                    <span><?= htmlspecialchars($dato['municipio'] ?? 'No Aplica') ?></span>
+                                    <span><?= htmlspecialchars(!empty($dato['municipio']) ? $dato['municipio'] : 'No Aplica') ?></span>
                                 </div>
                             </div>
                         </div>
@@ -228,7 +229,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                     <div class="detalle_card_icon" style="color:#ef4444;"><i data-lucide="calendar-minus"></i></div>
                                     <div class="detalle_card_txt">
                                         <label>Fecha de Retiro</label>
-                                        <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_retiro']))) ?></span>
+                                        <span><?= htmlspecialchars(date('d', strtotime($dato['fecha_retiro'])) . ' de ' . $meses[date('m', strtotime($dato['fecha_retiro']))] . ' de ' . date('Y', strtotime($dato['fecha_retiro']))) ?></span>
                                         <small style="color:#ef4444;">Motivo: <?= htmlspecialchars($dato['motivo_retiro'] ?? 'No especificado') ?></small>
                                     </div>
                                 </div>
@@ -238,7 +239,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                                     <div class="detalle_card_icon" style="color:#22c55e;"><i data-lucide="calendar-sync"></i></div>
                                     <div class="detalle_card_txt">
                                         <label>Fecha de Re-Ingreso</label>
-                                        <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_reingreso']))) ?></span>
+                                        <span><?= htmlspecialchars(date('d', strtotime($dato['fecha_reingreso'])) . ' de ' . $meses[date('m', strtotime($dato['fecha_reingreso']))] . ' de ' . date('Y', strtotime($dato['fecha_reingreso']))) ?></span>
                                     </div>
                                 </div>
                             <?php endif; ?>
@@ -439,7 +440,7 @@ endif;
                                                         <div class="detalle_card_icon"><i data-lucide="calendar-1"></i></div>
                                                         <div class="detalle_card_txt">
                                                             <label>Fecha de Nacimiento</label>
-                                                            <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_nac']))) ?></span>
+                                                            <span><?= htmlspecialchars(date('d', strtotime($dato['fecha_nac'])) . ' de ' . $meses[date('m', strtotime($dato['fecha_nac']))] . ' de ' . date('Y', strtotime($dato['fecha_nac']))) ?></span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -462,7 +463,7 @@ endif;
                                                         <div class="detalle_card_icon"><i data-lucide="calendar-plus"></i></div>
                                                         <div class="detalle_card_txt">
                                                             <label>Fecha de Ingreso</label>
-                                                            <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_ingreso']))) ?></span>
+                                                            <span><?= htmlspecialchars(date('d', strtotime($dato['fecha_ingreso'])) . ' de ' . $meses[date('m', strtotime($dato['fecha_ingreso']))] . ' de ' . date('Y', strtotime($dato['fecha_ingreso']))) ?></span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -471,21 +472,21 @@ endif;
                                 <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Lugar de Nacimiento</label>
-                                    <span><?= htmlspecialchars($dato['lugar_nacimiento'] ?? 'No Aplica') ?></span>
+                                    <span><?= htmlspecialchars(!empty($dato['lugar_nacimiento']) ? $dato['lugar_nacimiento'] : 'No Aplica') ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card">
                                 <div class="detalle_card_icon"><i data-lucide="mail"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Correo</label>
-                                    <span><?= htmlspecialchars($dato['correo'] ?? 'No Aplica') ?></span>
+                                    <span><?= htmlspecialchars(!empty($dato['correo']) ? $dato['correo'] : 'No Aplica') ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card">
                                 <div class="detalle_card_icon"><i data-lucide="instagram"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Instagram</label>
-                                    <span><?= htmlspecialchars($dato['instagram'] ?? 'No Aplica') ?></span>
+                                    <span><?= htmlspecialchars(!empty($dato['instagram']) ? $dato['instagram'] : 'No Aplica') ?></span>
                                 </div>
                             </div>
                         </div>
@@ -495,16 +496,16 @@ endif;
                                 <div class="detalle_card_icon"><i data-lucide="shirt"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Tallas</label>
-                                    <span>Pant. <?= htmlspecialchars($dato['talla_pantalon'] ?? 'No Aplica') ?> / Fran. <?= htmlspecialchars($dato['talla_franela'] ?? 'No Aplica') ?> / Calz. <?= htmlspecialchars($dato['talla_calzado'] ?? 'No Aplica') ?></span>
+                                    <span>Pant. <?= htmlspecialchars(!empty($dato['talla_pantalon']) ? $dato['talla_pantalon'] : 'No Aplica') ?> / Fran. <?= htmlspecialchars(!empty($dato['talla_franela']) ? $dato['talla_franela'] : 'No Aplica') ?> / Calz. <?= htmlspecialchars(!empty($dato['talla_calzado']) ? $dato['talla_calzado'] : 'No Aplica') ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card">
                                 <div class="detalle_card_icon"><i data-lucide="activity"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Médico</label>
-                                    <span>Sangre: <?= htmlspecialchars($dato['tipo_sangre'] ?? 'No Aplica') ?></span>
+                                    <span>Sangre: <?= htmlspecialchars(!empty($dato['tipo_sangre']) ? $dato['tipo_sangre'] : 'No Aplica') ?></span>
                                     <small <?= (isset($dato['es_alergico']) && $dato['es_alergico'] == 1) ? 'style="color: #ef4444;"' : '' ?>>
-                                        Alergias: <?= (isset($dato['es_alergico']) && $dato['es_alergico'] == 1) ? htmlspecialchars($dato['alergias_detalle'] ?? 'No Aplica') : 'Ninguna' ?>
+                                        Alergias: <?= (isset($dato['es_alergico']) && $dato['es_alergico'] == 1) ? htmlspecialchars(!empty($dato['alergias_detalle']) ? $dato['alergias_detalle'] : 'No Aplica') : 'Ninguna' ?>
                                     </small>
                                 </div>
                             </div>
@@ -512,7 +513,7 @@ endif;
                                 <div class="detalle_card_icon"><i data-lucide="map"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Municipio</label>
-                                    <span><?= htmlspecialchars($dato['municipio'] ?? 'No Aplica') ?></span>
+                                    <span><?= htmlspecialchars(!empty($dato['municipio']) ? $dato['municipio'] : 'No Aplica') ?></span>
                                 </div>
                             </div>
                         </div>
@@ -523,7 +524,7 @@ endif;
                                     <div class="detalle_card_icon" style="color:#ef4444;"><i data-lucide="calendar-minus"></i></div>
                                     <div class="detalle_card_txt">
                                         <label>Fecha de Retiro</label>
-                                        <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_retiro']))) ?></span>
+                                        <span><?= htmlspecialchars(date('d', strtotime($dato['fecha_retiro'])) . ' de ' . $meses[date('m', strtotime($dato['fecha_retiro']))] . ' de ' . date('Y', strtotime($dato['fecha_retiro']))) ?></span>
                                         <small style="color:#ef4444;">Motivo: <?= htmlspecialchars($dato['motivo_retiro'] ?? 'No especificado') ?></small>
                                     </div>
                                 </div>
@@ -533,7 +534,7 @@ endif;
                                     <div class="detalle_card_icon" style="color:#22c55e;"><i data-lucide="calendar-sync"></i></div>
                                     <div class="detalle_card_txt">
                                         <label>Fecha de Re-Ingreso</label>
-                                        <span><?= htmlspecialchars(date('d-m-Y', strtotime($dato['fecha_reingreso']))) ?></span>
+                                        <span><?= htmlspecialchars(date('d', strtotime($dato['fecha_reingreso'])) . ' de ' . $meses[date('m', strtotime($dato['fecha_reingreso']))] . ' de ' . date('Y', strtotime($dato['fecha_reingreso']))) ?></span>
                                     </div>
                                 </div>
                             <?php endif; ?>
@@ -744,14 +745,30 @@ endif;
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="talla_pantalon" name="talla_pantalon">
+                                <select name="talla_pantalon" id="talla_pantalon" class="formulario select">
+                                    <option value="" selected disabled>Seleccione...</option>
+                                    <option value="XS">XS</option>
+                                    <option value="S">S</option>
+                                    <option value="M">M</option>
+                                    <option value="L">L</option>
+                                    <option value="XL">XL</option>
+                                    <option value="XXL">XXL</option>
+                                </select>
                                 <label for="talla_pantalon" class="titulo_formulario">Talla de Pantalón</label>
                                 <span class="mensaje" id="talla_pantalon_spam"></span>
                             </div>
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="talla_franela" name="talla_franela">
+                                <select name="talla_franela" id="talla_franela" class="formulario select">
+                                    <option value="" selected disabled>Seleccione...</option>
+                                    <option value="XS">XS</option>
+                                    <option value="S">S</option>
+                                    <option value="M">M</option>
+                                    <option value="L">L</option>
+                                    <option value="XL">XL</option>
+                                    <option value="XXL">XXL</option>
+                                </select>
                                 <label for="talla_franela" class="titulo_formulario">Talla de Franela</label>
                                 <span class="mensaje" id="talla_franela_spam"></span>
                             </div>

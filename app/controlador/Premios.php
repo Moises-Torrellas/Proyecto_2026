@@ -136,9 +136,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            $idNuevo = $obj->codigo_premio ?? ''; // O como se asigne el ID después de incluir
+            $idNuevo = !empty($obj->codigo_premio) ? (int)$obj->codigo_premio : null;
             $datos_nuevos = $obj->Buscar($idNuevo)['datos'][0] ?? [];
-            unset($datos_nuevos['codigo_premio']);
+            if(isset($datos_nuevos['codigo_premio'])) {
+                unset($datos_nuevos['codigo_premio']);
+            }
             $datos_nuevos_json = json_encode($datos_nuevos);
             
             registrarBitacora($bitacoraObj, $id_modulo, "Registró el Premio: " . $_POST['nombre'] . ' (' . $_POST['tipo'] . ')', '', $datos_nuevos_json);

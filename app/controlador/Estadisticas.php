@@ -174,7 +174,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             unset($dn['id_estadisticas']);
             $datos_nuevos_json = json_encode($dn);
 
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró estadísticas para el atleta ID: {$datos['atleta']}", '', $datos_nuevos_json);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró estadísticas para: {$dn['nombres']} {$dn['apellidos']} ({$dn['cedula']})", '', $datos_nuevos_json);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Estadisticas registradas exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -247,7 +247,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             unset($dn['id_estadisticas']);
             $datos_nuevos_json = json_encode($dn);
 
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó estadísticas del atleta ID: {$datos['atleta']}", $datos_previos_json, $datos_nuevos_json);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó estadísticas para: {$dn['nombres']} {$dn['apellidos']} ({$dn['cedula']})", $datos_previos_json, $datos_nuevos_json);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Estadisticas modificadas exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -291,7 +291,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó estadísticas ID: {$idEliminar}", $datos_previos_json, '');
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó estadísticas para: {$dp['nombres']} {$dp['apellidos']} ({$dp['cedula']})", $datos_previos_json, '');
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Estadisticas eliminadas exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 

@@ -34,9 +34,56 @@ $(document).ready(function () {
 
     $('#busqueda').off('keyup').on('keyup', busqueda);
 
-    $("#ayuda").on("click", function() {
-        if(typeof iniciarAyuda === 'function') {
-            iniciarAyuda('devoluciones'); 
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            {
+                element: '#busqueda',
+                popover: { title: 'Barra de Búsqueda', description: 'Aquí puedes buscar al registro que necesites.', position: 'bottom' }
+            },
+            {
+                element: '#btn_nuevo',
+                popover: { title: 'Nueva Devolución', description: 'Si pulsas aquí se abrirá un modal para registrar una nueva devolución.', position: 'bottom' }
+            },
+            {
+                element: '#generar',
+                popover: { title: 'Generar Reportes', description: 'Si pulsas aquí se abrirá un modal para generar un reporte en PDF o Excel.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta',
+                popover: { title: 'Registros', description: 'Aquí se mostrarán todos los registros.', position: 'top' }
+            },
+            {
+                element: '.listado_item',
+                popover: { title: 'Detalles', description: 'Haz clic en el registro para desplegar y ver las devoluciones individuales.', position: 'bottom' },
+                onNext: function() {
+                    const primerRegistro = document.querySelector('.listado_item');
+                    if (primerRegistro) {
+                        const contenedor = $(primerRegistro).closest('.listado_contenedor_grupal');
+                        if (contenedor.find('.listado_detalle_oculto').css('display') === 'none') {
+                            contenedor.find('.listado_detalle_oculto').show();
+                        }
+                    }
+                }
+            },
+            {
+                element: '.sub_item_acciones',
+                popover: { title: 'Acciones de Devolución', description: 'Aquí podrás modificar o anular la devolución.', position: 'left' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aquí podrás seleccionar la cantidad de registros que quieres que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Página', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aquí puedes ver la cantidad de registros.', position: 'top' }
+            }
+        ];
+        if (typeof iniciarTourConPasos === 'function') {
+            iniciarTourConPasos(pasos).start();
         }
     });
 
@@ -46,7 +93,16 @@ $(document).ready(function () {
         $("#id_devolucion").val('');
         $("#titulo_modal").text("Registrar Devolución");
         $("#btn_guardar").text("Confirmar").attr("data-accion", "incluir");
-        $('#fecha_devolucion').val(new Date().toISOString().split('T')[0]);
+        let localDate = new Date();
+        localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset());
+        let hoy = localDate.toISOString().split('T')[0];
+        
+        let fp = document.querySelector("#fecha_devolucion")._flatpickr;
+        if (fp) {
+            fp.setDate(hoy);
+        } else {
+            $('#fecha_devolucion').val(hoy);
+        }
         
         $('#id_asignacion').closest('.colum').show();
         $('#id_estado').closest('.colum').show();
@@ -77,7 +133,7 @@ $(document).ready(function () {
         $("#f")[0].reset();
         $("#id_devolucion").val('');
         $("#titulo_modal").text("Filtros del Reporte");
-        $("#btn_guardar").text("Generar PDF").attr("data-accion", "generar");
+        $("#btn_guardar").text("Generar Reporte").attr("data-accion", "generar");
 
         $('#id_asignacion').closest('.colum').show();
         $('#id_estado').closest('.colum').show();
@@ -104,12 +160,21 @@ $(document).ready(function () {
                 muestraMensaje("error", 2000, "Validación", "Complete los campos obligatorios.");
                 return false;
             }
+            let datos = new FormData($('#f')[0]);
+            datos.append('accion', accion);
+            enviaAjax(datos);
+        } else if (accion === "generar") {
+            opcionesReporte(function(formato) {
+                if (typeof abrirAlertaEspara === 'function') {
+                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                }
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('filtro', $('#busqueda').val());
+                datos.append('formato', formato);
+                enviaAjax(datos);
+            });
         }
-        
-        let datos = new FormData($('#f')[0]);
-        datos.append('accion', accion);
-        
-        enviaAjax(datos);
     });
 });
 
@@ -180,8 +245,14 @@ function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
     $('#id_estado').closest('.colum').show();
     $('#observacion').closest('.colum').show();
 
+    let fechaLimpia = fecha ? fecha.split(' ')[0] : '';
     $("#id_devolucion").val(id_devolucion);
-    $("#fecha_devolucion").val(fecha);
+    let fp = document.querySelector("#fecha_devolucion")._flatpickr;
+    if (fp) {
+        fp.setDate(fechaLimpia);
+    } else {
+        $("#fecha_devolucion").val(fechaLimpia);
+    }
     $("#observacion").val(observacion);
     
     $("#id_asignacion option").each(function() {

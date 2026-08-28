@@ -178,7 +178,10 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó cargo(s) de " . $_POST['monto_total']);
+            $datos_previos = '';
+            $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+            $desc_bitacora = $resultado['desc_bitacora'] ?? "Generó cargo(s) de " . $_POST['monto_total'];
+            registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, $datos_previos, $datos_nuevos);
             
             // Verificador dinámico de eventos (Cargos atrasados, etc.)
             require_once __DIR__ . '/../servicios/verificarEvento.php';
@@ -218,7 +221,10 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó la cuenta por cobrar ID: " . $_POST['id']);
+            $datos_previos = $resultado['datos_previos'] ?? '';
+            $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+            $desc_bitacora = $resultado['desc_bitacora'] ?? "Modificó la cuenta por cobrar ID: " . $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, $datos_previos, $datos_nuevos);
 
             // Verificador dinámico de eventos (Cargos atrasados, etc.)
             require_once __DIR__ . '/../servicios/verificarEvento.php';
@@ -249,7 +255,10 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Anuló la cuenta por cobrar ID: " . $_POST['id']);
+            $datos_previos = $resultado['datos_previos'] ?? '';
+            $datos_nuevos = '';
+            $desc_bitacora = $resultado['desc_bitacora'] ?? "Anuló la cuenta por cobrar ID: " . $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Cuenta por cobrar anulada correctamente (estatus: Anulado).');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {

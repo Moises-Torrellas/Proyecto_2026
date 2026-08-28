@@ -1,32 +1,69 @@
 -- 2. Vistas (2)
 DROP VIEW IF EXISTS `vista_atletas`;
 DROP VIEW IF EXISTS `vista_atletas`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_atletas` AS
+SELECT 
+    a.codigo_atleta AS id_atleta,
+    CONCAT(a.p_nombre, ' ', COALESCE(a.s_nombre, '')) AS nombres,
+    CONCAT(a.p_apellidos, ' ', COALESCE(a.s_apellidos, '')) AS apellidos,
+    i.estatus AS estatus,
+    CASE 
+        WHEN ia.numero_doc IS NOT NULL AND ia.numero_doc <> '' THEN ia.numero_doc
+        ELSE CONCAT('R-', r.cedula)
+    END AS doc_identidad,
+    ar.codigo_representante AS id_representante,
+    i.codigo_posicion AS id_posicion,
+    i.codigo_categoria AS id_categoria,
+    a.genero AS genero,
+    a.fecha_nac AS fecha_nac,
+    a.foto AS foto,
+    r.telefono AS telefono,
+    r.direccion AS direccion,
+    r.nombre AS nombre_rep,
+    r.apellido AS apellido_rep,
+    r.cedula AS cedula_rep,
+    p.nombre AS nombre_posicion,
+    p.abreviatura AS abrev_posicion,
+    c.nombre AS nombre_categoria,
+    c.edad_min AS edad_min,
+    c.edad_max AS edad_max
+FROM atletas a
+LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta
+LEFT JOIN atleta_representante ar ON a.codigo_atleta = ar.codigo_atleta
+LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
+LEFT JOIN inscripciones i ON a.codigo_atleta = i.codigo_atleta 
+LEFT JOIN posiciones p ON i.codigo_posicion = p.codigo_posicion
+LEFT JOIN categorias c ON i.codigo_categoria = c.codigo_categoria;
 
 
 DROP VIEW IF EXISTS `vista_pagos`;
-DROP VIEW IF EXISTS `vista_pagos`;
-
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_pagos` AS select `p`.`codigo_pago` AS `id_pago`,`p`.`fecha` AS `fecha_pago`,`p`.`monto_pago` AS `monto_pagado`,ifnull((select sum(`v`.`monto_vuelto`) from `vueltos` `v` where `v`.`codigo_pago` = `p`.`codigo_pago`),0) AS `monto_vuelto`,`p`.`referencia` AS `referencia`,`p`.`estatus` AS `estatus`,`mp`.`nombre` AS `nombre_metodo_pago`,`m`.`simbolo` AS `simbolo`,`m`.`abreviatura` AS `abre`,`m`.`nombre` AS `moneda`,`dp`.`codigo_detalles_pagos` AS `id_detalle_pago`,`dp`.`monto_abonado` AS `monto_abonado`,`dp`.`tasa_cambio` AS `tasa_cambio`,`con`.`nombre` AS `concepto_pago`,`car`.`fecha_emision` AS `fecha_cargo`,`a`.`p_nombre` AS `nombre_atleta`,`a`.`p_apellidos` AS `nombre_apellido`,`mb`.`simbolo` AS `simbolo_cuenta`,`mb`.`abreviatura` AS `abre_cuenta` from (((((((`pagos` `p` left join `metodos_pago` `mp` on(`p`.`codigo_metodo` = `mp`.`codigo_metodo`)) left join `monedas` `m` on(`p`.`codigo_moneda` = `m`.`codigo_moneda`)) left join `detalles_pagos` `dp` on(`p`.`codigo_pago` = `dp`.`codigo_pago`)) left join `cargos` `car` on(`dp`.`codigo_cargo` = `car`.`codigo_cargo`)) left join `conceptos` `con` on(`car`.`codigo_concepto` = `con`.`codigo_concepto`)) left join `atletas` `a` on(`car`.`codigo_atleta` = `a`.`codigo_atleta`)) join (select `monedas`.`simbolo` AS `simbolo`,`monedas`.`abreviatura` AS `abreviatura` from `monedas` where `monedas`.`base` = 1 limit 1) `mb`;
 
 -- 3. Triggers (2)
 DELIMITER //
-DROP TRIGGER IF EXISTS trg_antes_insertar_pago;
-CREATE TRIGGER trg_antes_insertar_pago
-BEFORE INSERT ON pagos
+DROP TRIGGER IF EXISTS trg_despues_insertar_detalle_pago;
+CREATE TRIGGER trg_despues_insertar_detalle_pago
+AFTER INSERT ON detalles_pagos
 FOR EACH ROW
 BEGIN
-    IF NEW.monto_pago <= 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El monto del pago debe ser mayor a cero';
-    END IF;
-END;
-//
+    DECLARE v_monto_total DECIMAL(10,2);
+    DECLARE v_total_abonado DECIMAL(10,2);
 
-DROP TRIGGER IF EXISTS trg_antes_actualizar_atleta;
-CREATE TRIGGER trg_antes_actualizar_atleta
-BEFORE UPDATE ON atletas
-FOR EACH ROW
-BEGIN
-    IF OLD.genero != NEW.genero THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede modificar el género del atleta';
+    -- 1. Obtener el costo total del cargo
+    SELECT monto_total INTO v_monto_total 
+    FROM cargos 
+    WHERE codigo_cargo = NEW.codigo_cargo;
+
+    -- 2. Sumar todos los abonos realizados a ese cargo
+    SELECT COALESCE(SUM(monto_abonado), 0) INTO v_total_abonado 
+    FROM detalles_pagos 
+    WHERE codigo_cargo = NEW.codigo_cargo;
+
+    -- 3. Verificar si lo abonado cubre o supera el total del cargo
+    IF v_total_abonado >= v_monto_total THEN
+        UPDATE cargos 
+        SET estatus = 2 
+        WHERE codigo_cargo = NEW.codigo_cargo;
     END IF;
 END;
 //

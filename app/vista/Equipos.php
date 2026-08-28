@@ -16,6 +16,10 @@
                             <small>Atletas Asignados</small>
                             <span><?= htmlspecialchars($dato['cantidad_atletas'] ?? '0') ?></span>
                         </div>
+                        <div class="listado_dato_grupo">
+                            <small>Premios Ganados</small>
+                            <span><i class="fi fi-sr-trophy"></i> <?= htmlspecialchars($dato['total_premios'] ?? '0') ?></span>
+                        </div>
                     </div>
 
                     <div class="listado_col_acciones">
@@ -132,6 +136,10 @@
                                                 <div class="listado_dato_grupo">
                                                     <small>Atletas Asignados</small>
                                                     <span><?= htmlspecialchars($dato['cantidad_atletas'] ?? '0') ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Premios Ganados</small>
+                                                    <span><i class="fi fi-sr-trophy"></i> <?= htmlspecialchars($dato['total_premios'] ?? '0') ?></span>
                                                 </div>
                                             </div>
 
