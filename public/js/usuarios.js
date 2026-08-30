@@ -1,5 +1,6 @@
 $('#busqueda').off('keyup').on('keyup', busqueda);
 let timerBusqueda;
+let isSuperAdminEdit = false;
 function consultar() {
 
     let datos = new FormData();
@@ -96,13 +97,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function (formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
         else if (accion == "permisos_usuario") {
@@ -124,6 +124,8 @@ $(document).ready(function () {
     $("#incluir").on("click", function () {
         limpia();
         limpia_Tablas();
+
+        isSuperAdminEdit = false;
 
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Usuario");
@@ -184,16 +186,24 @@ $(document).ready(function () {
                 popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
             },
             {
-                element: '#tabla',
-                popover: { title: 'Usuarios Registrados', description: 'Aqui se mostraran todos los usuarios registrados.', position: 'top' }
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child',
+                popover: { title: 'Usuarios Registrados', description: 'Aqui se mostraran todos los usuarios registrados. Este es un registro individual.', position: 'top' }
             },
             {
-                element: '#cbt_v',
-                popover: { title: 'Modificar Usuario', description: 'Si pulsa aqui se abrira un modal para modificar el usuario seleccionado.', position: 'left' }
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .cbt_m',
+                popover: { title: 'Permisos Específicos', description: 'Permite gestionar los permisos particulares de este usuario.', position: 'left' }
             },
             {
-                element: '#cbt_r',
-                popover: { title: 'Eliminar Usuario', description: 'Si pulsa aqui eliminara el usuario seleccionado.', position: 'left' }
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .cbt_v',
+                popover: { title: 'Modificar Usuario', description: 'Abre un modal para modificar los datos de este usuario.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .cbt_r',
+                popover: { title: 'Eliminar Usuario', description: 'Permite eliminar permanentemente a este usuario.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .btn_t:last-of-type',
+                popover: { title: 'Bloquear/Desbloquear', description: 'Permite bloquear o desbloquear el acceso de este usuario al sistema.', position: 'left' }
             },
             {
                 element: '#rowsPerPage',
@@ -249,7 +259,7 @@ function validarEnvio(proceso) {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar una correo valido");
         return false;
     }
-    else if ($('#roles option:selected').val() == null) {
+    else if (!isSuperAdminEdit && $('#roles option:selected').val() == null) {
         muestraMensaje("error", 2000, "Error", "Tiene que elegir un rol");
         return false;
     }
@@ -278,7 +288,18 @@ function modificar(datos) {
     $('#nombre').closest('.colum').show();
     $('#apellido').closest('.colum').show();
     $('#cedula').closest('.colum').show();
-    $('#roles').closest('.colum').show();
+    
+    // Aquí validamos si el usuario a modificar es de nivel 1 o 2
+    isSuperAdminEdit = (datos[0].nivel_rol == 1 || datos[0].nivel_rol == 2);
+    
+    if (isSuperAdminEdit) {
+        $('#roles').closest('.colum').hide();
+        $('#contraseña').closest('.colum').hide();
+    } else {
+        $('#roles').closest('.colum').show();
+        $('#contraseña').closest('.colum').show();
+    }
+    
     $('#row_permisos').hide();
     $('#limpiar').show();
     $('#roles').val(null).trigger('change');
@@ -328,6 +349,9 @@ function bloquear(id, b, elemento) {
     });
 }
 
+// Variable global para almacenar los datos de permisos del usuario
+var datosPermisosUsuarioGlobal = [];
+
 function mostrarPermisosUsuario(datos) {
     limpia();
     limpia_Tablas();
@@ -346,68 +370,124 @@ function mostrarPermisosUsuario(datos) {
     $('#row_permisos').show();
     $('#limpiar').hide();
 
-    $('#id').val(datos[0].idUsuario); // Add the ID for saving
+    $('#id').val(datos[0].idUsuario);
     $('#roles').val(datos[0].id_rol).trigger('change');
-    
-    let moduloActual = null;
-    let htmlContent = '';
 
-    datos.forEach((dato, index) => {
-        let idModulo = dato.id_modulo;
+    // Guardar datos globalmente para el buscador
+    datosPermisosUsuarioGlobal = datos;
 
-        // Si cambiamos de módulo, cerramos el anterior (si existía) y abrimos el nuevo contenedor
-        if (idModulo !== moduloActual) {
-            if (moduloActual !== null) {
-                htmlContent += `
-                            </div> </div> </div> </div> `;
-            }
+    // Renderizar en pestañas
+    renderizarPermisosUsuarioEnTabs(datos);
 
-            moduloActual = idModulo;
+    // Limpiar el buscador
+    $('#buscador_permisos').val('');
 
-            // Contamos cuántos permisos totales pertenecen a este módulo en el array
-            let cantidadPermisos = datos.filter(d => d.id_modulo == idModulo).length;
-            let estatusModulo = parseInt(dato.estatus_modulo || 1);
-            let textoEstatus = (estatusModulo === 1) ? 'Activo' : 'Bloqueado';
-            let claseEstatus = (estatusModulo === 1) ? 'estatus_v' : 'estatus_r';
+    // Activar la primera pestaña
+    $('.permisos_tab').removeClass('activa');
+    $('.permisos_tab[data-tab="asignados"]').addClass('activa');
+    $('.permisos_tab_contenido').removeClass('activo');
+    $('#tab_asignados').addClass('activo');
 
-            htmlContent += `
-            <div class="listado_contenedor_grupal">
-                <div class="listado_item" onclick="toggleDetalles(this)">
-                    <div class="listado_col_principal">
-                        <div class="listado_avatar_null"><i class="icon_con" data-lucide="${dato.icono || 'folder'}"></i></div>
-                        <div class="listado_info_base">
-                            <span class="listado_titulo">${escapeHTML(dato.nombre_modulo)}</span>
-                        </div>
-                    </div>
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 
-                    <div class="listado_col_datos">
-                        <div class="listado_dato_grupo">
-                            <small>Opciones Disponibles</small>
-                            <span>${cantidadPermisos} Opción(es)</span>
-                        </div>
-                    </div>
+    abrirModal();
+}
 
-                    <div class="listado_col_acciones">
-                        <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
-                    </div>
-                </div>
+function renderizarPermisosUsuarioEnTabs(datos, filtro) {
+    filtro = (filtro || '').toLowerCase().trim();
 
-                <div class="listado_detalle_oculto">
-                    <div class="detalle_expandido_container" style="padding: 15px;">
-                        <div class="lista_sub_items">`;
+    // Agrupar permisos por módulo
+    let modulos = {};
+    datos.forEach(dato => {
+        if (!modulos[dato.id_modulo]) {
+            modulos[dato.id_modulo] = {
+                id_modulo: dato.id_modulo,
+                nombre_modulo: dato.nombre_modulo,
+                icono: dato.icono || 'folder',
+                estatus_modulo: dato.estatus_modulo,
+                permisos: []
+            };
         }
+        modulos[dato.id_modulo].permisos.push(dato);
+    });
 
-        // Si el usuario tiene una excepcion o hereda del rol, marcamos
+    let htmlAsignados = '';
+    let htmlNoAsignados = '';
+    let contAsignados = 0;
+    let contNoAsignados = 0;
+
+    Object.values(modulos).forEach(modulo => {
+        // Filtrar por nombre del módulo
+        if (filtro && !modulo.nombre_modulo.toLowerCase().includes(filtro)) return;
+
+        let tieneAlgunAsignado = modulo.permisos.some(p => p.asignado == 1);
+
+        if (tieneAlgunAsignado) {
+            // El módulo tiene al menos 1 permiso asignado: va completo a "Asignados"
+            contAsignados++;
+            htmlAsignados += generarBloqueModuloUsuario(modulo, modulo.permisos, true);
+        } else {
+            // El módulo no tiene ningún permiso asignado: va completo a "No Asignados"
+            contNoAsignados++;
+            htmlNoAsignados += generarBloqueModuloUsuario(modulo, modulo.permisos, false);
+        }
+    });
+
+    // Si no hay contenido, mostrar mensaje
+    if (!htmlAsignados) {
+        htmlAsignados = '<div class="permisos_vacio"><i class="fi fi-sr-check-circle"></i>No hay permisos asignados' + (filtro ? ' para esta búsqueda' : '') + '</div>';
+    }
+    if (!htmlNoAsignados) {
+        htmlNoAsignados = '<div class="permisos_vacio"><i class="fi fi-sr-circle-xmark"></i>No hay permisos sin asignar' + (filtro ? ' para esta búsqueda' : '') + '</div>';
+    }
+
+    $("#tabla_permisos_asignados").html(htmlAsignados);
+    $("#tabla_permisos_no_asignados").html(htmlNoAsignados);
+
+    // Actualizar badges
+    $('#badge_asignados').text(contAsignados);
+    $('#badge_no_asignados').text(contNoAsignados);
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function generarBloqueModuloUsuario(modulo, permisos, esAsignado) {
+    let cantidadPermisos = permisos.length;
+
+    let html = `
+    <div class="listado_contenedor_grupal">
+        <div class="listado_item" onclick="toggleDetalles(this)">
+            <div class="listado_col_principal">
+                <div class="listado_avatar_null"><i class="icon_con" data-lucide="${modulo.icono}"></i></div>
+                <div class="listado_info_base">
+                    <span class="listado_titulo">${escapeHTML(modulo.nombre_modulo)}</span>
+                </div>
+            </div>
+
+            <div class="listado_col_datos">
+                <div class="listado_dato_grupo">
+                    <small>${esAsignado ? 'Permisos Activos' : 'Permisos Disponibles'}</small>
+                    <span>${cantidadPermisos} Opción(es)</span>
+                </div>
+            </div>
+
+            <div class="listado_col_acciones">
+                <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+            </div>
+        </div>
+
+        <div class="listado_detalle_oculto">
+            <div class="detalle_expandido_container" style="padding: 15px;">
+                <div class="lista_sub_items">`;
+
+    permisos.forEach(dato => {
         let permisoChecked = (dato.asignado == 1) ? 'checked' : '';
-
-        // Identificar de manera automática si es el permiso base/ingresar para las reglas de negocio
         let nombreLower = dato.nombre_permiso.toLowerCase();
         let claseTipo = (nombreLower.includes('ingresar') || nombreLower.includes('consultar') || nombreLower.includes('acceder') || nombreLower.includes('listar'))
             ? 'permiso-acceso'
             : 'permiso-accion';
 
-        // Inyección del sub-item limpio con el checkbox correspondiente
-        htmlContent += `
+        html += `
         <div class="sub_item_fila">
             <div class="sub_item_info" style="flex: 2;">
                 <span class="sub_item_titulo">${escapeHTML(dato.nombre_permiso)}</span>
@@ -423,17 +503,28 @@ function mostrarPermisosUsuario(datos) {
         </div>`;
     });
 
-    if (datos.length > 0) {
-        htmlContent += `
-                    </div> </div> </div> </div> `;
-    }
+    html += `
+                </div>
+            </div>
+        </div>
+    </div>`;
 
-    $("#tabla_permisos").html(htmlContent);
-
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-
-    abrirModal();
+    return html;
 }
+
+// Eventos de pestañas y buscador para usuarios
+$(document).off('click.permisos_tabs_u').on('click.permisos_tabs_u', '.permisos_tab', function () {
+    let tab = $(this).data('tab');
+    $(this).closest('.permisos_tabs').find('.permisos_tab').removeClass('activa');
+    $(this).addClass('activa');
+    $(this).closest('#tabla_permisos_container').find('.permisos_tab_contenido').removeClass('activo');
+    $('#tab_' + tab).addClass('activo');
+});
+
+$(document).off('input.permisos_buscar_u').on('input.permisos_buscar_u', '#buscador_permisos', function () {
+    let filtro = $(this).val();
+    renderizarPermisosUsuarioEnTabs(datosPermisosUsuarioGlobal, filtro);
+});
 
 function CargarPermisos(idUsuario) {
     var datos = new FormData();
@@ -539,6 +630,7 @@ function enviaAjax(datos) {
                     setTimeout(function () {
                         window.open(lee.archivo, '_blank');
                     }, 2000);
+                    cerrarModal();
                     limpia();
                 } else if (lee.accion == "bloquear") {
                     muestraMensaje("success", 2000, "Accion Exitosa", lee.mensaje);

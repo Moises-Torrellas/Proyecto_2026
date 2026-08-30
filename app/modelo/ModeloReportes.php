@@ -78,13 +78,11 @@ class ModeloReportes extends Conexion
             $conex = $this->conex();
             $params = [];
 
-            // NOTA: Se eliminó la restricción estricta de c.estatus = 1 para incluir cargos pagados,
-            // excluyendo únicamente los que estén explícitamente anulados (asumiendo estatus = 0 como anulado)
             $sentencia = "SELECT 
             con.nombre AS concepto,
             m.abreviatura AS moneda,
-            SUM(c.monto_total) AS total_cargado,
-            SUM(COALESCE(p_agg.total_pagado, 0)) AS total_recaudado
+            COALESCE(SUM(c.monto_total), 0) AS total_cargado,
+            COALESCE(SUM(p_agg.total_pagado), 0) AS total_recaudado
         FROM conceptos con
         INNER JOIN cargos c ON con.codigo_concepto = c.codigo_concepto
         INNER JOIN monedas m ON c.codigo_moneda = m.codigo_moneda
@@ -92,14 +90,14 @@ class ModeloReportes extends Conexion
             SELECT dp.codigo_cargo, SUM(dp.monto_abonado) AS total_pagado
             FROM detalles_pagos dp
             INNER JOIN pagos p ON dp.codigo_pago = p.codigo_pago
-            WHERE p.estatus = 1 -- Asegúrate de que 1 sea el estatus de un pago aprobado/procesado
+            WHERE p.estatus = 1
             GROUP BY dp.codigo_cargo
         ) p_agg ON c.codigo_cargo = p_agg.codigo_cargo
-        WHERE c.estatus != 0"; // Cambiado para evitar omitir los cargos que cambiaron de estado al pagarse
+        WHERE c.estatus NOT IN (0, 3) AND m.estatus = 1 AND con.estatus = 1"; 
 
             // Filtro por Moneda
             if (!empty($filtros['moneda']) && $filtros['moneda'] !== 'todos') {
-                $sentencia .= " AND c.codigo_moneda = :moneda";
+                $sentencia .= " AND m.codigo_moneda = :moneda";
                 $params[':moneda'] = $filtros['moneda'];
             }
 
@@ -110,17 +108,18 @@ class ModeloReportes extends Conexion
             }
 
             // Filtros de fechas
-            if (!empty($filtros['fecha_desde'])) {
+            $fechas = $this->validateDateRange($filtros['fecha_desde'] ?? '', $filtros['fecha_hasta'] ?? '');
+            if ($fechas['desde']) {
                 $sentencia .= " AND c.fecha_emision >= :fecha_desde";
-                $params[':fecha_desde'] = $filtros['fecha_desde'];
+                $params[':fecha_desde'] = $fechas['desde'];
             }
-
-            if (!empty($filtros['fecha_hasta'])) {
+            if ($fechas['hasta']) {
                 $sentencia .= " AND c.fecha_emision <= :fecha_hasta";
-                $params[':fecha_hasta'] = $filtros['fecha_hasta'];
+                $params[':fecha_hasta'] = $fechas['hasta'];
             }
 
-            $sentencia .= " GROUP BY con.codigo_concepto, con.nombre, m.abreviatura";
+            $sentencia .= " GROUP BY con.codigo_concepto, con.nombre, m.abreviatura
+            ORDER BY con.nombre, m.abreviatura";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -214,13 +213,15 @@ class ModeloReportes extends Conexion
             }
 
             // Filtros por Rango de Fechas (fecha_asignacion)
-            if (!empty($filtros['fecha_desde'])) {
+            $fechas = $this->validateDateRange($filtros['fecha_desde'] ?? '', $filtros['fecha_hasta'] ?? '');
+
+            if ($fechas['desde']) {
                 $sentencia .= " AND a.fecha_asignacion >= :fecha_desde";
-                $params[':fecha_desde'] = $filtros['fecha_desde'];
+                $params[':fecha_desde'] = $fechas['desde'];
             }
-            if (!empty($filtros['fecha_hasta'])) {
+            if ($fechas['hasta']) {
                 $sentencia .= " AND a.fecha_asignacion <= :fecha_hasta";
-                $params[':fecha_hasta'] = $filtros['fecha_hasta'];
+                $params[':fecha_hasta'] = $fechas['hasta'];
             }
 
             // Agrupamos por el ID real del catálogo
@@ -315,4 +316,44 @@ class ModeloReportes extends Conexion
         return $stmt->fetchAll();
     }
     
+    private function parseAndValidateDate($dateString)
+    {
+        if (empty($dateString)) return null;
+        
+        $parts = explode('/', $dateString);
+        if (count($parts) === 3) {
+            $formattedDate = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+        } else {
+            // Assume it might already be Y-m-d
+            $formattedDate = $dateString;
+        }
+
+        $dateObj = new \DateTime($formattedDate);
+        $minDate = new \DateTime('2022-01-01');
+        $today = new \DateTime();
+        $today->setTime(0,0,0);
+
+        if ($dateObj < $minDate) {
+            throw new Exception("No se permiten fechas menores al año 2022.");
+        }
+        if ($dateObj > $today) {
+            throw new Exception("No se pueden ingresar fechas futuras.");
+        }
+
+        return $formattedDate;
+    }
+
+    private function validateDateRange($desdeStr, $hastaStr)
+    {
+        $desde = $this->parseAndValidateDate($desdeStr);
+        $hasta = $this->parseAndValidateDate($hastaStr);
+
+        if ($desde && $hasta) {
+            if (new \DateTime($desde) > new \DateTime($hasta)) {
+                throw new Exception("La fecha de inicio no puede ser mayor a la fecha de fin.");
+            }
+        }
+
+        return ['desde' => $desde, 'hasta' => $hasta];
+    }
 }

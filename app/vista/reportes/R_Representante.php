@@ -182,23 +182,23 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Nombre Y Apellido</th>
                     <th>Cédula</th>
                     <th>Teléfono</th>
                     <th>Dirección</th>
+                    <th>Correo</th>
+                    <th>Instagram</th>
                 </tr>
             </thead>
             <tbody>
-                <?php $id = 0;
-                foreach ($datos as $r) :
-                    $id++; ?>
+                <?php foreach ($datos as $r) : ?>
                     <tr>
-                        <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido']) ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['tipo_doc'] . '-' . $r['cedula']) ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['telefono']) ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['direccion']) ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['correo'] ?: 'No Aplica') ?></td>
+                        <td class="data-cell"><?= htmlspecialchars($r['instagram'] ?: 'No Aplica') ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

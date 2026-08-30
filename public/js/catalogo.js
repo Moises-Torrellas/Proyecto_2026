@@ -67,13 +67,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte del catálogo?', function (confirmado) {
-                if (confirmado) {
-                    if(typeof abrirAlertaEspara === 'function') abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                if(typeof abrirAlertaEspara === 'function') abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -120,8 +119,12 @@ $(document).ready(function () {
         const pasos = [
             { element: '#busqueda', popover: { title: 'Barra de Búsqueda', description: 'Aquí puedes buscar artículos por su nombre, categoría o talla.', position: 'bottom' } },
             { element: '#incluir', popover: { title: 'Nuevo Artículo', description: 'Pulsa aquí para registrar un nuevo artículo en el catálogo.', position: 'bottom' } },
-            { element: '#generar', popover: { title: 'Generar Reportes', description: 'Pulsa aquí para exportar la lista de artículos en PDF.', position: 'left' } },
-            { element: '#resultadoconsulta', popover: { title: 'Catálogo', description: 'Aquí se mostrarán todos los artículos registrados.', position: 'top' } }
+            { element: '#generar', popover: { title: 'Generar Reportes', description: 'Pulsa aquí para exportar la lista de artículos en PDF o Excel.', position: 'left' } },
+            { element: '#resultadoconsulta', popover: { title: 'Catálogo', description: 'Aquí se mostrarán todos los artículos registrados.', position: 'top' } },
+            { element: '.sub_item_acciones', popover: { title: 'Acciones de Artículo', description: 'Aquí podrás modificar la información del artículo o eliminarlo.', position: 'left' } },
+            { element: '#rowsPerPage', popover: { title: 'Registros Deseados', description: 'Aquí podrá seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' } },
+            { element: '#botonera', popover: { title: 'Cambiar de Página', description: 'Botones para cambiar de página.', position: 'top' } },
+            { element: '#cantidad', popover: { title: 'Cantidad', description: 'Aquí puedes ver la cantidad de artículos mostrados actualmente.', position: 'top' } }
         ];
         const driver = iniciarTourConPasos(pasos);
         driver.start();
@@ -185,8 +188,9 @@ function modificar(datos) {
     $('#stock_minimo').val(datos[0].stock_minimo);
     $('#talla').val(datos[0].talla);
     
+    $('#id_categoria').val(datos[0].id_categoria);
     if ($.fn.select2) {
-        $('#id_categoria').val(datos[0].id_categoria).trigger('change');
+        $('#id_categoria').trigger('change');
     }
 
     abrirModal();

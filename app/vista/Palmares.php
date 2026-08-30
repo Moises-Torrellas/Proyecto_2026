@@ -412,8 +412,8 @@ endif; ?>
         </div>
     </section>
 
-    <script src="js/main.js"></script>
-    <script src="js/palmares.js"></script>
+    <script src="js/main.js?v=2"></script>
+    <script src="js/palmares.js?v=2"></script>
 </body>
 
 </html>

@@ -53,13 +53,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -90,7 +89,7 @@ $(document).ready(function () {
         $("#titulo_modal").text("Generar Reporte");
         
         // Garantizamos visibilidad para permitir reportes filtrados opcionales
-        $('#nombre').closest('.colum').show();
+        $('#nombre').closest('.colum').hide();
         $('#tipo').closest('.colum').show();
         
         // Por defecto empieza en la opción "Todos" (valor vacío)
@@ -106,8 +105,8 @@ $(document).ready(function () {
             { element: '#incluir', popover: { title: 'Nuevo Premio', description: 'Abre el formulario para registrar un nuevo premio.', position: 'bottom' } },
             { element: '#generar', popover: { title: 'Generar Reportes', description: 'Abre el modal para exportar el listado de premios a PDF.', position: 'left' } },
             { element: '#resultadoconsulta', popover: { title: 'Premios Registrados', description: 'Aquí se desplegará el palmarés cargado.', position: 'top' } },
-            { element: '#cbt_v', popover: { title: 'Modificar Premios', description: 'Pulsando este botón podrás editar la información.', position: 'left' } },
-            { element: '#cbt_r', popover: { title: 'Eliminar Premio', description: 'Quita el premio seleccionado del sistema.', position: 'left' } },
+            { element: '#resultadoconsulta .listado_contenedor_grupal:first-child .cbt_v', popover: { title: 'Modificar Premios', description: 'Pulsando este botón podrás editar la información.', position: 'left' } },
+            { element: '#resultadoconsulta .listado_contenedor_grupal:first-child .cbt_r', popover: { title: 'Eliminar Premio', description: 'Quita el premio seleccionado del sistema.', position: 'left' } },
             { element: '#rowsPerPage', popover: { title: 'Registros Deseados', description: 'Configura la cantidad de filas visibles por tabla.', position: 'top' } },
             { element: '#botonera', popover: { title: 'Cambiar de Página', description: 'Navega a través de las páginas del listado.', position: 'top' } },
             { element: '#cantidad', popover: { title: 'Cantidad Total', description: 'Muestra la métrica total de premios cargados.', position: 'top' } },

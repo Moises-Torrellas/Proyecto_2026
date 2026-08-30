@@ -54,13 +54,14 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
+            opcionesReporte(function(formato) {
+                if (typeof abrirAlertaEspara === 'function') {
+                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
                 }
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -81,6 +82,66 @@ $(document).ready(function () {
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
         abrirModal();
+    });
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            { 
+                element: '#busqueda', 
+                popover: { 
+                    title: 'Búsqueda Rápida', 
+                    description: 'Filtra las categorías escribiendo su nombre o descripción.', 
+                    position: 'bottom' 
+                } 
+            },
+            { 
+                element: '#incluir', 
+                popover: { 
+                    title: 'Nueva Categoría', 
+                    description: 'Haz clic aquí para abrir el formulario y registrar una nueva categoría.', 
+                    position: 'bottom' 
+                } 
+            },
+            { 
+                element: '#generar', 
+                popover: { 
+                    title: 'Exportar Reportes', 
+                    description: 'Genera y descarga un reporte en PDF o Excel de las categorías.', 
+                    position: 'left' 
+                } 
+            },
+            { 
+                element: '#resultadoconsulta', 
+                popover: { 
+                    title: 'Lista de Categorías', 
+                    description: 'Aquí verás todas las categorías registradas. Puedes editarlas o eliminarlas desde las acciones.', 
+                    position: 'top' 
+                } 
+            },
+            {
+                element: '.listado_item',
+                popover: { title: 'Registro', description: 'Aquí se muestran los datos de la categoría.', position: 'bottom' }
+            },
+            {
+                element: '.listado_col_acciones',
+                popover: { title: 'Acciones', description: 'Usa estos botones para modificar los datos de la categoría o eliminarla del sistema.', position: 'left' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aquí podrá seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Página', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aquí puedes ver la cantidad de registros mostrados actualmente.', position: 'top' }
+            }
+        ];
+        if (typeof iniciarTourConPasos === 'function') {
+            iniciarTourConPasos(pasos).start();
+        }
     });
 });
 
@@ -175,7 +236,21 @@ function enviaAjax(datos) {
             }
             try {
                 var lee = JSON.parse(respuesta);
-                if (lee.accion == "incluir") {
+                
+                if (lee.accion === "reporte") {
+                    if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
+                    cerrarModal();
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
+                } 
+                else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
                     cerrarModal(); // Agregado para que se cierre al guardar
@@ -195,9 +270,11 @@ function enviaAjax(datos) {
                     modificar(lee.datos);
                 }
                 else if (lee.accion == "error") {
+                    if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
                     muestraMensaje("error", 3000, "Error", lee.mensaje);
                 }
             } catch (e) {
+                if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
                 alert("Error procesando los datos: " + e.message);
                 console.error(respuesta); // Útil para ver en la consola si el PHP imprimió un error visible
             }

@@ -87,6 +87,10 @@ function manejarSolicitudPalmares($obj, $id_modulo, $bitacoraObj, array $permiso
                 if (empty($permisos['modificar_palmares'])) throw new Exception('No tienes permisos para modificar palmarés.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar':
+                if (empty($permisos['generar_palmares'])) throw new Exception('No tienes permisos para generar reporte de palmarés.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -220,7 +224,22 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró un palmarés {$tipo_palmares} {$desc}");
+            $idNuevo = $obj->id ?? ''; // O donde se guarde
+            $datos_nuevos_json = "";
+            if ($tipo_palmares === 'individual') {
+                $dn = $obj->BuscarIndividual((int)$idNuevo)['datos'][0] ?? [];
+                unset($dn['codigo_individual']);
+                $datos_nuevos_json = json_encode($dn);
+            } else {
+                $dn = $obj->BuscarGrupal((int)$idNuevo)['datos'][0] ?? [];
+                unset($dn['codigo_grupal']);
+                $datos_nuevos_json = json_encode($dn);
+            }
+            $descLog = ($tipo_palmares === 'individual') 
+                ? "para: {$dn['nombres']} {$dn['apellidos']} ({$dn['cedula']})" 
+                : "para: {$dn['nombre_equipo']}";
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró un palmarés {$tipo_palmares} {$descLog}", '', $datos_nuevos_json);
             echo json_encode(['accion' => 'incluir', 'mensaje' => 'Palmarés registrado exitosamente.', 'tipo_palmares' => $tipo_palmares]);
             return;
         }
@@ -272,17 +291,45 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
 
         if ($tipo_palmares === 'individual') {
             $datos['atleta'] = (int)$_POST['atleta'];
+            $desc = "al atleta ID: " . $datos['atleta'];
         } else {
             $datos['equipo'] = (int)$_POST['equipo'];
+            $desc = "al equipo ID: " . $datos['equipo'];
         }
 
         $obj->setModeloParticipaciones(new ModeloParticipaciones());
         $obj->setModeloPremios(new ModeloPremios());
 
+        $datos_previos_json = "";
+        $idEditar = (int)$_POST['id'];
+        if ($tipo_palmares === 'individual') {
+            $dp = $obj->BuscarIndividual($idEditar)['datos'][0] ?? [];
+            unset($dp['codigo_individual']);
+            $datos_previos_json = json_encode($dp);
+        } else {
+            $dp = $obj->BuscarGrupal($idEditar)['datos'][0] ?? [];
+            unset($dp['codigo_grupal']);
+            $datos_previos_json = json_encode($dp);
+        }
+
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el palmarés {$tipo_palmares} ID: " . $datos['id']);
+            $datos_nuevos_json = "";
+            if ($tipo_palmares === 'individual') {
+                $dn = $obj->BuscarIndividual($idEditar)['datos'][0] ?? [];
+                unset($dn['codigo_individual']);
+                $datos_nuevos_json = json_encode($dn);
+            } else {
+                $dn = $obj->BuscarGrupal($idEditar)['datos'][0] ?? [];
+                unset($dn['codigo_grupal']);
+                $datos_nuevos_json = json_encode($dn);
+            }
+            $descLog = ($tipo_palmares === 'individual') 
+                ? "para: {$dn['nombres']} {$dn['apellidos']} ({$dn['cedula']})" 
+                : "para: {$dn['nombre_equipo']}";
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó un palmarés {$tipo_palmares} {$descLog}", $datos_previos_json, $datos_nuevos_json);
             echo json_encode(['accion' => 'modificar', 'mensaje' => 'Palmarés modificado exitosamente.', 'tipo_palmares' => $tipo_palmares]);
             return;
         }
@@ -321,11 +368,26 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion'        => 'eliminar'
         ];
 
-        $resultado = $obj->ProcesarDatos($datos);
+        $datos_previos_json = "";
+        $idEliminar = (int)$_POST['id'];
+        if ($tipo_palmares === 'individual') {
+            $dp = $obj->BuscarIndividual($idEliminar)['datos'][0] ?? [];
+            unset($dp['codigo_individual']);
+            $datos_previos_json = json_encode($dp);
+        } else {
+            $dp = $obj->BuscarGrupal($idEliminar)['datos'][0] ?? [];
+            unset($dp['codigo_grupal']);
+            $datos_previos_json = json_encode($dp);
+        }
 
+        $resultado = $obj->ProcesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el palmarés {$tipo_palmares} ID: {$id}");
-            echo json_encode(['accion' => 'eliminar', 'mensaje' => 'Palmarés eliminado correctamente.', 'tipo_palmares' => $tipo_palmares]);
+            $descLog = ($tipo_palmares === 'individual') 
+                ? "para: {$dp['nombres']} {$dp['apellidos']} ({$dp['cedula']})" 
+                : "para: {$dp['nombre_equipo']}";
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó un palmarés {$tipo_palmares} {$descLog}", $datos_previos_json, '');
+            echo json_encode(['accion' => 'eliminar', 'mensaje' => 'Palmarés eliminado exitosamente.', 'tipo_palmares' => $tipo_palmares]);
             return;
         }
 
@@ -340,6 +402,38 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode(['accion' => 'error', 'mensaje' => $mensaje]);
     } catch (Exception $e) {
         logs('Palmares', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $tipo_palmares = $_POST['tipo_palmares_reporte'] ?? 'individual';
+        $respuesta = ($tipo_palmares === 'individual') ? $obj->ConsultarIndividual() : $obj->ConsultarGrupal();
+        $datos = $respuesta['datos'] ?? [];
+
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontró palmarés para hacer el reporte.']);
+            exit();
+        }
+
+        $formato = $_POST['formato'] ?? 'pdf';
+        $_SESSION['tipo_palmares_reporte'] = $tipo_palmares;
+
+        $objG = new GenerarReporte();
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel('R_Palmares', $datos, 'Palmares');
+        } else {
+            $reporte = $objG->generarPDF('R_Palmares', $datos, 'Palmares');
+        }
+        
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de palmarés {$tipo_palmares} en " . strtoupper($formato));
+        }
+        echo json_encode($reporte);
+    } catch (Exception $e) {
+        logs('Palmares', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

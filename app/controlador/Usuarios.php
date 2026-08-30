@@ -1,6 +1,7 @@
 <?php
 
 use App\modelo\ModeloUsuarios;
+use App\servicios\GenerarReporte;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -89,6 +90,10 @@ function manejarSolicitudUsuarios($obj, $id_modulo, $bitacoraObj, $permisos): vo
                 if (empty($permisos['permisos_usuario'])) throw new Exception('No tiene permisos para modificar permisos de usuarios.');
                 guardarPermisosUsuario($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar':
+                if (empty($permisos['generar_usuarios'])) throw new Exception('No tiene permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
 
             default:
                 throw new Exception('Acción no permitida.');
@@ -133,7 +138,6 @@ function consultarRoles($obj): void
 function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        logs('Usuarios', 'POST RECIBIDO: ' . print_r($_POST, true), 'Controlador_Incluir');
         if (empty($_POST)) {
             logs('Usuarios', '¡ALERTA! El array POST está vacío.', 'Controlador_Incluir');
         }
@@ -159,8 +163,15 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 
         // 5. Auditoría y Respuesta
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Registro al usuario: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido']);
+            $datos_nuevos = [
+                'cedula'   => $_POST['cedula'],
+                'nombre'   => $_POST['nombre'],
+                'apellido' => $_POST['apellido'],
+                'telefono' => $_POST['telefono'],
+                'correo'   => $_POST['correo']
+            ];
+            $mensajeAccion = "Registro al usuario: " . $_POST['cedula'] . " - " . $_POST['nombre'] . " " . $_POST['apellido'];
+            // registrarBitacora($bitacoraObj, $id_modulo, $mensajeAccion, '', json_encode($datos_nuevos)); // Manejado por Trigger en la BD
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Usuario registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -184,7 +195,21 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id', 'cedula', 'nombre', 'apellido', 'telefono', 'correo', 'rol', 'foto_actual']);
+        validar_requeridos(['id', 'cedula', 'nombre', 'apellido', 'telefono', 'correo', 'foto_actual']);
+        if (!isset($_POST['rol'])) { $_POST['rol'] = ''; }
+
+        $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+        $datosPrevios = '';
+        if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
+            $viejo = $respuestaVieja['datos'][0];
+            $datosPrevios = json_encode([
+                'cedula'   => $viejo['cedulaUsuario'],
+                'nombre'   => $viejo['nombreUsuario'],
+                'apellido' => $viejo['apellidoUsuario'],
+                'telefono' => $viejo['telefonoUsuario'],
+                'correo'   => $viejo['correo']
+            ]);
+        }
 
         $foto_nombre = subirImagen($_FILES['foto'], 'user', $_POST['cedula'], 'usuarios', $_POST['foto_actual']);
 
@@ -207,8 +232,15 @@ function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico al usuario: " . $_POST['cedula'] . ' ' . $_POST['nombre'] . ' ' . $_POST['apellido']);
+            $datosNuevos = json_encode([
+                'cedula'   => $_POST['cedula'],
+                'nombre'   => $_POST['nombre'],
+                'apellido' => $_POST['apellido'],
+                'telefono' => $_POST['telefono'],
+                'correo'   => $_POST['correo']
+            ]);
+            $mensajeAccion = "Modifico al usuario: " . $_POST['cedula'] . " - " . $_POST['nombre'] . " " . $_POST['apellido'];
+            registrarBitacora($bitacoraObj, $id_modulo, $mensajeAccion, $datosPrevios, $datosNuevos);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Usuario modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -242,11 +274,24 @@ function eliminarUsuario($obj, $id_modulo, $bitacoraObj): void
             throw new Exception('No puedes eliminar tu propio usuario.');
         }
 
+        $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+        $datosPrevios = '';
+        if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
+            $viejo = $respuestaVieja['datos'][0];
+            $datosPrevios = json_encode([
+                'cedula'   => $viejo['cedulaUsuario'],
+                'nombre'   => $viejo['nombreUsuario'],
+                'apellido' => $viejo['apellidoUsuario'],
+                'telefono' => $viejo['telefonoUsuario'],
+                'correo'   => $viejo['correo']
+            ]);
+        }
+
         $resultado = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'eliminar']);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino al usuario: " . $_POST['id']);
+            $nombreUsuarioEliminado = isset($viejo) ? ($viejo['cedulaUsuario'] . " - " . $viejo['nombreUsuario'] . " " . $viejo['apellidoUsuario']) : $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino al usuario: " . $nombreUsuarioEliminado, $datosPrevios, '');
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Usuario eliminado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -294,7 +339,24 @@ function bloquearUsuario($obj, $id_modulo, $bitacoraObj): void
             $nuevoEstado = ($_POST['bloqueo'] == 1) ? 2 : 1;
             $mensajeExito = ($nuevoEstado == 2) ? "Usuario bloqueado exitosamente." : "Usuario desbloqueado exitosamente.";
             $mensajeBitacora = ($nuevoEstado == 2) ? "Bloqueo al usuario: " : "Desbloqueo al usuario: ";
-            registrarBitacora($bitacoraObj, $id_modulo, $mensajeBitacora . $_POST['id']);
+            
+            $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+            $datosPrevios = '';
+            if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
+                $viejo = $respuestaVieja['datos'][0];
+                $datosPrevios = json_encode([
+                    'cedula'   => $viejo['cedulaUsuario'],
+                    'nombre'   => $viejo['nombreUsuario'],
+                    'apellido' => $viejo['apellidoUsuario'],
+                    'telefono' => $viejo['telefonoUsuario'],
+                    'correo'   => $viejo['correo']
+                ]);
+            }
+            
+            $nombreUsuarioBloqueado = isset($viejo) ? ($viejo['cedulaUsuario'] . " - " . $viejo['nombreUsuario'] . " " . $viejo['apellidoUsuario']) : $_POST['id'];
+            $mensajeBitacoraCompleto = $mensajeBitacora . $nombreUsuarioBloqueado;
+            
+            registrarBitacora($bitacoraObj, $id_modulo, $mensajeBitacoraCompleto, $datosPrevios, '');
             $resultado = array('accion' => 'bloquear', 'mensaje' => $mensajeExito);
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -340,7 +402,13 @@ function guardarPermisosUsuario($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
         if ($resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico permisos al usuario: " . $_POST['id']);
+            $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+            $nombreUsuarioPermisos = $_POST['id'];
+            if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
+                $viejo = $respuestaVieja['datos'][0];
+                $nombreUsuarioPermisos = $viejo['cedulaUsuario'] . " - " . $viejo['nombreUsuario'] . " " . $viejo['apellidoUsuario'];
+            }
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico permisos al usuario: " . $nombreUsuarioPermisos);
             echo json_encode(['accion' => 'guardar_permisos_usuario', 'mensaje' => 'Permisos guardados correctamente.']);
         } else {
             throw new Exception($resultado['codigo'] ?? 'Ocurrió un error al guardar los permisos del usuario.');
@@ -351,40 +419,59 @@ function guardarPermisosUsuario($obj, $id_modulo, $bitacoraObj): void
     }
 }
 
-/* function generarReporteUsuarios($obj, $reporte): void
+function generar($obj, $id_modulo, $bitacoraObj)
 {
-    $validacionesReporte = [];
-    $datosFiltro = ['accion' => 'reporte'];
+    try {
+        $validacionesReporte = [];
+        $datosFiltro = ['accion' => 'generar']; // O 'consultar', el modelo usa Consultar() o processarDatos() con generar?
+        // ModeloUsuarios expects 'reporte' to call Consultar
+        $datosFiltro = ['accion' => 'reporte'];
 
-    if (!empty($_POST['cedula'])) {
-        $validacionesReporte['cedula'] = ['regla' => '/^[0-9]{1,8}$/', 'mensaje' => 'Cédula inválida.'];
-        $datosFiltro['cedula'] = $_POST['cedula'];
-    }
-    if (!empty($_POST['nombre'])) {
-        $validacionesReporte['nombre'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido.'];
-        $datosFiltro['nombre'] = $_POST['nombre'];
-    }
-    if (!empty($_POST['apellido'])) {
-        $validacionesReporte['apellido'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Apellido inválido.'];
-        $datosFiltro['apellido'] = $_POST['apellido'];
-    }
-    if (!empty($_POST['rol'])) {
-        $validacionesReporte['rol'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Rol inválido.'];
-        $datosFiltro['roles_id'] = $_POST['rol'];
-    }
+        if (!empty($_POST['cedula'])) {
+            $validacionesReporte['cedula'] = ['regla' => '/^[0-9]{1,8}$/', 'mensaje' => 'Cédula inválida.'];
+            $datosFiltro['cedula'] = $_POST['cedula'];
+        }
+        if (!empty($_POST['nombre'])) {
+            $validacionesReporte['nombre'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Nombre inválido.'];
+            $datosFiltro['nombre'] = $_POST['nombre'];
+        }
+        if (!empty($_POST['apellido'])) {
+            $validacionesReporte['apellido'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', 'mensaje' => 'Apellido inválido.'];
+            $datosFiltro['apellido'] = $_POST['apellido'];
+        }
+        if (!empty($_POST['rol'])) {
+            $validacionesReporte['rol'] = ['regla' => '/^[0-9]+$/', 'mensaje' => 'Rol inválido.'];
+            $datosFiltro['roles_id'] = $_POST['rol'];
+        }
 
-    // Solo valida si se envió algún filtro, de lo contrario asume reporte general
-    if (!empty($validacionesReporte)) {
-        validar_datos($validacionesReporte);
-    }
+        if (!empty($validacionesReporte)) {
+            validar_datos($validacionesReporte);
+        }
 
-    $resultado = $obj->procesarDatos($datosFiltro);
+        $respuesta = $obj->procesarDatos($datosFiltro);
+        $datos = $respuesta['datos'] ?? [];
 
-    if ($resultado['accion'] === 'consultar' && !empty($resultado['datos'])) {
-        $respuesta = $reporte->crearPdfUsuarios($resultado['datos']);
-        echo json_encode($respuesta);
-    } else {
-        throw new Exception('No se encontraron registros para el reporte.');
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron registros para hacer el reporte.']);
+            exit();
+        }
+
+        $nombreVista = 'R_Usuarios';
+        $objG = new GenerarReporte();
+        
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Usuarios');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Usuarios');
+        }
+
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de usuarios en " . strtoupper($formato), '', '');
+        }
+        echo json_encode($reporte);
+    } catch (Exception $e) {
+        logs('Usuarios', $e->getMessage(), 'Controlador_Generar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }
- */

@@ -1,5 +1,9 @@
+let timerBusqueda;
+
 $(document).ready(function () {
-    consultar();
+    inicializarPaginador();
+
+    $('#busqueda').off('keyup').on('keyup', busqueda);
 
     // Botón para generar un nuevo respaldo
     $("#btn_generar").on("click", function () {
@@ -12,7 +16,62 @@ $(document).ready(function () {
             }
         });
     });
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            {
+                element: '#titulo',
+                popover: { title: 'Mantenimiento BD', description: 'Aquí puedes gestionar los respaldos de la base de datos.', position: 'bottom' }
+            },
+            {
+                element: '#busqueda',
+                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar un respaldo por su nombre o fecha.', position: 'bottom' }
+            },
+            {
+                element: '#btn_generar',
+                popover: { title: 'Crear Punto de Restauración', description: 'Este botón te permite crear un nuevo respaldo del sistema.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child',
+                popover: { title: 'Registros de Respaldo', description: 'Aquí se listarán todos los respaldos que has generado.', position: 'top' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .cbt_v',
+                popover: { title: 'Restaurar', description: 'Al presionar este botón, el sistema se restaurará al punto seleccionado (Todos los datos actuales se reemplazarán).', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .cbt_r',
+                popover: { title: 'Eliminar', description: 'Permite eliminar definitivamente un respaldo.', position: 'left' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de registros en pantalla.', position: 'top' }
+            }
+        ];
+        
+        const driver = iniciarTourConPasos(pasos);
+        driver.start();
+    });
 });
+
+function busqueda() {
+    clearTimeout(timerBusqueda);
+    timerBusqueda = setTimeout(function () {
+        let valorBusqueda = $('#busqueda').val();
+        let datos = new FormData();
+        datos.append('accion', 'consultar');
+        datos.append('filtro', valorBusqueda);
+        enviaAjaxRespaldo(datos);
+    }, 500);
+}
 
 function consultar() {
     let datos = new FormData();
@@ -43,72 +102,13 @@ function eliminar(archivo) {
     });
 }
 
-function crearConsulta(datos) {
+function crearConsulta(htmlRecibido) {
     const contenedor = $('#resultadoconsulta');
+    contenedor.html(htmlRecibido);
 
-    contenedor.empty();
-
-    if (datos.length === 0) {
-        contenedor.append('<div class="listado_vacio"><p>No hay respaldos almacenados.</p></div>');
-    } else {
-        datos.forEach(dato => {
-
-            // --- INICIO DE LA VALIDACIÓN DE ESTATUS ---
-            let accionesHtml = '';
-            let estatus = "";
-            let clase = "";
-
-            if (dato.estatus == 1) {
-                estatus = "Guardado";
-                clase = "estatus_v";
-                accionesHtml = `
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn_t cbt_v" onclick="restaurar('${dato.nombre}')" title="Restaurar esta versión"><i class="fi fi-sr-time-past"></i></button>
-                        <button class="btn_t cbt_r" onclick="eliminar('${dato.nombre}')" title="Eliminar respaldo"><i class="fi fi-sr-trash-xmark"></i></button>
-                    </div>
-                `;
-            } else if (dato.estatus == 2) {
-                estatus = "Eliminado";
-                clase = "estatus_r";
-                accionesHtml = ``;
-            }
-            // --- FIN DE LA VALIDACIÓN ---
-
-            let registro = `
-                <div class="listado_contenedor_grupal">
-                    <div class="listado_item">
-                        <div class="listado_col_datos">
-                            <div class="listado_dato_grupo" style="width: 40%;">
-                                <small>Archivo</small>
-                                <span style="font-weight: bold; color: var(--texto-principal);">${dato.nombre}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Fecha de Creación</small>
-                                <span>${dato.fecha}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Creado por</small>
-                                <span>${dato.creador}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Peso</small>
-                                <span>${dato.tamano}</span>
-                            </div>
-                            <div class="listado_dato_grupo">
-                                <small>Estatus</small>
-                                <span class="${clase}">${estatus}</span>
-                            </div>
-                        </div>
-
-                        <div class="listado_col_acciones">
-                            ${accionesHtml}
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedor.append(registro);
-        });
-    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof inicializarPaginador === 'function') inicializarPaginador();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
 function enviaAjaxRespaldo(datos) {
@@ -127,6 +127,10 @@ function enviaAjaxRespaldo(datos) {
         },
         timeout: 30000,
         success: function (respuesta) {
+            if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
+                crearConsulta(respuesta);
+                return;
+            }
             try {
                 var lee = JSON.parse(respuesta);
 

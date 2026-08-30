@@ -30,6 +30,7 @@ class ModeloHistorial extends Conexion
                             a.fecha_nac,
                             a.foto,
                             a.genero,
+                            a.lugar_nacimiento,
                             TRIM(CONCAT(a.p_nombre, ' ', COALESCE(a.s_nombre, ''))) AS nombres,
                             TRIM(CONCAT(a.p_apellidos, ' ', COALESCE(a.s_apellidos, ''))) AS apellidos,
                             c.nombre AS nombre_categoria, 
@@ -38,15 +39,29 @@ class ModeloHistorial extends Conexion
                             i.dorsal,
                             i.peso_kg,
                             i.estatura_cm,
+                            i.talla_pantalon,
+                            i.talla_franela,
+                            i.talla_calzado,
+                            ca.direccion AS direccion,
+                            ca.telefono AS telefono,
+                            ca.municipio AS municipio,
+                            ca.instagram AS instagram_atleta,
                             ca.correo AS correo_atleta,
+                            dm.tipo_sangre,
+                            dm.es_alergico,
+                            dm.alergias_detalle,
                             TRIM(CONCAT(r.nombre, ' ', COALESCE(r.apellido, ''))) AS nombre_representante,
-                            r.correo AS correo_representante
+                            r.cedula AS cedula_representante,
+                            r.telefono AS telefono_representante,
+                            r.correo AS correo_representante,
+                            r.instagram AS instagram_representante
                           FROM atletas a 
                           LEFT JOIN inscripciones i ON a.codigo_atleta = i.codigo_atleta 
                           LEFT JOIN categorias c ON i.codigo_categoria = c.codigo_categoria 
                           LEFT JOIN posiciones p ON i.codigo_posicion = p.codigo_posicion 
                           LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta
                           LEFT JOIN contacto_atleta ca ON a.codigo_atleta = ca.codigo_atleta
+                          LEFT JOIN datos_medicos dm ON a.codigo_atleta = dm.codigo_atleta
                           LEFT JOIN atleta_representante ar ON a.codigo_atleta = ar.codigo_atleta
                           LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
                           WHERE a.codigo_atleta = :id_atleta

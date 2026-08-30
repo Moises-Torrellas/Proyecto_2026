@@ -9,8 +9,8 @@ function manejarRuta($pagina): void
 
         // Registramos
         if (isset($_SESSION['id'])) {
-            $entorno = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
-            $bitacora->RegistrarAccion(1, "Cierre de sesión exitoso.", $_SESSION['id'], null, null, $entorno);
+            $entorno = substr($_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido', 0, 50);
+            $bitacora->RegistrarAccion(_MD_CERRAR_, "Cierre de sesión exitoso.", $_SESSION['id'], '', '', $entorno);
         }
         // Limpiamos la sesión de forma segura
         $_SESSION = [];

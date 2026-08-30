@@ -1,6 +1,7 @@
 <?php
 
 use App\modelo\ModeloMetodosPago;
+use App\servicios\GenerarReporte;
 // Si usas Dompdf con Composer, asegúrate de tener el autoload requerido aquí o en tu Base.php
 // require_once __DIR__ . '/../../vendor/autoload.php'; 
 
@@ -139,9 +140,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Registro al metodo: " . $_POST['nombre']);
-            $resultado = array('accion' => 'incluir', 'mensaje' => 'Metodo registrado exitosamente.');
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'nec_referencia' => $_POST['nec_referencia']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registro el método de pago: " . $_POST['nombre'], '', $datos_nuevos_json);
+            $resultado = array('accion' => 'incluir', 'mensaje' => 'Método de pago registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -175,12 +179,20 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         ];
         $datos['accion'] = 'modificar';
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $metodo_previo = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($metodo_previo['codigo_metodo'])) unset($metodo_previo['codigo_metodo']);
+        $datos_previos_json = json_encode($metodo_previo);
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico al metodo: " . $_POST['nombre']);
-            $resultado = array('accion' => 'modificar', 'mensaje' => 'Metodo modificado exitosamente.');
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'nec_referencia' => $_POST['nec_referencia']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el método de pago: " . $_POST['nombre'], $datos_previos_json, $datos_nuevos_json);
+            $resultado = array('accion' => 'modificar', 'mensaje' => 'Método de pago modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -208,10 +220,15 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $metodo_previo = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($metodo_previo['codigo_metodo'])) unset($metodo_previo['codigo_metodo']);
+        $datos_previos_json = json_encode($metodo_previo);
+
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino al metodo de pago: " . $_POST['id']);
+            $nombre_metodo = $metodo_previo['nombre'] ?? $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el método de pago: " . $nombre_metodo, $datos_previos_json, '');
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Método de pago eliminado exitosamente.'); 
 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
@@ -271,54 +288,37 @@ function bloquear($obj, $id_modulo, $bitacoraObj): void
 function generar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        // 1. Capturamos lo que escribiste en el modal para filtrar la consulta
         $filtro = [];
         if (!empty($_POST['nombre'])) {
             $filtro['filtro'] = trim($_POST['nombre']);
         }
         
-        // 2. Ejecutamos la consulta con el filtro aplicado
         $respuesta = $obj->Consultar($filtro);
         $datos = $respuesta['datos'] ?? [];
 
-        // --- 🚨 NUEVA VALIDACIÓN: SI NO HAY DATOS, CANCELAMOS TODO 🚨 ---
         if (empty($datos)) {
             echo json_encode([
                 'accion' => 'error', 
                 'mensaje' => 'No se encontraron registros con ese nombre. El reporte fue cancelado.'
             ]);
-            return; // Cortamos la ejecución de la función aquí mismo
+            return; 
         }
-        // ---------------------------------------------------------------
 
-        registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Métodos de Pago");
-
-        $fecha_reporte = date('d/m/Y h:i A');
-        $usuario = $_SESSION['nombre_usuario'] ?? 'Administrador';
+        $nombreVista = 'R_MetodosPago';
+        $objG = new GenerarReporte();
         
-        $logo = __DIR__ . '/../../public/img/logo.png'; 
-        $logo_footer = __DIR__ . '/../../public/img/logo_footer.png';
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Métodos de Pago');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Métodos de Pago');
+        }
 
-        // 3. Incluimos el archivo con el nombre correcto
-        ob_start();
-        include(__DIR__ . '/../vista/reportes/R_MetodosPago.php'); 
-        $html = ob_get_clean();
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Métodos de Pago en " . strtoupper($formato));
+        }
 
-        // Inicializamos Dompdf
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
-        // Codificamos a Base64
-        $pdfBase64 = base64_encode($dompdf->output());
-        
-        // Retornamos el JSON con el PDF
-        echo json_encode([
-            'accion' => 'generar', 
-            'mensaje' => 'Reporte procesado con éxito.',
-            'pdf' => $pdfBase64
-        ]);
+        echo json_encode($reporte);
 
     } catch (Exception $e) {
         logs('Metodos_Pago', $e->getMessage(), 'Controlador_Generar');

@@ -1,4 +1,18 @@
-<?php include_once(__DIR__ . '/cookie.php'); ?>
+<?php 
+include_once(__DIR__ . '/cookie.php');
+
+$nivelUsuario = $_SESSION['nivel_rol'] ?? 99;
+$tienePermisoIA = ($nivelUsuario === 1 || $nivelUsuario === 2);
+
+if (!$tienePermisoIA && isset($_SESSION['permisos'])) {
+    foreach ($_SESSION['permisos'] as $permisosModulo) {
+        if (!empty($permisosModulo['ingresar_ia'])) {
+            $tienePermisoIA = true;
+            break;
+        }
+    }
+}
+?>
 <div class="nav_superior">
     <div class="contenedor_superior">
         <div class="contenedor_logo">
@@ -11,7 +25,9 @@
 
         <div class="contenedor_usuario">
             <div class="botones_usuario">
+                <?php if ($tienePermisoIA): ?>
                 <a type="button" class="boton_usuario asistente" id="asistente" data-tippy-content="Cani"><i class="icon_boton_usuario" data-lucide="bot-message-square"></i></a>
+                <?php endif; ?>
                 <a type="button" class="boton_usuario" id="ayuda" data-tippy-content="Ayuda"><i class="icon_boton_usuario" data-lucide="circle-question-mark"></i></a>
                 <a type="button" class="boton_usuario" id="noti" data-tippy-content="Notificaciones"><i class="icon_boton_usuario" data-lucide="bell"></i> <span id="campana-notificaciones-badge" class="badge_conteo ocultar">0</span></a>
 
@@ -61,6 +77,8 @@
 
     </div>
 </div>
+
+<?php if ($tienePermisoIA): ?>
 <section class="asistente_overlay" id="asistente_modal_contenedor">
     <div class="asistente_ventana ocultar" id="asistente_modal">
         <div class="asistente_cabecera">
@@ -89,3 +107,4 @@
         </div>
     </div>
 </section>
+<?php endif; ?>

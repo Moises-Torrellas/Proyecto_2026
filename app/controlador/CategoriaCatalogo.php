@@ -1,6 +1,7 @@
 <?php
 
 use App\modelo\ModeloCategoriaCatalogo;
+use App\servicios\GenerarReporte;
 
 require_once __DIR__ . '/Base.php';
 $id_modulo = _MD_CATEGORIA_CAT_;
@@ -62,6 +63,10 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
             case 'modificar':
                 if (empty($permisos['modificar_catcatalogo'])) throw new Exception('No tienes permisos para modificar categorías.');
                 modificar($obj, $id_modulo, $bitacoraObj);
+                break;
+            case 'generar':
+                if (empty($permisos['generar_catcatalogo'])) throw new Exception('No tienes permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
                 throw new Exception('Acción no permitida.');
@@ -198,6 +203,38 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('CategoriaCatalogo', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $filtro['filtro'] = $_POST['filtro'] ?? '';
+        $respuesta = $obj->Consultar($filtro);
+        $datos = $respuesta['datos'] ?? [];
+
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron categorías para generar el reporte.']);
+            exit();
+        }
+        
+        $formato = filter_input(INPUT_POST, 'formato', FILTER_SANITIZE_SPECIAL_CHARS) ?? 'pdf';
+        $nombreVista = 'R_CategoriaCatalogo'; 
+        
+        if ($formato === 'excel') {
+            $pdf = \App\servicios\GenerarReporte::generarExcel($nombreVista, $datos, 'CategoriaCatalogo');
+        } else {
+            $objG = new GenerarReporte();
+            $pdf = $objG->generarPDF($nombreVista, $datos, 'Categorías de Catálogo');
+        }
+        
+        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de categorías de catálogo en formato " . strtoupper($formato));
+        }
+        
+        echo json_encode($pdf);
+    } catch (Exception $e) {
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

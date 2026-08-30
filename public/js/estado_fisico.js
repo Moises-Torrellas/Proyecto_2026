@@ -49,13 +49,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    if(typeof abrirAlertaEspara === 'function') abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                if(typeof abrirAlertaEspara === 'function') abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -91,6 +90,66 @@ $(document).ready(function () {
     // Limpiar manual
     $("#limpiar").on("click", function() {
         limpia();
+    });
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            { 
+                element: '#busqueda', 
+                popover: { 
+                    title: 'Búsqueda Rápida', 
+                    description: 'Filtra los estados escribiendo su nombre.', 
+                    position: 'bottom' 
+                } 
+            },
+            { 
+                element: '#incluir', 
+                popover: { 
+                    title: 'Nuevo Estado', 
+                    description: 'Haz clic aquí para abrir el formulario y registrar un nuevo estado físico.', 
+                    position: 'bottom' 
+                } 
+            },
+            { 
+                element: '#generar', 
+                popover: { 
+                    title: 'Exportar Reportes', 
+                    description: 'Genera y descarga un reporte en PDF o Excel de los estados físicos.', 
+                    position: 'left' 
+                } 
+            },
+            { 
+                element: '#resultadoconsulta', 
+                popover: { 
+                    title: 'Lista de Estados', 
+                    description: 'Aquí verás todos los estados registrados en el sistema.', 
+                    position: 'top' 
+                } 
+            },
+            {
+                element: '.listado_item',
+                popover: { title: 'Registro', description: 'Muestra los datos del estado y su nivel de condición.', position: 'bottom' }
+            },
+            {
+                element: '.listado_col_acciones',
+                popover: { title: 'Acciones', description: 'Usa estos botones para modificar los datos del estado físico o eliminarlo.', position: 'left' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aquí podrá seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Página', description: 'Botones para navegar entre las páginas de resultados.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aquí puedes ver la cantidad de registros totales mostrados actualmente.', position: 'top' }
+            }
+        ];
+        if (typeof iniciarTourConPasos === 'function') {
+            iniciarTourConPasos(pasos).start();
+        }
     });
 });
 

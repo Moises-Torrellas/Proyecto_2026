@@ -2,6 +2,7 @@
 
 use App\modelo\ModeloRoles;
 use App\modelo\ModeloPermisos;
+use App\servicios\GenerarReporte;
 
 // 1. Cargamos las funciones base
 require_once __DIR__ . '/Base.php';
@@ -56,34 +57,38 @@ function manejarSolicitudRoles($obj, $id_modulo, $bitacoraObj, array $permisos):
         // Validaciones de permisos centralizadas en el switch
         switch ($accion) {
             case 'consultar':
-                if (empty(['ingresar_rol'])) throw new Exception('No tiene permisos para consultar roles.');
+                if (empty($permisos['ingresar_rol'])) throw new Exception('No tiene permisos para consultar roles.');
                 consultarRolesData($obj, $permisos);
                 break;
             case 'buscar':
-                if (empty(['modificar_rol'])) throw new Exception('No tiene permisos para buscar roles.');
+                if (empty($permisos['modificar_rol'])) throw new Exception('No tiene permisos para buscar roles.');
                 buscarRolesData($obj);
                 break;
 
             case 'incluir':
-                if (empty(['registrar_rol'])) throw new Exception('No tiene permisos para incluir roles.');
+                if (empty($permisos['registrar_rol'])) throw new Exception('No tiene permisos para incluir roles.');
                 incluirRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
 
             case 'modificar':
-                if (empty(['modificar_rol'])) throw new Exception('No tiene permisos para modificar roles.');
+                if (empty($permisos['modificar_rol'])) throw new Exception('No tiene permisos para modificar roles.');
                 modificarRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'guardar_permisos':
-                if (empty(['permisos_rol'])) throw new Exception('No tiene permisos para modificar permisos.');
-                guardarPermisosData($obj);
+                if (empty($permisos['permisos_rol'])) throw new Exception('No tiene permisos para modificar permisos.');
+                guardarPermisosData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (empty(['eliminar_rol'])) throw new Exception('No tiene permisos para eliminar roles.');
+                if (empty($permisos['eliminar_rol'])) throw new Exception('No tiene permisos para eliminar roles.');
                 eliminarRolesData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'CargarPermisos':
-                if (empty(['permisos_rol'])) throw new Exception('No tiene permisos para modificar permisos.');
+                if (empty($permisos['permisos_rol'])) throw new Exception('No tiene permisos para modificar permisos.');
                 CargarPermisos();
+                break;
+            case 'generar':
+                if (empty($permisos['generar_rol'])) throw new Exception('No tiene permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
                 break;
 
             default:
@@ -169,7 +174,11 @@ function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registro el Rol: " . $_POST['nombre']);
+            $datos_nuevos = [
+                'nombre' => $_POST['nombre'],
+                'descripcion' => $_POST['descripcion'] ?? ''
+            ];
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró el Rol: " . $_POST['nombre'], '', json_encode($datos_nuevos));
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Rol registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -201,10 +210,24 @@ function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'modificar'
         ];
 
+        $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+        $datosPrevios = '';
+        if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
+            $viejo = $respuestaVieja['datos'][0];
+            $datosPrevios = json_encode([
+                'nombre' => $viejo['nombre_rol'],
+                'descripcion' => $viejo['descripcion'] ?? ''
+            ]);
+        }
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico el Rol: " . $_POST['nombre']);
+            $datosNuevos = json_encode([
+                'nombre' => $_POST['nombre'],
+                'descripcion' => $_POST['descripcion'] ?? ''
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el Rol: " . $_POST['nombre'], $datosPrevios, $datosNuevos);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Rol modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -221,7 +244,7 @@ function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
     }
 }
 
-function guardarPermisosData($obj): void
+function guardarPermisosData($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         validar_requeridos(['id']);
@@ -234,6 +257,13 @@ function guardarPermisosData($obj): void
 
         $resultado = $obj->procesarDatos($datos);
         if ($resultado['accion'] === 'exito') {
+            $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+            $nombreRolPermisos = $_POST['id'];
+            if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
+                $viejo = $respuestaVieja['datos'][0];
+                $nombreRolPermisos = $viejo['nombre_rol'];
+            }
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó permisos al rol: " . $nombreRolPermisos);
             echo json_encode(['accion' => 'guardar_permisos', 'mensaje' => 'Permisos guardados correctamente.']);
         } else {
             throw new Exception($resultado['codigo'] ?? 'Ocurrió un error al guardar los permisos.');
@@ -255,10 +285,21 @@ function eliminarRolesData($obj, $id_modulo, $bitacoraObj)
             'accion'         => 'eliminar'
         ];
 
+        $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+        $datosPrevios = '';
+        if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
+            $viejo = $respuestaVieja['datos'][0];
+            $datosPrevios = json_encode([
+                'nombre' => $viejo['nombre_rol'],
+                'descripcion' => $viejo['descripcion'] ?? ''
+            ]);
+        }
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino el Rol: " . $_POST['id']);
+            $nombreRolEliminado = isset($viejo) ? $viejo['nombre_rol'] : $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el Rol: " . $nombreRolEliminado, $datosPrevios, '');
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Rol eliminado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -271,6 +312,49 @@ function eliminarRolesData($obj, $id_modulo, $bitacoraObj)
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Roles', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj)
+{
+    try {
+        $validacionesReporte = [];
+        $datosFiltro = ['accion' => 'reporte'];
+
+        if (!empty($_POST['nombre'])) {
+            $validacionesReporte['nombre'] = ['regla' => '/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/', 'mensaje' => 'Nombre inválido.'];
+            $datosFiltro['nombre'] = $_POST['nombre'];
+        }
+
+        if (!empty($validacionesReporte)) {
+            validar_datos($validacionesReporte);
+        }
+
+        $respuesta = $obj->procesarDatos($datosFiltro);
+        $datos = $respuesta['datos'] ?? [];
+
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron registros para hacer el reporte.']);
+            exit();
+        }
+
+        $nombreVista = 'R_Roles';
+        $objG = new GenerarReporte();
+        
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Roles');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Roles');
+        }
+
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de roles en " . strtoupper($formato), '', '');
+        }
+        echo json_encode($reporte);
+    } catch (Exception $e) {
+        logs('Roles', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

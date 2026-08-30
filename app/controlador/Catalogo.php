@@ -245,12 +245,18 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             exit();
         }
         
+        $formato = filter_input(INPUT_POST, 'formato', FILTER_SANITIZE_SPECIAL_CHARS) ?? 'pdf';
         $nombreVista = 'R_Catalogos'; 
-        $objG = new GenerarReporte();
-        $pdf = $objG->generarPDF($nombreVista, $datos, 'Catalogo de Equipamientos');
+        
+        if ($formato === 'excel') {
+            $pdf = \App\servicios\GenerarReporte::generarExcel($nombreVista, $datos, 'Catalogo');
+        } else {
+            $objG = new GenerarReporte();
+            $pdf = $objG->generarPDF($nombreVista, $datos, 'Catalogo de Equipamientos');
+        }
         
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte del catálogo.");
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte del catálogo en formato " . strtoupper($formato));
         }
         echo json_encode($pdf);
     } catch (Exception $e) {

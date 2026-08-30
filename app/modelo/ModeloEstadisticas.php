@@ -82,6 +82,7 @@ class ModeloEstadisticas extends Conexion
                         dp.goles, dp.asistencias, dp.penalizaciones, 
                         dp.partidos_jugados, dp.average, dp.goles_contra,
                         a.codigo_atleta AS id_atleta, a.p_nombre AS nombres, a.p_apellidos AS apellidos,
+                        ObtenerTorneosAtleta(a.codigo_atleta) AS total_torneos_jugados,
                         t.nombre AS torneo_nombre, t.fecha_inicio
                     FROM detalles_participacion dp
                     INNER JOIN atletas a ON dp.codigo_atleta = a.codigo_atleta
@@ -102,12 +103,21 @@ class ModeloEstadisticas extends Conexion
                 $params[':f2'] = $p;
                 $params[':f3'] = $p;
             }
+            
+            if (!empty($filtro['participacion'])) {
+                $sentencia .= " AND dp.codigo_participacion = :participacion";
+                $params[':participacion'] = $filtro['participacion'];
+            }
+            if (!empty($filtro['atleta'])) {
+                $sentencia .= " AND dp.codigo_atleta = :atleta";
+                $params[':atleta'] = $filtro['atleta'];
+            }
 
             $sentencia .= " ORDER BY a.codigo_atleta ASC, t.fecha_inicio DESC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
@@ -158,6 +168,7 @@ class ModeloEstadisticas extends Conexion
             $stmt->bindValue(':average', $this->average);
 
             $stmt->execute();
+            $this->id = $conex->lastInsertId();
             $conex->commit();
 
             return array('accion' => 'exito');
@@ -172,9 +183,10 @@ class ModeloEstadisticas extends Conexion
         }
     }
 
-    public function Buscar(): array
+    public function Buscar(int $id = null): array
     {
         try {
+            $idBuscar = $id ?? $this->id;
             $conex = $this->conex();
             $sql = "SELECT 
                         dp.codigo_dtll_prtc AS id_estadisticas, 
@@ -182,18 +194,23 @@ class ModeloEstadisticas extends Conexion
                         dp.codigo_atleta AS id_atleta, 
                         dp.goles, dp.asistencias, dp.penalizaciones, 
                         dp.partidos_jugados, dp.average, dp.goles_contra,
+                        COALESCE(NULLIF(ia.numero_doc, ''), CONCAT('R-', r.cedula)) AS cedula, 
                         a.p_nombre AS nombres, a.p_apellidos AS apellidos,
+                        ObtenerTorneosAtleta(a.codigo_atleta) AS total_torneos_jugados,
                         t.nombre AS torneo_nombre, t.fecha_inicio
                     FROM detalles_participacion dp
                     INNER JOIN atletas a ON dp.codigo_atleta = a.codigo_atleta
+                    LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta
+                    LEFT JOIN atleta_representante ar ON a.codigo_atleta = ar.codigo_atleta
+                    LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
                     INNER JOIN participaciones p ON dp.codigo_participacion = p.codigo_participacion
                     INNER JOIN torneos t ON p.codigo_torneo = t.codigo_torneo
                     WHERE dp.codigo_dtll_prtc = :id";
 
             $stmt = $conex->prepare($sql);
-            $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
+            $stmt->bindValue(':id', $idBuscar, PDO::PARAM_INT);
             $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if (!$datos) {
                 throw new Exception('Registro de estadísticas no encontrado.');
@@ -202,7 +219,7 @@ class ModeloEstadisticas extends Conexion
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Estadisticas', $e->getMessage(), 'Modelo_Buscar');
-            return array('accion' => 'error', 'codigo' => $e->getMessage());
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = null;
         }
@@ -241,8 +258,8 @@ class ModeloEstadisticas extends Conexion
                         asistencias = :asistencias, 
                         penalizaciones = :penalizaciones, 
                         goles_contra = :goles_c, 
-                        partidos_jugados = :partidos, 
-                        average = :average 
+                        partidos_jugados = :partidos,
+                        average = :average
                     WHERE codigo_dtll_prtc = :id";
 
             $stmt = $conex->prepare($sql);

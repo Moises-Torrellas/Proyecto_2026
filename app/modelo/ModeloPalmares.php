@@ -69,33 +69,15 @@ class ModeloPalmares extends Conexion
             $conex = $this->conex();
             $params = [];
 
-            $sentencia = "SELECT 
-                    pi.codigo_individual AS id_individual,
-                    pi.codigo_premio AS id_premio,
-                    dp.codigo_atleta AS id_atleta,
-                    a.p_nombre AS atleta_nombres,
-                    a.p_apellidos AS atleta_apellidos,
-                    a.foto AS atleta_foto,
-                    p.nombre AS nombre_premio,
-                    p.tipo AS tipo_premio,
-                    part.codigo_torneo AS id_torneo,
-                    t.nombre AS nombre_torneo,
-                    t.fecha_inicio AS fecha_torneo
-                FROM palmares_individual pi
-                INNER JOIN premios p ON pi.codigo_premio = p.codigo_premio
-                INNER JOIN detalles_participacion dp ON pi.codigo_dtll_prtc = dp.codigo_dtll_prtc
-                INNER JOIN atletas a ON dp.codigo_atleta = a.codigo_atleta
-                INNER JOIN participaciones part ON dp.codigo_participacion = part.codigo_participacion
-                INNER JOIN torneos t ON part.codigo_torneo = t.codigo_torneo
-                WHERE 1=1";
+            $sentencia = "SELECT * FROM vista_palmares_individual WHERE 1=1";
 
             if (!empty($filtro['filtro'])) {
                 $f = "%" . trim($filtro['filtro']) . "%";
                 $sentencia .= " AND (
-                    a.p_nombre LIKE :f1 OR 
-                    a.p_apellidos LIKE :f2 OR 
-                    p.nombre LIKE :f3 OR
-                    t.nombre LIKE :f4
+                    atleta_nombres LIKE :f1 OR 
+                    atleta_apellidos LIKE :f2 OR 
+                    nombre_premio LIKE :f3 OR
+                    nombre_torneo LIKE :f4
                 )";
                 $params[':f1'] = $f;
                 $params[':f2'] = $f;
@@ -103,7 +85,7 @@ class ModeloPalmares extends Conexion
                 $params[':f4'] = $f;
             }
 
-            $sentencia .= " ORDER BY a.p_apellidos ASC, a.p_nombre ASC, t.fecha_inicio DESC";
+            $sentencia .= " ORDER BY atleta_apellidos ASC, atleta_nombres ASC, fecha_torneo DESC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -126,36 +108,21 @@ class ModeloPalmares extends Conexion
             $conex = $this->conex();
             $params = [];
 
-            $sentencia = "SELECT 
-                    pg.codigo_grupal,
-                    pg.codigo_premio AS id_premio,
-                    part.codigo_equipo AS id_equipo,
-                    e.nombre AS nombre_equipo,
-                    p.nombre AS nombre_premio,
-                    p.tipo AS tipo_premio,
-                    part.codigo_torneo AS id_torneo,
-                    t.nombre AS nombre_torneo,
-                    t.fecha_inicio AS fecha_torneo
-                FROM palmares_grupal pg
-                INNER JOIN premios p ON pg.codigo_premio = p.codigo_premio
-                INNER JOIN participaciones part ON pg.codigo_participacion = part.codigo_participacion
-                INNER JOIN equipos e ON part.codigo_equipo = e.codigo_equipo
-                INNER JOIN torneos t ON part.codigo_torneo = t.codigo_torneo
-                WHERE 1=1";
+            $sentencia = "SELECT * FROM vista_palmares_grupal WHERE 1=1";
 
             if (!empty($filtro['filtro'])) {
                 $f = "%" . trim($filtro['filtro']) . "%";
                 $sentencia .= " AND (
-                    e.nombre LIKE :f1 OR 
-                    p.nombre LIKE :f2 OR
-                    t.nombre LIKE :f3
+                    nombre_equipo LIKE :f1 OR 
+                    nombre_premio LIKE :f2 OR
+                    nombre_torneo LIKE :f3
                 )";
                 $params[':f1'] = $f;
                 $params[':f2'] = $f;
                 $params[':f3'] = $f;
             }
 
-            $sentencia .= " ORDER BY e.nombre ASC, t.fecha_inicio DESC";
+            $sentencia .= " ORDER BY nombre_equipo ASC, fecha_torneo DESC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -288,8 +255,8 @@ class ModeloPalmares extends Conexion
                 }
 
                 // 3. Insertar
-                $stmtIn = $conex->prepare("INSERT INTO palmares_grupal (codigo_premio, codigo_participacion) VALUES (:premio, :participacion)");
-                $stmtIn->execute([':premio' => $this->id_premio, ':participacion' => $codParticipacion]);
+                $stmtIn = $conex->prepare("CALL ProcesarPalmaresGrupal(:participacion, :premio)");
+                $stmtIn->execute([':participacion' => $codParticipacion, ':premio' => $this->id_premio]);
             }
 
             $conex->commit();
@@ -414,15 +381,21 @@ class ModeloPalmares extends Conexion
                     pi.codigo_individual, 
                     pi.codigo_premio AS id_premio, 
                     dp.codigo_atleta AS id_atleta, 
-                    part.codigo_torneo AS id_torneo
+                    part.codigo_torneo AS id_torneo,
+                    a.p_nombre AS nombres, a.p_apellidos AS apellidos, 
+                    COALESCE(NULLIF(ia.numero_doc, ''), CONCAT('R-', r.cedula)) AS cedula
                 FROM palmares_individual pi
                 INNER JOIN detalles_participacion dp ON pi.codigo_dtll_prtc = dp.codigo_dtll_prtc
                 INNER JOIN participaciones part ON dp.codigo_participacion = part.codigo_participacion
+                INNER JOIN atletas a ON dp.codigo_atleta = a.codigo_atleta
+                LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta
+                LEFT JOIN atleta_representante ar ON a.codigo_atleta = ar.codigo_atleta
+                LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
                 WHERE pi.codigo_individual = :id
             ");
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return ['accion' => 'buscar', 'datos' => $datos];
         } catch (Exception $e) {
             logs('Palmares', $e->getMessage(), 'Modelo_BuscarIndividual');
@@ -441,14 +414,16 @@ class ModeloPalmares extends Conexion
                     pg.codigo_grupal, 
                     pg.codigo_premio AS id_premio, 
                     part.codigo_equipo AS id_equipo, 
-                    part.codigo_torneo AS id_torneo
+                    part.codigo_torneo AS id_torneo,
+                    e.nombre AS nombre_equipo
                 FROM palmares_grupal pg
                 INNER JOIN participaciones part ON pg.codigo_participacion = part.codigo_participacion
+                INNER JOIN equipos e ON part.codigo_equipo = e.codigo_equipo
                 WHERE pg.codigo_grupal = :id
             ");
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return ['accion' => 'buscar', 'datos' => $datos];
         } catch (Exception $e) {
             logs('Palmares', $e->getMessage(), 'Modelo_BuscarGrupal');

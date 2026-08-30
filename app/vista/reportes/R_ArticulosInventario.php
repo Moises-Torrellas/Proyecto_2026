@@ -233,7 +233,6 @@
                             <tr>
                                 <td class="data-cell" style="font-weight: bold;"><?= htmlspecialchars($pieza['codigo_club']) ?></td>
                                 <td class="data-cell">
-                                    <span class="<?= $claseCondicion ?>">&#9679;</span> 
                                     <?= htmlspecialchars($pieza['estado_fisico']) ?>
                                 </td>
                                 <td class="data-cell">

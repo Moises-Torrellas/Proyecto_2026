@@ -54,27 +54,27 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
         // Seguridad centralizada usando las claves exactas de tu Base de Datos
         switch ($accion) {
             case 'consultar':
-                if (empty($permisos['ingresar_conceptos'])) throw new Exception('No tienes permisos para consultar Concepto de pago.');
+                if (empty($permisos['ingresar_conceptos'])) throw new Exception('No tienes permisos para consultar Concepto de cargo.');
                 consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (empty($permisos['modificar_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de pago.');
+                if (empty($permisos['modificar_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de cargo.');
                 buscar($obj);
                 break;
             case 'incluir':
-                if (empty($permisos['registrar_concepto'])) throw new Exception('No tienes permisos para registrar Concepto de pago.');
+                if (empty($permisos['registrar_concepto'])) throw new Exception('No tienes permisos para registrar Concepto de cargo.');
                 incluir($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'eliminar':
-                if (empty($permisos['eliminar_concepto'])) throw new Exception('No tienes permisos para eliminar Concepto de pago.');
+                if (empty($permisos['eliminar_concepto'])) throw new Exception('No tienes permisos para eliminar Concepto de cargo.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':
-                if (empty($permisos['modificar_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de pago.');
+                if (empty($permisos['modificar_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de cargo.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'estatus':
-                if (empty($permisos['bloquear_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de pago.');
+                if (empty($permisos['bloquear_concepto'])) throw new Exception('No tienes permisos para modificar Concepto de cargo.');
                 cambiarEstatus($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'generar':
@@ -141,14 +141,20 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró el Concepto de Pago: " . $_POST['nombre'] . ' ' . $_POST['monto']);
-            $resultado = array('accion' => 'incluir', 'mensaje' => 'Concepto de pago registrado exitosamente.');
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'monto' => $_POST['monto'],
+                'frecuencia' => $_POST['frecuencia'],
+                'dias' => $_POST['dias']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró el Concepto de cargo: " . $_POST['nombre'] . ' ' . $_POST['monto'], '', $datos_nuevos_json);
+            $resultado = array('accion' => 'incluir', 'mensaje' => 'Concepto de cargo registrado exitosamente.');
 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                DUPLICATE_NAME => 'Ya existe un concepto de pago con ese nombre.',
+                DUPLICATE_NAME => 'Ya existe un concepto de cargo con ese nombre.',
+                "MULTA_EXISTENTE" => 'Ya existe una multa registrada en el sistema.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en el registro.'
             };
@@ -175,18 +181,29 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         ];
         $datos['accion'] = 'modificar';
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $concepto_previo = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($concepto_previo['codigo_concepto'])) unset($concepto_previo['codigo_concepto']);
+        $datos_previos_json = json_encode($concepto_previo);
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico el proceso de pago: " . $_POST['nombre'] . ' ' . $_POST['monto']);
-            $resultado = array('accion' => 'modificar', 'mensaje' => 'Proceso de pago modificado exitosamente.');
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'monto' => $_POST['monto'],
+                'frecuencia' => $_POST['frecuencia'],
+                'dias' => $_POST['dias']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico el proceso de cargo: " . $_POST['nombre'] . ' ' . $_POST['monto'], $datos_previos_json, $datos_nuevos_json);
+            $resultado = array('accion' => 'modificar', 'mensaje' => 'Proceso de cargo modificado exitosamente.');
 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                DUPLICATE_NAME => 'Ya existe un concepto de pago con ese nombre.',
-                INVALID_ID     => 'No se pudo encontrar el concepto de pago.',
+                DUPLICATE_NAME => 'Ya existe un concepto de cargo con ese nombre.',
+                "MULTA_EXISTENTE" => 'Ya existe una multa registrada en el sistema.',
+                INVALID_ID     => 'No se pudo encontrar el concepto de cargo.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
@@ -209,17 +226,22 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $concepto_previo = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($concepto_previo['codigo_concepto'])) unset($concepto_previo['codigo_concepto']);
+        $datos_previos_json = json_encode($concepto_previo);
+
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino el concepto de pago: " . $_POST['id']);
-            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Concepto de pago eliminado exitosamente.');
+            $nombre_concepto = $concepto_previo['nombre'] ?? $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino el concepto de cargo: " . $nombre_concepto, $datos_previos_json, '');
+            $resultado = array('accion' => 'eliminar', 'mensaje' => 'Concepto de cargo eliminado exitosamente.');
 
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID => 'El concepto de pago no existe.',
-                ASSOCIATES  => 'El concepto de pago tiene cargos asociados.',
+                INVALID_ID => 'El concepto de cargo no existe.',
+                ASSOCIATES  => 'El concepto de cargo tiene cargos asociados.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la eliminacion.'
             };
@@ -247,7 +269,7 @@ function cambiarEstatus($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Actualizó el estatus del concepto de pago " . $_POST['id']);
+            registrarBitacora($bitacoraObj, $id_modulo, "Actualizó el estatus del concepto de cargo " . $_POST['id']);
             $resultado = array('accion' => 'estatus', 'mensaje' => 'Estatus actualizado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = 'Ocurrió un error inesperado al actualizar el estatus en la base de datos.';
@@ -270,12 +292,7 @@ function generar($obj, $id_modulo, $bitacoraObj): void
         $sql = "SELECT * FROM conceptos WHERE 1=1";
         $params = [];
 
-        if (!empty($nombre)) {
-            $sql .= " AND nombre LIKE :nombre";
-            $params[':nombre'] = "%" . $nombre . "%";
-        }
-
-        if (!empty($frecuencia)) {
+        if (!empty($frecuencia) && $frecuencia !== 'Todas') {
             $sql .= " AND frecuencia = :frecuencia";
             $params[':frecuencia'] = $frecuencia;
         }
@@ -290,36 +307,26 @@ function generar($obj, $id_modulo, $bitacoraObj): void
         if (empty($datos)) {
             echo json_encode([
                 'accion' => 'error', 
-                'mensaje' => 'No se encontraron conceptos de pago con ese nombre y frecuencia.'
+                'mensaje' => 'No se encontraron conceptos de cargo con esa frecuencia.'
             ]);
             return;
         }
 
-        registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Conceptos");
-
-        $fecha_reporte = date('d/m/Y h:i A');
-        $usuario = $_SESSION['nombre_usuario'] ?? 'Administrador';
+        $nombreVista = 'R_Conceptos';
+        $objG = new \App\servicios\GenerarReporte();
         
-        $logo = __DIR__ . '/../../public/img/logo.png'; 
-        $logo_footer = __DIR__ . '/../../public/img/logo_footer.png';
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Conceptos');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Conceptos');
+        }
 
-        // 3. Incluimos la vista del PDF
-        ob_start();
-        include(__DIR__ . '/../vista/reportes/R_Conceptos.php'); 
-        $html = ob_get_clean();
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Conceptos en " . strtoupper($formato));
+        }
 
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
-        $pdfBase64 = base64_encode($dompdf->output());
-        
-        echo json_encode([
-            'accion' => 'generar', 
-            'mensaje' => 'Reporte procesado con éxito.',
-            'pdf' => $pdfBase64
-        ]);
+        echo json_encode($reporte);
 
     } catch (Exception $e) {
         logs('Conceptos', $e->getMessage(), 'Controlador_Generar');

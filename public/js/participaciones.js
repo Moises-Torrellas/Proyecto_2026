@@ -52,13 +52,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -84,6 +83,10 @@ $(document).ready(function () {
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Participacion");
         $("#titulo_modal").text("Registrar Participacion");
+        
+        $('#codigo_torneo').closest('.colum').show();
+        $('#codigo_equipo').closest('.colum').show();
+        
         $('#codigo_torneo').trigger('change'); // Ajustado
         $('#codigo_equipo').trigger('change'); // Ajustado
         abrirModal();
@@ -95,8 +98,11 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
-        $('#codigo_torneo').trigger('change'); // Ajustado
-        $('#codigo_equipo').trigger('change'); // Ajustado
+        
+        // Ensure they are visible (they might have been hidden previously if we had other logic)
+        $('#codigo_torneo').closest('.colum').show();
+        $('#codigo_equipo').closest('.colum').show();
+        
         abrirModal();
     });
 
@@ -104,40 +110,50 @@ $(document).ready(function () {
         const pasos = [
             {
                 element: '#busqueda',
-                popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar al representante que necesites.', position: 'bottom' }
+                popover: { title: 'Barra de Búsqueda', description: 'Aquí puedes buscar los equipos o torneos.', position: 'bottom' }
             },
             {
                 element: '#incluir',
-                popover: { title: 'Nueva Participacion', description: 'Si pulsa aqui se abrira un modal para ingresar una nueva participacion', position: 'bottom' }
+                popover: { title: 'Nueva Participación', description: 'Si pulsas aquí se abrirá un formulario para registrar una nueva participación.', position: 'bottom' }
             },
             {
                 element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
+                popover: { title: 'Generar Reportes', description: 'Usa este botón para exportar los registros mostrados a un archivo PDF o EXCEL.', position: 'left' }
             },
             {
                 element: '#resultadoconsulta',
-                popover: { title: 'Posiciones Registradas', description: 'Aqui se mostraran todos las posiciones registradas.', position: 'top' }
+                popover: { title: 'Tabla de Registros', description: 'Aquí se mostrarán todas las participaciones registradas.', position: 'top' }
             },
             {
-                element: '#cbt_v',
-                popover: { title: 'Modificar Participacion', description: 'Si pulsa aqui se abrira un modal para modificar la participacion seleccionada.', position: 'left' }
+                element: '.listado_item',
+                popover: { title: 'Registro de Participación', description: 'Aquí se mostrará la información de la participación del equipo en el torneo. Si pulsa el registro, se desplegarán las opciones detalladas.', position: 'bottom' },
+                onNext: function() {
+                    const primerRegistro = document.querySelector('.listado_item');
+                    if (primerRegistro) {
+                        const contenedor = $(primerRegistro).closest('.listado_contenedor_grupal');
+                        if (!contenedor.hasClass('expandido')) {
+                            contenedor.addClass('expandido');
+                            contenedor.find('.listado_detalle_oculto').show(); // Show instantáneo sin animación
+                        }
+                    }
+                }
             },
             {
-                element: '#cbt_r',
-                popover: { title: 'Eliminar Participacion', description: 'Si pulsa aqui eliminara la participacion seleccionada.', position: 'left' }
+                element: '.sub_item_acciones',
+                popover: { title: 'Acciones de la Participación', description: 'Aquí aparecerán los botones para modificar o anular la inscripción (si el torneo no ha finalizado o iniciado).', position: 'left' }
             },
             {
                 element: '#rowsPerPage',
-                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+                popover: { title: 'Registros Deseados', description: 'Aquí podrá seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
             },
             {
                 element: '#botonera',
-                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
+                popover: { title: 'Cambiar de Página', description: 'Botones para cambiar de página.', position: 'top' }
             },
             {
                 element: '#cantidad',
-                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de posiciones cargados.', position: 'top' }
-            },
+                popover: { title: 'Cantidad', description: 'Aquí puedes ver la cantidad de participaciones mostradas actualmente.', position: 'top' }
+            }
         ];
 
         const driver = iniciarTourConPasos(pasos);
@@ -265,6 +281,7 @@ function enviaAjax(datos) {
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
+                    cerrarModal();
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } else if (lee.accion == "eliminar") {
                     consultar();

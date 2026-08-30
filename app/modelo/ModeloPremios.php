@@ -3,6 +3,7 @@
 namespace App\modelo;
 
 use Exception;
+use PDO;
 
 class ModeloPremios extends Conexion
 {
@@ -30,18 +31,17 @@ class ModeloPremios extends Conexion
 
         $this->codigo_premio = $datos['codigo_premio'] ?? null; // Ajustado
 
-        $this->tipo = isset($datos['tipo']) ? strtoupper(trim($datos['tipo'])) : null;
-        
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
+        $this->tipo   = isset($datos['tipo']) ? trim($datos['tipo']) : null;
         
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
             'incluir'   => $this->Incluir(),
+            'modificar' => $this->Modificar(),
             'eliminar'  => $this->Eliminar(),
             'buscar'    => $this->Buscar(),
-            'modificar' => $this->Modificar(),
-            'generar'   => $this->Consultar(),
-            default     => throw new Exception('La accion no es valida')
+            'generar'   => $this->Consultar($datos),
+            default     => throw new Exception('La acción solicitada no es válida para Premios.')
         };
     }
 
@@ -128,6 +128,18 @@ class ModeloPremios extends Conexion
                 }
             }
 
+            // Verificar si el tipo de premio esta siendo modificado y si esta asociado
+            $stmtTipo = $conex->prepare("SELECT tipo FROM premios WHERE codigo_premio = :id");
+            $stmtTipo->execute([':id' => $this->codigo_premio]);
+            $tipoActual = $stmtTipo->fetchColumn();
+
+            if ($tipoActual !== $this->tipo) {
+                if ($this->verificarExistencia('codigo_premio', $this->codigo_premio, 'palmares_grupal', NULL, bloquear:true) ||
+                    $this->verificarExistencia('codigo_premio', $this->codigo_premio, 'palmares_individual', NULL, bloquear:true)) {
+                    throw new Exception('TYPE_ASSOCIATED');
+                }
+            }
+
             $sentencia = "UPDATE premios SET nombre = :nombre, tipo = :tipo WHERE codigo_premio = :codigo_premio"; // Ajustado a la BD
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
@@ -148,15 +160,16 @@ class ModeloPremios extends Conexion
         }
     }
 
-    public function Buscar(): array
+    public function Buscar(int $id = null): array
     {
         try {
+            $idBuscar = $id ?? $this->codigo_premio;
             $conex = $this->conex();
             $sentencia = "SELECT * FROM premios WHERE codigo_premio = :codigo_premio"; // Ajustado a la BD
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':codigo_premio', $this->codigo_premio); // Ajustado
+            $stmt->bindParam(':codigo_premio', $idBuscar); // Ajustado
             $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Premios', $e->getMessage(), 'Modelo_Buscar');
@@ -218,6 +231,23 @@ class ModeloPremios extends Conexion
             if ($premio['tipo'] !== $tipoEsperado) {
                 throw new Exception(VALIDATION);
             }
+        } finally {
+            $conex = null;
+        }
+    }
+
+    public function AsignarPremioAtleta(int $id_atleta, string $descripcion, float $monto): array
+    {
+        $conex = null;
+        try {
+            $conex = $this->conex();
+            $stmt = $conex->prepare("CALL RegistrarPremioSeguro(?, ?, ?)");
+            $stmt->execute([$id_atleta, $descripcion, $monto]);
+            
+            return ['accion' => 'exito', 'mensaje' => 'Premio registrado exitosamente para el atleta.'];
+        } catch (Exception $e) {
+            logs('Premios', $e->getMessage(), 'ModeloPremios_AsignarPremioAtleta');
+            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         } finally {
             $conex = null;
         }

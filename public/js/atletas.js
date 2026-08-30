@@ -50,13 +50,11 @@ $(document).ready(function () {
     Validacion("apellido", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras, mínimo 3 caracteres", "proceso");
     Validacion("doc_i", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Mínimo 7 máximo 8 dígitos, solo números", "proceso");
     Validacion("telefono", /^[0-9\b-]*$/, /^[0-9]{4}-[0-9]{7}$/, "Formato inválido (XXXX-XXXXXXX)", "proceso");
-    Validacion("direccion", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, /^.{5,150}$/, "Dirección muy corta o inválida", "proceso");
+    Validacion("direccion", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.\-\/]*$/, /^.{5,150}$/, "Dirección muy corta o inválida", "proceso");
     Validacion("municipio", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^.{3,50}$/, "Mínimo 3 caracteres", "proceso");
-    Validacion("correo", /^[a-zA-Z0-9._%+-@]*$/, /^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})?$/, "Correo inválido", "proceso");
+    Validacion("correo", /^[a-zA-Z0-9@._\-]*$/, /^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, "Ejemplo: usuario@dominio.com", "proceso");
     Validacion("instagram", /^[@a-zA-Z0-9._]*$/, /^[@a-zA-Z0-9._]{0,30}$/, "Usuario inválido", "proceso");
-    Validacion("talla_pantalon", /^[0-9a-zA-Z\s]*$/, /^.{1,10}$/, "Talla inválida", "proceso");
-    Validacion("talla_franela", /^[0-9a-zA-Z\s]*$/, /^.{1,10}$/, "Talla inválida", "proceso");
-    Validacion("talla_calzado", /^[0-9a-zA-Z\s]*$/, /^.{1,10}$/, "Talla inválida", "proceso");
+    Validacion("talla_calzado", /^[0-9]*$/, /^(1[0-9]|[2-4][0-9]|50)$/, "Solo números del 10 al 50", "proceso");
     Validacion("alergias_detalle", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, /^.{0,255}$/, "Detalle inválido", "proceso");
     Validacion("edad", /^[0-9\b]*$/, /^[0-9]{0,10}$/, "Solo numeros", "proceso");
 
@@ -116,13 +114,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento')
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -197,7 +194,7 @@ $(document).ready(function () {
             },
             {
                 element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
+                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF o Excel.', position: 'left' }
             },
             {
                 element: '#resultadoconsulta',
@@ -205,7 +202,13 @@ $(document).ready(function () {
             },
             {
                 element: '#registro',
-                popover: { title: 'Registro de un Atleta', description: 'Aqui se mostrara la informacion de un Atleta si pulsa el registro se desplegara mas informacion.', position: 'bottom' }
+                popover: { title: 'Registro de un Atleta', description: 'Aqui se mostrara la informacion de un Atleta si pulsa el registro se desplegara mas informacion.', position: 'bottom' },
+                onNext: function() {
+                    const primerRegistro = document.querySelector('.listado_item');
+                    if (primerRegistro && !primerRegistro.closest('.listado_contenedor_grupal').classList.contains('expandido')) {
+                        toggleDetalles(primerRegistro);
+                    }
+                }
             },
             {
                 element: '#cbt_v',
@@ -218,6 +221,10 @@ $(document).ready(function () {
             {
                 element: '#cbt_sec',
                 popover: { title: 'Generar Curriculum', description: 'Si pulsa aqui generara un curriculum del Atleta seleccionado.', position: 'left' }
+            },
+            {
+                element: '#cbt_historial',
+                popover: { title: 'Historial de Inscripción', description: 'Si pulsa aqui podrá ver el historial de acciones del Atleta.', position: 'top' }
             },
             {
                 element: '#rowsPerPage',
@@ -286,17 +293,17 @@ function validarEdadAtleta(fechaValor) {
         $doc_i.attr("placeholder", "Cédula del atleta");
     }
 
-    // 3. Regla: Representante (SOLO DESHABILITAR, NO OCULTAR)
+    // 3. Regla: Representante
     if (edad < 18) {
-        // Es menor: Requiere representante
+        // Es menor: Requiere representante (habilitado)
         $representante.prop("disabled", false).parent().removeClass("campo_deshabilitado");
 
         // Deshabilita tlf y dirección propios
         $telefono.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
         $direccion.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
     } else {
-        // Es adulto: Se deshabilita representante pero permanece visible
-        $representante.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
+        // Es adulto: El representante es opcional (se deja habilitado)
+        $representante.prop("disabled", false).parent().removeClass("campo_deshabilitado");
 
         // Habilita tlf y dirección propios
         $telefono.prop("disabled", false).parent().removeClass("campo_deshabilitado");
@@ -348,8 +355,11 @@ function validarEnvio(proceso) {
         return false;
     }
 
-    // 7. Representante (Solo si NO está deshabilitado)
-    if (!$("#representante").prop("disabled")) {
+    // Calculamos edad para las validaciones
+    const edadAtleta = $('#edad').val() || 0;
+
+    // 7. Representante (Obligatorio solo para menores de edad)
+    if (edadAtleta < 18) {
         if ($('#representante').val() == "" || $('#representante').val() == null) {
             muestraMensaje("error", 2000, "Error", "Debe seleccionar un representante");
             return false;
@@ -380,6 +390,43 @@ function validarEnvio(proceso) {
             return false;
         }
     }
+
+    if ($('#lugar_nacimiento').val() != "" && $('#lugar_nacimiento').val() != null) {
+        if (validarkeyup(/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, $('#lugar_nacimiento'), $("#lugar_nacimiento_spam"), "Mínimo 3 caracteres", true) || validarkeyup(/^.{3,100}$/, $('#lugar_nacimiento'), $("#lugar_nacimiento_spam"), "Mínimo 3 caracteres", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un lugar de nacimiento válido");
+            return false;
+        }
+    }
+
+    if ($('#municipio').val() != "" && $('#municipio').val() != null) {
+        if (validarkeyup(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, $('#municipio'), $("#municipio_spam"), "Mínimo 3 caracteres", true) || validarkeyup(/^.{3,50}$/, $('#municipio'), $("#municipio_spam"), "Mínimo 3 caracteres", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un municipio válido");
+            return false;
+        }
+    }
+
+    if ($('#instagram').val() != "" && $('#instagram').val() != null) {
+        if (validarkeyup(/^[@a-zA-Z0-9._]*$/, $('#instagram'), $("#instagram_spam"), "Usuario inválido", true) || validarkeyup(/^[@a-zA-Z0-9._]{0,30}$/, $('#instagram'), $("#instagram_spam"), "Usuario inválido", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un instagram válido");
+            return false;
+        }
+    }
+
+
+    if ($('#correo').val() != "" && $('#correo').val() != null) {
+        if (validarkeyup(/^[a-zA-Z0-9@._\-]*$/, $('#correo'), $("#correo_spam"), "Ejemplo: usuario@dominio.com", true) || validarkeyup(/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, $('#correo'), $("#correo_spam"), "Ejemplo: usuario@dominio.com", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un correo válido");
+            return false;
+        }
+    }
+
+    if ($('#talla_calzado').val() != "" && $('#talla_calzado').val() != null) {
+        if (validarkeyup(/^(1[0-9]|[2-4][0-9]|50)$/, $('#talla_calzado'), $("#talla_calzado_spam"), "Solo números del 10 al 50", true)) {
+            muestraMensaje("error", 2000, "Error", "La talla de calzado debe ser un número del 10 al 50");
+            return false;
+        }
+    }
+
     if (proceso == "incluir") {
         if ($('#foto').val() == "" || $('#foto')[0].files.length === 0) {
             muestraMensaje("error", 2000, "Error", "Debe seleccionar una foto para el atleta");
@@ -566,6 +613,11 @@ function modificar(datos) {
     $("#todos").prop('disabled', true);
 
     $('#fecha_nac').val(datos[0].fecha_nac);
+    if ($('#fecha_nac')[0]._flatpickr) {
+        $('#fecha_nac')[0]._flatpickr.setDate(datos[0].fecha_nac);
+    } else {
+        $('#fecha_nac')[0].dispatchEvent(new Event('change'));
+    }
     $('#lugar_nacimiento').val(datos[0].lugar_nacimiento);
     $('#id').val(datos[0].id_atleta);
     $('#doc_i').val(datos[0].doc_identidad);

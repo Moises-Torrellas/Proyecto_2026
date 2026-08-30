@@ -213,16 +213,59 @@
                     $estatus = ((int)$r['estatus'] === 1) ? 'Activo' : 'Retirado';
                     $representante = ($r['nombre_rep'] === null ) ? 'N/A' : $r['nombre_rep'] . ' ' . $r['apellido_rep'];
                     ?>
+                    <tr style="background-color: #f7fafc;">
+                        <td class="data-cell" style="font-weight: bold; border-bottom: none;"><?= $id ?></td>
+                        <td class="data-cell" style="font-weight: bold; border-bottom: none;"><?= htmlspecialchars($r['nombres'] . ' ' . $r['apellidos']) ?></td>
+                        <td class="data-cell" style="border-bottom: none;"><?= htmlspecialchars(!empty($r['doc_identidad']) ? $r['doc_identidad'] : 'No Aplica') ?></td>
+                        <td class="data-cell" style="border-bottom: none;"><?= $edadCalendario ?></td>
+                        <td class="data-cell" style="border-bottom: none;"><?= $genero ?></td>
+                        <td class="data-cell" style="border-bottom: none;"><?= htmlspecialchars($r['nombre_posicion']) ?></td>
+                        <td class="data-cell" style="border-bottom: none;"><?= htmlspecialchars($r['nombre_categoria']) ?></td>
+                        <td class="data-cell" style="border-bottom: none;"><?= htmlspecialchars($representante) ?></td>
+                        <td class="data-cell" style="border-bottom: none; text-align: center;">
+                            <?= ((int)$r['estatus'] === 1) ? '<span style="color: #38a169; font-weight: bold;">Activo</span>' : '<span style="color: #e53e3e; font-weight: bold;">Retirado</span>' ?>
+                        </td>
+                    </tr>
+                    <!-- Fila de Detalles -->
                     <tr>
-                        <td class="data-cell"><?= $id ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['nombres'] . ' ' . $r['apellidos']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['doc_identidad']) ?></td>
-                        <td class="data-cell"><?= $edadCalendario?></td>
-                        <td class="data-cell"><?= $genero?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['nombre_posicion']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['nombre_categoria']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($representante) ?></td>
-                        <td class="data-cell"><?= $estatus ?></td>
+                        <td colspan="9" style="background-color: #ffffff; padding: 5px 15px 15px 30px; border-bottom: 1px solid #e2e8f0;">
+                            <table style="width: 100%; border-collapse: collapse; table-layout: fixed; word-wrap: break-word; font-size: 11px;">
+                                <tr>
+                                    <td style="vertical-align: top; width: 33%; padding-right: 10px;">
+                                        <div style="color: #4a5568; font-weight: bold; margin-bottom: 5px; border-bottom: 1px dashed #cbd5e0; padding-bottom: 3px;">Datos Físicos e Ingreso</div>
+                                        <div style="margin-bottom: 2px;"><strong>Dorsal:</strong> <?= htmlspecialchars(!empty($r['dorsal']) ? $r['dorsal'] : 'No Aplica') ?></div>
+                                        <div style="margin-bottom: 2px;"><strong>Peso/Estatura:</strong> <?= htmlspecialchars($r['peso_kg'] ?? '0') ?> kg / <?= htmlspecialchars($r['estatura_cm'] ?? '0') ?> cm</div>
+                                        <div style="margin-bottom: 2px;"><strong>Tallas:</strong> Pant: <?= htmlspecialchars($r['talla_pantalon'] ?? 'N/A') ?> | Fra: <?= htmlspecialchars($r['talla_franela'] ?? 'N/A') ?> | Calz: <?= htmlspecialchars($r['talla_calzado'] ?? 'N/A') ?></div>
+                                        <div style="margin-bottom: 2px;"><strong>Fecha Ingreso:</strong> <?= !empty($r['fecha_ingreso']) ? date('d/m/Y', strtotime($r['fecha_ingreso'])) : 'No Aplica' ?></div>
+                                    </td>
+                                    <td style="vertical-align: top; width: 33%; padding-right: 10px;">
+                                        <div style="color: #4a5568; font-weight: bold; margin-bottom: 5px; border-bottom: 1px dashed #cbd5e0; padding-bottom: 3px;">Contacto y Residencia</div>
+                                        <div style="margin-bottom: 2px;"><strong>Correo:</strong> <?= htmlspecialchars(!empty($r['correo']) ? $r['correo'] : 'No Aplica') ?></div>
+                                        <div style="margin-bottom: 2px;"><strong>Instagram:</strong> <?= htmlspecialchars(!empty($r['instagram']) ? $r['instagram'] : 'No Aplica') ?></div>
+                                        <div style="margin-bottom: 2px;"><strong>Lugar Nac.:</strong> <?= htmlspecialchars(!empty($r['lugar_nacimiento']) ? $r['lugar_nacimiento'] : 'No Aplica') ?></div>
+                                        <div style="margin-bottom: 2px;"><strong>Municipio:</strong> <?= htmlspecialchars(!empty($r['municipio']) ? $r['municipio'] : 'No Aplica') ?></div>
+                                    </td>
+                                    <td style="vertical-align: top; width: 33%;">
+                                        <div style="color: #4a5568; font-weight: bold; margin-bottom: 5px; border-bottom: 1px dashed #cbd5e0; padding-bottom: 3px;">Datos Médicos y Estado</div>
+                                        <div style="margin-bottom: 2px;"><strong>Tipo Sangre:</strong> <?= htmlspecialchars(!empty($r['tipo_sangre']) ? $r['tipo_sangre'] : 'No Aplica') ?></div>
+                                        <div style="margin-bottom: 2px; <?= (isset($r['es_alergico']) && $r['es_alergico'] == 1) ? 'color: #e53e3e;' : '' ?>">
+                                            <strong>Alergias:</strong> <?= (isset($r['es_alergico']) && $r['es_alergico'] == 1) ? htmlspecialchars(!empty($r['alergias_detalle']) ? $r['alergias_detalle'] : 'Sí') : 'Ninguna' ?>
+                                        </div>
+                                        <?php if ((int)$r['estatus'] === 2 && !empty($r['fecha_retiro'])): ?>
+                                        <div style="margin-top: 5px; padding: 4px; background-color: #fff5f5; border-left: 2px solid #fc8181; color: #c53030;">
+                                            <strong>Retirado el:</strong> <?= date('d/m/Y', strtotime($r['fecha_retiro'])) ?><br>
+                                            <strong>Motivo:</strong> <?= htmlspecialchars($r['motivo_retiro'] ?? 'No especificado') ?>
+                                        </div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($r['fecha_reingreso']) && (int)$r['estatus'] === 1): ?>
+                                        <div style="margin-top: 5px; padding: 4px; background-color: #f0fff4; border-left: 2px solid #68d391; color: #2f855a;">
+                                            <strong>Reingresado el:</strong> <?= date('d/m/Y', strtotime($r['fecha_reingreso'])) ?>
+                                        </div>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

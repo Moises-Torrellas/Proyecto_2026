@@ -119,7 +119,7 @@ if (isset($solo_lista) && $solo_lista === true) :
         </div>
     </section>
     <section class="contenedor_modal" id="contenedor_modal">
-        <div class="modal modal_grande ocultar" id="modal">
+        <div class="modal modal_grande modal_permisos ocultar" id="modal">
             <div class="cabecera_modal">
                 <h2 class="titulo_modal" id="titulo_modal"></h2>
                 <a type="button" class="cerrar_modal" id="cerrar_modal">&times;</a>
@@ -146,9 +146,22 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="row" id="row_permisos" style="display: none;">
                         <div class="colum colum_tabla_completa" style="padding: 0;">
                             <div id="tabla_permisos_container">
+                                <div class="permisos_header">
+                                    <div class="permisos_buscador_container">
+                                        <i data-lucide="search" class="permisos_buscador_icon"></i>
+                                        <input type="text" class="permisos_buscador formulario" id="buscador_permisos" placeholder="Buscar..." autocomplete="off">
+                                    </div>
+                                    <div class="permisos_tabs">
+                                        <button type="button" class="permisos_tab activa" data-tab="asignados">Asignados <span class="permisos_tab_badge" id="badge_asignados">0</span></button>
+                                        <button type="button" class="permisos_tab" data-tab="no_asignados">No Asignados <span class="permisos_tab_badge" id="badge_no_asignados">0</span></button>
+                                    </div>
+                                </div>
                                 <div id="tabla_permisos_ui">
-                                    <div id="tabla_permisos">
-
+                                    <div id="tab_asignados" class="permisos_tab_contenido activo">
+                                        <div id="tabla_permisos_asignados"></div>
+                                    </div>
+                                    <div id="tab_no_asignados" class="permisos_tab_contenido">
+                                        <div id="tabla_permisos_no_asignados"></div>
                                     </div>
                                 </div>
                             </div>
@@ -164,7 +177,7 @@ if (isset($solo_lista) && $solo_lista === true) :
         </div>
     </section>
     <script src="js/main.js"></script>
-    <script src="js/roles.js"></script>
+    <script src="js/roles.js?v=4"></script>
     <?php include('complementos/mensajeError.php'); ?>
 </body>
 

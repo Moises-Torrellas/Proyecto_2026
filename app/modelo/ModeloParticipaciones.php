@@ -39,6 +39,7 @@ class ModeloParticipaciones extends Conexion
             'eliminar'  => $this->Eliminar(),
             'modificar' => $this->Modificar(),
             'buscar'    => $this->Buscar(),
+            'generar'   => $this->Consultar($datos),
             default     => throw new Exception('La acción solicitada para participaciones no es válida.')
         };
     }
@@ -66,15 +67,40 @@ class ModeloParticipaciones extends Conexion
             // Filtro de búsqueda (nombre)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . trim($filtro['filtro']) . "%";
-                $sentencia .= " AND (t.nombre LIKE :f1 OR e.nombre LIKE :f2)";
+                $sentencia .= " AND (t.nombre LIKE :f1 OR e.nombre LIKE :f2";
+                
+                $texto = strtolower(trim($filtro['filtro']));
+                if (strpos('por disputarse', $texto) !== false) {
+                    $sentencia .= " OR t.estatus = 1";
+                }
+                if (strpos('en curso', $texto) !== false) {
+                    $sentencia .= " OR t.estatus = 2";
+                }
+                if (strpos('finalizado', $texto) !== false) {
+                    $sentencia .= " OR t.estatus = 3";
+                }
+                
+                $sentencia .= ")";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
             }
 
-            // NUEVO: Filtro por estatus de torneo
+            // Filtro por estatus de torneo
             if (isset($filtro['estatus_torneo'])) {
                 $sentencia .= " AND t.estatus = :estatus";
                 $params[':estatus'] = $filtro['estatus_torneo'];
+            }
+
+            // Filtro por torneo especifico
+            if (!empty($filtro['codigo_torneo'])) {
+                $sentencia .= " AND t.codigo_torneo = :codigo_torneo_filtro";
+                $params[':codigo_torneo_filtro'] = $filtro['codigo_torneo'];
+            }
+            
+            // Filtro por equipo especifico
+            if (!empty($filtro['codigo_equipo'])) {
+                $sentencia .= " AND e.codigo_equipo = :codigo_equipo_filtro";
+                $params[':codigo_equipo_filtro'] = $filtro['codigo_equipo'];
             }
 
             $sentencia .= " ORDER BY t.codigo_torneo DESC, e.nombre ASC";
@@ -110,17 +136,20 @@ class ModeloParticipaciones extends Conexion
                 throw new Exception(DUPLICATE);
             }
 
-            $sql = "INSERT INTO participaciones (codigo_torneo, codigo_equipo) 
-                    VALUES (:codigo_torneo, :codigo_equipo)";
+            $sql = "INSERT INTO participaciones (codigo_equipo, codigo_torneo) VALUES (:codigo_equipo, :codigo_torneo)";
 
             $stmt = $conex->prepare($sql);
             $stmt->bindValue(':codigo_torneo', $this->codigo_torneo, PDO::PARAM_INT);
             $stmt->bindValue(':codigo_equipo', $this->codigo_equipo, PDO::PARAM_INT);
 
+            $stmtNuevoInfo = $conex->prepare("SELECT t.nombre as torneo, e.nombre as equipo FROM torneos t JOIN equipos e WHERE t.codigo_torneo = :torneo AND e.codigo_equipo = :equipo");
+            $stmtNuevoInfo->execute([':torneo' => $this->codigo_torneo, ':equipo' => $this->codigo_equipo]);
+            $datosNuevos = $stmtNuevoInfo->fetch(PDO::FETCH_ASSOC);
+
             $stmt->execute();
             $conex->commit();
 
-            return array('accion' => 'exito');
+            return array('accion' => 'exito', 'nuevo' => json_encode($datosNuevos));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
@@ -175,6 +204,10 @@ class ModeloParticipaciones extends Conexion
                 throw new Exception(INVALID_ID . '2');
             }
 
+            $stmtPrevio = $conex->prepare("SELECT t.nombre as torneo, e.nombre as equipo FROM participaciones p JOIN torneos t ON p.codigo_torneo = t.codigo_torneo JOIN equipos e ON p.codigo_equipo = e.codigo_equipo WHERE p.codigo_participacion = :id");
+            $stmtPrevio->execute([':id' => $this->codigo_participacion]);
+            $datosPrevios = $stmtPrevio->fetch(PDO::FETCH_ASSOC);
+
             $stmtEstado = $conex->prepare("SELECT t.estatus FROM torneos t JOIN participaciones p ON t.codigo_torneo = p.codigo_torneo WHERE p.codigo_participacion = :id");
             $stmtEstado->execute([':id' => $this->codigo_participacion]);
             $estatusTorneo = $stmtEstado->fetchColumn();
@@ -212,10 +245,14 @@ class ModeloParticipaciones extends Conexion
             $stmt->bindValue(':codigo_equipo', $this->codigo_equipo, PDO::PARAM_INT);
             $stmt->bindValue(':codigo_participacion', $this->codigo_participacion, PDO::PARAM_INT);
 
+            $stmtNuevoInfo = $conex->prepare("SELECT t.nombre as torneo, e.nombre as equipo FROM torneos t JOIN equipos e WHERE t.codigo_torneo = :torneo AND e.codigo_equipo = :equipo");
+            $stmtNuevoInfo->execute([':torneo' => $this->codigo_torneo, ':equipo' => $this->codigo_equipo]);
+            $datosNuevos = $stmtNuevoInfo->fetch(PDO::FETCH_ASSOC);
+
             $stmt->execute();
             $conex->commit();
 
-            return array('accion' => 'exito');
+            return array('accion' => 'exito', 'previo' => json_encode($datosPrevios), 'nuevo' => json_encode($datosNuevos));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
@@ -238,6 +275,10 @@ class ModeloParticipaciones extends Conexion
                 throw new Exception(INVALID_ID);
             }
 
+            $stmtPrevio = $conex->prepare("SELECT t.nombre as torneo, e.nombre as equipo FROM participaciones p JOIN torneos t ON p.codigo_torneo = t.codigo_torneo JOIN equipos e ON p.codigo_equipo = e.codigo_equipo WHERE p.codigo_participacion = :id");
+            $stmtPrevio->execute([':id' => $this->codigo_participacion]);
+            $datosPrevios = $stmtPrevio->fetch(PDO::FETCH_ASSOC);
+
             $stmtEstado = $conex->prepare("SELECT t.estatus FROM torneos t JOIN participaciones p ON t.codigo_torneo = p.codigo_torneo WHERE p.codigo_participacion = :id");
             $stmtEstado->execute([':id' => $this->codigo_participacion]);
             $estatusTorneo = $stmtEstado->fetchColumn();
@@ -249,10 +290,11 @@ class ModeloParticipaciones extends Conexion
             $sql = "DELETE FROM participaciones WHERE codigo_participacion = :codigo_participacion";
             $stmt = $conex->prepare($sql);
             $stmt->bindValue(':codigo_participacion', $this->codigo_participacion, PDO::PARAM_INT);
-            $stmt->execute();
 
+            $stmt->execute();
             $conex->commit();
-            return array('accion' => 'exito');
+
+            return array('accion' => 'exito', 'previo' => json_encode($datosPrevios));
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();

@@ -20,12 +20,12 @@
 
 <script src="libraries/driver.js-stable/dist/driver.min.js"></script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<link href="css/main.css" rel="stylesheet">
+<link href="css/main.css?v=4" rel="stylesheet">
 <link href="css/navbar.css" rel="stylesheet">
-<link href="css/modal.css" rel="stylesheet">
+<link href="css/modal.css?v=4" rel="stylesheet">
 <link href="css/error.css" rel="stylesheet">
 <link href="css/inicio.css" rel="stylesheet">
-<link href="css/responsive.css" rel="stylesheet">
+<link href="css/responsive.css?v=2" rel="stylesheet">
 <link href="libraries/driver.js-stable/dist/driver.min.css" rel="stylesheet">
 <link href="libraries/css/select2.min.css" rel="stylesheet" />
 <link href="libraries/css/tippy.css" rel="stylesheet" />

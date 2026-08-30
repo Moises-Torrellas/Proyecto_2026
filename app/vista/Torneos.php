@@ -1,3 +1,13 @@
+<?php 
+if (!function_exists('formatearFechaTorneo')) {
+    function formatearFechaTorneo($fecha) {
+        if (empty($fecha)) return '';
+        $meses = ['01'=>'Enero', '02'=>'Febrero', '03'=>'Marzo', '04'=>'Abril', '05'=>'Mayo', '06'=>'Junio', '07'=>'Julio', '08'=>'Agosto', '09'=>'Septiembre', '10'=>'Octubre', '11'=>'Noviembre', '12'=>'Diciembre'];
+        $timestamp = strtotime($fecha);
+        return date('d', $timestamp) . ' de ' . $meses[date('m', $timestamp)] . ' ' . date('Y', $timestamp);
+    }
+}
+?>
 <?php if (isset($solo_lista) && $solo_lista === true) :
     if (empty($registro)) : ?>
         <div class="listado_vacio">
@@ -14,11 +24,11 @@
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Fecha Inicio</small>
-                            <span><?= htmlspecialchars($dato['fecha_inicio']) ?></span>
+                            <span><?= htmlspecialchars(formatearFechaTorneo($dato['fecha_inicio'])) ?></span>
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Fecha Fin</small>
-                            <span><?= htmlspecialchars($dato['fecha_fin']) ?></span>
+                            <span><?= htmlspecialchars(formatearFechaTorneo($dato['fecha_fin'])) ?></span>
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Ubicación</small>
@@ -107,11 +117,11 @@
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Fecha Inicio</small>
-                                                    <span><?= htmlspecialchars($dato['fecha_inicio']) ?></span>
+                                                    <span><?= htmlspecialchars(formatearFechaTorneo($dato['fecha_inicio'])) ?></span>
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Fecha Fin</small>
-                                                    <span><?= htmlspecialchars($dato['fecha_fin']) ?></span>
+                                                    <span><?= htmlspecialchars(formatearFechaTorneo($dato['fecha_fin'])) ?></span>
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Ubicación</small>
@@ -205,9 +215,9 @@
                     </div>
 
                     <div class="row">
-                        <div class="colum" style="width: 100%;">
+                        <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="ubicacion" name="ubicacion" placeholder="Ej: Cancha Múltiple del Este, Barquisimeto">
+                                <input type="text" class="formulario" id="ubicacion" name="ubicacion">
                                 <label for="ubicacion" class="titulo_formulario">Ubicación</label>
                                 <span class="mensaje" id="ubicacion_spam"></span>
                             </div>
@@ -217,7 +227,7 @@
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

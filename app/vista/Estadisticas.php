@@ -55,7 +55,7 @@
                             </div>
                             <div class="listado_dato_grupo">
                                 <small>PARTICIPACIÓN</small>
-                                <span><?= $totalParticipaciones ?> Torneo(s)</span>
+                                <span><?= $dato['total_torneos_jugados'] ?? '0' ?> Torneo(s)</span>
                             </div>
                         </div>
 
@@ -213,7 +213,7 @@
                     </div>
                     <div class="listado_dato_grupo">
                         <small>PARTICIPACIÓN</small>
-                        <span><?= $totalParticipaciones ?> Torneo(s)</span>
+                        <span><?= $dato['total_torneos_jugados'] ?? '0' ?> Torneo(s)</span>
                     </div>
                 </div>
 
@@ -245,7 +245,7 @@
                                         $botonesAccion .= '<button class="btn_t cbt_v" onclick="buscar(' . $dato['id_estadisticas'] . ')" data-tippy-content="Modificar"><i class="fi fi-sr-pencil"></i></button> ';
                                     }
                                     if (!empty($permisos['eliminar_estadistica'])) {
-                                        $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['id_estadisticas'] . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-cross-circle"></i></button>';
+                                        $botonesAccion .= '<button class="btn_t cbt_r" onclick="eliminar(' . $dato['id_estadisticas'] . ')" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>';
                                     }
                     ?>
                     <div class="sub_item_fila_estadistica">
@@ -311,66 +311,68 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="goles" name="goles">
-                                <label for="goles" class="titulo_formulario">Goles</label>
-                                <span class="mensaje" id="goles_spam"></span>
+                    <div id="seccion_metricas">
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="goles" name="goles">
+                                    <label for="goles" class="titulo_formulario">Goles</label>
+                                    <span class="mensaje" id="goles_spam"></span>
+                                </div>
+                            </div>
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="asistencias" name="asistencias">
+                                    <label for="asistencias" class="titulo_formulario">Asistencias</label>
+                                    <span class="mensaje" id="asistencias_spam"></span>
+                                </div>
                             </div>
                         </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="asistencias" name="asistencias">
-                                <label for="asistencias" class="titulo_formulario">Asistencias</label>
-                                <span class="mensaje" id="asistencias_spam"></span>
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="penalizaciones" name="penalizaciones">
+                                    <label for="penalizaciones" class="titulo_formulario">Penalizaciones</label>
+                                    <span class="mensaje" id="penalizaciones_spam"></span>
+                                </div>
+                            </div>
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="goles_c" name="goles_c">
+                                    <label for="goles_c" class="titulo_formulario">Goles en Contra</label>
+                                    <span class="mensaje" id="goles_c_spam"></span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="penalizaciones" name="penalizaciones">
-                                <label for="penalizaciones" class="titulo_formulario">Penalizaciones</label>
-                                <span class="mensaje" id="penalizaciones_spam"></span>
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="partido" name="partido">
+                                    <label for="partido" class="titulo_formulario">Partidos Jugados</label>
+                                    <span class="mensaje" id="partido_spam"></span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="goles_c" name="goles_c">
-                                <label for="goles_c" class="titulo_formulario">Goles en Contra</label>
-                                <span class="mensaje" id="goles_c_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="partido" name="partido">
-                                <label for="partido" class="titulo_formulario">Partidos Jugados</label>
-                                <span class="mensaje" id="partido_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="average" name="average">
-                                <label for="average" class="titulo_formulario">Average</label>
-                                <span class="mensaje" id="average_spam"></span>
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <input type="text" class="formulario" id="average" name="average">
+                                    <label for="average" class="titulo_formulario">Average</label>
+                                    <span class="mensaje" id="average_spam"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>
             </div>
         </div>
     </section>
-    <script src="js/main.js"></script>
-    <script src="js/Estadisticas.js"></script>
+    <script src="js/main.js?v=2"></script>
+    <script src="js/Estadisticas.js?v=2"></script>
 </body>
 
 </html>

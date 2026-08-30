@@ -22,6 +22,7 @@ class ModeloUsuarios extends Conexion
     private $permisos_seleccionados = [];
 
     private $obj_roles;
+    private $objPermiso;
 
     public function __construct()
     {
@@ -37,6 +38,7 @@ class ModeloUsuarios extends Conexion
         $this->llavePrimaria = 'idUsuario';
 
         $this->obj_roles = new ModeloRoles;
+        $this->objPermiso = new ModeloPermisos;
     }
 
     public function procesarDatos(array $datos): array
@@ -87,30 +89,17 @@ class ModeloUsuarios extends Conexion
             $params = []; // Array para acumular todos los parámetros
 
             // 1. Base de la consulta
-            $sentencia = "SELECT 
-                        u.idUsuario,
-                        u.cedulaUsuario,
-                        u.nombreUsuario,
-                        u.apellidoUsuario,
-                        u.foto,
-                        u.telefonoUsuario,
-                        u.correo,
-                        u.bloqueo,
-                        r.nombre_rol,
-                        u.ultimo_ingreso 
-                    FROM `usuarios` u 
-                    INNER JOIN roles r ON r.id_rol = u.id_rol 
-                    WHERE u.estatus != 0";
+            $sentencia = "SELECT * FROM vista_consulta_usuarios WHERE 1=1";
 
             // 2. BUSCADOR GLOBAL (Si viene del input de la tabla)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
                 $sentencia .= " AND (
-                            u.cedulaUsuario LIKE :f1 OR 
-                            u.nombreUsuario LIKE :f2 OR 
-                            u.apellidoUsuario LIKE :f3 OR 
-                            u.correo LIKE :f4 OR 
-                            r.nombre_rol LIKE :f5
+                            cedulaUsuario LIKE :f1 OR 
+                            nombreUsuario LIKE :f2 OR 
+                            apellidoUsuario LIKE :f3 OR 
+                            correo LIKE :f4 OR 
+                            nombre_rol LIKE :f5
                         )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
@@ -122,25 +111,25 @@ class ModeloUsuarios extends Conexion
             // 3. BUSCADOR ESPECÍFICO (Del Modal de Reporte)
             if (!empty($this->cedula)) {
                 // Usamos % al inicio y al final para máxima compatibilidad
-                $sentencia .= " AND u.cedulaUsuario LIKE :cedula";
+                $sentencia .= " AND cedulaUsuario LIKE :cedula";
                 $params[':cedula'] = "" . trim($this->cedula) . "%";
             }
             if (!empty($this->nombre)) {
-                $sentencia .= " AND u.nombreUsuario LIKE :nombre";
+                $sentencia .= " AND nombreUsuario LIKE :nombre";
                 $params[':nombre'] = "%" . trim($this->nombre) . "%";
             }
             if (!empty($this->apellido)) {
-                $sentencia .= " AND u.apellidoUsuario LIKE :apellido";
+                $sentencia .= " AND apellidoUsuario LIKE :apellido";
                 $params[':apellido'] = "%" . trim($this->apellido) . "%";
             }
 
             // Cambiamos !empty por una validación más robusta para IDs numéricos
             if (isset($this->rol) && $this->rol !== "" && $this->rol !== "0") {
-                $sentencia .= " AND u.id_rol = :rol";
+                $sentencia .= " AND id_rol = :rol";
                 $params[':rol'] = (int)$this->rol; // Forzamos a entero
             }
 
-            $sentencia .= " ORDER BY u.idUsuario ASC";
+            $sentencia .= " ORDER BY idUsuario ASC";
 
             $str = $conex->prepare($sentencia);
 
@@ -169,7 +158,15 @@ class ModeloUsuarios extends Conexion
             }
 
             $conex = $this->conexSG();
-            $conex->beginTransaction();
+            
+            // Establecer el usuario actual en la sesión de BD para que el trigger lo registre
+            if (isset($_SESSION['idUsuario'])) {
+                $conex->exec("SET @usuario_actual = " . (int)$_SESSION['idUsuario']);
+            } elseif (isset($_SESSION['id'])) {
+                $conex->exec("SET @usuario_actual = " . (int)$_SESSION['id']);
+            }
+            
+            // Transacción removida porque pa_incluir_usuario maneja la propia internamente
 
             if ($this->verificarExistencia('cedula', $this->cedula, 'usuarios', 1, 'sg', bloquear: true)) {
                 throw new Exception(DUPLICATE_CEDULA);
@@ -194,25 +191,29 @@ class ModeloUsuarios extends Conexion
                             `id_rol` = :rol,
                             `estatus` = 1 
                             WHERE cedulaUsuario = :cedula";
+                $stmt = $conex->prepare($sql);
+                $stmt->bindValue(':cedula', $this->cedula, \PDO::PARAM_STR);
+                $stmt->bindValue(':nombre', $this->nombre, \PDO::PARAM_STR);
+                $stmt->bindValue(':apellido', $this->apellido, \PDO::PARAM_STR);
+                $stmt->bindValue(':foto', $this->foto, \PDO::PARAM_STR);
+                $stmt->bindValue(':telefono', $this->telefono, \PDO::PARAM_STR);
+                $stmt->bindValue(':contra', $this->contraseña, \PDO::PARAM_STR);
+                $stmt->bindValue(':correo', $this->correo, \PDO::PARAM_STR);
+                $stmt->bindValue(':rol', $this->rol, \PDO::PARAM_INT);
+                $stmt->execute();
             } else {
-                $sql = "INSERT INTO `usuarios`
-                            (`cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`,`foto`, `telefonoUsuario`, `pass_hash`,`correo`, `id_rol`, `estatus`) 
-                            VALUES 
-                            (:cedula, :nombre, :apellido,:foto, :telefono, :contra, :correo, :rol, 1)";
+                $sql = "CALL pa_incluir_usuario(:cedula, :nombre, :apellido, :foto, :telefono, :contra, :correo, :rol, @resultado)";
+                $stmt = $conex->prepare($sql);
+                $stmt->bindValue(':cedula', $this->cedula, \PDO::PARAM_STR);
+                $stmt->bindValue(':nombre', $this->nombre, \PDO::PARAM_STR);
+                $stmt->bindValue(':apellido', $this->apellido, \PDO::PARAM_STR);
+                $stmt->bindValue(':foto', $this->foto, \PDO::PARAM_STR);
+                $stmt->bindValue(':telefono', $this->telefono, \PDO::PARAM_STR);
+                $stmt->bindValue(':contra', $this->contraseña, \PDO::PARAM_STR);
+                $stmt->bindValue(':correo', $this->correo, \PDO::PARAM_STR);
+                $stmt->bindValue(':rol', $this->rol, \PDO::PARAM_INT);
+                $stmt->execute();
             }
-
-            $stmt = $conex->prepare($sql);
-
-            $stmt->bindValue(':cedula', $this->cedula, \PDO::PARAM_STR);
-            $stmt->bindValue(':nombre', $this->nombre, \PDO::PARAM_STR);
-            $stmt->bindValue(':apellido', $this->apellido, \PDO::PARAM_STR);
-            $stmt->bindValue(':foto', $this->foto, \PDO::PARAM_STR);
-            $stmt->bindValue(':telefono', $this->telefono, \PDO::PARAM_STR);
-            $stmt->bindValue(':contra', $this->contraseña, \PDO::PARAM_STR);
-            $stmt->bindValue(':correo', $this->correo, \PDO::PARAM_STR);
-            $stmt->bindValue(':rol', $this->rol, \PDO::PARAM_INT);
-
-            $stmt->execute();
 
             $idUsuario = $Reactivacion
                 ? $conex->query("SELECT idUsuario FROM usuarios WHERE cedulaUsuario = '{$this->cedula}'")->fetchColumn()
@@ -228,12 +229,10 @@ class ModeloUsuarios extends Conexion
             $stmtCopy = $conex->prepare($sqlCopy);
             $stmtCopy->execute([':idUsuario' => $idUsuario, ':idRol' => $this->rol]); */
 
-            $conex->commit();
+            // $conex->commit(); // Removido por el PA
             return ['accion' => 'exito'];
         } catch (Exception $e) {
-            if ($conex && $conex->inTransaction()) {
-                $conex->rollBack();
-            }
+            // Rollback removido porque pa_incluir_usuario lo maneja
             logs('Usuarios', $e->getMessage(), 'Modelo_Incluir');
             return ['accion' => 'error', 'codigo' => $e->getMessage()];
         } finally {
@@ -257,10 +256,6 @@ class ModeloUsuarios extends Conexion
                 throw new Exception(DUPLICATE_PHONE . '0');
             }
 
-            if (!$this->verificarExistencia('rol', $this->rol, 'roles', NULL, 'sg')) {
-                throw new Exception(INVALID_ID);
-            }
-
             $conex = $this->conexSG();
             $conex->beginTransaction();
 
@@ -269,6 +264,15 @@ class ModeloUsuarios extends Conexion
             $rolActualData = $stmtRolActual->fetch(\PDO::FETCH_ASSOC);
             $rolActual = $rolActualData['id_rol'];
             $nivelActual = $rolActualData['nivel_rol'];
+
+            if ($nivelActual == 1 || $nivelActual == 2) {
+                $this->rol = $rolActual; // Forzar el rol actual
+                $this->actualizar_contraseña = false; // No se puede editar la contraseña
+            }
+
+            if (!$this->verificarExistencia('rol', $this->rol, 'roles', NULL, 'sg')) {
+                throw new Exception(INVALID_ID);
+            }
 
             if ($rolActual != $this->rol) {
                 if ($nivelActual == 1) {
@@ -333,7 +337,7 @@ class ModeloUsuarios extends Conexion
 
             if ($rolActual != $this->rol) {
                 // Remove exceptions and change role
-                $stmtDel = $conex->prepare("DELETE FROM excepciones WHERE idUsuario = :idUsuario");
+                $stmtDel = $conex->prepare("DELETE FROM excepciones WHERE id_usuario = :idUsuario");
                 $stmtDel->execute([':idUsuario' => $this->id]);
             }
 
@@ -379,7 +383,7 @@ class ModeloUsuarios extends Conexion
             $stmt->bindValue(':id', $this->id, \PDO::PARAM_INT);
             $stmt->execute();
 
-            $stmtDel = $conex->prepare("DELETE FROM excepciones WHERE idUsuario = :idUsuario");
+            $stmtDel = $conex->prepare("DELETE FROM excepciones WHERE id_usuario = :idUsuario");
             $stmtDel->execute([':idUsuario' => $this->id]);
 
 
@@ -452,8 +456,9 @@ class ModeloUsuarios extends Conexion
     {
         try {
             $conex = $this->conexSG();
-            $sentencia = 'SELECT * FROM `usuarios` 
-            WHERE idUsuario=:id AND estatus=1;';
+            $sentencia = 'SELECT u.*, r.nivel_rol FROM `usuarios` u 
+            INNER JOIN `roles` r ON u.id_rol = r.id_rol
+            WHERE u.idUsuario=:id AND u.estatus=1;';
             $str = $conex->prepare($sentencia);
             $str->bindParam(':id', $this->id);
             $str->execute();
@@ -478,31 +483,8 @@ class ModeloUsuarios extends Conexion
     public function CargarPermisosUsuario()
     {
         try {
-            $conex = $this->conexSG();
-            $sentencia = 'SELECT 
-                            :id1 AS idUsuario, 
-                            (SELECT id_rol FROM usuarios WHERE idUsuario = :id2) AS id_rol,
-                            m.id_modulo, m.nombre_modulo, m.icono, m.estatus AS estatus_modulo,
-                            p.id_permiso, p.nombre AS nombre_permiso, p.descripcion, p.clave,
-                            CASE 
-                                WHEN e.id_permiso IS NOT NULL THEN e.tipo
-                                WHEN pr.id_permiso_rol IS NOT NULL THEN 1 
-                                ELSE 0 
-                            END AS asignado,
-                            CASE WHEN e.id_excepcion IS NOT NULL THEN e.tipo ELSE 2 END AS excepcion
-                        FROM modulos m
-                        INNER JOIN permisos p ON p.id_modulo = m.id_modulo
-                        LEFT JOIN permisos_rol pr ON pr.id_permiso = p.id_permiso AND pr.id_rol = (SELECT id_rol FROM usuarios WHERE idUsuario = :id3)
-                        LEFT JOIN excepciones e ON e.id_permiso = p.id_permiso AND e.id_usuario = :id4
-                        WHERE m.id_modulo NOT IN (4, 5, 8, 1, 2, 3, 99)
-                        ORDER BY m.id_modulo ASC, p.id_permiso ASC';
-            $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id1', $this->id);
-            $stmt->bindParam(':id2', $this->id);
-            $stmt->bindParam(':id3', $this->id);
-            $stmt->bindParam(':id4', $this->id);
-            $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $permisos = $this->objPermiso->permisosUsuarios($this->id);
+            $datos = $permisos['datos'];
             $resultado = array('accion' => 'CargarPermisosUsuario', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Usuarios', $e->getMessage(), 'Modelo_CargarPermisosUsuario');

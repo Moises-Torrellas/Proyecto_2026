@@ -131,7 +131,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         }
         $_SESSION['permisos'] = $permisosIndexados;
         
-        //registrarBitacora($bitacoraObj, $id_modulo, 'Inicio de sesión exitoso');
+        registrarBitacora($bitacoraObj, $id_modulo, 'Inicio de sesión exitoso');
 
         $respuestaFinal = [
             'accion'    => 'inicio',

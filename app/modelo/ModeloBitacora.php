@@ -4,6 +4,7 @@ namespace App\modelo;
 
 use App\interface\InterBitacora;
 use Exception;
+use PDO;
 
 class ModeloBitacora extends Conexion implements InterBitacora
 {
@@ -15,9 +16,7 @@ class ModeloBitacora extends Conexion implements InterBitacora
         $conex = null;
         try{
             $conex = $this->conexSG();
-            $conex->beginTransaction();
-            $sql = 'INSERT INTO `bitacora`(`id_modulo`, `acciones`, `datos_previos`, `datos_nuevos`, `entorno`, `fecha_hora`, `idUsuario`) 
-                            VALUES (:modulo,:accion,:datos_previos,:datos_nuevos,:entorno,NOW(),:usuario)';
+            $sql = 'CALL pa_incluir_bitacora(:modulo,:accion,:datos_previos,:datos_nuevos,:entorno,:usuario,@resultado)';
             $stmt = $conex->prepare($sql);
             $parametros = [
                 ':modulo' => $id_modulo,
@@ -28,8 +27,6 @@ class ModeloBitacora extends Conexion implements InterBitacora
                 ':usuario' => $id_usuario
             ];
             $stmt->execute($parametros);
-
-            $conex->commit();
 
         }catch(Exception $e){
             if ($conex && $conex->inTransaction()) {
@@ -51,33 +48,17 @@ class ModeloBitacora extends Conexion implements InterBitacora
         $conex = $this->conexSG();
         $params = [];
 
-        // 1. Iniciamos la sentencia con los JOINs necesarios
-        $sentencia = "SELECT 
-                        b.id_bitacora,
-                        u.nombreUsuario,
-                        u.apellidoUsuario,
-                        u.cedulaUsuario,
-                        m.nombre_modulo,
-                        m.icono,
-                        b.acciones,
-                        b.datos_previos,
-                        b.datos_nuevos,
-                        b.entorno,
-                        DATE(b.fecha_hora) AS fecha,
-                        TIME(b.fecha_hora) AS hora 
-                    FROM bitacora b
-                    INNER JOIN usuarios u ON u.idUsuario = b.idUsuario
-                    INNER JOIN modulos m ON m.id_modulo = b.id_modulo
-                    WHERE 1=1";
+        // 1. Iniciamos la sentencia con la vista
+        $sentencia = "SELECT * FROM vista_consulta_bitacora WHERE 1=1";
 
         // 2. BUSCADOR GENERAL (Filtra por nombre de usuario, cédula o acción)
         if (!empty($filtro['filtro'])) {
             $p = "%" . $filtro['filtro'] . "%";
             $sentencia .= " AND (
-                            u.nombreUsuario LIKE :f1 OR 
-                            u.cedulaUsuario LIKE :f2 OR 
-                            b.acciones LIKE :f3 OR
-                            m.nombre_modulo LIKE :f4
+                            nombreUsuario LIKE :f1 OR 
+                            cedulaUsuario LIKE :f2 OR 
+                            acciones LIKE :f3 OR
+                            nombre_modulo LIKE :f4
                         )";
             $params[':f1'] = $p;
             $params[':f2'] = $p;
@@ -85,10 +66,42 @@ class ModeloBitacora extends Conexion implements InterBitacora
             $params[':f4'] = $p;
         }
 
-        $sentencia .= " ORDER BY b.id_bitacora DESC";
+        if (!empty($filtro['id_modulo'])) {
+            $sentencia .= " AND nombre_modulo = (SELECT nombre_modulo FROM modulos WHERE id_modulo = :id_modulo LIMIT 1)";
+            $params[':id_modulo'] = $filtro['id_modulo'];
+        }
+        if (!empty($filtro['idUsuario'])) {
+            $sentencia .= " AND cedulaUsuario = (SELECT cedulaUsuario FROM usuarios WHERE idUsuario = :idUsuario LIMIT 1)";
+            $params[':idUsuario'] = $filtro['idUsuario'];
+        }
+        if (!empty($filtro['fecha_inicio']) && !empty($filtro['fecha_fin'])) {
+            $sentencia .= " AND fecha BETWEEN :fecha_inicio AND :fecha_fin";
+            $params[':fecha_inicio'] = $filtro['fecha_inicio'];
+            $params[':fecha_fin'] = $filtro['fecha_fin'];
+        }
+
+        // Limit and Offset only if it's not a report
+        if (isset($filtro['accion']) && $filtro['accion'] === 'reporte') {
+            $sentencia .= " ORDER BY id_bitacora DESC";
+        } else {
+            $sentencia .= " ORDER BY id_bitacora DESC";
+            $limit = isset($filtro['limit']) ? (int) $filtro['limit'] : 100;
+            $offset = isset($filtro['offset']) ? (int) $filtro['offset'] : 0;
+            $sentencia .= " LIMIT :limit OFFSET :offset";
+        }
 
         $stmt = $conex->prepare($sentencia);
-        $stmt->execute($params);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        if (!isset($filtro['accion']) || $filtro['accion'] !== 'reporte') {
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        }
+        
+        $stmt->execute();
 
         $datos = $stmt->fetchAll();
 
@@ -101,5 +114,37 @@ class ModeloBitacora extends Conexion implements InterBitacora
     } finally {
         $conex = NULL;
     }
-}
+    }
+
+    public function consultarUsuarios()
+    {
+        try {
+            $conex = $this->conexSG();
+            $sentencia = "SELECT idUsuario, cedulaUsuario, nombreUsuario, apellidoUsuario FROM usuarios ORDER BY nombreUsuario ASC";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute();
+            return array('accion' => 'consultar_usuarios', 'datos' => $stmt->fetchAll());
+        } catch (Exception $e) {
+            logs('Bitacora', $e->getMessage(), 'Modelo_consultarUsuarios');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
+        }
+    }
+
+    public function consultarModulos()
+    {
+        try {
+            $conex = $this->conexSG();
+            $sentencia = "SELECT id_modulo, nombre_modulo FROM modulos ORDER BY nombre_modulo ASC";
+            $stmt = $conex->prepare($sentencia);
+            $stmt->execute();
+            return array('accion' => 'consultar_modulos', 'datos' => $stmt->fetchAll());
+        } catch (Exception $e) {
+            logs('Bitacora', $e->getMessage(), 'Modelo_consultarModulos');
+            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+        } finally {
+            $conex = NULL;
+        }
+    }
 }

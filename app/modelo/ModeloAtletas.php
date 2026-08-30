@@ -225,10 +225,10 @@ class ModeloAtletas extends Conexion
                             a.p_apellidos,
                             a.s_nombre,
                             a.s_apellidos,
-                            cat.nombre AS categoria,
+                            MAX(cat.nombre) AS categoria,
                             CASE 
-                                WHEN ia.numero_doc IS NOT NULL AND ia.numero_doc <> '' THEN ia.numero_doc
-                                ELSE CONCAT('R-', r.cedula)
+                                WHEN MAX(ia.numero_doc) IS NOT NULL AND MAX(ia.numero_doc) <> '' THEN MAX(ia.numero_doc)
+                                ELSE CONCAT('R-', MAX(r.cedula))
                             END AS documento_identidad
                             FROM atletas a
                             INNER JOIN inscripciones i ON a.codigo_atleta = i.codigo_atleta
@@ -236,7 +236,8 @@ class ModeloAtletas extends Conexion
                             LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta
                             LEFT JOIN atleta_representante ar ON a.codigo_atleta = ar.codigo_atleta
                             LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
-                            WHERE i.estatus = 1;";
+                            WHERE i.estatus = 1
+                            GROUP BY a.codigo_atleta, a.p_nombre, a.p_apellidos, a.s_nombre, a.s_apellidos;";
             $stmt = $conex->prepare($sentencia);
             $stmt->execute();
             $datos = $stmt->fetchAll();
@@ -279,7 +280,7 @@ class ModeloAtletas extends Conexion
             if (!$this->ObjPos->verificarPosiciones($this->posicion)) {
                 throw new Exception(INVALID_ID . '0');
             }
-            if ($this->representante !== null && $this->representante !== '0') {
+            if (!empty($this->representante) && $this->representante !== '0') {
                 if (!$this->ObjRep->verificarRepresentantes($this->representante)) {
                     throw new Exception(INVALID_ID . '1');
                 }
@@ -295,6 +296,31 @@ class ModeloAtletas extends Conexion
             $s_apellidos  = $apellidosArr[1] ?? '';
 
             $conex = $this->conex();
+
+            // Verificaciones de duplicados en PHP para correo, instagram y dorsal
+            if (!empty($this->correo)) {
+                $stmtVerifCorreo = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE correo = :correo");
+                $stmtVerifCorreo->execute([':correo' => $this->correo]);
+                if ($stmtVerifCorreo->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_EMAIL);
+                }
+            }
+
+            if (!empty($this->instagram)) {
+                $stmtVerifInsta = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE instagram = :instagram");
+                $stmtVerifInsta->execute([':instagram' => $this->instagram]);
+                if ($stmtVerifInsta->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_INSTAGRAM);
+                }
+            }
+
+            if (!empty($this->dorsal) && !empty($this->categoria)) {
+                $stmtVerifDorsal = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1");
+                $stmtVerifDorsal->execute([':dorsal' => $this->dorsal, ':categoria' => $this->categoria]);
+                if ($stmtVerifDorsal->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_DORSAL);
+                }
+            }
 
             // Llamamos al procedimiento almacenado pasando parámetros y declarando @resultado
             $sql = "CALL RegistrarAtletaCompleto(
@@ -389,7 +415,7 @@ class ModeloAtletas extends Conexion
             if (!$this->verificarExistencia('posicion', $this->posicion, 'posiciones', NULL)) {
                 throw new Exception(INVALID_ID . '0');
             }
-            if ($this->representante !== null) {
+            if (!empty($this->representante) && $this->representante !== '0') {
                 if (!$this->verificarExistencia('representante', $this->representante, 'representantes', NULL)) {
                     throw new Exception(INVALID_ID . '1');
                 }
@@ -411,6 +437,30 @@ class ModeloAtletas extends Conexion
                 $stmtVerifTel->execute([':tel' => $this->telefono, ':id' => $this->id]);
                 if ($stmtVerifTel->fetchColumn() > 0) {
                     throw new Exception(DUPLICATE_PHONE);
+                }
+            }
+
+            if (!empty($this->correo)) {
+                $stmtVerifCorreo = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE correo = :correo AND codigo_atleta != :id");
+                $stmtVerifCorreo->execute([':correo' => $this->correo, ':id' => $this->id]);
+                if ($stmtVerifCorreo->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_EMAIL);
+                }
+            }
+
+            if (!empty($this->instagram)) {
+                $stmtVerifInsta = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE instagram = :instagram AND codigo_atleta != :id");
+                $stmtVerifInsta->execute([':instagram' => $this->instagram, ':id' => $this->id]);
+                if ($stmtVerifInsta->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_INSTAGRAM);
+                }
+            }
+
+            if (!empty($this->dorsal) && !empty($this->categoria)) {
+                $stmtVerifDorsal = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1 AND codigo_atleta != :id");
+                $stmtVerifDorsal->execute([':dorsal' => $this->dorsal, ':categoria' => $this->categoria, ':id' => $this->id]);
+                if ($stmtVerifDorsal->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_DORSAL);
                 }
             }
 
@@ -469,7 +519,7 @@ class ModeloAtletas extends Conexion
             }
 
             // Update atleta_representante
-            if ($this->representante && $this->representante !== '0') {
+            if (!empty($this->representante) && $this->representante !== '0') {
                 $stmtRep = $conex->prepare("SELECT COUNT(*) FROM atleta_representante WHERE codigo_atleta = :id");
                 $stmtRep->execute([':id' => $this->id]);
                 if ($stmtRep->fetchColumn() > 0) {
@@ -481,6 +531,10 @@ class ModeloAtletas extends Conexion
                     $stmtAr = $conex->prepare($sqlAr);
                     $stmtAr->execute([':cr' => $this->representante, ':id' => $this->id]);
                 }
+            } else {
+                $sqlAr = "DELETE FROM atleta_representante WHERE codigo_atleta = :id";
+                $stmtAr = $conex->prepare($sqlAr);
+                $stmtAr->execute([':id' => $this->id]);
             }
 
             // Update inscripciones (the latest one)
@@ -686,6 +740,15 @@ class ModeloAtletas extends Conexion
 
         try {
             $conex = $this->conex();
+
+            if (!empty($this->dorsal) && !empty($this->categoria)) {
+                $stmtVerifDorsal = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1 AND codigo_atleta != :id");
+                $stmtVerifDorsal->execute([':dorsal' => $this->dorsal, ':categoria' => $this->categoria, ':id' => $this->id]);
+                if ($stmtVerifDorsal->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_DORSAL);
+                }
+            }
+
             $conex->beginTransaction();
 
             $sqlInsc = "INSERT INTO inscripciones (codigo_atleta, codigo_categoria, codigo_posicion, dorsal, peso_kg, estatura_cm, fecha_inscripcion, estatus) 
@@ -755,7 +818,7 @@ class ModeloAtletas extends Conexion
         if (!empty($datos['telefono']) && !preg_match('/^[0-9]{4}[-]{1}[0-9]{7}$/', $datos['telefono'])) {
             throw new Exception('Telefono invalido.');
         }
-        if (!empty($datos['direccion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/', $datos['direccion'])) {
+        if (!empty($datos['direccion']) && !preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-\/]{5,150}$/', $datos['direccion'])) {
             throw new Exception('Direccion inválida.');
         }
         if (!empty($datos['foto_actual']) && !preg_match('/^atleta_\d{4}-\d{2}-\d{2}_\d+\.(png|jpg|jpeg|webp)$/', $datos['foto_actual'])) {
@@ -776,6 +839,38 @@ class ModeloAtletas extends Conexion
         if (!empty($datos['estatura']) && !preg_match('/^[0-9]{2,3}$/', $datos['estatura'])) {
             throw new Exception('Estatura inválida.');
         }
+
+        if (!empty($datos['lugar_nacimiento']) && !preg_match('/^.{3,100}$/', $datos['lugar_nacimiento'])) {
+            throw new Exception('Lugar de nacimiento inválido.');
+        }
+        if (!empty($datos['correo']) && !preg_match('/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i', $datos['correo'])) {
+            throw new Exception('Correo inválido.');
+        }
+        if (!empty($datos['instagram']) && !preg_match('/^[@a-zA-Z0-9._]{0,30}$/', $datos['instagram'])) {
+            throw new Exception('Instagram inválido.');
+        }
+        if (!empty($datos['municipio']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]{3,50}$/', $datos['municipio'])) {
+            throw new Exception('Municipio inválido.');
+        }
+        if (!empty($datos['talla_pantalon']) && !preg_match('/^(XS|S|M|L|XL|XXL)$/', $datos['talla_pantalon'])) {
+            throw new Exception('Talla de pantalón inválida.');
+        }
+        if (!empty($datos['talla_franela']) && !preg_match('/^(XS|S|M|L|XL|XXL)$/', $datos['talla_franela'])) {
+            throw new Exception('Talla de franela inválida.');
+        }
+        if (!empty($datos['talla_calzado']) && !preg_match('/^(1[0-9]|[2-4][0-9]|50)$/', $datos['talla_calzado'])) {
+            throw new Exception('Talla de calzado inválida. Solo números del 10 al 50.');
+        }
+        if (!empty($datos['tipo_sangre']) && !preg_match('/^(A\+|A\-|B\+|B\-|AB\+|AB\-|O\+|O\-)$/', $datos['tipo_sangre'])) {
+            throw new Exception('Tipo de sangre inválido.');
+        }
+        if (isset($datos['es_alergico']) && !preg_match('/^[0-1]$/', $datos['es_alergico'])) {
+            throw new Exception('Dato es_alergico inválido.');
+        }
+        if (!empty($datos['alergias_detalle']) && !preg_match('/^.{0,255}$/', $datos['alergias_detalle'])) {
+            throw new Exception('Detalle de alergias demasiado largo.');
+        }
+
 
         if ($accion === 'incluir' || $accion === 'modificar' || $accion === 'reinscribir') {
             if (!empty($datos['fecha_nac'])) {

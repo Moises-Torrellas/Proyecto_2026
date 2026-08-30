@@ -65,8 +65,10 @@ CREATE TRIGGER trg_bloquear_articulos_danados
 BEFORE UPDATE ON articulos_inventario
 FOR EACH ROW
 BEGIN
-    -- Si el nuevo estado físico es 2 (Dañado)
-    IF NEW.id_estado = 2 THEN
+    DECLARE v_nivel TINYINT;
+    SELECT nivel_estado INTO v_nivel FROM estado_fisico WHERE id_estado = NEW.id_estado;
+    -- Si el nivel de estado es 3
+    IF v_nivel = 3 THEN
         -- Lo pasamos a estatus 3 (Retirado) para que no salga en la lista de disponibles
         SET NEW.estatus = 3;
     END IF;

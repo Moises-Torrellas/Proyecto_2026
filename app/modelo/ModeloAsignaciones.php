@@ -109,7 +109,7 @@ class ModeloAsignaciones extends Conexion
 
             // 2. Aplicamos los filtros usando los nombres de las columnas de la vista
             if (!empty($this->filtro)) {
-                $sql .= " AND (atleta LIKE :filtro OR doc_identidad LIKE :filtro OR articulo LIKE :filtro)";
+                $sql .= " AND (atleta LIKE :filtro1 OR doc_identidad LIKE :filtro2 OR articulo LIKE :filtro3 OR fecha_vista LIKE :filtro4 OR fecha_real LIKE :filtro5)";
             }
 
             if (!empty($this->codigo_atleta)) {
@@ -134,7 +134,14 @@ class ModeloAsignaciones extends Conexion
 
             $stmt = $conex->prepare($sql);
 
-            if (!empty($this->filtro)) $stmt->bindValue(':filtro', '%' . $this->filtro . '%');
+            if (!empty($this->filtro)) {
+                $p = '%' . $this->filtro . '%';
+                $stmt->bindValue(':filtro1', $p);
+                $stmt->bindValue(':filtro2', $p);
+                $stmt->bindValue(':filtro3', $p);
+                $stmt->bindValue(':filtro4', $p);
+                $stmt->bindValue(':filtro5', $p);
+            }
             if (!empty($this->codigo_atleta)) $stmt->bindValue(':codigo_atleta', $this->codigo_atleta);
             if (!empty($this->codigo_articulo)) $stmt->bindValue(':codigo_articulo', $this->codigo_articulo);
             if (!empty($this->fecha_inicio)) $stmt->bindValue(':fecha_inicio', $this->fecha_inicio);

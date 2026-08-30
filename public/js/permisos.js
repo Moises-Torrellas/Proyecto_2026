@@ -82,7 +82,7 @@ $(document).ready(function () {
         abrirModal();
     });
 
-    /* $('#ayuda').on('click', function () {
+    $('#ayuda').on('click', function () {
         const pasos = [
             {
                 element: '#busqueda',
@@ -90,27 +90,47 @@ $(document).ready(function () {
             },
             {
                 element: '#incluir',
-                popover: { title: 'Nuevo Registro', description: 'Si pulsa aqui se abrira un modal para registrar un nuevo rol', position: 'bottom' }
+                popover: { title: 'Nuevo Registro', description: 'Si pulsa aqui se abrira un modal para registrar un nuevo permiso', position: 'bottom' }
             },
             {
-                element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' }
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .listado_item',
+                popover: { title: 'Módulos y Permisos', description: 'Los permisos están agrupados por módulo. Este es un registro de módulo.', position: 'top' },
+                onNext: () => {
+                    const primerRegistro = $('#resultadoconsulta .listado_contenedor_grupal:first-child');
+                    const detalle = primerRegistro.find('.listado_detalle_oculto');
+                    if (detalle.length && !detalle.is(':visible')) {
+                        detalle.show();
+                        primerRegistro.find('.icono_flecha_detalle').css('transform', 'rotate(180deg)');
+                    }
+                }
             },
             {
-                element: '#resultadoconsulta',
-                popover: { title: 'Registros', description: 'Aqui se mostraran todos los registros.', position: 'top' }
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .sub_item_fila:first-child .cbt_v',
+                popover: { title: 'Modificar Permiso', description: 'Si pulsa aqui se abrira un modal para modificar el permiso seleccionado.', position: 'left' }
             },
             {
-                element: '#cbt_v',
-                popover: { title: 'Modificar Registro', description: 'Si pulsa aqui se abrira un modal para modificar el registro seleccionado.', position: 'left' }
-            },
-            {
-                element: '#cbt_r',
-                popover: { title: 'Eliminar Registro', description: 'Si pulsa aqui eliminara el registro seleccionado.', position: 'left' }
+                element: '#resultadoconsulta .listado_contenedor_grupal:first-child .sub_item_fila:first-child .btn_t:last-of-type',
+                popover: { title: 'Bloquear/Desbloquear Permiso', description: 'Si pulsa aqui bloqueará o desbloqueará el permiso seleccionado.', position: 'left' },
+                onNext: () => {
+                    const primerRegistro = $('#resultadoconsulta .listado_contenedor_grupal:first-child');
+                    const detalle = primerRegistro.find('.listado_detalle_oculto');
+                    if (detalle.length && detalle.is(':visible')) {
+                        detalle.hide();
+                        primerRegistro.find('.icono_flecha_detalle').css('transform', 'rotate(0deg)');
+                    }
+                }
             },
             {
                 element: '#rowsPerPage',
-                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' },
+                onPrevious: () => {
+                    const primerRegistro = $('#resultadoconsulta .listado_contenedor_grupal:first-child');
+                    const detalle = primerRegistro.find('.listado_detalle_oculto');
+                    if (detalle.length && !detalle.is(':visible')) {
+                        detalle.show();
+                        primerRegistro.find('.icono_flecha_detalle').css('transform', 'rotate(180deg)');
+                    }
+                }
             },
             {
                 element: '#botonera',
@@ -118,14 +138,21 @@ $(document).ready(function () {
             },
             {
                 element: '#cantidad',
-                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de usuarios registrados.', position: 'top' }
+                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de permisos registrados.', position: 'top' }
             },
         ];
+
+        // Asegurarnos de que inicie cerrado
+        const primerRegistroInit = $('#resultadoconsulta .listado_item').first();
+        const detalleInit = primerRegistroInit.siblings('.listado_detalle_oculto');
+        if (detalleInit.length && detalleInit.is(':visible')) {
+            primerRegistroInit.click();
+        }
 
         // Iniciar tour
         const driver = iniciarTourConPasos(pasos);
         driver.start();
-    }); */
+    });
 
 });
 

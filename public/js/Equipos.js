@@ -16,7 +16,7 @@ $(document).ready(function () {
     inicializarPaginador();
 
     // Configuración inicial de componentes UI
-    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
+    Validacion("nombre", /^[A-Za-z0-9\-\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z0-9\-\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras, números, guiones y espacios (3-30 caracteres)", "proceso");
 
     $('#categoria').select2({
         placeholder: "Selecciona una opción",
@@ -46,13 +46,13 @@ $(document).ready(function () {
                 }
             });
         } else if (accion === "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
-                    let datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            if (!validarEnvio(accion)) return;
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                let datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -87,8 +87,8 @@ $(document).ready(function () {
             { element: '#incluir', popover: { title: 'Nuevo Equipo', description: 'Abre un modal para ingresar un equipo nuevo.', position: 'bottom' } },
             { element: '#generar', popover: { title: 'Generar Reportes', description: 'Abre un modal para generar un reporte en PDF.', position: 'left' } },
             { element: '#resultadoconsulta', popover: { title: 'Equipos Registrados', description: 'Muestra todos los equipos registrados.', position: 'top' } },
-            { element: '#cbt_v', popover: { title: 'Modificar Equipo', description: 'Abre un modal para modificar el equipo seleccionado.', position: 'left' } },
-            { element: '#cbt_r', popover: { title: 'Eliminar Equipo', description: 'Elimina el equipo seleccionado.', position: 'left' } },
+            { element: '#resultadoconsulta .listado_contenedor_grupal:first-child .cbt_v', popover: { title: 'Modificar Equipo', description: 'Abre un modal para modificar el equipo seleccionado.', position: 'left' } },
+            { element: '#resultadoconsulta .listado_contenedor_grupal:first-child .cbt_r', popover: { title: 'Eliminar Equipo', description: 'Elimina el equipo seleccionado.', position: 'left' } },
             { element: '#rowsPerPage', popover: { title: 'Registros Deseados', description: 'Selecciona la cantidad de registros a mostrar.', position: 'top' } },
             { element: '#botonera', popover: { title: 'Cambiar de Página', description: 'Botones para la paginación.', position: 'top' } },
             { element: '#cantidad', popover: { title: 'Cantidad', description: 'Muestra la cantidad total de equipos.', position: 'top' } }
@@ -267,7 +267,14 @@ function procesarAccionAjax(lee) {
 }
 
 function validarEnvio(proceso) {
-    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
+    if (proceso === "generar") {
+        if (!$('#id_equipo').val()) {
+            muestraMensaje("error", 2000, "Error de Validación", "Debe seleccionar un equipo.");
+            return false;
+        }
+        return true;
+    }
+    if (validarkeyup(/^[A-Za-z0-9\-\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras, números, guiones y espacios (3-30 caracteres)", true)) {
         muestraMensaje("error", 2000, "Error de Validación", "Tiene que ingresar un nombre válido.");
         return false;
     }
@@ -278,6 +285,15 @@ function prepararModalPrincipal(accion, titulo, mostrarNombre) {
     $("#proceso").data("accion", accion).text(titulo);
     $("#titulo_modal").text(titulo);
     $('#nombre').closest('.colum').toggle(mostrarNombre);
+    $('#row_asignar').toggle(mostrarNombre);
+    $('#row_tabla_atletas').toggle(mostrarNombre);
+    $('#row_equipo_reporte').toggle(!mostrarNombre);
+    
+    // Si mostramos el select de equipos, asegurar que select2 se renderice bien
+    if (!mostrarNombre) {
+        setTimeout(() => $('#id_equipo').select2({ dropdownParent: $('.modal_contenedor') }), 100);
+    }
+    
     abrirModal();
 }
 

@@ -36,7 +36,8 @@ $(document).ready(function () {
 
     Validacion("monto", /^[0-9.\b]*$/, /^\d+(\.\d{1,2})?$/, "Monto inválido", "proceso");
     Validacion("tasa", /^[0-9.\b]*$/, /^\d+(\.\d{1,4})?$/, "Tasa inválida", "proceso");
-    Validacion("referencia", /^[a-zA-Z0-9\-\_\b]*$/, /^[a-zA-Z0-9\-\_]+$/, "Referencia inválida", "proceso");
+    Validacion("referencia", /^[0-9\b]*$/, /^\d{4,12}$/, "La referencia debe tener entre 4 y 12 dígitos numéricos", "proceso");
+    Validacion("referencia_vuelto", /^[0-9\b]*$/, /^\d{4,12}$/, "La referencia debe tener entre 4 y 12 dígitos numéricos", "proceso_vuelto");
     Validacion("fecha", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "proceso");
     Validacion("fecha_f", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "proceso");
 
@@ -44,43 +45,6 @@ $(document).ready(function () {
         let accion = $(this).data("accion");
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
-                // Verificar si hay exceso
-                let monto = parseFloat($('#monto_cambio').val()) || 0;
-                let idsCobrar = $('#cuenta').val() || [];
-                let deudaTotalPendiente = 0;
-                idsCobrar.forEach(id => {
-                    let c = listadoCuentas.find(cuenta => cuenta.codigo_cargo == id);
-                    if (c) deudaTotalPendiente += parseFloat(c.monto_pendiente) || 0;
-                });
-
-                let saldoRestante = deudaTotalPendiente - monto;
-                if (saldoRestante < 0) {
-                    // Hay exceso, mostrar modal de vuelto
-                    let exceso = Math.abs(saldoRestante);
-                    $('#monto_vuelto_base').val(exceso.toFixed(2));
-                    $('#monto_vuelto_base').data('valor', exceso);
-                    let simDeuda = cuentaSeleccionadaActual.simbolo_moneda;
-                    $('#label_vuelto_base').text(`Monto Vuelto Base (${simDeuda})`);
-                    $('#monto_vuelto').val('');
-                    $('#fecha_vuelto').val($('#fecha').val()); // misma fecha por defecto
-
-                    // Construir selects
-                    construirSelect('codigo_moneda_vuelto', listadoMonedas, 'codigo_moneda', 'simbolo', 'nombre');
-                    construirSelect('codigo_metodo_vuelto', listadoMetodosVuelto, 'codigo_metodo', 'nombre');
-
-                    $('#codigo_moneda_vuelto').select2({
-                        placeholder: "Selecciona una Moneda",
-                        dropdownParent: $('#secundario_modal_contenedor') // Debe coincidir con el ID del modal
-                    });
-
-                    $('#codigo_metodo_vuelto').select2({
-                        placeholder: "Selecciona un Método",
-                        dropdownParent: $('#secundario_modal_contenedor') // Debe coincidir con el ID del modal
-                    });
-
-                    abrirModalSecundario();
-                    return;
-                }
 
                 confirmar('¿Está seguro que quiere registrar este pago?', function (confirmado) {
                     if (confirmado) {
@@ -105,13 +69,12 @@ $(document).ready(function () {
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function (formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -164,7 +127,13 @@ $(document).ready(function () {
         let mes = String(fechaLocal.getMonth() + 1).padStart(2, '0');
         let dia = String(fechaLocal.getDate()).padStart(2, '0');
         let hoy = `${año}-${mes}-${dia}`;
-        $('#fecha').val(hoy);
+
+        let fp_fecha = document.querySelector("#fecha")._flatpickr;
+        if (fp_fecha) {
+            fp_fecha.setDate(hoy);
+        } else {
+            $('#fecha').val(hoy);
+        }
 
         abrirModal();
     });
@@ -198,32 +167,32 @@ $(document).ready(function () {
             },
             {
                 element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Permite generar listados detallados de ingresos en formato PDF.', position: 'left' }
+                popover: { title: 'Generar Reportes', description: 'Permite generar listados detallados de ingresos en formato PDF y Excel.', position: 'left' }
             },
             {
                 element: '#resultadoconsulta',
                 popover: { title: 'Historial de Pagos', description: 'Aquí se muestra la tabla con todos los movimientos financieros.', position: 'top' }
             },
             {
-                element: '#registro',
-                popover: { title: 'Detalle de Fila', description: 'Haz clic en cualquier registro para expandir los detalles específicos del pago.', position: 'bottom' }
+                element: '.listado_item',
+                popover: { title: 'Detalle de Fila', description: 'Haz clic en cualquier registro para expandir los detalles específicos del pago y ver el desglose de los cargos y vueltos.', position: 'bottom' }
             },
             {
-                element: '#cbt_v',
-                popover: { title: 'Modificar Datos', description: 'Permite editar la información de un cobro seleccionado.', position: 'left' }
-            },
-            {
-                element: '#cbt_r',
+                element: '.cbt_r',
                 popover: { title: 'Anular Transacción', description: 'Si el pago fue erróneo, puedes anularlo especificando un motivo.', position: 'left' }
             },
             {
                 element: '#rowsPerPage',
-                popover: { title: 'Registros por Página', description: 'Ajusta cuántos elementos deseas visualizar a la vez.', position: 'top' }
+                popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
             },
             {
                 element: '#botonera',
-                popover: { title: 'Paginación', description: 'Navega entre las diferentes páginas del historial.', position: 'top' }
-            }
+                popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de representantes cargados.', position: 'top' }
+            },
         ];
 
         const driver = iniciarTourConPasos(pasos);
@@ -304,6 +273,15 @@ $(document).ready(function () {
         solicitarTasaAPI();
     });
 
+    $('#fecha').on('change', function () {
+        validarFechaLimite('fecha', 'pago');
+    });
+
+    $('#fecha_vuelto').on('change', function () {
+        validarFechaLimite('fecha_vuelto', 'vuelto');
+    });
+
+
     // Listener en tiempo real para amortización y monto al cambio
     $('#monto, #tasa').on('input change', function () {
         recalcularAmortizacion();
@@ -333,6 +311,14 @@ $(document).ready(function () {
             return false;
         }
 
+        let ref_vuelto = $('#referencia_vuelto').val().trim();
+        if (ref_vuelto !== "") {
+            if (!/^\d{4,12}$/.test(ref_vuelto)) {
+                muestraMensaje("error", 2000, "Error", "La referencia del vuelto debe tener entre 4 y 12 dígitos numéricos");
+                return false;
+            }
+        }
+
         confirmar('¿Está seguro que quiere registrar el pago y el vuelto?', function (confirmado) {
             if (confirmado) {
                 // Combinar datos del pago y del vuelto
@@ -343,7 +329,13 @@ $(document).ready(function () {
                     datos.append(pair[0], pair[1]);
                 }
 
-                datos.append('accion', 'registrar_vuelto');
+                let accionVuelto = $('#proceso_vuelto').data('accion');
+                if (accionVuelto === 'incluir_con_vuelto') {
+                    datos.append('accion', 'incluir');
+                } else {
+                    datos.append('accion', 'registrar_vuelto');
+                }
+
                 enviaAjax(datos);
 
                 $('#secundario_modal_contenedor').removeClass('mostrar');
@@ -374,14 +366,14 @@ function solicitarTasaAPI() {
     if (isoCuenta === isoPago) {
         let selectTasa = $('#tasa');
         selectTasa.empty();
-        selectTasa.append('<option value="1.0000" selected>Misma Moneda (1.0000)</option>');
+        selectTasa.append('<option value="1.00" selected>Misma Moneda (1.00)</option>');
         selectTasa.prop('disabled', true);
-        $('#label_tasa').html(`Tasa de cambio <span style="color: #28a745; font-size:12px;">(Misma moneda: 1 ${isoPago} = 1 ${isoCuenta})</span>`);
+        $('#label_tasa').html(`Tasa de cambio <span style="color: #28a745; font-size:12px;">(${isoPago} = ${isoCuenta})</span>`);
         recalcularAmortizacion();
         return;
     }
 
-    $('#label_tasa').html(`Tasa de cambio <span style="color: #007bff; font-size:11px;">(Convirtiendo de ${isoPago} a ${isoCuenta})</span>`);
+    $('#label_tasa').html(`Tasa de cambio <span style="color: #28a745; font-size:11px;">(Convirtiendo de ${isoPago} a ${isoCuenta})</span>`);
 
     let datos = new FormData();
     datos.append('accion', 'consultar_tasas_disponibles');
@@ -410,11 +402,11 @@ function solicitarTasaAPI() {
                         let tipoLabel = (t.tipo === 'automatica') ? 'Automática' : 'Manual';
                         let seleccion = (index === 0) ? 'selected' : ''; // <-- Autoselección en la primera iteración
 
-                        selectTasa.append(`<option value="${parseFloat(t.valor_tasa).toFixed(4)}" ${seleccion}>${tipoLabel} - ${parseFloat(t.valor_tasa).toFixed(4)} ${t.simbolo}</option>`);
+                        selectTasa.append(`<option value="${parseFloat(t.valor_tasa).toFixed(2)}" ${seleccion}>${tipoLabel} - ${parseFloat(t.valor_tasa).toFixed(2)} ${t.simbolo}</option>`);
                     });
 
                     selectTasa.prop('disabled', false);
-                    $('#label_tasa').html(`Tasa Seleccionada <strong style="color: #007bff;">(${isoPago} ➔ ${isoCuenta})</strong>`);
+                    $('#label_tasa').html(`Tasa <strong style="color: #28a745;">(${isoPago} ➔ ${isoCuenta})</strong>`);
 
                 } else {
                     selectTasa.append('<option value="" disabled selected>No hay tasas disponibles</option>');
@@ -482,11 +474,18 @@ function recalcularAmortizacion() {
     }
 }
 
+let globalIsoMonedaBaseVuelto = null;
+
 function solicitarTasaVueltoAPI() {
     let idMonedaVuelto = $('#codigo_moneda_vuelto').val();
     let fechaVuelto = $('#fecha_vuelto').val();
-    
-    if (!idMonedaVuelto || !fechaVuelto || !cuentaSeleccionadaActual) {
+
+    let isoCuenta = globalIsoMonedaBaseVuelto;
+    if (!isoCuenta && cuentaSeleccionadaActual) {
+        isoCuenta = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
+    }
+
+    if (!idMonedaVuelto || !fechaVuelto || !isoCuenta) {
         $('#label_tasa_vuelto').text("Tasa de Cambio");
         return;
     }
@@ -494,72 +493,133 @@ function solicitarTasaVueltoAPI() {
     let monedaVueltoObj = listadoMonedas.find(m => m.codigo_moneda == idMonedaVuelto);
     if (!monedaVueltoObj) return;
 
-    let isoCuenta = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
     let isoVuelto = monedaVueltoObj.abreviatura.toUpperCase();
 
     if (isoCuenta === isoVuelto) {
         let selectTasa = $('#tasa_vuelto');
         selectTasa.empty();
-        selectTasa.append('<option value="1.0000" selected>Misma Moneda (1.0000)</option>');
+        selectTasa.append('<option value="1.00" selected>Misma Moneda (1.00)</option>');
         selectTasa.prop('disabled', true);
-        $('#label_tasa_vuelto').html(`Tasa de cambio <span style="color: #28a745; font-size:12px;">(1 ${isoVuelto} = 1 ${isoCuenta})</span>`);
+        $('#label_tasa_vuelto').html(`Tasa <strong style="color: #28a745; font-size:11px;">(1 ${isoVuelto} = 1 ${isoCuenta})</strong>`);
+        
+        // Cuando es la misma moneda, la tasa para convertir es directamente 1
+        $('#tasa_vuelto').data('tasa-cruzada', 1.00); 
+
         recalcularVuelto();
         return;
     }
 
-    $('#label_tasa_vuelto').html(`Tasa de cambio <span style="color: #007bff; font-size:11px;">(${isoVuelto} ➔ ${isoCuenta})</span>`);
+    $('#label_tasa_vuelto').html(`Tasa <strong style="color: #28a745; font-size:11px;">(${isoVuelto} ➔ ${isoCuenta})</strong>`);
 
-    let datos = new FormData();
-    datos.append('accion', 'consultar_tasas_disponibles');
-    datos.append('codigo_moneda', idMonedaVuelto);
-    datos.append('fecha', fechaVuelto);
+    let cuentaObj = listadoMonedas.find(m => m.abreviatura.toUpperCase() === isoCuenta);
+    let idMonedaCuenta = cuentaObj ? cuentaObj.codigo_moneda : null;
 
-    $.ajax({
-        url: "",
-        type: "POST",
-        contentType: false,
-        processData: false,
-        data: datos,
-        beforeSend: function (request) {
-            request.setRequestHeader("X-CSRF-TOKEN", token);
-        },
-        success: function (respuesta) {
-            try {
-                let lee = JSON.parse(respuesta);
-                let selectTasa = $('#tasa_vuelto');
-                selectTasa.empty();
+    let datosVuelto = new FormData();
+    datosVuelto.append('accion', 'consultar_tasas_disponibles');
+    datosVuelto.append('codigo_moneda', idMonedaVuelto);
+    datosVuelto.append('fecha', fechaVuelto);
 
-                if (lee.accion === 'exito' && lee.datos && lee.datos.length > 0) {
-                    lee.datos.forEach((t, index) => {
-                        let tipoLabel = (t.tipo === 'automatica') ? 'Automática' : 'Manual';
-                        let seleccion = (index === 0) ? 'selected' : ''; 
-                        selectTasa.append(`<option value="${parseFloat(t.valor_tasa).toFixed(4)}" ${seleccion}>${tipoLabel} - ${parseFloat(t.valor_tasa).toFixed(4)} ${t.simbolo}</option>`);
-                    });
-                    selectTasa.prop('disabled', false);
-                    $('#label_tasa_vuelto').html(`Tasa Seleccionada <strong style="color: #007bff;">(${isoVuelto} ➔ ${isoCuenta})</strong>`);
-                } else {
-                    selectTasa.append('<option value="" disabled selected>No hay tasas disponibles</option>');
-                    selectTasa.prop('disabled', true);
-                    muestraMensaje("error", 3000, "Aviso de Tasa", "No se encontraron tasas disponibles para esta fecha.");
-                }
+    let datosCuenta = new FormData();
+    datosCuenta.append('accion', 'consultar_tasas_disponibles');
+    datosCuenta.append('codigo_moneda', idMonedaCuenta);
+    datosCuenta.append('fecha', fechaVuelto);
 
-                recalcularVuelto();
-            } catch (e) {
-                console.error("Error procesando tasa de vuelto", e);
+    $.when(
+        $.ajax({
+            url: "",
+            type: "POST",
+            data: datosVuelto,
+            processData: false,
+            contentType: false,
+            headers: { "X-CSRF-TOKEN": token }
+        }),
+        $.ajax({
+            url: "",
+            type: "POST",
+            data: datosCuenta,
+            processData: false,
+            contentType: false,
+            headers: { "X-CSRF-TOKEN": token }
+        })
+    ).done(function (resVuelto, resCuenta) {
+        try {
+            let leeVuelto = JSON.parse(resVuelto[0]);
+            let leeCuenta = JSON.parse(resCuenta[0]);
+            
+            let tasaPagoReal = 1.0;
+            if (leeCuenta.accion === 'exito' && leeCuenta.datos && leeCuenta.datos.length > 0) {
+                tasaPagoReal = parseFloat(leeCuenta.datos[0].valor_tasa);
             }
+
+            let selectTasa = $('#tasa_vuelto');
+            selectTasa.empty();
+
+            if (leeVuelto.accion === 'exito' && leeVuelto.datos && leeVuelto.datos.length > 0) {
+                leeVuelto.datos.forEach((t, index) => {
+                    let tipoLabel = (t.tipo === 'automatica') ? 'Automática' : 'Manual';
+                    let seleccion = (index === 0) ? 'selected' : '';
+                    let tasaVueltoBase = parseFloat(t.valor_tasa);
+                    
+                    let tasaMostrada = 1;
+                    let textoTasa = "";
+
+                    if (tasaPagoReal > tasaVueltoBase) {
+                        tasaMostrada = tasaPagoReal / tasaVueltoBase;
+                        textoTasa = `(1 ${isoVuelto} = ${tasaMostrada.toFixed(2)} ${isoCuenta})`;
+                    } else {
+                        tasaMostrada = tasaVueltoBase / tasaPagoReal;
+                        textoTasa = `(1 ${isoCuenta} = ${tasaMostrada.toFixed(2)} ${isoVuelto})`;
+                    }
+                    
+                    // Guardamos la tasa real de la cuenta en data-tasa-pago para usarla en recalcularVuelto
+                    selectTasa.append(`<option value="${tasaVueltoBase.toFixed(2)}" data-tasa-pago="${tasaPagoReal.toFixed(2)}" ${seleccion}>${tipoLabel} - ${tasaMostrada.toFixed(2)} ${textoTasa}</option>`);
+                });
+                selectTasa.prop('disabled', false);
+            } else {
+                selectTasa.append('<option value="" disabled selected>No hay tasas disponibles</option>');
+                selectTasa.prop('disabled', true);
+                muestraMensaje("error", 3000, "Aviso de Tasa", "No se encontraron tasas disponibles para esta fecha.");
+            }
+
+            recalcularVuelto();
+        } catch (e) {
+            console.error("Error procesando tasa de vuelto", e);
         }
+    }).fail(function() {
+        console.error("Error en las peticiones AJAX de tasas cruzadas");
+        muestraMensaje("error", 3000, "Error", "No se pudieron obtener las tasas para el cálculo cruzado.");
     });
 }
 
 function recalcularVuelto() {
-    let excesoBase = parseFloat($('#monto_vuelto_base').data('valor')) || 0;
-    let tasa = parseFloat($('#tasa_vuelto').val()) || 0;
+    let excesoBase = parseFloat($('#monto_vuelto_base').data('valor')) || parseFloat($('#monto_vuelto_base').val()) || 0;
+    
+    // Si las monedas son iguales, forzamos un multiplier de 1 (evita errores con tasas distintas en DB)
+    let isoCuenta = globalIsoMonedaBaseVuelto;
+    if (!isoCuenta && cuentaSeleccionadaActual) isoCuenta = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
+    let idMonedaVuelto = $('#codigo_moneda_vuelto').val();
+    let monedaVueltoObj = idMonedaVuelto ? listadoMonedas.find(m => m.codigo_moneda == idMonedaVuelto) : null;
+    let isoVuelto = monedaVueltoObj ? monedaVueltoObj.abreviatura.toUpperCase() : null;
 
-    if (excesoBase > 0 && tasa > 0) {
-        // excesoBase está en la moneda de la cuenta (moneda base).
-        // tasa es la tasa de cambio desde moneda base a moneda vuelto.
-        // Entonces, para convertir excesoBase a "moneda vuelto", multiplicamos por la tasa.
-        let montoConvertido = excesoBase * tasa;
+    if (isoCuenta === isoVuelto) {
+        $('#monto_vuelto').val(excesoBase.toFixed(2));
+        return;
+    }
+
+    let tasaVuelto = parseFloat($('#tasa_vuelto').val()) || 0;
+    
+    // Obtenemos la tasa real de la cuenta desde el data-tasa-pago que calculamos en solicitarTasaVueltoAPI
+    let opcionSeleccionada = $('#tasa_vuelto option:selected');
+    let tasaPagoReal = parseFloat(opcionSeleccionada.data('tasa-pago')) || parseFloat($('#tasa').val()) || 1;
+
+    if (excesoBase > 0 && tasaVuelto > 0 && tasaPagoReal > 0) {
+        // Fórmula generalizada:
+        // Exceso (Moneda_Cuenta) -> USD (Base) -> Moneda_Vuelto
+        // 1 USD = tasaPagoReal Moneda_Cuenta
+        // 1 USD = tasaVuelto Moneda_Vuelto
+        // USD = Exceso / tasaPagoReal
+        // Moneda_Vuelto = USD * tasaVuelto
+        let montoConvertido = excesoBase * (tasaVuelto / tasaPagoReal);
         $('#monto_vuelto').val(montoConvertido.toFixed(2));
     } else {
         $('#monto_vuelto').val('');
@@ -578,10 +638,10 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
         let textoMostrar = "";
         let atributosExtra = "";
 
-        if (idSelect === 'moneda' && campo1 && campo2) {
-            textoMostrar = `${dato[campo1]} ${dato[campo2]}`;
+        if ((idSelect === 'moneda' || idSelect === 'codigo_moneda_vuelto') && campo1 && campo2) {
+            textoMostrar = `${dato[campo1]} - ${dato[campo2]}`;
         }
-        else if (idSelect === 'metodo' && campo1 && campo2) {
+        else if ((idSelect === 'metodo' || idSelect === 'codigo_metodo_vuelto') && campo1 && campo2) {
             textoMostrar = `${dato[campo1]}`;
             atributosExtra = `data-nec_ref="${dato[campo2]}"`;
         }
@@ -631,6 +691,44 @@ function escapeHTML(texto) {
     return String(texto).replace(/[&<>"']/g, m => caracteres[m]);
 }
 
+function validarFechaLimite(inputId, nombreCampo) {
+    let inputFecha = $('#' + inputId);
+    if (!inputFecha.val()) return true;
+
+    let fechaParts = inputFecha.val().split('-');
+    if (fechaParts.length !== 3) return true;
+
+    let fechaIngresada = new Date(fechaParts[0], fechaParts[1] - 1, fechaParts[2]);
+    fechaIngresada.setHours(0,0,0,0);
+    
+    let hoy = new Date();
+    hoy.setHours(0,0,0,0);
+    
+    if (fechaIngresada > hoy) {
+        muestraMensaje("error", 3500, "Error de Fecha", "La fecha del " + nombreCampo + " no puede ser futura.");
+        inputFecha.val('');
+        if (inputId === 'fecha') {
+            if (typeof window._flatpickr !== 'undefined') window._flatpickr.setDate('');
+        }
+        return false;
+    }
+    
+    let haceDosMeses = new Date();
+    haceDosMeses.setMonth(haceDosMeses.getMonth() - 2);
+    haceDosMeses.setHours(0,0,0,0);
+    
+    if (fechaIngresada < haceDosMeses) {
+        muestraMensaje("error", 3500, "Error de Fecha", "La fecha del " + nombreCampo + " no puede tener más de 2 meses de atraso.");
+        inputFecha.val('');
+        if (inputId === 'fecha') {
+            if (typeof window._flatpickr !== 'undefined') window._flatpickr.setDate('');
+        }
+        return false;
+    }
+    
+    return true;
+}
+
 function validarEnvio(accion) {
     if (accion == "incluir" || accion == "modificar") {
         if ($('#cuenta').val() == "" || $('#cuenta').val() == null || $('#cuenta').val().length == 0) {
@@ -657,19 +755,18 @@ function validarEnvio(accion) {
             muestraMensaje("error", 2000, "Error", "Debe seleccionar una fecha");
             return false;
         } else {
-            let fechaIngresada = $('#fecha').val();
-            let hoy = new Date();
-            let mes = (hoy.getMonth() + 1).toString().padStart(2, '0');
-            let dia = hoy.getDate().toString().padStart(2, '0');
-            let fechaActualStr = hoy.getFullYear() + '-' + mes + '-' + dia;
-            if (fechaIngresada > fechaActualStr) {
-                muestraMensaje("error", 2000, "Error", "La fecha del pago no puede ser futura");
+            if (!validarFechaLimite('fecha', 'pago')) return false;
+        }
+        if (!$('#referencia').prop('disabled')) {
+            let ref = $('#referencia').val().trim();
+            if (ref === "") {
+                muestraMensaje("error", 2000, "Error", "Debe ingresar la referencia del pago");
                 return false;
             }
-        }
-        if (!$('#referencia').prop('disabled') && $('#referencia').val() == "") {
-            muestraMensaje("error", 2000, "Error", "Debe ingresar la referencia del pago");
-            return false;
+            if (!/^\d{4,12}$/.test(ref)) {
+                muestraMensaje("error", 2500, "Error", "La referencia debe tener entre 4 y 12 dígitos numéricos");
+                return false;
+            }
         }
     }
     return true;
@@ -706,6 +803,11 @@ function enviaAjax(datos) {
                     construirSelect('cuenta', lee.cuentas, 'codigo_cargo', 'concepto', 'p_nombre', 'p_apellidos', 'monto_pendiente', 'simbolo_moneda', 'fecha_emision');
                 } else if (lee.accion == "incluir") {
                     consultar();
+                    
+                    // Preserve the currency selection before cleaning the form
+                    let idMonedaPago = $('#moneda').val();
+                    let monedaPagoObj = listadoMonedas.find(m => m.codigo_moneda == idMonedaPago);
+
                     limpia();
                     $('#monto_equivalente_ayuda').html('');
                     $('#detalles_deuda_ayuda').html('');
@@ -718,16 +820,24 @@ function enviaAjax(datos) {
                         $('#monto_vuelto_base').val(parseFloat(lee.vuelto).toFixed(2));
                         $('#monto_vuelto_base').data('valor', parseFloat(lee.vuelto));
                         $('#monto_vuelto').val('');
-                        if (cuentaSeleccionadaActual) {
-                            let simDeuda = cuentaSeleccionadaActual.simbolo_moneda;
-                            $('#label_vuelto_base').text(`Monto Vuelto Base (${simDeuda})`);
+                        
+                        if (monedaPagoObj) {
+                            let simPago = monedaPagoObj.simbolo + ' ' + monedaPagoObj.abreviatura;
+                            $('#label_vuelto_base').text(`Monto Vuelto Base (${simPago})`);
+                            globalIsoMonedaBaseVuelto = monedaPagoObj.abreviatura.toUpperCase();
                         }
-
+                        
                         let hoyObj = new Date();
                         let mesObj = (hoyObj.getMonth() + 1).toString().padStart(2, '0');
                         let diaObj = hoyObj.getDate().toString().padStart(2, '0');
                         let fechaLocalVuelto = hoyObj.getFullYear() + '-' + mesObj + '-' + diaObj;
-                        $('#fecha_vuelto').val(fechaLocalVuelto);
+
+                        let fp_vuelto = document.querySelector("#fecha_vuelto")._flatpickr;
+                        if (fp_vuelto) {
+                            fp_vuelto.setDate(fechaLocalVuelto);
+                        } else {
+                            $('#fecha_vuelto').val(fechaLocalVuelto);
+                        }
 
                         // Dentro del bloque: if (lee.vuelto && parseFloat(lee.vuelto) > 0) { ...
 
@@ -787,4 +897,42 @@ function enviaAjax(datos) {
             }
         }
     });
+}
+
+function abrirModalVuelto(id_pago, vueltoPendiente, simboloCuenta) {
+    $('#codigo_pago_vuelto').val(id_pago);
+    $('#monto_vuelto_base').val(parseFloat(vueltoPendiente).toFixed(2));
+    $('#monto_vuelto_base').data('valor', parseFloat(vueltoPendiente));
+    $('#monto_vuelto').val('');
+    $('#label_vuelto_base').text(`Monto Vuelto Base (${simboloCuenta})`);
+
+    let parts = String(simboloCuenta).trim().split(' ');
+    globalIsoMonedaBaseVuelto = (parts.length > 1) ? parts[parts.length - 1].toUpperCase() : String(simboloCuenta).toUpperCase();
+
+    let hoyObj = new Date();
+    let mesObj = (hoyObj.getMonth() + 1).toString().padStart(2, '0');
+    let diaObj = hoyObj.getDate().toString().padStart(2, '0');
+    let hoyStr = hoyObj.getFullYear() + '-' + mesObj + '-' + diaObj;
+
+    let fp_vuelto = document.querySelector("#fecha_vuelto")._flatpickr;
+    if (fp_vuelto) {
+        fp_vuelto.setDate(hoyStr);
+    } else {
+        $('#fecha_vuelto').val(hoyStr);
+    }
+
+    construirSelect('codigo_moneda_vuelto', listadoMonedas, 'codigo_moneda', 'simbolo', 'nombre');
+    construirSelect('codigo_metodo_vuelto', listadoMetodosVuelto, 'codigo_metodo', 'nombre', 'nec_referencia');
+
+    $('#codigo_moneda_vuelto').select2({
+        placeholder: "Selecciona una Moneda",
+        dropdownParent: $('#secundario_modal_contenedor')
+    });
+    $('#codigo_metodo_vuelto').select2({
+        placeholder: "Selecciona un Método",
+        dropdownParent: $('#secundario_modal_contenedor')
+    });
+
+    $('#proceso_vuelto').data('accion', 'solo_registrar_vuelto');
+    abrirModalSecundario();
 }

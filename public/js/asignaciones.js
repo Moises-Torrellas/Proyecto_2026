@@ -66,16 +66,15 @@ $(document).ready(function () {
         }
         // NUEVA ESTRUCTURA: Procesar la acción de generar reporte desde el modal
         else if (accion === "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    if (typeof abrirAlertaEspara === 'function') {
-                        abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
-                    }
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    datos.append('filtro', $('#busqueda').val());
-                    enviaAjax(datos);
+            opcionesReporte(function(formato) {
+                if (typeof abrirAlertaEspara === 'function') {
+                    abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
                 }
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('filtro', $('#busqueda').val());
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -87,8 +86,16 @@ $(document).ready(function () {
         $("#titulo_modal").text("Registrar Asignación");
         $("#btn_guardar").text("Registrar Asignación").data("accion", "incluir");
         
-        let hoy = new Date().toISOString().split('T')[0];
-        $('#fecha_asignacion').val(hoy);
+        let localDate = new Date();
+        localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset());
+        let hoy = localDate.toISOString().split('T')[0];
+        
+        let fp = document.querySelector("#fecha_asignacion")._flatpickr;
+        if (fp) {
+            fp.setDate(hoy);
+        } else {
+            $('#fecha_asignacion').val(hoy);
+        }
         
         $('#codigo_atleta').val(null).trigger('change');
         $('#codigo_articulo').val(null).trigger('change');
@@ -120,37 +127,51 @@ $(document).ready(function () {
 
     $('#ayuda').on('click', function () {
         const pasos = [
-            { 
-                element: '#busqueda', 
-                popover: { 
-                    title: 'Búsqueda Rápida', 
-                    description: 'Filtra las asignaciones escribiendo el nombre, apellido o cédula del atleta, o el nombre del artículo deportivo.', 
-                    position: 'bottom' 
-                } 
+            {
+                element: '#busqueda',
+                popover: { title: 'Barra de Búsqueda', description: 'Aquí puedes buscar al registro que necesites.', position: 'bottom' }
             },
-            { 
-                element: '#btn_nuevo', 
-                popover: { 
-                    title: 'Nueva Asignación', 
-                    description: 'Haz clic aquí para abrir el formulario y registrar el préstamo de un nuevo equipo a un atleta.', 
-                    position: 'bottom' 
-                } 
+            {
+                element: '#btn_nuevo',
+                popover: { title: 'Nuevo Registro', description: 'Si pulsas aquí se abrirá un modal para registrar una nueva asignación.', position: 'bottom' }
             },
-            { 
-                element: '#generar', 
-                popover: { 
-                    title: 'Exportar Reportes', 
-                    description: 'Configura y descarga un archivo PDF de las asignaciones. Puedes filtrar por fechas e incluir artículos devueltos o anulados.', 
-                    position: 'left' 
-                } 
+            {
+                element: '#generar',
+                popover: { title: 'Generar Reportes', description: 'Si pulsas aquí se abrirá un modal para generar un reporte en PDF o Excel.', position: 'left' }
             },
-            { 
-                element: '#resultadoconsulta', 
-                popover: { 
-                    title: 'Historial Agrupado', 
-                    description: 'Aquí verás el inventario en préstamo agrupado por atleta. Despliega la tarjeta para ver los detalles, editar fechas o registrar una devolución.', 
-                    position: 'top' 
-                } 
+            {
+                element: '#resultadoconsulta',
+                popover: { title: 'Registros', description: 'Aquí se mostrarán todos los registros.', position: 'top' }
+            },
+            {
+                element: '.listado_item',
+                popover: { title: 'Detalles', description: 'Haz clic en el registro para desplegar y ver las asignaciones individuales.', position: 'bottom' },
+                onNext: function() {
+                    const primerRegistro = document.querySelector('.listado_item');
+                    if (primerRegistro) {
+                        const contenedor = $(primerRegistro).closest('.listado_contenedor_grupal');
+                        if (!contenedor.hasClass('expandido')) {
+                            contenedor.addClass('expandido');
+                            contenedor.find('.listado_detalle_oculto').show();
+                        }
+                    }
+                }
+            },
+            {
+                element: '.sub_item_acciones',
+                popover: { title: 'Acciones de Asignación', description: 'Aquí podrás modificar o anular (liberar) el artículo prestado.', position: 'left' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aquí podrás seleccionar la cantidad de registros que quieres que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Página', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aquí puedes ver la cantidad de registros.', position: 'top' }
             }
         ];
         if (typeof iniciarTourConPasos === 'function') {
@@ -189,10 +210,15 @@ function editar(id_asignacion, codigo_atleta, codigo_articulo, fecha) {
     $("#titulo_modal").text("Modificar Asignación");
     $("#btn_guardar").text("Guardar Cambios").data("accion", "modificar");
     
-    let fechaLimpia = fecha.split(' ')[0];
+    let fechaLimpia = fecha ? fecha.split(' ')[0] : '';
 
     $("#id_asignacion").val(id_asignacion);
-    $("#fecha_asignacion").val(fechaLimpia);
+    let fp = document.querySelector("#fecha_asignacion")._flatpickr;
+    if (fp) {
+        fp.setDate(fechaLimpia);
+    } else {
+        $("#fecha_asignacion").val(fechaLimpia);
+    }
     $("#codigo_atleta").val(codigo_atleta).trigger('change');
     
     if ($(`#codigo_articulo option[value='${codigo_articulo}']`).length === 0) {

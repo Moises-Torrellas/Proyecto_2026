@@ -16,6 +16,10 @@
                             <small>Atletas Asignados</small>
                             <span><?= htmlspecialchars($dato['cantidad_atletas'] ?? '0') ?></span>
                         </div>
+                        <div class="listado_dato_grupo">
+                            <small>Premios Ganados</small>
+                            <span><i class="fi fi-sr-trophy"></i> <?= htmlspecialchars($dato['total_premios'] ?? '0') ?></span>
+                        </div>
                     </div>
 
                     <div class="listado_col_acciones">
@@ -133,6 +137,10 @@
                                                     <small>Atletas Asignados</small>
                                                     <span><?= htmlspecialchars($dato['cantidad_atletas'] ?? '0') ?></span>
                                                 </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Premios Ganados</small>
+                                                    <span><i class="fi fi-sr-trophy"></i> <?= htmlspecialchars($dato['total_premios'] ?? '0') ?></span>
+                                                </div>
                                             </div>
 
                                             <div class="listado_col_acciones">
@@ -220,13 +228,29 @@
                         </div>
                     </div>
                     
-                    <div class="row">
+                    <div class="row" id="row_equipo_reporte" style="display:none;">
                         <div class="colum">
+                            <div class="caja_formulario">
+                                <select class="formulario select2" id="id_equipo" name="id_equipo" style="width: 100%;">
+                                    <option value="" selected disabled>Seleccione un equipo</option>
+                                    <?php if (!empty($registro)) : ?>
+                                        <?php foreach ($registro as $dato) : ?>
+                                            <option value="<?= (int)$dato['id_equipos'] ?>"><?= htmlspecialchars($dato['nombre'] ?? '') ?></option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <label for="id_equipo" class="titulo_formulario">Equipo a Reportar</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row" id="row_asignar">
+                        <div class="colum" id="colum_asignar">
                             <button type="button" class="btn btn_azul" id="asignar">Seleccionar Atletas</button>
                         </div>
                     </div>
                     
-                    <div class="row">
+                    <div class="row" id="row_tabla_atletas">
                         <div class="colum colum_tabla_completa">
                             <label for="" class="titulo_formulario titulo_formulario_tabla" id="label_tabla">Atletas Seleccionados</label>
                             <div class="caja_formulario caja_tabla ct_t">
@@ -250,7 +274,7 @@
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>
@@ -316,8 +340,8 @@
         </div>
     </section>
 
-    <script src="js/main.js"></script>
-    <script src="js/Equipos.js"></script>
+    <script src="js/main.js?v=2"></script>
+    <script src="js/equipos.js?v=2"></script>
     <?php include('complementos/mensajeError.php'); ?>
 </body>
 </html>

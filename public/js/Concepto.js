@@ -20,45 +20,55 @@ function busqueda() {
 
 $(document).ready(function () {
     inicializarPaginador();
+    $('#monto').on('input', function () {
+        let entrada = $(this).val().replace(/[^0-9]/g, '');
+        if (entrada === '' || entrada === '00') {
+            $(this).val(SIMBOLO_BASE + ' 0.00');
+            return;
+        }
+        let valorFlotante = parseFloat(entrada) / 100;
+        let valorFormateado = valorFlotante.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+            useGrouping: false
+        });
+        $(this).val(SIMBOLO_BASE + ' ' + valorFormateado);
+    });
+
+    $('#monto').on('focus', function () {
+        if ($(this).val() === '' || $(this).val().replace(/[^0-9]/g, '') === '') {
+            $(this).val(SIMBOLO_BASE + ' 0.00');
+        }
+    });
     
     // Validaciones
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
-    Validacion("monto", /^[0-9\b\,]*$/, /^[0-9]+(.[0-9]{1,2})?$/, "Solo números con hasta dos decimales (solo comas)", "proceso");
+    Validacion("monto", /^[0-9.\b]*$/, /^\d+(\.\d{1,2})?$/, "Monto inválido", "proceso");
     Validacion("dias", /^[0-9]*$/, /^[0-9]{1,3}$/, "Solo números hasta tres digitos", "proceso");
 
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
-        if (accion == "incluir") {
+        if (accion == "incluir" || accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere registrar este concepto de pago?', function (confirmado) {
+                let msj = accion == "incluir" ? "¿Esta seguro que quiere registrar el Concepto?" : "¿Esta seguro que quiere modificar el Concepto?";
+                confirmar(msj, function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
-                        datos.append('accion', 'incluir');
-                        enviaAjax(datos);
-                    }
-                });
-            }
-        }
-        else if (accion == "modificar") {
-            if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar este concepto de pago?', function (confirmado) {
-                    if (confirmado) {
-                        var datos = new FormData($('#f')[0]);
-                        datos.append('accion', 'modificar');
+                        let montoStr = $('#monto').val() || "";
+                        datos.set('monto', montoStr.replace(/[^0-9.]/g, ''));
+                        datos.append('accion', accion);
                         enviaAjax(datos);
                     }
                 });
             }
         }
         else if (accion == "generar") {
-            confirmar('¿Está seguro que quiere generar un reporte con este criterio?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
-                    // Enviamos todo el formulario (incluye el nombre y la frecuencia seleccionada)
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                enviaAjax(datos);
             });
         }
     });
@@ -67,7 +77,13 @@ $(document).ready(function () {
         limpia();
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Concepto");
-        $("#titulo_modal").text("Registrar Concepto de Pago");
+        $("#titulo_modal").text("Registrar Concepto de cargo");
+        $('#frecuencia option[value="Todas"]').remove();
+        
+        $('#nombre').closest('.colum').show();
+        $('#monto').closest('.colum').show();
+        $('#dias').closest('.colum').show();
+
         abrirModal();
     });
 
@@ -76,20 +92,29 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
+        if ($('#frecuencia option[value="Todas"]').length === 0) {
+            $('#frecuencia').prepend('<option value="Todas" selected>Todas las frecuencias</option>');
+        }
+        
+        $('#nombre').closest('.colum').hide();
+        $('#monto').closest('.colum').hide();
+        $('#dias').closest('.colum').hide();
+
         abrirModal();
     });
 
     $('#ayuda').on('click', function () {
         const pasos = [
-            { element: '#busqueda', popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar el Concepto de Pago que necesites.', position: 'bottom' } },
-            { element: '#incluir', popover: { title: 'Nuevo Concepto de pago', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevo Concepto de Pago', position: 'bottom' } },
-            { element: '#generar', popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira un modal para generar un reporte en PDF.', position: 'left' } },
-            { element: '#resultadoconsulta', popover: { title: 'Conceptos de Pago Registrados', description: 'Aqui se mostraran todos los Conceptos de pago registrados.', position: 'top' } },
-            { element: '#cbt_v', popover: { title: 'Modificar Concepto de Pago', description: 'Si pulsa aqui se abrira un modal para modificar el Conceptos de Pago seleccionado.', position: 'left' } },
-            { element: '#cbt_r', popover: { title: 'Eliminar Concepto de Pago', description: 'Si pulsa aqui eliminara el Concepto de Pago seleccionado.', position: 'left' } },
+            { element: '#busqueda', popover: { title: 'Barra de Busqueda', description: 'Aqui puedes buscar el Concepto de cargo que necesites.', position: 'bottom' } },
+            { element: '#incluir', popover: { title: 'Nuevo Concepto de cargo', description: 'Si pulsa aqui se abrira un modal para ingresar un nuevo Concepto de cargo', position: 'bottom' } },
+            { element: '#generar', popover: { title: 'Generar Reportes', description: 'Si pulsa aqui se abrira una alerta para generar un reporte en PDF o EXCEL.', position: 'left' } },
+            { element: '#resultadoconsulta', popover: { title: 'Conceptos de cargo Registrados', description: 'Aqui se mostraran todos los Conceptos de cargo registrados.', position: 'top' } },
+            { element: '#cbt_v', popover: { title: 'Modificar Concepto de cargo', description: 'Si pulsa aqui se abrira un modal para modificar el Conceptos de cargo seleccionado.', position: 'left' } },
+            { element: '#cbt_r', popover: { title: 'Eliminar Concepto de cargo', description: 'Si pulsa aqui eliminara el Concepto de cargo seleccionado.', position: 'left' } },
+            { element: '#cbt_t', popover: { title: 'Desactivar Concepto de cargo', description: 'Si pulsa aqui desactivará o activará el Concepto de cargo seleccionado.', position: 'left' } },
             { element: '#rowsPerPage', popover: { title: 'Registros Deseados', description: 'Aqui podra seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' } },
             { element: '#botonera', popover: { title: 'Cambiar de Pagina', description: 'Botones para cambiar de página.', position: 'top' } },
-            { element: '#cantidad', popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de Concepto de Pagos cargados.', position: 'top' } },
+            { element: '#cantidad', popover: { title: 'Cantidad', description: 'Aqui puedes ver la cantidad de Concepto de cargos cargados.', position: 'top' } },
         ];
         const driver = iniciarTourConPasos(pasos);
         driver.start();
@@ -104,7 +129,7 @@ function buscar(id) {
 }
 
 function eliminar(id) {
-    confirmar('¿Está seguro que quiere eliminar este proceso de pago?', function (confirmado) {
+    confirmar('¿Está seguro que quiere eliminar este proceso de cargo?', function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'eliminar');
@@ -116,7 +141,7 @@ function eliminar(id) {
 
 function cambiarEstatus(id, estadoActual) {
     let accionTexto = (estadoActual == 1) ? 'desactivar' : 'activar';
-    confirmar(`¿Está seguro que desea ${accionTexto} este concepto de pago?`, function (confirmado) {
+    confirmar(`¿Está seguro que desea ${accionTexto} este concepto de cargo?`, function (confirmado) {
         if (confirmado) {
             var datos = new FormData();
             datos.append('accion', 'estatus');
@@ -128,31 +153,42 @@ function cambiarEstatus(id, estadoActual) {
 }
 
 function validarEnvio(proceso) {
-    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
-        return false;
-    }
-    else if (validarkeyup(/^[0-9]+(.[0-9]{1,2})?$/, $('#monto'), $("#monto_spam"), "Solo números con hasta dos decimales (solo comas)", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un monto válido");
-        return false;
-    }
-    else if ($('#frecuencia').val() == "" || $('#frecuencia').val() == null) {
-        muestraMensaje("error", 2000, "Error", "Debe elegir la frecuencia");
-        return false;
-    } else if (validarkeyup(/^[0-9]{0,10}$/, $('#dias'), $("#dias_spam"), "Solo números de hasta 3 digitos.", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un numero de dias valido");
-        return false;
+    if (proceso !== "generar") {
+        if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres", true)) {
+            muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
+            return false;
+        }
+        else if ($('#frecuencia').val() == "" || $('#frecuencia').val() == null) {
+            muestraMensaje("error", 2000, "Error", "Debe elegir la frecuencia");
+            return false;
+        } else if (validarkeyup(/^[0-9]{0,10}$/, $('#dias'), $("#dias_spam"), "Solo números de hasta 3 digitos.", true)) {
+            muestraMensaje("error", 2000, "Error", "Tiene que ingresar un numero de dias valido");
+            return false;
+        }
     }
     return true;
 }
 
 function modificar(datos) {
     $("#proceso").data("accion", "modificar");
-    $("#proceso").text("Modificar concepto de pago");
-    $("#titulo_modal").text("Modificar concepto de pago");
+    $("#proceso").text("Modificar concepto de cargo");
+    $("#titulo_modal").text("Modificar concepto de cargo");
+    
+    $('#nombre').closest('.colum').show();
+    $('#monto').closest('.colum').show();
+    $('#dias').closest('.colum').show();
+
     $('#id').val(datos[0].codigo_concepto);
     $('#nombre').val(datos[0].nombre);
-    $('#monto').val(datos[0].monto);
+    
+    let montoNumerico = parseFloat(datos[0].monto);
+    let montoFormateado = (typeof SIMBOLO_BASE !== 'undefined' ? SIMBOLO_BASE : '$') + ' ' + montoNumerico.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        useGrouping: false
+    });
+    $('#monto').val(montoFormateado);
+    $('#frecuencia option[value="Todas"]').remove();
     $('#frecuencia').val(datos[0].frecuencia);
     $('#dias').val(datos[0].dias_gracia);
     abrirModal();
@@ -206,23 +242,18 @@ function enviaAjax(datos) {
                     muestraMensaje("success", 2000, "Modificacion Exitosa", lee.mensaje);
                 } else if (lee.accion == "buscar") {
                     modificar(lee.datos);
-                } else if (lee.accion == "generar") {
-                    if (typeof Swal !== 'undefined') Swal.close(); 
-                    
-                    if (lee.pdf) {
-                        const byteCharacters = atob(lee.pdf);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                        }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const file = new Blob([byteArray], { type: 'application/pdf' });
-                        
-                        const fileURL = URL.createObjectURL(file);
-                        window.open(fileURL, '_blank');
-                        
-                        muestraMensaje("success", 2000, "Éxito", "Reporte generado correctamente");
-                    }
+                } else if (lee.accion == "reporte") {
+                    cerrarAlertaEspara();
+                    cerrarModal();
+                    muestraMensaje("success", 1000, "Creado Exitosamente", 'Se ha generado el reporte');
+                    setTimeout(function () {
+                        const enlaceFantasma = document.createElement('a');
+                        enlaceFantasma.href = lee.archivo;
+                        enlaceFantasma.target = '_blank';
+                        document.body.appendChild(enlaceFantasma);
+                        enlaceFantasma.click();
+                        document.body.removeChild(enlaceFantasma);
+                    }, 1000);
                 } else if (lee.accion == "error") {
                     if (typeof Swal !== 'undefined') Swal.close(); 
                     muestraMensaje("error", 2000, "Error", lee.mensaje);

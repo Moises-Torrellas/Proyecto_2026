@@ -246,12 +246,18 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             exit();
         }
 
+        $formato = filter_input(INPUT_POST, 'formato', FILTER_SANITIZE_SPECIAL_CHARS) ?? 'pdf';
         $nombreVista = 'R_EstadoFisico';
-        $objG = new GenerarReporte();
-        $pdf = $objG->generarPDF($nombreVista, $datos, 'Estado Fisico');
+        
+        if ($formato === 'excel') {
+            $pdf = \App\servicios\GenerarReporte::generarExcel($nombreVista, $datos, 'EstadoFisico');
+        } else {
+            $objG = new GenerarReporte();
+            $pdf = $objG->generarPDF($nombreVista, $datos, 'Estado Físico');
+        }
 
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte del módulo Estados Físicos.");
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte del módulo Estados Físicos en formato " . strtoupper($formato));
         }
         
         echo json_encode($pdf);

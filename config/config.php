@@ -92,7 +92,7 @@ const _MD_MODULO_ = 112;
 // 6. CÓDIGOS DE ERROR
 // =======================================================
 const DUPLICATE_CEDULA = "001";
-const DUPLICATE_EMAIL  = "002";
+const DUPLICATE_EMAIL  = "013";
 const INVALID_ID     = "003";
 const DUPLICATE_NAME  = "004";
 const DUPLICATE_PHONE  = "005";
@@ -101,4 +101,6 @@ const ASSOCIATES  = "006";
 const VALIDATION = "007";
 const ALREADY_ANNULLED = "008";
 const EMPTY_SELECTION  = "009";
+const DUPLICATE_INSTAGRAM = "014";
+const DUPLICATE_DORSAL = "015";
 const DB_CONNECTION    = "500";

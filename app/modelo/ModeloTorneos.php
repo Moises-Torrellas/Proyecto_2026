@@ -46,7 +46,8 @@ class ModeloTorneos extends Conexion
             'eliminar'  => $this->Eliminar(),
             'buscar'    => $this->Buscar(),
             'modificar' => $this->Modificar(),
-            'consultar' => $this->Consultar(),
+            'consultar' => $this->Consultar($datos),
+            'generar'   => $this->Consultar($datos),
             default => throw new Exception('La acción no es válida')
         };
     }
@@ -70,9 +71,17 @@ class ModeloTorneos extends Conexion
                 $params[':nombre'] = trim($this->nombre) . "%";
             }
 
-            if (isset($filtro['estatus'])) {
+            if (!empty($filtro['estatus'])) {
                 $sentencia .= " AND estatus = :estatus";
                 $params[':estatus'] = $filtro['estatus'];
+            }
+            if (!empty($filtro['fecha_inicio'])) {
+                $sentencia .= " AND fecha_inicio >= :fecha_inicio";
+                $params[':fecha_inicio'] = $filtro['fecha_inicio'];
+            }
+            if (!empty($filtro['fecha_fin'])) {
+                $sentencia .= " AND fecha_fin <= :fecha_fin";
+                $params[':fecha_fin'] = $filtro['fecha_fin'];
             }
 
             $sentencia .= " ORDER BY codigo_torneo ASC"; // Ajustado a la BD
@@ -154,13 +163,14 @@ class ModeloTorneos extends Conexion
         }
     }
 
-    function Buscar(): array
+    function Buscar($id = null): array
     {
         try {
+            $codigo = ($id === null) ? $this->codigo_torneo : $id;
             $conex = $this->conex();
             $sentencia = "SELECT * FROM torneos WHERE codigo_torneo = :codigo_torneo"; // Ajustado a la BD
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':codigo_torneo', $this->codigo_torneo); // Ajustado a la BD
+            $stmt->bindParam(':codigo_torneo', $codigo); // Ajustado a la BD
             $stmt->execute();
             $datos = $stmt->fetchAll();
 

@@ -182,19 +182,15 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Posicion</th>
                     <th>Abreviatura</th>
                     <th>Descripción</th>
                 </tr>
             </thead>
             <tbody>
-                <?php $id = 0;
-                foreach ($datos as $r) :
-                    $id++;
+                <?php foreach ($datos as $r) :
                     $descripcion = ($r['descripcion'] == null) ? 'Sin Descripción' : $r['descripcion']; ?>
                     <tr>
-                        <td class="data-cell"><?= $id ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['nombre']) ?></td>
                         <td class="data-cell"><?= htmlspecialchars($r['abreviatura']) ?></td>
                         <td class="data-cell"><?= htmlspecialchars($descripcion) ?></td>

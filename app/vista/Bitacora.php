@@ -42,9 +42,9 @@
                             <small>Usuario</small>
                             <span><?= htmlspecialchars($dato['nombreUsuario']) ?> <?= htmlspecialchars($dato['apellidoUsuario']) ?></span>
                         </div>
-                        <div class="listado_dato_grupo">
+                        <div class="listado_dato_grupo" style="flex: 1; min-width: 0;">
                             <small>Acción</small>
-                            <span><?= htmlspecialchars($dato['acciones']) ?></span>
+                            <span style="display: block; overflow-wrap: break-word; word-break: break-word; white-space: normal; max-width: 100%;"><?= htmlspecialchars($dato['acciones']) ?></span>
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Fecha y Hora</small>
@@ -65,7 +65,7 @@
                                 <div class="detalle_card_icon"><i data-lucide="info"></i></div>
                                 <div class="detalle_card_txt">
                                     <label>Información Adicional</label>
-                                    <span>Cédula: <b><?= htmlspecialchars($dato['cedulaUsuario']) ?></b></span>
+                                    <span>Cédula del Usuario: <b><?= htmlspecialchars($dato['cedulaUsuario']) ?></b></span>
                                     <span>Entorno: <b><?= htmlspecialchars($dato['entorno'] ?? 'N/A') ?></b></span>
                                 </div>
                             </div>
@@ -74,16 +74,16 @@
                         <div class="detalle_fila">
                             <div class="detalle_card" style="width: 100%;">
                                 <div class="detalle_card_icon"><i data-lucide="history"></i></div>
-                                <div class="detalle_card_txt">
+                                <div class="detalle_card_txt" style="overflow: hidden;">
                                     <label>Datos Previos</label>
-                                    <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555;"><?= $datosPrevios ?></span>
+                                    <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555; overflow-wrap: break-word; word-break: break-all; display: block;"><?= $datosPrevios ?></span>
                                 </div>
                             </div>
                             <div class="detalle_card" style="width: 100%;">
                                 <div class="detalle_card_icon"><i data-lucide="file-diff"></i></div>
-                                <div class="detalle_card_txt">
+                                <div class="detalle_card_txt" style="overflow: hidden;">
                                     <label>Datos Nuevos</label>
-                                    <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745;"><?= $datosNuevos ?></span>
+                                    <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745; overflow-wrap: break-word; word-break: break-all; display: block;"><?= $datosNuevos ?></span>
                                 </div>
                             </div>
                         </div>
@@ -92,6 +92,7 @@
             </div>
 
         <?php endforeach; ?>
+        <div id="tiene_mas_datos" style="display:none;" data-count="<?= count($registro) ?>"></div>
     <?php endif;
     exit(); ?>
 <?php endif; ?>
@@ -121,6 +122,7 @@
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones">
+                            <button class="btn btn_azul" id="btn_cargar_mas" style="display: <?= (isset($registro) && count($registro) == 100) ? 'inline-block' : 'none' ?>;">Cargar +100</button>
                             <?php if(!empty($permisos['generar_bitacora'])) : ?>
                             <button class="btn btn_verde" id="generar">Generar Reporte</button>
                             <?php endif; ?>
@@ -171,9 +173,9 @@
                                                     <small>Usuario</small>
                                                     <span><?= htmlspecialchars($dato['nombreUsuario']) ?> <?= htmlspecialchars($dato['apellidoUsuario']) ?></span>
                                                 </div>
-                                                <div class="listado_dato_grupo">
+                                                <div class="listado_dato_grupo" style="flex: 1; min-width: 0;">
                                                     <small>Acción</small>
-                                                    <span><?= htmlspecialchars($dato['acciones']) ?></span>
+                                                    <span style="display: block; overflow-wrap: break-word; word-break: break-word; white-space: normal; max-width: 100%;"><?= htmlspecialchars($dato['acciones']) ?></span>
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Fecha y Hora</small>
@@ -194,7 +196,7 @@
                                                         <div class="detalle_card_icon"><i data-lucide="info"></i></div>
                                                         <div class="detalle_card_txt">
                                                             <label>Información Adicional</label>
-                                                            <span>Cédula: <b><?= htmlspecialchars($dato['cedulaUsuario']) ?></b></span>
+                                                            <span>Cédula del Usuario: <b><?= htmlspecialchars($dato['cedulaUsuario']) ?></b></span>
                                                             <span>Entorno: <b><?= htmlspecialchars($dato['entorno'] ?? 'N/A') ?></b></span>
                                                         </div>
                                                     </div>
@@ -203,16 +205,16 @@
                                                 <div class="detalle_fila">
                                                     <div class="detalle_card" style="width: 100%;">
                                                         <div class="detalle_card_icon"><i data-lucide="history"></i></div>
-                                                        <div class="detalle_card_txt">
+                                                        <div class="detalle_card_txt" style="overflow: hidden;">
                                                             <label>Datos Previos</label>
-                                                            <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555;"><?= $datosPrevios ?></span>
+                                                            <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #555; overflow-wrap: break-word; word-break: break-all; display: block;"><?= $datosPrevios ?></span>
                                                         </div>
                                                     </div>
                                                     <div class="detalle_card" style="width: 100%;">
                                                         <div class="detalle_card_icon"><i data-lucide="file-diff"></i></div>
-                                                        <div class="detalle_card_txt">
+                                                        <div class="detalle_card_txt" style="overflow: hidden;">
                                                             <label>Datos Nuevos</label>
-                                                            <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745;"><?= $datosNuevos ?></span>
+                                                            <span style="white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #28a745; overflow-wrap: break-word; word-break: break-all; display: block;"><?= $datosNuevos ?></span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -238,10 +240,50 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off" enctype="multipart/form-data">
                     <input type="hidden" id="id" name="id">
+                    <!-- Fila 1: Filtro de Módulo y Usuario -->
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="filtro_modulo" id="filtro_modulo" class="formulario select">
+                                    <option value="">Todos los Módulos</option>
+                                    <!-- Options will be populated via AJAX -->
+                                </select>
+                                <label for="filtro_modulo" class="titulo_formulario">Módulo</label>
+                                <span class="mensaje" id="filtro_modulo_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="filtro_usuario" id="filtro_usuario" class="formulario select">
+                                    <option value="">Todos los Usuarios</option>
+                                    <!-- Options will be populated via AJAX -->
+                                </select>
+                                <label for="filtro_usuario" class="titulo_formulario">Usuario</label>
+                                <span class="mensaje" id="filtro_usuario_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Fila 2: Rango de Fechas -->
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_inicio" name="fecha_inicio">
+                                <label for="fecha_inicio" class="titulo_formulario">Fecha Inicio</label>
+                                <span class="mensaje" id="fecha_inicio_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_fin" name="fecha_fin">
+                                <label for="fecha_fin" class="titulo_formulario">Fecha Fin</label>
+                                <span class="mensaje" id="fecha_fin_spam"></span>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

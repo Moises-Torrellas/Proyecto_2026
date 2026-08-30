@@ -51,6 +51,7 @@
                             <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-star"></i></div>
                             <div class="listado_info_base">
                                 <span class="listado_titulo"><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
+                                <small style="color: #a0aec0; font-size: 0.85em;"><?= htmlspecialchars($dato['documento_identidad']) ?></small>
                             </div>
                         </div>
 
@@ -120,13 +121,18 @@
                                 $botonesAccion .= '<button class="btn_t cbt_r" onclick="anular(' . $dato['id_cobrar'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
                             }
                         }
+                            $meses_c = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                            $t_emi = strtotime($dato['fecha_emision']);
+                            $emi_fmt = date('d', $t_emi) . ' ' . $meses_c[(int)date('m', $t_emi) - 1] . ' ' . date('Y', $t_emi);
+                            $t_ven = strtotime($dato['fecha_vencimiento']);
+                            $ven_fmt = date('d', $t_ven) . ' ' . $meses_c[(int)date('m', $t_ven) - 1] . ' ' . date('Y', $t_ven);
                             ?>
                             <div class="sub_item_fila <?= $claseFila ?>">
                                 <div class="sub_item_info">
                                     <span class="sub_item_titulo"><?= htmlspecialchars($dato['concepto_nombre']) ?></span>
                                     <div class="sub_item_fechas">
-                                        <span>Emi: <?= explode(' ', $dato['fecha_emision'])[0] ?></span>
-                                        <span>Venc: <?= explode(' ', $dato['fecha_vencimiento'])[0] ?></span>
+                                        <span>Emi: <?= $emi_fmt ?></span>
+                                        <span>Venc: <?= $ven_fmt ?></span>
                                     </div>
                                 </div>
 
@@ -251,6 +257,7 @@
                     <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-star"></i></div>
                     <div class="listado_info_base">
                         <span class="listado_titulo"><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
+                        <small style="color: #a0aec0; font-size: 0.85em;"><?= htmlspecialchars($dato['documento_identidad']) ?></small>
                     </div>
                 </div>
 
@@ -320,13 +327,18 @@
                                             $botonesAccion .= '<button class="btn_t cbt_r" onclick="anular(' . $dato['id_cobrar'] . ')" data-tippy-content="Anular"><i class="fi fi-sr-cross-circle"></i></button>';
                                         }
                                     }
+                    $meses_c = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                    $t_emi = strtotime($dato['fecha_emision']);
+                    $emi_fmt = date('d', $t_emi) . ' ' . $meses_c[(int)date('m', $t_emi) - 1] . ' ' . date('Y', $t_emi);
+                    $t_ven = strtotime($dato['fecha_vencimiento']);
+                    $ven_fmt = date('d', $t_ven) . ' ' . $meses_c[(int)date('m', $t_ven) - 1] . ' ' . date('Y', $t_ven);
                     ?>
                     <div class="sub_item_fila <?= $claseFila ?>">
                         <div class="sub_item_info">
                             <span class="sub_item_titulo"><?= htmlspecialchars($dato['concepto_nombre']) ?></span>
                             <div class="sub_item_fechas">
-                                <span>Emi: <?= explode(' ', $dato['fecha_emision'])[0] ?></span>
-                                <span>Venc: <?= explode(' ', $dato['fecha_vencimiento'])[0] ?></span>
+                                <span>Emi: <?= $emi_fmt ?></span>
+                                <span>Venc: <?= $ven_fmt ?></span>
                             </div>
                         </div>
 
@@ -379,6 +391,21 @@
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
 
+                    <div class="row" id="rango_fechas" style="display: none;">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_inicio" name="fecha_inicio">
+                                <label for="fecha_inicio" class="titulo_formulario">Fecha Inicio</label>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="date" class="formulario" id="fecha_fin" name="fecha_fin">
+                                <label for="fecha_fin" class="titulo_formulario">Fecha Fin</label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="colum colum_select_multiple">
                             <div class="caja_formulario">
@@ -399,10 +426,15 @@
                                 <span class="mensaje" id="id_concepto_span"></span>
                             </div>
                         </div>
+                    </div>
+
+                    <div id="campos_cargo">
+
+                    <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="monto_total" name="monto_total" placeholder="Ej: 50.00">
-                                <label for="monto_total" class="titulo_formulario">Monto Total</label>
+                                <input type="text" class="formulario" id="monto_total" name="monto_total" placeholder="Ej: 50.00" readonly>
+                                <label for="monto_total" class="titulo_formulario" id="lbl_monto_total">Monto</label>
                                 <span class="mensaje" id="monto_total_spam"></span>
                             </div>
                         </div>
@@ -431,11 +463,12 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

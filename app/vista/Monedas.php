@@ -166,15 +166,20 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="nombre" name="nombre">
+                                <input type="text" class="formulario" id="nombre" name="nombre" readonly tabindex="-1">
                                 <label for="nombre" class="titulo_formulario">Nombre</label>
                                 <span class="mensaje" id="nombre_spam"></span>
                             </div>
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="abreviatura" name="abreviatura">
-                                <label for="abreviatura" class="titulo_formulario">Abreviatura</label>
+                                <select name="abreviatura" id="abreviatura" class="formulario select">
+                                    <option value="" disabled selected>Seleccione...</option>
+                                    <option value="VES">Bolívar (VES)</option>
+                                    <option value="USD">Dólar (USD)</option>
+                                    <option value="EUR">Euro (EUR)</option>
+                                </select>
+                                <label for="abreviatura" class="titulo_formulario">Abreviatura / Moneda</label>
                                 <span class="mensaje" id="abreviatura_spam"></span>
                             </div>
                         </div>
@@ -182,7 +187,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="simbolo" name="simbolo">
+                                <input type="text" class="formulario" id="simbolo" name="simbolo" readonly tabindex="-1">
                                 <label for="simbolo" class="titulo_formulario">Simbolo</label>
                                 <span class="mensaje" id="simbolo_spam"></span>
                             </div>
@@ -191,7 +196,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

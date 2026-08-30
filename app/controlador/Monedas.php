@@ -118,9 +118,9 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $validaciones = [
-            'nombre'      => ['regla'   => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido (solo letras, entre 3 y 30 caracteres).'],
-            'abreviatura' => ['regla'   => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida (solo letras, entre 2 y 4 caracteres).'],
-            'simbolo'     => ['regla'   => '/^[a-zA-ZñÑ\$€£]{1,5}$/u', 'mensaje' => 'Símbolo inválido (máximo 5 caracteres, ej: $, Bs, €).']
+            'nombre'      => ['regla'   => '/^(Dólar|Bolívar|Euro)$/ui', 'mensaje' => 'Nombre inválido.'],
+            'abreviatura' => ['regla'   => '/^(USD|VES|EUR)$/i', 'mensaje' => 'Abreviatura (ISO) inválida.'],
+            'simbolo'     => ['regla'   => '/^(\$|Bs|€)$/u', 'mensaje' => 'Símbolo inválido.']
         ];
 
         validar_datos($validaciones);
@@ -135,7 +135,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $respuesta = $obj->ProcesarDatos($datos);
 
         if (isset($respuesta['accion']) && $respuesta['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró la moneda: " . $_POST['nombre']);
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'abreviatura' => $_POST['abreviatura'],
+                'simbolo' => $_POST['simbolo']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró la moneda: " . $_POST['nombre'], '', $datos_nuevos_json);
             $respuesta = array('accion' => 'incluir', 'mensaje' => 'Moneda registrada exitosamente.');
         } else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
@@ -158,9 +163,9 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
     try {
         $validaciones = [
             'id'          => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre'      => ['regla'   => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido (solo letras, entre 3 y 30 caracteres).'],
-            'abreviatura' => ['regla'   => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida (solo letras, entre 2 y 4 caracteres).'],
-            'simbolo'     => ['regla'   => '/^[a-zA-ZñÑ\$€£]{1,5}$/u', 'mensaje' => 'Símbolo inválido (máximo 5 caracteres, ej: $, Bs, €).']
+            'nombre'      => ['regla'   => '/^(Dólar|Bolívar|Euro)$/ui', 'mensaje' => 'Nombre inválido.'],
+            'abreviatura' => ['regla'   => '/^(USD|VES|EUR)$/i', 'mensaje' => 'Abreviatura (ISO) inválida.'],
+            'simbolo'     => ['regla'   => '/^(\$|Bs|€)$/u', 'mensaje' => 'Símbolo inválido.']
         ];
 
         validar_datos($validaciones);
@@ -173,10 +178,20 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         ];
         $datos['accion'] = 'modificar';
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $moneda_previa = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($moneda_previa['codigo_moneda'])) unset($moneda_previa['codigo_moneda']);
+        $datos_previos_json = json_encode($moneda_previa);
+
         $respuesta = $obj->ProcesarDatos($datos);
 
         if (isset($respuesta['accion']) && $respuesta['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico la moneda: " . $_POST['nombre']);
+            $datos_nuevos_json = json_encode([
+                'nombre' => $_POST['nombre'],
+                'abreviatura' => $_POST['abreviatura'],
+                'simbolo' => $_POST['simbolo']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico la moneda: " . $_POST['nombre'], $datos_previos_json, $datos_nuevos_json);
             $respuesta = array('accion' => 'modificar', 'mensaje' => 'Moneda modificada exitosamente.');
         } else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
@@ -209,10 +224,16 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         ];
         $datos['accion'] = 'eliminar';
 
+        $consultar_datos_previos = $obj->Buscar($_POST['id']);
+        $moneda_previa = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($moneda_previa['codigo_moneda'])) unset($moneda_previa['codigo_moneda']);
+        $datos_previos_json = json_encode($moneda_previa);
+
         $respuesta = $obj->ProcesarDatos($datos);
 
         if (isset($respuesta['accion']) && $respuesta['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino la moneda: " . $_POST['id']);
+            $nombre_moneda = $moneda_previa['nombre'] ?? $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino la moneda: " . $nombre_moneda, $datos_previos_json, '');
             $respuesta = array('accion' => 'eliminar', 'mensaje' => 'Moneda eliminada exitosamente.');
         } else if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
             $respuesta['mensaje'] = match ($respuesta['codigo']) {
@@ -335,32 +356,21 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             return;
         }
 
-        registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Monedas");
-
-        $fecha_reporte = date('d/m/Y h:i A');
-        $usuario = $_SESSION['nombre_usuario'] ?? 'Administrador';
+        $nombreVista = 'R_Monedas';
+        $objG = new \App\servicios\GenerarReporte();
         
-        $logo = __DIR__ . '/../../public/img/logo.png'; 
-        $logo_footer = __DIR__ . '/../../public/img/logo_footer.png';
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Monedas');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Monedas');
+        }
 
-        // 3. Incluimos el archivo de la vista
-        ob_start();
-        include(__DIR__ . '/../vista/reportes/R_Monedas.php'); 
-        $html = ob_get_clean();
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de Monedas en " . strtoupper($formato));
+        }
 
-        // 4. Inicializamos Dompdf y generamos el Base64
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
-        $pdfBase64 = base64_encode($dompdf->output());
-        
-        echo json_encode([
-            'accion' => 'generar', 
-            'mensaje' => 'Reporte procesado con éxito.',
-            'pdf' => $pdfBase64
-        ]);
+        echo json_encode($reporte);
 
     } catch (Exception $e) {
         logs('Monedas', $e->getMessage(), 'Controlador_Generar');

@@ -93,6 +93,14 @@
     gap: 20px;
 }
 
+#row_permisos{
+    width: 100%;
+}
+
+form{
+    width: 90%;
+}
+
 .row-g {
     width: 700px;
     height: 400px;
@@ -452,6 +460,7 @@
     cursor: not-allowed;
 }
 
+
 #tabla_permisos {
     display: flex;
     justify-content: center;
@@ -460,21 +469,210 @@
     gap: 5px;
 }
 
+/* ======================================================== */
+/* MODAL DE PERMISOS - Pestañas, Buscador y Layout          */
+/* ======================================================== */
+
+/* Contenedor cabecera de permisos: buscador + tabs */
+.permisos_header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 10px 10px 10px;
+}
+
+/* Buscador de módulos */
+.permisos_buscador_container {
+    position: relative;
+    width: 100%;
+}
+
+.permisos_buscador {
+    width: 100%;
+    padding: 10px 14px 10px 38px !important; /* !important para sobreescribir .formulario */
+    border: 2px solid var(--borde-form, #ddd);
+    border-radius: 8px;
+    background: var(--fondo-form, #f9f9f9);
+    color: var(--texto-principal, #333);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+    height: 45px;
+}
+
+.permisos_buscador:focus {
+    border-color: var(--color-primario, #32B10B);
+}
+
+.permisos_buscador::placeholder {
+    color: var(--color-secundario, #999);
+}
+
+.permisos_buscador_icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-secundario, #999);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+}
+
+/* Contenedor de pestañas */
+.permisos_tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--borde-color, #e0e0e0);
+}
+
+.permisos_tab {
+    flex: 1;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-secundario, #888);
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    bottom: -2px;
+    user-select: none;
+}
+
+.permisos_tab:hover {
+    color: var(--texto-principal, #333);
+    background: var(--fondo-contraste, #f5f5f5);
+}
+
+.permisos_tab.activa {
+    color: var(--color-primario, #32B10B);
+    border-bottom-color: var(--color-primario, #32B10B);
+}
+
+/* Badge de conteo en las pestañas */
+.permisos_tab_badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-left: 6px;
+    vertical-align: middle;
+    background: var(--borde-color, #e0e0e0);
+    color: var(--texto-principal, #333);
+}
+
+.permisos_tab.activa .permisos_tab_badge {
+    background: var(--color-primario, #32B10B);
+    color: #fff;
+}
+
+/* Contenedores de contenido de pestañas */
+.permisos_tab_contenido {
+    display: none !important;
+}
+
+.permisos_tab_contenido.activo {
+    display: block !important;
+}
+
+/* Mensaje cuando no hay resultados */
+.permisos_vacio {
+    text-align: center;
+    padding: 30px 15px;
+    color: var(--color-secundario, #999);
+    font-size: 0.9rem;
+}
+
+.permisos_vacio i {
+    display: block;
+    font-size: 2rem;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
 #tabla_permisos_container {
-    width: 98%;
-    max-width: 650px;
+    width: 100%;
+    max-width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
-    margin: 0;
+    margin: 0 auto;
     padding: 10px;
+    box-sizing: border-box;
+}
 
+/* CENTRADO: Los contenedores de las pestañas actúan como flex column centrado */
+#tabla_permisos_asignados,
+#tabla_permisos_no_asignados {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+/* Separación y centrado de módulos dentro de las pestañas de permisos */
+#tabla_permisos_asignados .listado_contenedor_grupal,
+#tabla_permisos_no_asignados .listado_contenedor_grupal {
+    width: 95%;
+    margin: 0 auto;
+}
+
+/* Evitar desborde de descripciones largas en sub-items del modal de permisos */
+#tabla_permisos_container .detalle_expandido_container {
+    overflow: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#tabla_permisos_container .sub_item_fila {
+    overflow: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#tabla_permisos_container .sub_item_info {
+    overflow: hidden;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    min-width: 0;
+    flex: 1 1 0 !important;
+}
+
+#tabla_permisos_container .lista_sub_items {
+    overflow: hidden;
+    max-width: 100%;
+}
+
+/* Prevenir expansión lateral del contenedor al abrir detalles */
+#tabla_permisos_container .listado_contenedor_grupal {
+    overflow: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#tabla_permisos_container .listado_detalle_oculto {
+    overflow: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 #tabla_permisos_ui {
     width: 100%;
-    table-layout: fixed;
-    /* Mantiene el control estricto de los anchos */
-    border-collapse: collapse;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 /* MODIFICADO: Se añaden divisiones suaves horizontales y verticales */

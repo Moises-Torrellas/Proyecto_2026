@@ -1,4 +1,24 @@
-<?php if (isset($solo_lista) && $solo_lista === true) : ?>
+<?php 
+$formatearFecha = function($fecha) {
+    if (empty($fecha)) return '';
+    $meses = ['01'=>'enero', '02'=>'febrero', '03'=>'marzo', '04'=>'abril', '05'=>'mayo', '06'=>'junio', '07'=>'julio', '08'=>'agosto', '09'=>'septiembre', '10'=>'octubre', '11'=>'noviembre', '12'=>'diciembre'];
+    
+    if (strpos($fecha, '-') !== false) {
+        $partes = explode('-', explode(' ', $fecha)[0]);
+        if (count($partes) === 3) {
+            return $partes[2] . ' de ' . $meses[$partes[1]] . ' del ' . $partes[0];
+        }
+    }
+    if (strpos($fecha, '/') !== false) {
+        $partes = explode('/', explode(' ', $fecha)[0]);
+        if (count($partes) === 3) {
+            return $partes[0] . ' de ' . $meses[$partes[1]] . ' del ' . $partes[2];
+        }
+    }
+    return $fecha;
+};
+
+if (isset($solo_lista) && $solo_lista === true) : ?>
     <?php if (empty($registro)) : ?>
         <div class="listado_vacio">
             <p>No se encontraron registros de asignaciones</p>
@@ -83,7 +103,7 @@
                                     <div class="sub_item_info">
                                         <span class="sub_item_titulo"><?= htmlspecialchars(mb_strtoupper($asignacion['articulo'], 'UTF-8')) ?></span>
                                         <div class="sub_item_fechas">
-                                            <span>Fecha de entrega: <?= htmlspecialchars($asignacion['fecha_vista']) ?></span>
+                                            <span>Fecha de entrega: <?= htmlspecialchars($formatearFecha($asignacion['fecha_vista'])) ?></span>
                                             <?php if(isset($asignacion['codigo_club']) && !empty($asignacion['codigo_club'])): ?>
                                                 <span style="margin-left: 10px; color: #888;">| Código: <?= htmlspecialchars($asignacion['codigo_club']) ?></span>
                                             <?php endif; ?>
@@ -239,7 +259,7 @@
                     <div class="row row_final">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="btn_guardar" data-accion="incluir">Confirmar Préstamo</button>
-                            <button type="button" class="btn btn_verde" onclick="limpia()">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

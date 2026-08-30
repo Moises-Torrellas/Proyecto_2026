@@ -78,13 +78,13 @@ $(document).ready(function () {
                 });
             }
         } else if (accion === 'generar') {
-            confirmar('¿Está seguro que quiere generar un reporte?', function (confirmado) {
-                if (confirmado) {
-                    abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
-                    var datos = new FormData($('#f')[0]);
-                    datos.append('accion', 'generar');
-                    enviaAjax(datos);
-                }
+            opcionesReporte(function(formato) {
+                abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
+                var datos = new FormData($('#f')[0]);
+                datos.append('accion', 'generar');
+                datos.append('formato', formato);
+                datos.append('tipo_palmares_reporte', $('#tipo_palmares').val());
+                enviaAjax(datos);
             });
         }
     });
@@ -128,7 +128,7 @@ $(document).ready(function () {
                 popover: { title: 'Barra de Búsqueda', description: 'Aquí puedes buscar atletas, equipos, torneos o premios rápidamente.', position: 'bottom' }
             },
             {
-                element: '.pestana-btn.activa',
+                element: '.pestanas-header',
                 popover: { title: 'Pestañas de Palmarés', description: 'Navega entre palmarés individuales y grupales.', position: 'bottom' }
             },
             {
@@ -137,11 +137,44 @@ $(document).ready(function () {
             },
             {
                 element: '#generar',
-                popover: { title: 'Generar Reportes', description: 'Permite generar reportes estadísticos o tabulares en formato PDF.', position: 'left' }
+                popover: { title: 'Generar Reportes', description: 'Permite generar reportes estadísticos o tabulares en formato PDF o Excel.', position: 'left' }
             },
             {
-                element: '.resultadoconsulta',
+                element: '.pestana-content.activa .resultadoconsulta',
                 popover: { title: 'Historial de Palmarés', description: 'Aquí se muestran agrupados los premios.', position: 'top' }
+            },
+            {
+                element: '.pestana-content.activa .listado_item',
+                popover: { title: 'Ver Registros', description: 'Permite extender o comprimir la lista de palmarés asociados al atleta o equipo.', position: 'bottom' },
+                onNext: function() {
+                    const tabActiva = document.querySelector('.pestana-content.activa');
+                    if (tabActiva) {
+                        const primerRegistro = tabActiva.querySelector('.listado_item');
+                        if (primerRegistro) {
+                            const contenedor = $(primerRegistro).closest('.listado_contenedor_grupal');
+                            if (!contenedor.hasClass('expandido')) {
+                                contenedor.addClass('expandido');
+                                contenedor.find('.listado_detalle_oculto').show();
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                element: '.pestana-content.activa .sub_item_acciones',
+                popover: { title: 'Acciones de Palmarés', description: 'Aquí aparecerán los botones para modificar o eliminar el palmarés.', position: 'left' }
+            },
+            {
+                element: '.pestana-content.activa .cantidad_paginacion',
+                popover: { title: 'Registros a Mostrar', description: 'Permite seleccionar cuántas filas ver por página.', position: 'top' }
+            },
+            {
+                element: '.pestana-content.activa .c_paginacion_botonera',
+                popover: { title: 'Botonera de Paginación', description: 'Botones para cambiar entre páginas.', position: 'top' }
+            },
+            {
+                element: '.pestana-content.activa .cantidad_registros',
+                popover: { title: 'Total Registros', description: 'Muestra el número total de registros listados.', position: 'top' }
             }
         ];
 

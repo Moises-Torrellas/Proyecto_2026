@@ -212,7 +212,7 @@
                             <td class="data-cell"><?= $contador ?></td>
                             <td class="data-cell" style="font-weight: bold;"><?= htmlspecialchars($item['nombre']) ?></td>
                             <td class="data-cell" style="color: <?= $color ?>; font-weight: bold;">
-                                &#9679; <?= $nivelTxt ?>
+                                <?= $nivelTxt ?>
                             </td>
                         </tr>
                     <?php endforeach; 

@@ -191,20 +191,20 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             'estatura'  => $_POST['estatura'] ?? 0,
         ];
 
-        if (isset($_POST['representante'])) $datos['representante'] = $_POST['representante'];
-        if (isset($_POST['doc_i'])) $datos['doc_identidad'] = $_POST['doc_i'];
-        if (isset($_POST['telefono'])) $datos['telefono'] = $_POST['telefono'];
-        if (isset($_POST['direccion'])) $datos['direccion'] = $_POST['direccion'];
-        if (isset($_POST['lugar_nacimiento'])) $datos['lugar_nacimiento'] = $_POST['lugar_nacimiento'];
-        if (isset($_POST['correo'])) $datos['correo'] = filter_var($_POST['correo'], FILTER_SANITIZE_EMAIL);
-        if (isset($_POST['municipio'])) $datos['municipio'] = $_POST['municipio'];
-        if (isset($_POST['instagram'])) $datos['instagram'] = $_POST['instagram'];
-        if (isset($_POST['talla_pantalon'])) $datos['talla_pantalon'] = $_POST['talla_pantalon'];
-        if (isset($_POST['talla_franela'])) $datos['talla_franela'] = $_POST['talla_franela'];
-        if (isset($_POST['talla_calzado'])) $datos['talla_calzado'] = $_POST['talla_calzado'];
-        if (isset($_POST['tipo_sangre'])) $datos['tipo_sangre'] = $_POST['tipo_sangre'];
-        if (isset($_POST['es_alergico'])) $datos['es_alergico'] = $_POST['es_alergico'];
-        if (isset($_POST['alergias_detalle'])) $datos['alergias_detalle'] = $_POST['alergias_detalle'];
+        $datos['representante'] = $_POST['representante'] ?? '';
+        $datos['doc_identidad'] = $_POST['doc_i'] ?? '';
+        $datos['telefono'] = $_POST['telefono'] ?? '';
+        $datos['direccion'] = $_POST['direccion'] ?? '';
+        $datos['lugar_nacimiento'] = $_POST['lugar_nacimiento'] ?? '';
+        $datos['correo'] = filter_var($_POST['correo'] ?? '', FILTER_SANITIZE_EMAIL);
+        $datos['municipio'] = $_POST['municipio'] ?? '';
+        $datos['instagram'] = $_POST['instagram'] ?? '';
+        $datos['talla_pantalon'] = $_POST['talla_pantalon'] ?? '';
+        $datos['talla_franela'] = $_POST['talla_franela'] ?? '';
+        $datos['talla_calzado'] = $_POST['talla_calzado'] ?? '';
+        $datos['tipo_sangre'] = $_POST['tipo_sangre'] ?? '';
+        $datos['es_alergico'] = $_POST['es_alergico'] ?? 0;
+        $datos['alergias_detalle'] = $_POST['alergias_detalle'] ?? '';
 
         if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
             throw new Exception('La foto del atleta es obligatoria.');
@@ -234,7 +234,6 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 
             registrarBitacora($bitacoraObj, $id_modulo, "Registró al Atleta: " . $identificador . " - " . $datos['nombre'] . " " . $datos['apellido'], $datos_previos, $datos_nuevos);
 
-            // Verificador dinámico de eventos (Cumpleaños, etc.)
             require_once __DIR__ . '/../servicios/verificarEvento.php';
             $verificador = new \App\servicios\verificarEvento();
             $verificador->procesar();
@@ -245,6 +244,9 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_CEDULA => 'La cedula ingresada ya pertenece a un atleta registrado.',
                 DUPLICATE_PHONE  => 'El telefono ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_EMAIL  => 'El correo ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_INSTAGRAM => 'El instagram ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_DORSAL => 'El dorsal ingresado ya está en uso por un atleta activo en esta categoría.',
                 INVALID_ID       => 'La categoria ingresada no existe en los registros del club.',
                 INVALID_ID . '0' => 'La posicion ingresada no existe en los registros del club.',
                 INVALID_ID . '1' => 'El representante ingresado no existe en los registros del club.',
@@ -293,20 +295,20 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'foto_actual' => $_POST['foto_actual']
         ];
 
-        if (isset($_POST['representante'])) $datos['representante'] = $_POST['representante'];
-        if (isset($_POST['doc_i'])) $datos['doc_identidad'] = $_POST['doc_i'];
-        if (isset($_POST['telefono'])) $datos['telefono'] = $_POST['telefono'];
-        if (isset($_POST['direccion'])) $datos['direccion'] = $_POST['direccion'];
-        if (isset($_POST['lugar_nacimiento'])) $datos['lugar_nacimiento'] = $_POST['lugar_nacimiento'];
-        if (isset($_POST['correo'])) $datos['correo'] = filter_var($_POST['correo'], FILTER_SANITIZE_EMAIL);
-        if (isset($_POST['municipio'])) $datos['municipio'] = $_POST['municipio'];
-        if (isset($_POST['instagram'])) $datos['instagram'] = $_POST['instagram'];
-        if (isset($_POST['talla_pantalon'])) $datos['talla_pantalon'] = $_POST['talla_pantalon'];
-        if (isset($_POST['talla_franela'])) $datos['talla_franela'] = $_POST['talla_franela'];
-        if (isset($_POST['talla_calzado'])) $datos['talla_calzado'] = $_POST['talla_calzado'];
-        if (isset($_POST['tipo_sangre'])) $datos['tipo_sangre'] = $_POST['tipo_sangre'];
-        if (isset($_POST['es_alergico'])) $datos['es_alergico'] = $_POST['es_alergico'];
-        if (isset($_POST['alergias_detalle'])) $datos['alergias_detalle'] = $_POST['alergias_detalle'];
+        $datos['representante'] = $_POST['representante'] ?? '';
+        $datos['doc_identidad'] = $_POST['doc_i'] ?? '';
+        $datos['telefono'] = $_POST['telefono'] ?? '';
+        $datos['direccion'] = $_POST['direccion'] ?? '';
+        $datos['lugar_nacimiento'] = $_POST['lugar_nacimiento'] ?? '';
+        $datos['correo'] = filter_var($_POST['correo'] ?? '', FILTER_SANITIZE_EMAIL);
+        $datos['municipio'] = $_POST['municipio'] ?? '';
+        $datos['instagram'] = $_POST['instagram'] ?? '';
+        $datos['talla_pantalon'] = $_POST['talla_pantalon'] ?? '';
+        $datos['talla_franela'] = $_POST['talla_franela'] ?? '';
+        $datos['talla_calzado'] = $_POST['talla_calzado'] ?? '';
+        $datos['tipo_sangre'] = $_POST['tipo_sangre'] ?? '';
+        $datos['es_alergico'] = $_POST['es_alergico'] ?? 0;
+        $datos['alergias_detalle'] = $_POST['alergias_detalle'] ?? '';
 
         if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
             $foto_nombre = $_POST['foto_actual'];
@@ -320,13 +322,17 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         // 1. Buscamos los datos PREVIOS antes de modificarlos
         $consultar_datos_previos = $obj->Buscar($_POST['id']);
         $atleta_previo = $consultar_datos_previos['datos'][0] ?? null; // Posición [0] por el fetchAll()
+        if (isset($atleta_previo['id_atleta'])) unset($atleta_previo['id_atleta']);
         $datos_previos_json = json_encode($atleta_previo);
 
         // 2. Procesamos la modificación
         $resultado = $obj->ProcesarDatos($datos);
 
         // 3. Extraemos los datos NUEVOS del resultado
-        $datos_nuevos_json = $resultado['datos_nuevos'] ?? '';
+        $arr_nuevos = json_decode($resultado['datos_nuevos'] ?? '{}', true) ?: [];
+        if (isset($arr_nuevos['id'])) unset($arr_nuevos['id']);
+        if (isset($arr_nuevos['id_atleta'])) unset($arr_nuevos['id_atleta']);
+        $datos_nuevos_json = json_encode($arr_nuevos);
 
         // Generamos un identificador seguro para el mensaje
         $identificador = $datos['doc_identidad'] ?? 'R-' . $atleta_previo['cedula_rep'];
@@ -344,6 +350,9 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_CEDULA => 'La cedula ingresada ya pertenece a un atleta registrado.',
                 DUPLICATE_PHONE  => 'El telefono ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_EMAIL  => 'El correo ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_INSTAGRAM => 'El instagram ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_DORSAL => 'El dorsal ingresado ya está en uso por un atleta activo en esta categoría.',
                 INVALID_ID       => 'La categoria ingresada no existe en los registros del club.',
                 INVALID_ID . '0' => 'La posicion ingresada no existe en los registros del club.',
                 INVALID_ID . '1' => 'El representante ingresado no existe en los registros del club.',
@@ -453,6 +462,7 @@ function reinscribir($obj, $id_modulo, $bitacoraObj): void
             $resultado = array('accion' => 'reinscribir', 'mensaje' => 'Atleta re-inscrito exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
+                DUPLICATE_DORSAL => 'El dorsal ingresado ya está en uso por un atleta activo en esta categoría.',
                 DB_CONNECTION    => 'Ocurrió un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado al re-inscribir al atleta.'
             };
@@ -498,14 +508,20 @@ function generar($obj, $id_modulo, $bitacoraObj): void
 
         $nombreVista = 'R_Atletas';
         $objG = new GenerarReporte();
-        $pdf = $objG->generarPDF($nombreVista, $datos, 'Atletas');
-
-        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            // Se envían strings vacíos para datos_previos y datos_nuevos
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de atletas.", '', '');
+        $formato = $_POST['formato'] ?? 'pdf';
+        
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Atletas');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Atletas');
         }
 
-        echo json_encode($pdf);
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            // Se envían strings vacíos para datos_previos y datos_nuevos
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de atletas en formato " . strtoupper($formato) . ".", '', '');
+        }
+
+        echo json_encode($reporte);
     } catch (Exception $e) {
         logs('Atletas', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);

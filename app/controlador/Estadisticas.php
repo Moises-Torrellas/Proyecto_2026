@@ -83,6 +83,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (empty($permisos['eliminar_estadistica'])) throw new Exception('No tienes permisos para eliminar las estadisticas.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar':
+                if (empty($permisos['generar_estadistica'])) throw new Exception('No tienes permisos para generar reportes de estadisticas.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
 
             default:
                 throw new Exception('Acción no permitida.');
@@ -165,8 +169,12 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            $idNuevo = $obj->id ?? ''; 
+            $dn = $obj->Buscar((int)$idNuevo)['datos'][0] ?? [];
+            unset($dn['id_estadisticas']);
+            $datos_nuevos_json = json_encode($dn);
 
-            registrarBitacora($bitacoraObj, $id_modulo, "Registro estadisticas: ");
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró estadísticas para: {$dn['nombres']} {$dn['apellidos']} ({$dn['cedula']})", '', $datos_nuevos_json);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Estadisticas registradas exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -227,11 +235,19 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $obj->setParticipaciones(new ModeloParticipaciones());
         $obj->setHistorial(new ModeloHistorial());
 
+        $idEditar = (int)$_POST['id'];
+        $dp = $obj->Buscar($idEditar)['datos'][0] ?? [];
+        unset($dp['id_estadisticas']);
+        $datos_previos_json = json_encode($dp);
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            $dn = $obj->Buscar($idEditar)['datos'][0] ?? [];
+            unset($dn['id_estadisticas']);
+            $datos_nuevos_json = json_encode($dn);
 
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico estadisticas: ");
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó estadísticas para: {$dn['nombres']} {$dn['apellidos']} ({$dn['cedula']})", $datos_previos_json, $datos_nuevos_json);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Estadisticas modificadas exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -267,11 +283,15 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         $datos['accion'] = 'eliminar';
         $obj->setHistorial(new ModeloHistorial());
 
+        $idEliminar = (int)$_POST['id'];
+        $dp = $obj->Buscar($idEliminar)['datos'][0] ?? [];
+        unset($dp['id_estadisticas']);
+        $datos_previos_json = json_encode($dp);
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino estadisticas: ");
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó estadísticas para: {$dp['nombres']} {$dp['apellidos']} ({$dp['cedula']})", $datos_previos_json, '');
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Estadisticas eliminadas exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -285,6 +305,44 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Estadisticas', $e->getMessage(), 'Controlador_Modificar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $filtro = [];
+        if (!empty($_POST['participacion'])) {
+            $filtro['participacion'] = filter_var($_POST['participacion'], FILTER_SANITIZE_SPECIAL_CHARS);
+        }
+        if (!empty($_POST['atleta'])) {
+            $filtro['atleta'] = filter_var($_POST['atleta'], FILTER_SANITIZE_SPECIAL_CHARS);
+        }
+
+        $respuesta = $obj->Consultar($filtro);
+        $datos = $respuesta['datos'] ?? [];
+
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron estadísticas para hacer el reporte.']);
+            exit();
+        }
+
+        $formato = $_POST['formato'] ?? 'pdf';
+        
+        $objG = new GenerarReporte();
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel('R_Estadisticas', $datos, 'Estadisticas');
+        } else {
+            $reporte = $objG->generarPDF('R_Estadisticas', $datos, 'Estadisticas');
+        }
+        
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de estadísticas en " . strtoupper($formato));
+        }
+        echo json_encode($reporte);
+    } catch (Exception $e) {
+        logs('Estadisticas', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

@@ -54,8 +54,10 @@ class ModeloRespaldo extends Conexion
 
         $accion = $datos['accion'] ?? null;
 
+        $filtro = $datos['filtro'] ?? '';
+
         return match ($accion) {
-            'consultar' => $this->ConsultarBackups(),
+            'consultar' => $this->ConsultarBackups($filtro),
             'generar'   => $this->GenerarBackup(),
             'restaurar' => $this->RestaurarBackup($datos['archivo'] ?? ''),
             'eliminar'  => $this->EliminarBackup($datos['archivo'] ?? ''),
@@ -63,7 +65,7 @@ class ModeloRespaldo extends Conexion
         };
     }
 
-    private function ConsultarBackups(): array
+    private function ConsultarBackups(string $filtro = ''): array
     {
         try {
             $sql = "SELECT r.nombre_archivo as nombre, 
@@ -74,10 +76,30 @@ class ModeloRespaldo extends Conexion
                            u.apellidoUsuario
                     FROM bds2.respaldos r
                     INNER JOIN bds2.usuarios u ON r.id_usuario = u.idUsuario
-                    ORDER BY r.fecha_creacion DESC";
+                    WHERE 1=1";
+            
+            if (!empty($filtro)) {
+                $sql .= " AND (
+                            r.nombre_archivo LIKE ? 
+                            OR DATE_FORMAT(r.fecha_creacion, '%d/%m/%Y') LIKE ?
+                            OR u.nombreUsuario LIKE ?
+                            OR u.apellidoUsuario LIKE ?
+                          )";
+            }
+
+            $sql .= " ORDER BY r.fecha_creacion DESC";
                    
             $conex = $this->conex();
             $stmt = $conex->prepare($sql);
+            
+            if (!empty($filtro)) {
+                $filtroVal = "%$filtro%";
+                $stmt->bindValue(1, $filtroVal, PDO::PARAM_STR);
+                $stmt->bindValue(2, $filtroVal, PDO::PARAM_STR);
+                $stmt->bindValue(3, $filtroVal, PDO::PARAM_STR);
+                $stmt->bindValue(4, $filtroVal, PDO::PARAM_STR);
+            }
+            
             $stmt->execute();
             $lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -114,7 +136,7 @@ class ModeloRespaldo extends Conexion
 
             // Calculamos el peso y guardamos en bds2 con estatus = 1 y id_usuario
             $pesoCalculado = round(filesize($rutaCompleta) / 1024, 2) . ' KB';
-            $idUsuario = $_SESSION['idUsuario'] ?? 1;
+            $idUsuario = $_SESSION['id'];
             
             $conex = $this->conex();
             $sql = "INSERT INTO bds2.respaldos (nombre_archivo, peso, fecha_creacion, id_usuario, estatus) VALUES (?, ?, NOW(), ?, 1)";
@@ -139,20 +161,21 @@ class ModeloRespaldo extends Conexion
                 throw new Exception('El archivo de respaldo no existe en el servidor.');
             }
 
-            $scriptSql = file_get_contents($rutaCompleta);
+            // Para restaurar archivos con DELIMITER y TRIGGERS, no podemos usar PDO::exec() 
+            // porque no entiende los delimitadores nativos del cliente mysql.
+            // Usaremos el cliente mysql vía consola, tal como usamos mysqldump.
             
-            // Validación de cabecera
-            $cabecera = substr($scriptSql, 0, 250);
-            if (stripos($cabecera, 'MariaDB dump') === false && stripos($cabecera, 'MySQL dump') === false) {
-                throw new Exception('El archivo no tiene la firma de un respaldo válido.');
-            }
+            $mysqlCli = str_replace('mysqldump', 'mysql', $this->mysqlPath);
+            $paramPassword = !empty($this->pass) ? "--password=\"{$this->pass}\"" : "";
+            
+            // Ejecutamos la restauración inyectando el script sql con <
+            $comando = "\"{$mysqlCli}\" --user={$this->user} {$paramPassword} {$this->dbName} < \"{$rutaCompleta}\" 2>&1";
+            
+            $resultado = null;
+            system($comando, $resultado);
 
-            $conex = $this->conex();
-            $conex->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
-            $resultado = $conex->exec($scriptSql);
-
-            if ($resultado === false) {
-                throw new Exception('Error interno al ejecutar el script SQL.');
+            if ($resultado !== 0) {
+                throw new Exception('Error de sintaxis o ejecución al restaurar usando el comando MySQL.');
             }
 
             return ['accion' => 'exito'];

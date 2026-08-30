@@ -232,25 +232,30 @@
                                     </thead>
                                     <tbody>
                                         <?php foreach ($atleta['asignaciones'] as $det) : 
-                                            // 2. Lógica binaria de estado (1 = En Uso, 0 = Inactivo)
-                                            $esInactivo = ($det['estatus'] == 0);
-                                            $claseFila = $esInactivo ? 'fila-anulada' : '';
+                                            // Lógica de estado (1 = En Uso, 2 = Devuelto, 3 = Anulado)
+                                            $estado = (int)$det['estatus'];
+                                            if ($estado === 1) {
+                                                $textoEstatus = '<span style="color: #38a169; font-weight: bold;">En Uso</span>';
+                                            } elseif ($estado === 2) {
+                                                $textoEstatus = '<span style="color: #3182ce; font-weight: bold;">Devuelto</span>';
+                                            } elseif ($estado === 3) {
+                                                $textoEstatus = '<span style="color: #e53e3e; font-weight: bold;">Anulado</span>';
+                                            } else {
+                                                $textoEstatus = '<span style="color: #a0aec0; font-weight: bold;">Desconocido</span>';
+                                            }
                                             
                                             // Añadimos el código del club si existe para mayor claridad
                                             $codigoClub = isset($det['codigo_club']) && !empty($det['codigo_club']) ? ' - Cód: ' . $det['codigo_club'] : '';
                                         ?>
-                                            <tr class="<?= $claseFila ?>">
+                                            <tr>
                                                 <td style="padding: 4px 0; color: #4a5568; font-weight: bold;">
                                                     <?= htmlspecialchars(mb_strtoupper($det['articulo'], 'UTF-8')) . htmlspecialchars($codigoClub) ?>
                                                 </td>
                                                 <td style="padding: 4px 0; color: #718096;">
                                                     <?= htmlspecialchars($det['fecha_vista']) ?>
                                                 </td>
-                                                <td class="no-strike" style="padding: 4px 0; text-align: right;">
-                                                    <?= $esInactivo 
-                                                        ? '<span style="color: #a0aec0; font-weight: bold;">Devuelta / Inactiva</span>' 
-                                                        : '<span style="color: #38a169; font-weight: bold;">En Uso</span>' 
-                                                    ?>
+                                                <td style="padding: 4px 0; text-align: right;">
+                                                    <?= $textoEstatus ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>

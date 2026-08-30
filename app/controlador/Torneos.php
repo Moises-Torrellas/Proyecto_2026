@@ -66,6 +66,10 @@ function manejarSolicitudTorneos($obj, $id_modulo, $bitacoraObj, array $permisos
                 if (empty($permisos['modificar_torneo'])) throw new Exception('No tienes permisos para modificar torneos.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar':
+                if (empty($permisos['generar_torneos'])) throw new Exception('No tienes permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
             default:
                 throw new Exception('Acción no permitida.');
         }
@@ -125,12 +129,19 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró el torneo: " . $_POST['nombre']);
-            
             // Verificador dinámico de eventos (Torneos, etc.)
             require_once __DIR__ . '/../servicios/verificarEvento.php';
             $verificador = new \App\servicios\verificarEvento();
             $verificador->procesar();
+
+            $datos_nuevos_json = json_encode([
+                'nombre'       => $_POST['nombre'],
+                'fecha_inicio' => $_POST['fecha_inicio'],
+                'fecha_fin'    => $_POST['fecha_fin'],
+                'ubicacion'    => $_POST['ubicacion'],
+                'estatus'      => $_POST['estatus']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró el torneo: " . $_POST['nombre'], '', $datos_nuevos_json);
 
             $resultado = ['accion' => 'incluir', 'mensaje' => 'Torneo registrado exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
@@ -163,15 +174,27 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'accion'       => 'modificar'
         ];
 
+        $consultar_datos_previos = $obj->Buscar($_POST['codigo_torneo']);
+        $datos_previos = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($datos_previos['codigo_torneo'])) unset($datos_previos['codigo_torneo']);
+        $datos_previos_json = json_encode($datos_previos);
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el torneo: " . $_POST['nombre']);
-
             // Verificador dinámico de eventos (Torneos, etc.)
             require_once __DIR__ . '/../servicios/verificarEvento.php';
             $verificador = new \App\servicios\verificarEvento();
             $verificador->procesar();
+
+            $datos_nuevos_json = json_encode([
+                'nombre'       => $_POST['nombre'],
+                'fecha_inicio' => $_POST['fecha_inicio'],
+                'fecha_fin'    => $_POST['fecha_fin'],
+                'ubicacion'    => $_POST['ubicacion'],
+                'estatus'      => $_POST['estatus']
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el torneo: " . $_POST['nombre'], $datos_previos_json, $datos_nuevos_json);
 
             $resultado = ['accion' => 'modificar', 'mensaje' => 'Torneo modificado exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
@@ -198,10 +221,16 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion' => 'eliminar'
         ];
 
+        $consultar_datos_previos = $obj->Buscar($_POST['codigo_torneo']);
+        $datos_previos = $consultar_datos_previos['datos'][0] ?? null;
+        if (isset($datos_previos['codigo_torneo'])) unset($datos_previos['codigo_torneo']);
+        $datos_previos_json = json_encode($datos_previos);
+
         $resultado = $obj->procesarDatos($datos);
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el torneo con código: " . $_POST['codigo_torneo']);
+            $nombre_torneo = $datos_previos['nombre'] ?? $_POST['codigo_torneo'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el torneo: " . $nombre_torneo, $datos_previos_json, '');
             $resultado = ['accion' => 'eliminar', 'mensaje' => 'Torneo eliminado exitosamente.'];
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -214,6 +243,48 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Torneos', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj)
+{
+    try {
+        $datosFiltro = ['accion' => 'generar'];
+        
+        if (!empty($_POST['fecha_inicio'])) {
+            $datosFiltro['fecha_inicio'] = $_POST['fecha_inicio'];
+        }
+        if (!empty($_POST['fecha_fin'])) {
+            $datosFiltro['fecha_fin'] = $_POST['fecha_fin'];
+        }
+        if (!empty($_POST['estatus'])) {
+            $datosFiltro['estatus'] = $_POST['estatus'];
+        }
+
+        $respuesta = $obj->procesarDatos($datosFiltro);
+        $datos = $respuesta['datos'] ?? [];
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron torneos para hacer el reporte.']);
+            exit();
+        }
+
+        require_once __DIR__ . '/../servicios/GenerarReporte.php';
+        $objG = new \App\servicios\GenerarReporte();
+        
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel('R_Torneos', $datos, 'Torneos');
+        } else {
+            $reporte = $objG->generarPDF('R_Torneos', $datos, 'Torneos');
+        }
+
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de torneos en " . strtoupper($formato));
+        }
+        echo json_encode($reporte);
+    } catch (Exception $e) {
+        logs('Torneos', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

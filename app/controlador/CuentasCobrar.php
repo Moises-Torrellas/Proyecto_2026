@@ -88,6 +88,10 @@ function manejarSolicitudCuentasCobrar($obj, $id_modulo, $bitacoraObj, array $pe
                 if (empty($permisos['modificar_cargo'])) throw new Exception('No tienes permisos para modificar cuentas por cobrar.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar':
+                if (empty($permisos['generar_cargo'])) throw new Exception('No tienes permisos para generar reportes.');
+                generar($obj, $id_modulo, $bitacoraObj);
+                break;
 
             default:
                 throw new Exception('Acción no permitida.');
@@ -158,6 +162,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
     try {
         validar_requeridos(['id_concepto', 'monto_total', 'fecha_emision']);
 
+        $fechaEmision = $_POST['fecha_emision'];
+        if (strtotime($fechaEmision) < strtotime(date('Y-m-d'))) {
+            throw new Exception("La fecha del cargo no puede ser una fecha pasada.");
+        }
+
         $datos = [
             'id_concepto'       => $_POST['id_concepto'],
             'id_atleta'         => is_array($_POST['id_atleta']) ? $_POST['id_atleta'] : [$_POST['id_atleta']],
@@ -169,7 +178,10 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó cargo(s) de " . $_POST['monto_total']);
+            $datos_previos = '';
+            $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+            $desc_bitacora = $resultado['desc_bitacora'] ?? "Generó cargo(s) de " . $_POST['monto_total'];
+            registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, $datos_previos, $datos_nuevos);
             
             // Verificador dinámico de eventos (Cargos atrasados, etc.)
             require_once __DIR__ . '/../servicios/verificarEvento.php';
@@ -209,7 +221,10 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modificó la cuenta por cobrar ID: " . $_POST['id']);
+            $datos_previos = $resultado['datos_previos'] ?? '';
+            $datos_nuevos = $resultado['datos_nuevos'] ?? '';
+            $desc_bitacora = $resultado['desc_bitacora'] ?? "Modificó la cuenta por cobrar ID: " . $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, $datos_previos, $datos_nuevos);
 
             // Verificador dinámico de eventos (Cargos atrasados, etc.)
             require_once __DIR__ . '/../servicios/verificarEvento.php';
@@ -240,7 +255,10 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Anuló la cuenta por cobrar ID: " . $_POST['id']);
+            $datos_previos = $resultado['datos_previos'] ?? '';
+            $datos_nuevos = '';
+            $desc_bitacora = $resultado['desc_bitacora'] ?? "Anuló la cuenta por cobrar ID: " . $_POST['id'];
+            registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Cuenta por cobrar anulada correctamente (estatus: Anulado).');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -252,6 +270,57 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('CuentasCobrar', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generar($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        require_once __DIR__ . '/../servicios/GenerarReporte.php';
+
+        $idAtletas = isset($_POST['id_atleta']) ? (is_array($_POST['id_atleta']) ? implode(',', $_POST['id_atleta']) : $_POST['id_atleta']) : '';
+        $filtros = [
+            'atleta' => $idAtletas,
+            'concepto' => $_POST['id_concepto'] ?? '',
+            'fecha_inicio' => $_POST['fecha_inicio'] ?? '',
+            'fecha_fin' => $_POST['fecha_fin'] ?? ''
+        ];
+        
+        $formato = $_POST['formato'] ?? 'pdf';
+        
+        // Consultar usando los filtros
+        $resultado = $obj->Consultar($filtros);
+        
+        if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            throw new Exception('Error al obtener los datos para el reporte.');
+        }
+        
+        $datos = $resultado['datos'] ?? [];
+        
+        require_once __DIR__ . '/../servicios/GenerarReporte.php';
+        
+        if ($formato === 'pdf') {
+            $resultadoReporte = \App\servicios\GenerarReporte::generarPDF('R_CuentasCobrar', $datos, 'CuentasCobrar');
+        } else if ($formato === 'excel') {
+            $resultadoReporte = \App\servicios\GenerarReporte::generarExcel('R_CuentasCobrar', $datos, 'CuentasCobrar');
+        } else {
+            throw new Exception("Formato de reporte inválido.");
+        }
+        
+        if (isset($resultadoReporte['accion']) && $resultadoReporte['accion'] === 'error') {
+            throw new Exception('Error al generar el archivo: ' . ($resultadoReporte['mensaje'] ?? ''));
+        }
+        $rutaArchivo = $resultadoReporte['archivo'] ?? '';
+        registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de cuentas por cobrar en formato " . strtoupper($formato));
+        
+        echo json_encode([
+            'accion' => 'reporte',
+            'archivo' => $rutaArchivo
+        ]);
+        
+    } catch (Exception $e) {
+        logs('CuentasCobrar', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

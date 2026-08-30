@@ -25,6 +25,14 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <small>Direccion</small>
                             <span><?= $dato['direccion'] ?></span>
                         </div>
+                        <div class="listado_dato_grupo">
+                            <small>Correo</small>
+                            <span><?= $dato['correo'] ?: 'No Aplica' ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Instagram</small>
+                            <span><?= $dato['instagram'] ?: 'No Aplica' ?></span>
+                        </div>
                     </div>
 
                     <div class="listado_col_acciones">
@@ -103,6 +111,14 @@ if (isset($solo_lista) && $solo_lista === true) :
                                                 <div class="listado_dato_grupo">
                                                     <small>Direccion</small>
                                                     <span><?= $dato['direccion'] ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Correo</small>
+                                                    <span><?= $dato['correo'] ?: 'No Aplica' ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Instagram</small>
+                                                    <span><?= $dato['instagram'] ?: 'No Aplica' ?></span>
                                                 </div>
                                             </div>
 
@@ -206,7 +222,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

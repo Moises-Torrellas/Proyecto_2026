@@ -136,7 +136,14 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró al Premio: " . $_POST['nombre'] . ' ' . $_POST['tipo']);
+            $idNuevo = !empty($obj->codigo_premio) ? (int)$obj->codigo_premio : null;
+            $datos_nuevos = $obj->Buscar($idNuevo)['datos'][0] ?? [];
+            if(isset($datos_nuevos['codigo_premio'])) {
+                unset($datos_nuevos['codigo_premio']);
+            }
+            $datos_nuevos_json = json_encode($datos_nuevos);
+            
+            registrarBitacora($bitacoraObj, $id_modulo, "Registró el Premio: " . $_POST['nombre'] . ' (' . $_POST['tipo'] . ')', '', $datos_nuevos_json);
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Premio registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -171,14 +178,23 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         ];
         $datos['accion'] = 'modificar';
 
+        $datos_previos = $obj->Buscar($_POST['codigo_premio'])['datos'][0] ?? [];
+        unset($datos_previos['codigo_premio']);
+        $datos_previos_json = json_encode($datos_previos);
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico al Premio: " . $_POST['nombre'] . ' ' . $_POST['tipo']);
+            $datos_nuevos = $obj->Buscar($_POST['codigo_premio'])['datos'][0] ?? [];
+            unset($datos_nuevos['codigo_premio']);
+            $datos_nuevos_json = json_encode($datos_nuevos);
+
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el Premio: " . $_POST['nombre'] . ' (' . $_POST['tipo'] . ')', $datos_previos_json, $datos_nuevos_json);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Premio modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un Premio registrado con ese nombre.',
+                'TYPE_ASSOCIATED' => 'No puedes modificar el tipo de un Premio que ya está asignado a un palmarés.',
                 default        => 'Ocurrió un error inesperado en la modificacion.'
             };
         }
@@ -202,14 +218,18 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
             'accion'        => 'eliminar'
         ];
 
+        $datos_previos = $obj->Buscar($_POST['codigo_premio'])['datos'][0] ?? [];
+        unset($datos_previos['codigo_premio']);
+        $datos_previos_json = json_encode($datos_previos);
+
         $resultado = $obj->procesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino al Premio: " . $_POST['codigo_premio']); // Ajustado para bitácora
+            registrarBitacora($bitacoraObj, $id_modulo, "Eliminó el Premio: " . ($datos_previos['nombre'] ?? $_POST['codigo_premio']), $datos_previos_json, '');
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Premio eliminado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El Premio no existe.',
-                ASSOCIATES => 'El Premio esta asociado a un palmare.',
+                ASSOCIATES => 'El Premio está asociado a un palmarés.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default    => 'Ocurrió un error inesperado en la eliminacion.'
             };
@@ -244,13 +264,19 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron premios para hacer el reporte.']);
             exit();
         }
-        $nombreVista = 'R_Premios';
+        $formato = $_POST['formato'] ?? 'pdf';
+        
         $objG = new GenerarReporte();
-        $pdf = $objG->generarPDF($nombreVista, $datos, 'Premios');
-        if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de premios.");
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel('R_Premios', $datos, 'Premios');
+        } else {
+            $reporte = $objG->generarPDF('R_Premios', $datos, 'Premios');
         }
-        echo json_encode($pdf);
+        
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte de premios en " . strtoupper($formato));
+        }
+        echo json_encode($reporte);
     } catch (Exception $e) {
         logs('Premios', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);

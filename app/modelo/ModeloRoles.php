@@ -15,6 +15,7 @@ class ModeloRoles extends Conexion
     public function __construct()
     {
         parent::__construct();
+        $this->objPermiso = new ModeloPermisos();
         $this->campoWhitelist = [
             'nombre' => 'nombre_rol',
             'id_modulo' => 'id_modulo',
@@ -43,6 +44,7 @@ class ModeloRoles extends Conexion
             'buscar' => $this->Buscar(),
             'eliminar' => $this->Eliminar(),
             'guardar_permisos' => $this->GuardarPermisos(),
+            'reporte' => $this->consultar($datos),
             default => throw new Exception("Acción no válida."),
         };
     }
@@ -105,24 +107,8 @@ class ModeloRoles extends Conexion
     public function CargarPermisos($id)
     {
         try {
-            $conex = $this->conexSG();
-            $sentencia = 'SELECT 
-                            :id1 AS id_rol, 
-                            (SELECT nombre_rol FROM roles WHERE id_rol = :id2) AS nombre_rol, 
-                            m.id_modulo, m.nombre_modulo,m.icono, m.estatus AS estatus_modulo,
-                            p.id_permiso, p.nombre AS nombre_permiso, p.descripcion, p.clave,
-                            CASE WHEN pr.id_permiso_rol IS NOT NULL THEN 1 ELSE 0 END AS asignado
-                        FROM modulos m
-                        INNER JOIN permisos p ON p.id_modulo = m.id_modulo
-                        LEFT JOIN permisos_rol pr ON pr.id_permiso = p.id_permiso AND pr.id_rol = :id3
-                        WHERE m.id_modulo NOT IN (4, 5, 8, 1, 2, 3, 99)
-                        ORDER BY m.id_modulo ASC, p.id_permiso ASC';
-            $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':id1', $id);
-            $stmt->bindParam(':id2', $id);
-            $stmt->bindParam(':id3', $id);
-            $stmt->execute();
-            $datos = $stmt->fetchAll();
+            $permisos = $this->objPermiso->permisosRoles($id);
+            $datos = $permisos['datos'];
             $resultado = array('accion' => 'CargarPermisos', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Roles', $e->getMessage(), 'Modelo_CargarPermisos');

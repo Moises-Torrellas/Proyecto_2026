@@ -117,9 +117,24 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'accion'       => 'modificar'
         ];
 
+        $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
+        $datosPrevios = '';
+        if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
+            $viejo = $respuestaVieja['datos'][0];
+            $datosPrevios = json_encode([
+                'nombre' => $viejo['nombre_modulo'],
+                'descripcion' => $viejo['descripcion'] ?? ''
+            ]);
+        }
+
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
+            $datosNuevos = json_encode([
+                'nombre' => $_POST['nombre'],
+                'descripcion' => $_POST['descripcion'] ?? ''
+            ]);
+            registrarBitacora($bitacoraObj, $id_modulo, "Modificó el Módulo: " . $_POST['nombre'], $datosPrevios, $datosNuevos);
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Modulo modificado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {

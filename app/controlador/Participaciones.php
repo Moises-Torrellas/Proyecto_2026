@@ -66,6 +66,10 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 if (empty($permisos['eliminar_partici'])) throw new Exception('No tienes permiso para realizar esta acción.');
                 eliminar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'generar':
+                if (empty($permisos['generar_partici'])) throw new Exception('No tienes permiso para realizar esta acción.');
+                generarReporte($obj, $id_modulo, $bitacoraObj);
+                break;
             
             default:
                 throw new Exception('Acción no permitida.');
@@ -77,7 +81,11 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 }
 
 function consultar($obj, $permisos): void {
-    $respuesta = $obj->Consultar();
+    $filtro = [];
+    if (isset($_POST['filtro'])) {
+        $filtro['filtro'] = $_POST['filtro'];
+    }
+    $respuesta = $obj->Consultar($filtro);
     $registro = $respuesta['datos'] ?? []; 
     $solo_lista = true;
     include (__DIR__.'/../vista/Participaciones.php');
@@ -139,7 +147,7 @@ function incluir($obj, $id_modulo, $bitacoraObj) : void {
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registro una participacion");
+            registrarBitacora($bitacoraObj, $id_modulo, "Registro una participacion", '', $resultado['nuevo'] ?? '');
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Participacion registrada exitosamente.');
             
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
@@ -181,7 +189,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Modifico una participacion");
+            registrarBitacora($bitacoraObj, $id_modulo, "Modifico una participacion", $resultado['previo'] ?? '', $resultado['nuevo'] ?? '');
             $resultado = array('accion' => 'modificar', 'mensaje' => 'Participación modificada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -219,7 +227,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Elimino una participacion");
+            registrarBitacora($bitacoraObj, $id_modulo, "Elimino una participacion", $resultado['previo'] ?? '', '');
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Participación eliminada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
@@ -232,6 +240,49 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         echo json_encode($resultado);
     } catch (Exception $e) {
         logs('Participaciones', $e->getMessage(), 'Controlador_Eliminar');
+        echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
+    }
+}
+
+function generarReporte($obj, $id_modulo, $bitacoraObj): void
+{
+    try {
+        $datosFiltro = ['accion' => 'generar'];
+        
+        if (!empty($_POST['codigo_torneo'])) {
+            $datosFiltro['codigo_torneo'] = $_POST['codigo_torneo'];
+        }
+        
+        if (!empty($_POST['codigo_equipo'])) {
+            $datosFiltro['codigo_equipo'] = $_POST['codigo_equipo'];
+        }
+        
+        $respuesta = $obj->procesarDatos($datosFiltro);
+        $datos = $respuesta['datos'] ?? [];
+
+        if (empty($datos)) {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron participaciones para hacer el reporte.']);
+            exit();
+        }
+
+        $nombreVista = 'R_Participaciones';
+        $objG = new \App\servicios\GenerarReporte();
+        
+        $formato = $_POST['formato'] ?? 'pdf';
+        if ($formato === 'excel') {
+            $reporte = $objG->generarExcel($nombreVista, $datos, 'Participaciones');
+        } else {
+            $reporte = $objG->generarPDF($nombreVista, $datos, 'Participaciones');
+        }
+
+        if (isset($reporte['accion']) && $reporte['accion'] === 'reporte') {
+            registrarBitacora($bitacoraObj, $id_modulo, "Genero un reporte de participaciones");
+            echo json_encode($reporte);
+        } else {
+            echo json_encode(['accion' => 'error', 'mensaje' => 'No se pudo generar el reporte.']);
+        }
+    } catch (Exception $e) {
+        logs('Participaciones', $e->getMessage(), 'Controlador_Generar');
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
 }

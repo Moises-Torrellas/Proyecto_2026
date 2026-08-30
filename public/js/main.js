@@ -10,7 +10,7 @@ window.onload = function () {
 
 
 $(".ojo").click(function () {
-    var $this = $(this); // el botÃ³n clickeado
+    var $this = $(this); // el botón clickeado
     var $pass = $this.siblings("input[type='password'], input[type='text']"); // el input cercano
 
     if ($pass.attr("type") === "password") {
@@ -108,15 +108,15 @@ $(document).ready(function () {
         let $this = $(this);
         let id = $this.attr('class'); // Usamos la clase como identificador simple
 
-        // Agregamos la clase al contenedor que se estÃ¡ moviendo
+        // Agregamos la clase al contenedor que se está moviendo
         $this.addClass('is-scrolling');
 
-        // Limpiamos el timer especÃ­fico de este contenedor
+        // Limpiamos el timer específico de este contenedor
         if (scrollTimers[id]) {
             clearTimeout(scrollTimers[id]);
         }
 
-        // Ocultamos el scroll despuÃ©s de 1.2 segundos de inactividad
+        // Ocultamos el scroll después de 1.2 segundos de inactividad
         scrollTimers[id] = setTimeout(function () {
             $this.removeClass('is-scrolling');
             delete scrollTimers[id];
@@ -186,7 +186,7 @@ $(document).ready(function () {
                 let fecha = new Date();
                 fecha.setTime(fecha.getTime() + (30 * 24 * 60 * 60 * 1000));
 
-                // CORRECCIÃ“N DE SEGURIDAD AQUÃ: Agregamos SameSite
+                // CORRECCIÓN DE SEGURIDAD AQUÍ: Agregamos SameSite
                 // Nota: Cuando migres a Linux con HTTPS, cambia el final a: ";path=/;SameSite=Lax;Secure";
                 document.cookie = "tema_preferido=" + tema + ";expires=" + fecha.toUTCString() + ";path=/;SameSite=Lax";
             }, 400);
@@ -204,7 +204,7 @@ $(document).ready(function () {
                 let fecha = new Date();
                 fecha.setTime(fecha.getTime() + (30 * 24 * 60 * 60 * 1000));
 
-                // CORRECCIÃ“N DE SEGURIDAD AQUÃ
+                // CORRECCIÓN DE SEGURIDAD AQUÍ 
                 document.cookie = "tema_preferido=" + tema + ";expires=" + fecha.toUTCString() + ";path=/;SameSite=Lax";
             }, 400);
         }
@@ -240,7 +240,7 @@ $(document).ready(function () {
     });
 
     $(document).on('click', function (e) {
-        // Si el clic no es en el Ã¡rea de usuario, cerrar menÃº usuario
+        // Si el clic no es en el área de usuario, cerrar menú usuario
         if (!$(e.target).closest('#info_usuario, #menu_superior').length) {
             $('#menu_superior').removeClass('expandir');
             $('#flecha').removeClass('rotar');
@@ -249,7 +249,7 @@ $(document).ready(function () {
         if (!$(e.target).closest('#noti, #contenedor_notificaciones').length) {
             $('#contenedor_notificaciones').removeClass('expandir');
         }
-        // Si el clic no es en nav_lateral ni en btn_hamburguesa, cerrar menÃº lateral
+        // Si el clic no es en nav_lateral ni en btn_hamburguesa, cerrar menú lateral
         if (!$(e.target).closest('.nav_lateral, #btn_hamburguesa').length) {
             $('.nav_lateral').removeClass('mostrar');
         }
@@ -275,7 +275,7 @@ $(document).ready(function () {
     function enviarMensaje() {
         let texto = $('#chat_mensaje').val().trim();
         if (texto !== "") {
-            // 1. AÃ±adir mensaje del usuario con las NUEVAS clases
+            // 1. Añadir mensaje del usuario con las NUEVAS clases
             $('#chat_historial').append(`
             <div class="asistente_msg asistente_usuario">
                 <div class="asistente_burbuja">${texto}</div>
@@ -285,7 +285,7 @@ $(document).ready(function () {
             // Limpiar input
             $('#chat_mensaje').val('');
 
-            // Scroll automÃ¡tico al fondo
+            // Scroll automático al fondo
             let historial = $('#chat_historial');
             historial.scrollTop(historial[0].scrollHeight);
 
@@ -301,7 +301,7 @@ $(document).ready(function () {
         }
     }
 
-    // Eventos (Se mantienen igual, solo asegÃºrate de que los IDs coincidan)
+    // Eventos (Se mantienen igual, solo asegúrate de que los IDs coincidan)
     $('#enviar_mensaje').on('click', enviarMensaje);
 
     $('#chat_mensaje').on('keydown', function (e) {
@@ -316,11 +316,11 @@ function inicializarPaginador() {
     const $contenedorListado = $('#resultadoconsulta');
 
     // CAMBIO CLAVE: Ahora buscamos el CONTENEDOR GRUPAL, no solo el item.
-    // Esto asegura que se oculte el borde verde y el panel de detalle tambiÃ©n.
+    // Esto asegura que se oculte el borde verde y el panel de detalle también.
     const $items = $contenedorListado.find('.listado_contenedor_grupal');
 
     // Si tienes tablas sin tree (donde usas listado_item directo), 
-    // esta lÃ­nea detectarÃ¡ ambos casos:
+    // esta línea detectará ambos casos:
     const $registros = $items.length > 0 ? $items : $contenedorListado.find('.listado_item');
 
     const $rowsPerPageSelect = $('#rowsPerPage');
@@ -336,8 +336,8 @@ function inicializarPaginador() {
         // Ocultamos todos los contenedores completos
         $registros.hide();
 
-        // Mostramos solo los de la pÃ¡gina actual
-        // Si es el tree, usamos block (porque el flex estÃ¡ dentro, en el listado_item)
+        // Mostramos solo los de la página actual
+        // Si es el tree, usamos block (porque el flex está dentro, en el listado_item)
         // Si es la tabla simple, usamos flex.
         $registros.slice(start, end).each(function () {
             if ($(this).hasClass('listado_contenedor_grupal')) {
@@ -348,7 +348,7 @@ function inicializarPaginador() {
         });
     }
 
-    // --- El resto de tu funciÃ³n renderPagination se mantiene igual ---
+    // --- El resto de tu función renderPagination se mantiene igual ---
     function renderPagination() {
         const totalItems = $registros.length;
         const pageCount = Math.ceil(totalItems / itemsPerPage);
@@ -407,7 +407,7 @@ function inicializarPaginador() {
 
 
 function muestraMensaje(icono, tiempo, titulo, mensaje) {
-    // Â¡Este return es obligatorio para que funcione el .then()!
+    // ¡Este return es obligatorio para que funcione el .then()!
     return Swal.fire({
         icon: icono,
         title: titulo,
@@ -468,17 +468,17 @@ function validarkeypress(er, e) {
     }
 }
 
-// CAMBIO: Ahora esta funciÃ³n tiene una lÃ³gica inteligente
+// CAMBIO: Ahora esta función tiene una lógica inteligente
 function validarkeyup(er, etiqueta, etiquetamensaje, mensaje, mostrarError = false) {
     let a = er.test(etiqueta.val());
 
     if (a) {
-        // Si es vÃ¡lido: Limpiamos todo
+        // Si es válido: Limpiamos todo
         etiquetamensaje.text("");
         etiqueta.removeClass("denegado");
         return false;
     } else {
-        // Si es invÃ¡lido:
+        // Si es inválido:
         if (mostrarError) {
             // Solo ponemos el rojo si salimos del foco (blur) o damos clic en enviar
             etiquetamensaje.text(mensaje);
@@ -492,7 +492,7 @@ function Validacion(idInput, erKeyPress, erKeyUp, mensajeAyuda, boton = null) {
     let $input = $(`#${idInput}`);
     const $spam = $(`#${idInput}_spam`);
 
-    // Soporte para el altInput de Flatpickr (Si el input original estÃ¡ oculto, usar el visible)
+    // Soporte para el altInput de Flatpickr (Si el input original está oculto, usar el visible)
     if ($input.hasClass('flatpickr-input') && $input.attr('type') === 'hidden') {
         let $alt = $input.siblings('.flatpickr-input[type!="hidden"]');
         if ($alt.length > 0) {
@@ -548,13 +548,13 @@ function confirmar(titulo, callback) {
 
 function confirmarAnulacion(titulo, callback) {
 
-    const regexMotivo = /^[a-zA-Z0-9Ã¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘\s,.\-]+$/;
+    const regexMotivo = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-]+$/;
 
     Swal.fire({
         icon: "warning",
         title: titulo,
         input: "text",
-        inputPlaceholder: "Escribe el motivo aquÃ­...",
+        inputPlaceholder: "Escribe el motivo aqui...",
         showCancelButton: true,
         confirmButtonText: "SI",
         confirmButtonColor: "#00a200",
@@ -565,23 +565,23 @@ function confirmarAnulacion(titulo, callback) {
             title: "mi-titulo",
             content: "mi-contenido"
         },
-        // Doble validaciÃ³n: existencia y formato seguro
+        // Doble validación: existencia y formato seguro
         inputValidator: (value) => {
             let textoLimpio = value ? value.trim() : "";
 
-            // 1. Validar que no estÃ© vacÃ­o
+            // 1. Validar que no esté vacío
             if (textoLimpio === "") {
-                return "Â¡Es obligatorio ingresar un motivo para la anulaciÃ³n!";
+                return "Â¡Es obligatorio ingresar un motivo para la anulación!";
             }
 
-            // 2. Validar que cumpla con la longitud mÃ­nima (ej. 10 caracteres para que sea un motivo real)
+            // 2. Validar que cumpla con la longitud mínima (ej. 10 caracteres para que sea un motivo real)
             if (textoLimpio.length < 5) {
-                return "Por favor, escribe un motivo mÃ¡s detallado (mÃ­nimo 10 caracteres).";
+                return "Por favor, escribe un motivo más detallado (mínimo 10 caracteres).";
             }
 
-            // 3. Validar con la ExpresiÃ³n Regular
+            // 3. Validar con la Expresión Regular
             if (!regexMotivo.test(textoLimpio)) {
-                return "El motivo contiene caracteres no permitidos. Evita usar sÃ­mbolos como <, >, $, %, etc.";
+                return "El motivo contiene caracteres no permitidos. Evita usar símbolos como <, >, $, %, etc.";
             }
         }
     }).then((result) => {
@@ -592,7 +592,7 @@ function confirmarAnulacion(titulo, callback) {
             callback(false);
         }
     }).catch((e) => {
-        alert("Error en confirmaciÃ³n: " + e.name);
+        alert("Error en confirmación: " + e.name);
         callback(false);
     });
 }
@@ -622,7 +622,7 @@ function limpia() {
     // 1. Limpiar campos de texto, fecha y otros (Excepto token)
     formulario.find('input').not(':checkbox, :radio, :file, #token').val('');
 
-    // 2. Limpiar input de ARCHIVO y resetear la PREVISUALIZACIÃ“N a la cÃ¡mara
+    // 2. Limpiar input de ARCHIVO y resetear la PREVISUALIZACIÓN a la cámara
     formulario.find('input:file').val('');
     $('#foto_previa').attr('src', '').hide(); 
     $('#icono_default').show(); 
@@ -630,10 +630,10 @@ function limpia() {
     // 3. Desmarcar checkboxes y radios
     formulario.find('input:checkbox, input:radio').prop('checked', false);
 
-    // 4. Limpiar textareas (DirecciÃ³n)
+    // 4. Limpiar textareas (Dirección)
     formulario.find('textarea').val('');
 
-    // 5. Resetear Selects (CategorÃ­a, PosiciÃ³n, Representante)
+    // 5. Resetear Selects (Categoría, Posición, Representante)
     formulario.find('select').each(function () {
         $(this).val($(this).find('option:first').val()).trigger('change');
     });
@@ -642,7 +642,7 @@ function limpia() {
     formulario.find('.denegado').removeClass('denegado');
     $('.mensaje').text('');
 
-    // 7. Restablecer bloqueos de la lÃ³gica de edad (Atletas)
+    // 7. Restablecer bloqueos de la lógica de edad (Atletas)
     formulario.find('input, select, textarea, button').prop('disabled', false);
     $('.campo_deshabilitado, .bloqueado, .btn_bloqueado').removeClass('campo_deshabilitado bloqueado btn_bloqueado');
 
@@ -653,6 +653,8 @@ function limpia() {
 
 function limpia_Tablas() {
     $('#tabla_permisos').find('tr').remove();
+    $('#tabla_permisos_asignados').html('');
+    $('#tabla_permisos_no_asignados').html('');
     $('#tabla_Atletas_Seleccionados').find('tr').remove();
 }
 
@@ -678,13 +680,13 @@ function iniciarTourConPasos(pasos) {
 }
 
 function toggleDetalles(elemento) {
-    // 1. Identificamos el contenedor padre y el panel especÃ­fico que el usuario clickeÃ³
+    // 1. Identificamos el contenedor padre y el panel específico que el usuario clickeó
     const contenedorActual = $(elemento).closest('.listado_contenedor_grupal');
     const panelActual = contenedorActual.find('.listado_detalle_oculto');
 
     // 2. Buscamos TODOS los paneles ocultos, EXCEPTO el que acabamos de clickear
     $('.listado_detalle_oculto').not(panelActual).each(function () {
-        // Validamos la realidad visual: Â¿EstÃ¡ abierto en la pantalla?
+        // Validamos la realidad visual: Â¿Está abierto en la pantalla?
         if ($(this).is(':visible')) {
             $(this).slideUp(300); // Lo cerramos suavemente
             $(this).closest('.listado_contenedor_grupal').removeClass('expandido'); // Limpiamos la clase por si acaso
@@ -701,7 +703,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const btnNoti = document.getElementById("noti");
     const contenedorNoti = document.getElementById("contenedor_notificaciones");
 
-    // Mostrar notificaciones automÃ¡ticas al iniciar
+    // Mostrar notificaciones automáticas al iniciar
     if (btnNoti) {
         mostrarNotificacionesAutomaticas();
     }
@@ -719,12 +721,12 @@ function mostrarNotificacionesAutomaticas() {
                 respuesta.datos.forEach(noti => {
                     if (noti.estatus == 1) {
                         unreadCount++;
-                        // Mostrar como popup automÃ¡ticamente
+                        // Mostrar como popup automáticamente
                         renderizarNotificacionSuperior(noti.titulo, noti.mensaje, noti.tipo);
                     }
                 });
 
-                // Actualizar el badge segÃºn la cantidad de no leÃ­das
+                // Actualizar el badge según la cantidad de no leídas
                 const badge = document.getElementById("campana-notificaciones-badge");
                 if (badge && unreadCount > 0) {
                     badge.textContent = unreadCount;
@@ -732,7 +734,7 @@ function mostrarNotificacionesAutomaticas() {
                 }
             }
         })
-        .catch(err => console.error("Error al cargar historial automÃ¡tico:", err));
+        .catch(err => console.error("Error al cargar historial automático:", err));
 }
 
 // ==========================================
@@ -789,7 +791,7 @@ function cargarNotificacionesEnPanel() {
                 // Forzar re-escaneo de Lucide sobre las nuevas etiquetas li
                 if (typeof lucide !== 'undefined') lucide.createIcons({ container: listaUl });
 
-                // Reiniciar el badge numÃ©rico visual del botÃ³n
+                // Reiniciar el badge numérico visual del botón
                 const badge = document.getElementById("campana-notificaciones-badge");
                 let unreadPanel = 0;
                 respuesta.datos.forEach(noti => {
@@ -865,14 +867,14 @@ function cargarNotificacionesEnPanel() {
                 }
 
             } else {
-                listaUl.innerHTML = `<li class="item_noti"><p class="noti_mensaje" style="padding: 10px; text-align: center; width: 100%;">No tienes notificaciones por ahora.</p></li>`;
+                listaUl.innerHTML = `<li class="item_noti"><p class="noti_mensaje" style="padding: 10px; text-align: center; width: 100%; color: var(--texto-principal);">No tienes notificaciones por ahora.</p></li>`;
             }
         })
         .catch(err => console.error("Error al cargar historial desde el .htaccess:", err));
 }
 
 // ==========================================
-// 4. FUNCIONES DE RENDERIZACIÃ“N PARA SWEETALERT Y BADGE
+// 4. FUNCIONES DE RENDERIZACIÓN PARA SWEETALERT Y BADGE
 // ==========================================
 function renderizarNotificacionSuperior(titulo, mensaje, tipo) {
     let nombreIcono = "bell";
@@ -904,7 +906,7 @@ function actualizarContadorBadge() {
     }
 }
 
-// Tu funciÃ³n original intacta adaptada para inicializar Lucide
+// Tu función original intacta adaptada para inicializar Lucide
 function muestraNoti(titulo, tiempo) {
     const Toast = Swal.mixin({
         toast: true,
@@ -927,7 +929,7 @@ function muestraNoti(titulo, tiempo) {
     Toast.fire({ html: titulo });
 }
 
-// FunciÃ³n global para manejar imÃ¡genes rotas de atletas
+// Función global para manejar imágenes rotas de atletas
 function manejarErrorCamara(img) {
     // 1. Definimos el HTML exacto que quieres para el estado 'null'
     const htmlAvatarNull = '<div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-user"></i></div>';
@@ -940,7 +942,7 @@ function manejarErrorCamara(img) {
     // 3. Reemplazamos la imagen rota por el nuevo contenedor del icono
     img.replaceWith(nuevoNodo);
 
-    // 4. Â¡IMPORTANTE! Forzamos a Lucide a renderizar el icono reciÃ©n insertado
+    // 4. Â¡IMPORTANTE! Forzamos a Lucide a renderizar el icono recién insertado
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
@@ -958,7 +960,7 @@ function ModeloBancario(selector) {
         let valorFlotante = parseFloat(entrada) / 100;
 
         // Cambiamos a 'en-US' para que use punto (.) como separador decimal
-        // y eliminamos los separadores de miles para que no choque con tu Regex de validaciÃ³n
+        // y eliminamos los separadores de miles para que no choque con tu Regex de validación
         let valorFormateado = valorFlotante.toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -1124,3 +1126,31 @@ $(document).ready(function() {
     });
 });
 
+function opcionesReporte(callback) {
+    Swal.fire({
+        title: 'Generar Reporte',
+        text: '¿En qué formato desea generar el reporte?',
+        icon: 'question',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'PDF',
+        denyButtonText: 'Excel',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545', // Rojo para PDF
+        denyButtonColor: '#198754', // Verde para Excel
+        customClass: {
+            popup: "mi-popup",
+            title: "mi-titulo",
+            content: "mi-contenido",
+            confirmButton: "btn",
+            denyButton: "btn",
+            cancelButton: "btn btn_gris"
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            callback('pdf');
+        } else if (result.isDenied) {
+            callback('excel');
+        }
+    });
+}

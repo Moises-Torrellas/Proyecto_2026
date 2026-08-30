@@ -41,7 +41,7 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
         switch ($accion) {
             case 'consultar':
                 if (empty($permisos['ingresar_articulos'])) throw new Exception('No tienes permisos para consultar los artículos.');
-                $respuesta = $obj->ProcesarDatos(['accion' => 'consultar']);
+                $respuesta = $obj->ProcesarDatos(['accion' => 'consultar', 'filtro' => $_POST['filtro'] ?? '']);
                 $registro = $respuesta['datos'] ?? [];
                 $solo_lista = true;
                 include(__DIR__ . '/../vista/ArticulosInventario.php'); 
@@ -155,7 +155,14 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
 function generar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $respuesta = $obj->ProcesarDatos(['accion' => 'consultar']);
+        $filtros = ['accion' => 'consultar'];
+        if (!empty($_POST['id_catalogo'])) {
+            $filtros['id_catalogo'] = $_POST['id_catalogo'];
+        }
+        if (!empty($_POST['id_estado'])) {
+            $filtros['id_estado'] = $_POST['id_estado'];
+        }
+        $respuesta = $obj->ProcesarDatos($filtros);
         $datos = $respuesta['datos'] ?? [];
 
         if (empty($datos)) {
@@ -163,13 +170,18 @@ function generar($obj, $id_modulo, $bitacoraObj): void
             exit();
         }
         
+        $formato = filter_input(INPUT_POST, 'formato', FILTER_SANITIZE_SPECIAL_CHARS) ?? 'pdf';
         $nombreVista = 'R_ArticulosInventario'; 
-        $objG = new GenerarReporte();
         
-        $pdf = $objG->generarPDF($nombreVista, $datos, 'Inventario Fisico');
+        if ($formato === 'excel') {
+            $pdf = \App\servicios\GenerarReporte::generarExcel($nombreVista, $datos, 'InventarioFisico');
+        } else {
+            $objG = new GenerarReporte();
+            $pdf = $objG->generarPDF($nombreVista, $datos, 'Inventario Fisico');
+        }
         
         if (isset($pdf['accion']) && $pdf['accion'] === 'reporte') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte del inventario de artículos.");
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte del inventario de artículos en formato " . strtoupper($formato));
         }
         
         echo json_encode($pdf);

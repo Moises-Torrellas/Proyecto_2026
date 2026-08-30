@@ -14,12 +14,19 @@ class ModeloArticulosInventario extends Conexion
         $this->llavePrimaria = 'codigo_articulo';
     }
 
+    private $filtro;
+    private $filtro_catalogo;
+    private $filtro_estado;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {
             return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
         }
 
+        $this->filtro = $datos['filtro'] ?? '';
+        $this->filtro_catalogo = $datos['id_catalogo'] ?? null;
+        $this->filtro_estado = $datos['id_estado'] ?? null;
         $accion = $datos['accion'] ?? null;
 
         return match ($accion) {
@@ -87,9 +94,32 @@ class ModeloArticulosInventario extends Conexion
                     INNER JOIN catalogo c ON e.id_catalogo = c.id_catalogo
                     INNER JOIN categoria_catalogo ce ON c.id_categoria = ce.id_categoria
                     INNER JOIN estado_fisico es ON e.id_estado = es.id_estado
-                    ORDER BY c.nombre ASC, e.codigo_articulo DESC";
+                    WHERE 1=1";
+                    
+            if (!empty($this->filtro)) {
+                $sql .= " AND (c.nombre LIKE :filtro1 OR es.nombre LIKE :filtro2)";
+            }
+            if (!empty($this->filtro_catalogo)) {
+                $sql .= " AND c.id_catalogo = :id_catalogo";
+            }
+            if (!empty($this->filtro_estado)) {
+                $sql .= " AND e.id_estado = :id_estado";
+            }
+            
+            $sql .= " ORDER BY c.nombre ASC, e.codigo_articulo DESC";
             
             $stmt = $this->conex()->prepare($sql);
+            if (!empty($this->filtro)) {
+                $p = '%' . $this->filtro . '%';
+                $stmt->bindValue(':filtro1', $p);
+                $stmt->bindValue(':filtro2', $p);
+            }
+            if (!empty($this->filtro_catalogo)) {
+                $stmt->bindValue(':id_catalogo', $this->filtro_catalogo);
+            }
+            if (!empty($this->filtro_estado)) {
+                $stmt->bindValue(':id_estado', $this->filtro_estado);
+            }
             $stmt->execute();
             $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -247,7 +277,8 @@ public function ConsultarArticulosLibres(): array {
         try {
             $conex = $this->conex();
             
-            // APLICACIÓN DE SUBCONSULTA: Extraemos el nombre del catálogo consultando la tabla anidada
+            // Excluimos artículos cuyo catálogo ya alcanzó el stock mínimo.
+            // Si asignar un artículo haría que el stock baje al mínimo o por debajo, no aparece.
             $sql = "SELECT e.codigo_articulo, 
                            e.codigo_club, 
                            IFNULL((SELECT nombre FROM catalogo c WHERE c.id_catalogo = e.id_catalogo), 'Artículo sin registrar') as articulo 

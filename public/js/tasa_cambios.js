@@ -74,6 +74,38 @@ $(document).ready(function () {
             });
         }
     });
+
+    $('#ayuda').on('click', function () {
+        const pasos = [
+            {
+                element: '#sincronizar_btn',
+                popover: { title: 'Sincronizar Monto', description: 'Si pulsa aquí se abrirá un modal para sincronizar la tasa de cambio con una API externa.', position: 'bottom' }
+            },
+            {
+                element: '#actualizar_btn',
+                popover: { title: 'Actualizar Monto Manual', description: 'Si pulsa aquí se abrirá un modal para ingresar manualmente la tasa de cambio.', position: 'left' }
+            },
+            {
+                element: '#resultadoconsulta',
+                popover: { title: 'Tasas Registradas', description: 'Aquí se mostrará el historial de todas las tasas de cambio registradas.', position: 'top' }
+            },
+            {
+                element: '#rowsPerPage',
+                popover: { title: 'Registros Deseados', description: 'Aquí podrá seleccionar la cantidad de registros que quiere que se muestren.', position: 'top' }
+            },
+            {
+                element: '#botonera',
+                popover: { title: 'Cambiar de Página', description: 'Botones para cambiar de página.', position: 'top' }
+            },
+            {
+                element: '#cantidad',
+                popover: { title: 'Cantidad', description: 'Aquí puede ver la cantidad de tasas cargadas.', position: 'top' }
+            }
+        ];
+
+        const driver = iniciarTourConPasos(pasos);
+        driver.start();
+    });
 });
 
 function crearConsulta(htmlRecibido) {
