@@ -51,6 +51,7 @@
                             <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-star"></i></div>
                             <div class="listado_info_base">
                                 <span class="listado_titulo"><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
+                                <small style="color: #a0aec0; font-size: 0.85em;"><?= htmlspecialchars($dato['documento_identidad']) ?></small>
                             </div>
                         </div>
 
@@ -256,6 +257,7 @@
                     <div class="listado_avatar_null"><i class="icon_con" data-lucide="circle-star"></i></div>
                     <div class="listado_info_base">
                         <span class="listado_titulo"><?= htmlspecialchars($dato['atleta_nombre'] . ' ' . $dato['atleta_apellido']) ?></span>
+                        <small style="color: #a0aec0; font-size: 0.85em;"><?= htmlspecialchars($dato['documento_identidad']) ?></small>
                     </div>
                 </div>
 
@@ -431,8 +433,8 @@
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="monto_total" name="monto_total" placeholder="Ej: 50.00">
-                                <label for="monto_total" class="titulo_formulario">Monto Total</label>
+                                <input type="text" class="formulario" id="monto_total" name="monto_total" placeholder="Ej: 50.00" readonly>
+                                <label for="monto_total" class="titulo_formulario" id="lbl_monto_total">Monto</label>
                                 <span class="mensaje" id="monto_total_spam"></span>
                             </div>
                         </div>
@@ -466,7 +468,7 @@
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

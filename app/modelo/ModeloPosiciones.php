@@ -141,7 +141,7 @@ class ModeloPosiciones extends Conexion
             if (!$this->verificarExistencia('id', $this->id, 'posiciones', NULL)) {
                 return array('accion' => 'error', 'mensaje' => 'La posicion no existe.');
             }
-            if ($this->verificarExistencia('id', $this->id, 'atletas', NULL)) {
+            if ($this->verificarExistencia('id', $this->id, 'inscripciones', NULL)) {
                 return array('accion' => 'error', 'mensaje' => 'La posicion tiene atletas asociados.');
             }
             $conex = $this->conex();

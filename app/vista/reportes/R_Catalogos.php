@@ -179,9 +179,8 @@
             <thead>
                 <tr>
                     <th style="width: 8%;">N°</th>
-                    <th style="width: 32%;">Nombre del Artículo</th>
+                    <th style="width: 47%;">Nombre del Artículo</th>
                     <th style="width: 25%;">Categoría</th>
-                    <th style="width: 15%;">Posición</th>
                     <th style="width: 10%;">Talla</th>
                     <th style="width: 10%; text-align: right;">Stock Mín.</th>
                 </tr>
@@ -196,9 +195,6 @@
                         <td class="data-cell"><?= $contador ?></td>
                         <td class="data-cell" style="font-weight: bold;"><?= htmlspecialchars($item['nombre']) ?></td>
                         <td class="data-cell"><?= htmlspecialchars($item['categoria_nombre']) ?></td>
-                        <td class="data-cell">
-                            <?= !empty($item['posicion_nombre']) ? htmlspecialchars($item['posicion_nombre']) : '<span style="color: #a0aec0;">N/A</span>' ?>
-                        </td>
                         <td class="data-cell" style="text-align: center;">
                             <?= !empty($item['talla']) ? htmlspecialchars($item['talla']) : '<span style="color: #a0aec0;">N/A</span>' ?>
                         </td>

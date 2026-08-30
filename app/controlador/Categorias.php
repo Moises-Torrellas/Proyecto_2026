@@ -70,7 +70,7 @@ function manejarSolicitudCategorias($obj, $id_modulo, $bitacoraObj, array $permi
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'generar':
-                if (empty($permisos['generar_categorias'])) throw new Exception('No tienes permisos para generar un reporte de categorías.');
+                if (empty($permisos['generar_categoria'])) throw new Exception('No tienes permisos para generar un reporte de categorías.');
                 generar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:
@@ -235,7 +235,8 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 function generar($obj, $id_modulo, $bitacoraObj)
 {
     try {
-        $datosFiltro = ['accion' => 'generar'];
+        $datosFiltro = $_POST;
+        $datosFiltro['accion'] = 'generar';
         
         // El modelo necesita procesar datos como array, pasamos el request si tiene datos o solo generar
         $respuesta = $obj->procesarDatos($datosFiltro);

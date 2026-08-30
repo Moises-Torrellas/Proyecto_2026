@@ -22,6 +22,8 @@ class ModeloRepresentantes extends Conexion
         $this->campoWhitelist = [
             'cedula' => 'cedula',
             'telefono' => 'telefono',
+            'correo' => 'correo',
+            'instagram' => 'instagram',
             'id' => 'codigo_representante'
         ];
 
@@ -185,6 +187,12 @@ class ModeloRepresentantes extends Conexion
             if ($this->verificarExistencia('telefono', $this->telefono, 'representantes', NULL, bloquear: true)) {
                 throw new Exception(DUPLICATE_PHONE);
             }
+            if (!empty($this->correo) && $this->verificarExistencia('correo', $this->correo, 'representantes', NULL, bloquear: true)) {
+                throw new Exception(DUPLICATE_EMAIL);
+            }
+            if (!empty($this->instagram) && $this->verificarExistencia('instagram', $this->instagram, 'representantes', NULL, bloquear: true)) {
+                throw new Exception(DUPLICATE_INSTAGRAM);
+            }
 
             $this->verificarEdadAtleta($conex);
 
@@ -239,6 +247,16 @@ class ModeloRepresentantes extends Conexion
             if (!$this->verificarExistenciaPropia('telefono', $this->telefono, $this->id, 'representantes', NULL, bloquear: true)) {
                 if ($this->verificarExistencia('telefono', $this->telefono, 'representantes', NULL, bloquear: true)) {
                     throw new Exception(DUPLICATE_PHONE);
+                }
+            }
+            if (!empty($this->correo) && !$this->verificarExistenciaPropia('correo', $this->correo, $this->id, 'representantes', NULL, bloquear: true)) {
+                if ($this->verificarExistencia('correo', $this->correo, 'representantes', NULL, bloquear: true)) {
+                    throw new Exception(DUPLICATE_EMAIL);
+                }
+            }
+            if (!empty($this->instagram) && !$this->verificarExistenciaPropia('instagram', $this->instagram, $this->id, 'representantes', NULL, bloquear: true)) {
+                if ($this->verificarExistencia('instagram', $this->instagram, 'representantes', NULL, bloquear: true)) {
+                    throw new Exception(DUPLICATE_INSTAGRAM);
                 }
             }
 

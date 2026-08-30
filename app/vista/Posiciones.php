@@ -149,7 +149,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="descripcion" name="descripcion">
-                                <label for="descripcion" class="titulo_formulario">Descripción</label>
+                                <label for="descripcion" class="titulo_formulario">Descripción (Opcional)</label>
                                 <span class="mensaje" id="descripcion_spam"></span>
                             </div>
                         </div>
@@ -157,7 +157,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

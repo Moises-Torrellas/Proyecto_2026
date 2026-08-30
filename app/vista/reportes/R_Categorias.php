@@ -191,8 +191,8 @@
                 <?php foreach ($datos as $r) : ?>
                     <tr>
                         <td class="data-cell"><?= htmlspecialchars($r['nombre']) ?></td>
-                        <td class="data-cell"><?= htmlspecialchars($r['edad_minima']) ?> años</td>
-                        <td class="data-cell"><?= htmlspecialchars($r['edad_maxima']) ?> años</td>
+                        <td class="data-cell"><?= htmlspecialchars($r['edad_min']) ?> años</td>
+                        <td class="data-cell"><?= htmlspecialchars($r['edad_max']) ?> años</td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

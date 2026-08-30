@@ -34,6 +34,7 @@ $(document).ready(function () {
         $("#codigo_articulo").val('');
         $("#titulo_modal").text("Registrar Nuevo Artículo");
         $("#btn_guardar").text("Guardar").attr("data-accion", "incluir");
+        $('#id_catalogo').closest('.colum').show();
         abrirModal(); 
     });
 
@@ -165,6 +166,8 @@ function editar(id, catalogo, estado) {
         $("#id_catalogo").val(catalogo).trigger('change');
         $("#id_estado").val(estado).trigger('change');
     }
+    
+    $('#id_catalogo').closest('.colum').hide();
     
     abrirModal();
 }

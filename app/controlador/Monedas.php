@@ -118,9 +118,9 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $validaciones = [
-            'nombre'      => ['regla'   => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido (solo letras, entre 3 y 30 caracteres).'],
-            'abreviatura' => ['regla'   => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida (solo letras, entre 2 y 4 caracteres).'],
-            'simbolo'     => ['regla'   => '/^[a-zA-ZñÑ\$€£]{1,5}$/u', 'mensaje' => 'Símbolo inválido (máximo 5 caracteres, ej: $, Bs, €).']
+            'nombre'      => ['regla'   => '/^(Dólar|Bolívar|Euro)$/ui', 'mensaje' => 'Nombre inválido.'],
+            'abreviatura' => ['regla'   => '/^(USD|VES|EUR)$/i', 'mensaje' => 'Abreviatura (ISO) inválida.'],
+            'simbolo'     => ['regla'   => '/^(\$|Bs|€)$/u', 'mensaje' => 'Símbolo inválido.']
         ];
 
         validar_datos($validaciones);
@@ -163,9 +163,9 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
     try {
         $validaciones = [
             'id'          => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id inválido.'],
-            'nombre'      => ['regla'   => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido (solo letras, entre 3 y 30 caracteres).'],
-            'abreviatura' => ['regla'   => '/^[a-zA-Z]{2,4}$/', 'mensaje' => 'Abreviatura inválida (solo letras, entre 2 y 4 caracteres).'],
-            'simbolo'     => ['regla'   => '/^[a-zA-ZñÑ\$€£]{1,5}$/u', 'mensaje' => 'Símbolo inválido (máximo 5 caracteres, ej: $, Bs, €).']
+            'nombre'      => ['regla'   => '/^(Dólar|Bolívar|Euro)$/ui', 'mensaje' => 'Nombre inválido.'],
+            'abreviatura' => ['regla'   => '/^(USD|VES|EUR)$/i', 'mensaje' => 'Abreviatura (ISO) inválida.'],
+            'simbolo'     => ['regla'   => '/^(\$|Bs|€)$/u', 'mensaje' => 'Símbolo inválido.']
         ];
 
         validar_datos($validaciones);

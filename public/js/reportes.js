@@ -537,9 +537,17 @@ function cargarGraficoReporte(datosServidor, tipoReporte) {
         plugins: {
             legend: { position: 'top' },
             datalabels: {
-                anchor: 'center',
-                align: 'center',
+                anchor: function(context) {
+                    return (tipoGrafico === 'line') ? (context.datasetIndex === 0 ? 'bottom' : 'top') : 'center';
+                },
+                align: function(context) {
+                    return (tipoGrafico === 'line') ? (context.datasetIndex === 0 ? 'top' : 'bottom') : 'center';
+                },
                 color: '#ffffff',
+                backgroundColor: function(context) {
+                    return context.dataset.borderColor;
+                },
+                borderRadius: 4,
                 font: { weight: 'bold', size: 11 },
                 formatter: function (value) {
                     if (tipoReporte === 'recaudacion') {

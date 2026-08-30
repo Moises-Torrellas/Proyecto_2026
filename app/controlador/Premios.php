@@ -194,6 +194,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un Premio registrado con ese nombre.',
+                'TYPE_ASSOCIATED' => 'No puedes modificar el tipo de un Premio que ya está asignado a un palmarés.',
                 default        => 'Ocurrió un error inesperado en la modificacion.'
             };
         }
@@ -228,7 +229,7 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 INVALID_ID => 'El Premio no existe.',
-                ASSOCIATES => 'El Premio esta asociado a un palmare.',
+                ASSOCIATES => 'El Premio está asociado a un palmarés.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default    => 'Ocurrió un error inesperado en la eliminacion.'
             };

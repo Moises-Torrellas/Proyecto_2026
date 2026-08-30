@@ -33,8 +33,8 @@ class ModeloCategorias extends Conexion
 
         $this->id = $datos['id'] ?? null;
         $this->nombre = mb_strtoupper(trim($datos['nombre'] ?? ''), "UTF-8");
-        $this->edad_min = $datos['edad_minima'] ?? null;
-        $this->edad_max = $datos['edad_maxima'] ?? null;
+        $this->edad_min = $datos['edad_min'] ?? null;
+        $this->edad_max = $datos['edad_max'] ?? null;
 
         $accion = $datos['accion'] ?? null;
 
@@ -44,6 +44,7 @@ class ModeloCategorias extends Conexion
             'buscar'    => $this->Buscar(),
             'modificar' => $this->Modificar(),
             'consultar' => $this->Consultar(),
+            'generar'   => $this->Consultar(),
             default => throw new Exception('La acción no es válida')
         };
     }
@@ -70,6 +71,14 @@ class ModeloCategorias extends Conexion
             if (!empty($this->nombre)) {
                 $sentencia .= " AND nombre LIKE :nombre";
                 $params[':nombre'] = trim($this->nombre) . "%";
+            }
+            if ($this->edad_min !== null && $this->edad_min !== '') {
+                $sentencia .= " AND edad_min >= :emin";
+                $params[':emin'] = $this->edad_min;
+            }
+            if ($this->edad_max !== null && $this->edad_max !== '') {
+                $sentencia .= " AND edad_max <= :emax";
+                $params[':emax'] = $this->edad_max;
             }
 
             // 4. Orden (Asegúrate de usar una columna que exista, como id_categorias)
@@ -198,7 +207,7 @@ class ModeloCategorias extends Conexion
                 throw new Exception('La categoría no existe.');
             }
 
-            if ($this->verificarExistencia('id', $this->id, 'atletas', NULL)) {
+            if ($this->verificarExistencia('id', $this->id, 'inscripciones', NULL)) {
                 throw new Exception('No se puede eliminar: la categoría tiene atletas asociados.');
             }
 
@@ -229,13 +238,13 @@ class ModeloCategorias extends Conexion
         if (!empty($datos['nombre']) && !preg_match('/^[a-zA-Z0-9\-\s]{2,30}$/', $datos['nombre'])) {
             throw new Exception('Nombre de categoría inválido.');
         }
-        if (!empty($datos['edad_minima']) && !preg_match('/^[0-9]{1,2}$/', $datos['edad_minima'])) {
+        if (!empty($datos['edad_min']) && !preg_match('/^[0-9]{1,2}$/', $datos['edad_min'])) {
             throw new Exception('Edad mínima inválida.');
         }
-        if (!empty($datos['edad_maxima']) && !preg_match('/^[0-9]{1,2}$/', $datos['edad_maxima'])) {
+        if (!empty($datos['edad_max']) && !preg_match('/^[0-9]{1,2}$/', $datos['edad_max'])) {
             throw new Exception('Edad máxima inválida.');
         }
-        if (!empty($datos['edad_minima']) && !empty($datos['edad_maxima']) && (int)$datos['edad_minima'] > (int)$datos['edad_maxima']) {
+        if (!empty($datos['edad_min']) && !empty($datos['edad_max']) && (int)$datos['edad_min'] > (int)$datos['edad_max']) {
             throw new Exception('La edad mínima no puede ser mayor que la edad máxima.');
         }
     }

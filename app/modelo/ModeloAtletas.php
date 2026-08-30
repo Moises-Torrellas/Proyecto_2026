@@ -225,10 +225,10 @@ class ModeloAtletas extends Conexion
                             a.p_apellidos,
                             a.s_nombre,
                             a.s_apellidos,
-                            cat.nombre AS categoria,
+                            MAX(cat.nombre) AS categoria,
                             CASE 
-                                WHEN ia.numero_doc IS NOT NULL AND ia.numero_doc <> '' THEN ia.numero_doc
-                                ELSE CONCAT('R-', r.cedula)
+                                WHEN MAX(ia.numero_doc) IS NOT NULL AND MAX(ia.numero_doc) <> '' THEN MAX(ia.numero_doc)
+                                ELSE CONCAT('R-', MAX(r.cedula))
                             END AS documento_identidad
                             FROM atletas a
                             INNER JOIN inscripciones i ON a.codigo_atleta = i.codigo_atleta
@@ -236,7 +236,8 @@ class ModeloAtletas extends Conexion
                             LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta
                             LEFT JOIN atleta_representante ar ON a.codigo_atleta = ar.codigo_atleta
                             LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
-                            WHERE i.estatus = 1;";
+                            WHERE i.estatus = 1
+                            GROUP BY a.codigo_atleta, a.p_nombre, a.p_apellidos, a.s_nombre, a.s_apellidos;";
             $stmt = $conex->prepare($sentencia);
             $stmt->execute();
             $datos = $stmt->fetchAll();
@@ -295,6 +296,31 @@ class ModeloAtletas extends Conexion
             $s_apellidos  = $apellidosArr[1] ?? '';
 
             $conex = $this->conex();
+
+            // Verificaciones de duplicados en PHP para correo, instagram y dorsal
+            if (!empty($this->correo)) {
+                $stmtVerifCorreo = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE correo = :correo");
+                $stmtVerifCorreo->execute([':correo' => $this->correo]);
+                if ($stmtVerifCorreo->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_EMAIL);
+                }
+            }
+
+            if (!empty($this->instagram)) {
+                $stmtVerifInsta = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE instagram = :instagram");
+                $stmtVerifInsta->execute([':instagram' => $this->instagram]);
+                if ($stmtVerifInsta->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_INSTAGRAM);
+                }
+            }
+
+            if (!empty($this->dorsal) && !empty($this->categoria)) {
+                $stmtVerifDorsal = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1");
+                $stmtVerifDorsal->execute([':dorsal' => $this->dorsal, ':categoria' => $this->categoria]);
+                if ($stmtVerifDorsal->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_DORSAL);
+                }
+            }
 
             // Llamamos al procedimiento almacenado pasando parámetros y declarando @resultado
             $sql = "CALL RegistrarAtletaCompleto(
@@ -411,6 +437,30 @@ class ModeloAtletas extends Conexion
                 $stmtVerifTel->execute([':tel' => $this->telefono, ':id' => $this->id]);
                 if ($stmtVerifTel->fetchColumn() > 0) {
                     throw new Exception(DUPLICATE_PHONE);
+                }
+            }
+
+            if (!empty($this->correo)) {
+                $stmtVerifCorreo = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE correo = :correo AND codigo_atleta != :id");
+                $stmtVerifCorreo->execute([':correo' => $this->correo, ':id' => $this->id]);
+                if ($stmtVerifCorreo->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_EMAIL);
+                }
+            }
+
+            if (!empty($this->instagram)) {
+                $stmtVerifInsta = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE instagram = :instagram AND codigo_atleta != :id");
+                $stmtVerifInsta->execute([':instagram' => $this->instagram, ':id' => $this->id]);
+                if ($stmtVerifInsta->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_INSTAGRAM);
+                }
+            }
+
+            if (!empty($this->dorsal) && !empty($this->categoria)) {
+                $stmtVerifDorsal = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1 AND codigo_atleta != :id");
+                $stmtVerifDorsal->execute([':dorsal' => $this->dorsal, ':categoria' => $this->categoria, ':id' => $this->id]);
+                if ($stmtVerifDorsal->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_DORSAL);
                 }
             }
 
@@ -690,6 +740,15 @@ class ModeloAtletas extends Conexion
 
         try {
             $conex = $this->conex();
+
+            if (!empty($this->dorsal) && !empty($this->categoria)) {
+                $stmtVerifDorsal = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1 AND codigo_atleta != :id");
+                $stmtVerifDorsal->execute([':dorsal' => $this->dorsal, ':categoria' => $this->categoria, ':id' => $this->id]);
+                if ($stmtVerifDorsal->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_DORSAL);
+                }
+            }
+
             $conex->beginTransaction();
 
             $sqlInsc = "INSERT INTO inscripciones (codigo_atleta, codigo_categoria, codigo_posicion, dorsal, peso_kg, estatura_cm, fecha_inscripcion, estatus) 

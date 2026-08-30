@@ -67,7 +67,20 @@ class ModeloParticipaciones extends Conexion
             // Filtro de búsqueda (nombre)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . trim($filtro['filtro']) . "%";
-                $sentencia .= " AND (t.nombre LIKE :f1 OR e.nombre LIKE :f2)";
+                $sentencia .= " AND (t.nombre LIKE :f1 OR e.nombre LIKE :f2";
+                
+                $texto = strtolower(trim($filtro['filtro']));
+                if (strpos('por disputarse', $texto) !== false) {
+                    $sentencia .= " OR t.estatus = 1";
+                }
+                if (strpos('en curso', $texto) !== false) {
+                    $sentencia .= " OR t.estatus = 2";
+                }
+                if (strpos('finalizado', $texto) !== false) {
+                    $sentencia .= " OR t.estatus = 3";
+                }
+                
+                $sentencia .= ")";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
             }
@@ -123,7 +136,7 @@ class ModeloParticipaciones extends Conexion
                 throw new Exception(DUPLICATE);
             }
 
-            $sql = "CALL RegistrarParticipacionSegura(:codigo_equipo, :codigo_torneo)";
+            $sql = "INSERT INTO participaciones (codigo_equipo, codigo_torneo) VALUES (:codigo_equipo, :codigo_torneo)";
 
             $stmt = $conex->prepare($sql);
             $stmt->bindValue(':codigo_torneo', $this->codigo_torneo, PDO::PARAM_INT);

@@ -74,20 +74,11 @@ $(document).ready(function () {
             let conceptoEncontrado = listaConceptosGlobal.find(c => c.codigo_concepto == idSeleccionado);
             if (conceptoEncontrado && conceptoEncontrado.monto) {
                 let montoBase = parseFloat(conceptoEncontrado.monto).toFixed(2);
-                $('#monto_total').val(montoBase).trigger('input');
+                let simbolo = (typeof monedaBaseGlobal !== 'undefined' && monedaBaseGlobal && monedaBaseGlobal.simbolo) ? monedaBaseGlobal.simbolo : '$';
+                $('#monto_total').val(simbolo + ' ' + montoBase);
             }
         }
     });
-
-    $("#monto_total").on("input", function () {
-        var input = $(this).val().replace(/[^0-9.]/g, '');
-        if ((input.match(/\./g) || []).length > 1) {
-            input = input.substring(0, input.length - 1);
-        }
-        $(this).val(input);
-    });
-
-    Validacion("monto_total", /^[0-9.]*$/, /^[0-9]+(\.[0-9]{1,2})?$/, "Monto inválido (Ej: 50 o 50.50)", "proceso");
 
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
@@ -96,6 +87,8 @@ $(document).ready(function () {
                 confirmar('¿Esta seguro que quiere generar esta(s) cuenta(s) por cobrar?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
+                        let montoStr = $('#monto_total').val() || "";
+                        datos.set('monto_total', montoStr.replace(/[^0-9.]/g, ''));
                         datos.append('accion', 'incluir');
                         enviaAjax(datos);
                     }
@@ -111,6 +104,8 @@ $(document).ready(function () {
                         $('#fecha_emision').prop('readonly', false);
                         $('#fecha_vencimiento').prop('readonly', false);
                         var datos = new FormData($('#f')[0]);
+                        let montoStr = $('#monto_total').val() || "";
+                        datos.set('monto_total', montoStr.replace(/[^0-9.]/g, ''));
                         datos.append('accion', 'modificar');
                         $('#estatus').prop('disabled', true);
                         $('#id_atleta').prop('disabled', true);
@@ -389,8 +384,13 @@ function limpia() {
     if ($('#f')[0]) $('#f')[0].reset();
     $('#id_atleta').val(null).trigger('change');
     $('#id_concepto').val(null).trigger('change');
-    $("#proceso").data("accion", "incluir");
-    $("#proceso").text("Registrar Cargo");
+    
+    // Preserve current action if it's "generar", otherwise default to "incluir"
+    let currentAccion = $("#proceso").data("accion");
+    if (currentAccion !== "generar" && currentAccion !== "modificar") {
+        $("#proceso").data("accion", "incluir");
+        $("#proceso").text("Registrar Cargo");
+    }
 }
 
     $('#ayuda').on('click', function () {
@@ -446,4 +446,8 @@ function limpia() {
         const driver = iniciarTourConPasos(pasos);
         driver.start();
     });
+
+function mostrarMonedaCargo(datos) {
+    // Ya no se modifica el label, el símbolo se agrega dinámicamente al input
+}
 

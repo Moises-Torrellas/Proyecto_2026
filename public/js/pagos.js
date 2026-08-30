@@ -366,7 +366,7 @@ function solicitarTasaAPI() {
     if (isoCuenta === isoPago) {
         let selectTasa = $('#tasa');
         selectTasa.empty();
-        selectTasa.append('<option value="1.0000" selected>Misma Moneda (1.0000)</option>');
+        selectTasa.append('<option value="1.00" selected>Misma Moneda (1.00)</option>');
         selectTasa.prop('disabled', true);
         $('#label_tasa').html(`Tasa de cambio <span style="color: #28a745; font-size:12px;">(${isoPago} = ${isoCuenta})</span>`);
         recalcularAmortizacion();
@@ -402,11 +402,11 @@ function solicitarTasaAPI() {
                         let tipoLabel = (t.tipo === 'automatica') ? 'Automática' : 'Manual';
                         let seleccion = (index === 0) ? 'selected' : ''; // <-- Autoselección en la primera iteración
 
-                        selectTasa.append(`<option value="${parseFloat(t.valor_tasa).toFixed(4)}" ${seleccion}>${tipoLabel} - ${parseFloat(t.valor_tasa).toFixed(4)} ${t.simbolo}</option>`);
+                        selectTasa.append(`<option value="${parseFloat(t.valor_tasa).toFixed(2)}" ${seleccion}>${tipoLabel} - ${parseFloat(t.valor_tasa).toFixed(2)} ${t.simbolo}</option>`);
                     });
 
                     selectTasa.prop('disabled', false);
-                    $('#label_tasa').html(`Tasa Seleccionada <strong style="color: #28a745;">(${isoPago} ➔ ${isoCuenta})</strong>`);
+                    $('#label_tasa').html(`Tasa <strong style="color: #28a745;">(${isoPago} ➔ ${isoCuenta})</strong>`);
 
                 } else {
                     selectTasa.append('<option value="" disabled selected>No hay tasas disponibles</option>');
@@ -474,11 +474,18 @@ function recalcularAmortizacion() {
     }
 }
 
+let globalIsoMonedaBaseVuelto = null;
+
 function solicitarTasaVueltoAPI() {
     let idMonedaVuelto = $('#codigo_moneda_vuelto').val();
     let fechaVuelto = $('#fecha_vuelto').val();
 
-    if (!idMonedaVuelto || !fechaVuelto || !cuentaSeleccionadaActual) {
+    let isoCuenta = globalIsoMonedaBaseVuelto;
+    if (!isoCuenta && cuentaSeleccionadaActual) {
+        isoCuenta = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
+    }
+
+    if (!idMonedaVuelto || !fechaVuelto || !isoCuenta) {
         $('#label_tasa_vuelto').text("Tasa de Cambio");
         return;
     }
@@ -486,72 +493,133 @@ function solicitarTasaVueltoAPI() {
     let monedaVueltoObj = listadoMonedas.find(m => m.codigo_moneda == idMonedaVuelto);
     if (!monedaVueltoObj) return;
 
-    let isoCuenta = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
     let isoVuelto = monedaVueltoObj.abreviatura.toUpperCase();
 
     if (isoCuenta === isoVuelto) {
         let selectTasa = $('#tasa_vuelto');
         selectTasa.empty();
-        selectTasa.append('<option value="1.0000" selected>Misma Moneda (1.0000)</option>');
+        selectTasa.append('<option value="1.00" selected>Misma Moneda (1.00)</option>');
         selectTasa.prop('disabled', true);
-        $('#label_tasa_vuelto').html(`Tasa de cambio <span style="color: #28a745; font-size:12px;">(1 ${isoVuelto} = 1 ${isoCuenta})</span>`);
+        $('#label_tasa_vuelto').html(`Tasa <strong style="color: #28a745; font-size:11px;">(1 ${isoVuelto} = 1 ${isoCuenta})</strong>`);
+        
+        // Cuando es la misma moneda, la tasa para convertir es directamente 1
+        $('#tasa_vuelto').data('tasa-cruzada', 1.00); 
+
         recalcularVuelto();
         return;
     }
 
-    $('#label_tasa_vuelto').html(`Tasa de cambio <span style="color: #28a745; font-size:11px;">(${isoVuelto} ➔ ${isoCuenta})</span>`);
+    $('#label_tasa_vuelto').html(`Tasa <strong style="color: #28a745; font-size:11px;">(${isoVuelto} ➔ ${isoCuenta})</strong>`);
 
-    let datos = new FormData();
-    datos.append('accion', 'consultar_tasas_disponibles');
-    datos.append('codigo_moneda', idMonedaVuelto);
-    datos.append('fecha', fechaVuelto);
+    let cuentaObj = listadoMonedas.find(m => m.abreviatura.toUpperCase() === isoCuenta);
+    let idMonedaCuenta = cuentaObj ? cuentaObj.codigo_moneda : null;
 
-    $.ajax({
-        url: "",
-        type: "POST",
-        contentType: false,
-        processData: false,
-        data: datos,
-        beforeSend: function (request) {
-            request.setRequestHeader("X-CSRF-TOKEN", token);
-        },
-        success: function (respuesta) {
-            try {
-                let lee = JSON.parse(respuesta);
-                let selectTasa = $('#tasa_vuelto');
-                selectTasa.empty();
+    let datosVuelto = new FormData();
+    datosVuelto.append('accion', 'consultar_tasas_disponibles');
+    datosVuelto.append('codigo_moneda', idMonedaVuelto);
+    datosVuelto.append('fecha', fechaVuelto);
 
-                if (lee.accion === 'exito' && lee.datos && lee.datos.length > 0) {
-                    lee.datos.forEach((t, index) => {
-                        let tipoLabel = (t.tipo === 'automatica') ? 'Automática' : 'Manual';
-                        let seleccion = (index === 0) ? 'selected' : '';
-                        selectTasa.append(`<option value="${parseFloat(t.valor_tasa).toFixed(4)}" ${seleccion}>${tipoLabel} - ${parseFloat(t.valor_tasa).toFixed(4)} ${t.simbolo}</option>`);
-                    });
-                    selectTasa.prop('disabled', false);
-                    $('#label_tasa_vuelto').html(`Tasa Seleccionada <strong style="color: #28a745;">(${isoVuelto} ➔ ${isoCuenta})</strong>`);
-                } else {
-                    selectTasa.append('<option value="" disabled selected>No hay tasas disponibles</option>');
-                    selectTasa.prop('disabled', true);
-                    muestraMensaje("error", 3000, "Aviso de Tasa", "No se encontraron tasas disponibles para esta fecha.");
-                }
+    let datosCuenta = new FormData();
+    datosCuenta.append('accion', 'consultar_tasas_disponibles');
+    datosCuenta.append('codigo_moneda', idMonedaCuenta);
+    datosCuenta.append('fecha', fechaVuelto);
 
-                recalcularVuelto();
-            } catch (e) {
-                console.error("Error procesando tasa de vuelto", e);
+    $.when(
+        $.ajax({
+            url: "",
+            type: "POST",
+            data: datosVuelto,
+            processData: false,
+            contentType: false,
+            headers: { "X-CSRF-TOKEN": token }
+        }),
+        $.ajax({
+            url: "",
+            type: "POST",
+            data: datosCuenta,
+            processData: false,
+            contentType: false,
+            headers: { "X-CSRF-TOKEN": token }
+        })
+    ).done(function (resVuelto, resCuenta) {
+        try {
+            let leeVuelto = JSON.parse(resVuelto[0]);
+            let leeCuenta = JSON.parse(resCuenta[0]);
+            
+            let tasaPagoReal = 1.0;
+            if (leeCuenta.accion === 'exito' && leeCuenta.datos && leeCuenta.datos.length > 0) {
+                tasaPagoReal = parseFloat(leeCuenta.datos[0].valor_tasa);
             }
+
+            let selectTasa = $('#tasa_vuelto');
+            selectTasa.empty();
+
+            if (leeVuelto.accion === 'exito' && leeVuelto.datos && leeVuelto.datos.length > 0) {
+                leeVuelto.datos.forEach((t, index) => {
+                    let tipoLabel = (t.tipo === 'automatica') ? 'Automática' : 'Manual';
+                    let seleccion = (index === 0) ? 'selected' : '';
+                    let tasaVueltoBase = parseFloat(t.valor_tasa);
+                    
+                    let tasaMostrada = 1;
+                    let textoTasa = "";
+
+                    if (tasaPagoReal > tasaVueltoBase) {
+                        tasaMostrada = tasaPagoReal / tasaVueltoBase;
+                        textoTasa = `(1 ${isoVuelto} = ${tasaMostrada.toFixed(2)} ${isoCuenta})`;
+                    } else {
+                        tasaMostrada = tasaVueltoBase / tasaPagoReal;
+                        textoTasa = `(1 ${isoCuenta} = ${tasaMostrada.toFixed(2)} ${isoVuelto})`;
+                    }
+                    
+                    // Guardamos la tasa real de la cuenta en data-tasa-pago para usarla en recalcularVuelto
+                    selectTasa.append(`<option value="${tasaVueltoBase.toFixed(2)}" data-tasa-pago="${tasaPagoReal.toFixed(2)}" ${seleccion}>${tipoLabel} - ${tasaMostrada.toFixed(2)} ${textoTasa}</option>`);
+                });
+                selectTasa.prop('disabled', false);
+            } else {
+                selectTasa.append('<option value="" disabled selected>No hay tasas disponibles</option>');
+                selectTasa.prop('disabled', true);
+                muestraMensaje("error", 3000, "Aviso de Tasa", "No se encontraron tasas disponibles para esta fecha.");
+            }
+
+            recalcularVuelto();
+        } catch (e) {
+            console.error("Error procesando tasa de vuelto", e);
         }
+    }).fail(function() {
+        console.error("Error en las peticiones AJAX de tasas cruzadas");
+        muestraMensaje("error", 3000, "Error", "No se pudieron obtener las tasas para el cálculo cruzado.");
     });
 }
 
 function recalcularVuelto() {
-    let excesoBase = parseFloat($('#monto_vuelto_base').data('valor')) || 0;
-    let tasa = parseFloat($('#tasa_vuelto').val()) || 0;
+    let excesoBase = parseFloat($('#monto_vuelto_base').data('valor')) || parseFloat($('#monto_vuelto_base').val()) || 0;
+    
+    // Si las monedas son iguales, forzamos un multiplier de 1 (evita errores con tasas distintas en DB)
+    let isoCuenta = globalIsoMonedaBaseVuelto;
+    if (!isoCuenta && cuentaSeleccionadaActual) isoCuenta = cuentaSeleccionadaActual.moneda_abreviatura.toUpperCase();
+    let idMonedaVuelto = $('#codigo_moneda_vuelto').val();
+    let monedaVueltoObj = idMonedaVuelto ? listadoMonedas.find(m => m.codigo_moneda == idMonedaVuelto) : null;
+    let isoVuelto = monedaVueltoObj ? monedaVueltoObj.abreviatura.toUpperCase() : null;
 
-    if (excesoBase > 0 && tasa > 0) {
-        // excesoBase está en la moneda de la cuenta (moneda base).
-        // tasa es la tasa de cambio desde moneda base a moneda vuelto.
-        // Entonces, para convertir excesoBase a "moneda vuelto", multiplicamos por la tasa.
-        let montoConvertido = excesoBase * tasa;
+    if (isoCuenta === isoVuelto) {
+        $('#monto_vuelto').val(excesoBase.toFixed(2));
+        return;
+    }
+
+    let tasaVuelto = parseFloat($('#tasa_vuelto').val()) || 0;
+    
+    // Obtenemos la tasa real de la cuenta desde el data-tasa-pago que calculamos en solicitarTasaVueltoAPI
+    let opcionSeleccionada = $('#tasa_vuelto option:selected');
+    let tasaPagoReal = parseFloat(opcionSeleccionada.data('tasa-pago')) || parseFloat($('#tasa').val()) || 1;
+
+    if (excesoBase > 0 && tasaVuelto > 0 && tasaPagoReal > 0) {
+        // Fórmula generalizada:
+        // Exceso (Moneda_Cuenta) -> USD (Base) -> Moneda_Vuelto
+        // 1 USD = tasaPagoReal Moneda_Cuenta
+        // 1 USD = tasaVuelto Moneda_Vuelto
+        // USD = Exceso / tasaPagoReal
+        // Moneda_Vuelto = USD * tasaVuelto
+        let montoConvertido = excesoBase * (tasaVuelto / tasaPagoReal);
         $('#monto_vuelto').val(montoConvertido.toFixed(2));
     } else {
         $('#monto_vuelto').val('');
@@ -570,10 +638,10 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
         let textoMostrar = "";
         let atributosExtra = "";
 
-        if (idSelect === 'moneda' && campo1 && campo2) {
-            textoMostrar = `${dato[campo1]} ${dato[campo2]}`;
+        if ((idSelect === 'moneda' || idSelect === 'codigo_moneda_vuelto') && campo1 && campo2) {
+            textoMostrar = `${dato[campo1]} - ${dato[campo2]}`;
         }
-        else if (idSelect === 'metodo' && campo1 && campo2) {
+        else if ((idSelect === 'metodo' || idSelect === 'codigo_metodo_vuelto') && campo1 && campo2) {
             textoMostrar = `${dato[campo1]}`;
             atributosExtra = `data-nec_ref="${dato[campo2]}"`;
         }
@@ -735,6 +803,11 @@ function enviaAjax(datos) {
                     construirSelect('cuenta', lee.cuentas, 'codigo_cargo', 'concepto', 'p_nombre', 'p_apellidos', 'monto_pendiente', 'simbolo_moneda', 'fecha_emision');
                 } else if (lee.accion == "incluir") {
                     consultar();
+                    
+                    // Preserve the currency selection before cleaning the form
+                    let idMonedaPago = $('#moneda').val();
+                    let monedaPagoObj = listadoMonedas.find(m => m.codigo_moneda == idMonedaPago);
+
                     limpia();
                     $('#monto_equivalente_ayuda').html('');
                     $('#detalles_deuda_ayuda').html('');
@@ -747,11 +820,13 @@ function enviaAjax(datos) {
                         $('#monto_vuelto_base').val(parseFloat(lee.vuelto).toFixed(2));
                         $('#monto_vuelto_base').data('valor', parseFloat(lee.vuelto));
                         $('#monto_vuelto').val('');
-                        if (cuentaSeleccionadaActual) {
-                            let simDeuda = cuentaSeleccionadaActual.simbolo_moneda;
-                            $('#label_vuelto_base').text(`Monto Vuelto Base (${simDeuda})`);
+                        
+                        if (monedaPagoObj) {
+                            let simPago = monedaPagoObj.simbolo + ' ' + monedaPagoObj.abreviatura;
+                            $('#label_vuelto_base').text(`Monto Vuelto Base (${simPago})`);
+                            globalIsoMonedaBaseVuelto = monedaPagoObj.abreviatura.toUpperCase();
                         }
-
+                        
                         let hoyObj = new Date();
                         let mesObj = (hoyObj.getMonth() + 1).toString().padStart(2, '0');
                         let diaObj = hoyObj.getDate().toString().padStart(2, '0');
@@ -830,6 +905,9 @@ function abrirModalVuelto(id_pago, vueltoPendiente, simboloCuenta) {
     $('#monto_vuelto_base').data('valor', parseFloat(vueltoPendiente));
     $('#monto_vuelto').val('');
     $('#label_vuelto_base').text(`Monto Vuelto Base (${simboloCuenta})`);
+
+    let parts = String(simboloCuenta).trim().split(' ');
+    globalIsoMonedaBaseVuelto = (parts.length > 1) ? parts[parts.length - 1].toUpperCase() : String(simboloCuenta).toUpperCase();
 
     let hoyObj = new Date();
     let mesObj = (hoyObj.getMonth() + 1).toString().padStart(2, '0');

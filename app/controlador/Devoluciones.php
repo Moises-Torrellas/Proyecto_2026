@@ -112,11 +112,16 @@ function MultiConsulta(): void {
         $stmt->execute();
         $asignaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        $modeloAtletas = new \App\modelo\ModeloAtletas();
+        $respAtletas = $modeloAtletas->ConsultarAtletas();
+        $atletas = $respAtletas['datos'] ?? [];
+
         $respEstado = $modeloEstado->Consultar(); 
 
         echo json_encode([
             'accion'       => 'MultiConsulta',
             'asignaciones' => $asignaciones,
+            'atletas'      => $atletas,
             'estados'      => $respEstado['datos'] ?? []
         ]);
     } catch (Exception $e) {
@@ -210,7 +215,9 @@ function generarReporte($obj, $id_modulo, $bitacoraObj): void {
             'accion' => 'generar',
             'id_asignacion' => !empty($_POST['id_asignacion']) ? filter_var($_POST['id_asignacion'], FILTER_SANITIZE_NUMBER_INT) : null,
             'id_estado' => !empty($_POST['id_estado']) ? filter_var($_POST['id_estado'], FILTER_SANITIZE_NUMBER_INT) : null,
-            'fecha_devolucion' => !empty($_POST['fecha_devolucion']) ? filter_var($_POST['fecha_devolucion'], FILTER_SANITIZE_SPECIAL_CHARS) : null,
+            'codigo_atleta' => !empty($_POST['codigo_atleta']) ? filter_var($_POST['codigo_atleta'], FILTER_SANITIZE_NUMBER_INT) : null,
+            'fecha_desde' => !empty($_POST['fecha_desde']) ? filter_var($_POST['fecha_desde'], FILTER_SANITIZE_SPECIAL_CHARS) : null,
+            'fecha_hasta' => !empty($_POST['fecha_hasta']) ? filter_var($_POST['fecha_hasta'], FILTER_SANITIZE_SPECIAL_CHARS) : null,
             'filtro' => filter_var($_POST['filtro'] ?? '', FILTER_SANITIZE_SPECIAL_CHARS)
         ];
 
@@ -234,7 +241,7 @@ function generarReporte($obj, $id_modulo, $bitacoraObj): void {
             registrarBitacora($bitacoraObj, $id_modulo, "Generó reporte filtrado de devoluciones en formato " . strtoupper($formato));
             echo json_encode($pdf);
         } else {
-            throw new Exception("Error al generar el documento PDF.");
+            throw new Exception("Error al generar el documento PDF: " . ($pdf['mensaje'] ?? ''));
         }
     } catch (Exception $e) {
         echo json_encode(['accion' => 'error', 'codigo' => VALIDATION, 'mensaje' => $e->getMessage()]);

@@ -118,7 +118,7 @@
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Monto</small>
-                                                    <span><?= $dato['monto'] ?></span>
+                                                    <span><?= $dato['monto'] ?> <?= $dato['simbolo_base'] ?? '$' ?></span>
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Frecuencia</small>
@@ -206,7 +206,7 @@
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso">Registra Concepto</button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>
@@ -214,7 +214,11 @@
         </div>
     </section>
     <script src="js/main.js"></script>
-    <script src="js/Concepto.js"></script>
+    <script>
+    // Se obtiene el símbolo de la primera fila si existe, de lo contrario $
+    const SIMBOLO_BASE = "<?= (!empty($registro) && isset($registro[0]['simbolo_base'])) ? $registro[0]['simbolo_base'] : '$' ?>";
+</script>
+<script src="js/Concepto.js"></script>
     <?php include('complementos/mensajeError.php'); ?>
 </body>
 

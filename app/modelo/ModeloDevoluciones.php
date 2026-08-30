@@ -86,7 +86,8 @@ class ModeloDevoluciones extends Conexion
             $sql = "SELECT 
                         id_devolucion, 
                         DATE_FORMAT(fecha_devolucion, '%d/%m/%Y') as fecha_vista,
-                        fecha_devolucion, id_asignacion, id_estado, observacion, 
+                        fecha_devolucion, id_asignacion, id_estado, 
+                        COALESCE(NULLIF(TRIM(observacion), ''), 'Sin observaciones') as observacion, 
                         estado_fisico, nivel_estado, 
                         codigo_atleta, atleta_nombre, atleta_apellido, doc_identidad,
                         articulo_nombre, codigo_club, total_devoluciones_atleta
@@ -96,13 +97,15 @@ class ModeloDevoluciones extends Conexion
             $params = [];
             
             if (!empty($filtros['filtro'])) {
-                $sql .= " AND (atleta_nombre LIKE ? OR atleta_apellido LIKE ? OR articulo_nombre LIKE ? OR DATE_FORMAT(fecha_devolucion, '%d/%m/%Y') LIKE ? OR fecha_devolucion LIKE ?)";
+                $sql .= " AND (atleta_nombre LIKE ? OR atleta_apellido LIKE ? OR doc_identidad LIKE ? OR articulo_nombre LIKE ? OR DATE_FORMAT(fecha_devolucion, '%d/%m/%Y') LIKE ? OR fecha_devolucion LIKE ?)";
                 $p = '%' . $filtros['filtro'] . '%';
-                $params = array_merge($params, [$p, $p, $p, $p, $p]);
+                $params = array_merge($params, [$p, $p, $p, $p, $p, $p]);
             }
+            if (!empty($filtros['codigo_atleta'])) { $sql .= " AND codigo_atleta = ? "; $params[] = $filtros['codigo_atleta']; }
             if (!empty($filtros['id_asignacion'])) { $sql .= " AND id_asignacion = ? "; $params[] = $filtros['id_asignacion']; }
             if (!empty($filtros['id_estado'])) { $sql .= " AND id_estado = ? "; $params[] = $filtros['id_estado']; }
-            if (!empty($filtros['fecha_devolucion'])) { $sql .= " AND fecha_devolucion = ? "; $params[] = $filtros['fecha_devolucion']; }
+            if (!empty($filtros['fecha_desde'])) { $sql .= " AND fecha_devolucion >= ? "; $params[] = $filtros['fecha_desde'] . ' 00:00:00'; }
+            if (!empty($filtros['fecha_hasta'])) { $sql .= " AND fecha_devolucion <= ? "; $params[] = $filtros['fecha_hasta'] . ' 23:59:59'; }
             
             $sql .= " ORDER BY atleta_nombre ASC, fecha_devolucion DESC";
 

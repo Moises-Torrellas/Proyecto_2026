@@ -138,7 +138,6 @@ function consultarRoles($obj): void
 function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        logs('Usuarios', 'POST RECIBIDO: ' . print_r($_POST, true), 'Controlador_Incluir');
         if (empty($_POST)) {
             logs('Usuarios', '¡ALERTA! El array POST está vacío.', 'Controlador_Incluir');
         }
@@ -172,7 +171,7 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
                 'correo'   => $_POST['correo']
             ];
             $mensajeAccion = "Registro al usuario: " . $_POST['cedula'] . " - " . $_POST['nombre'] . " " . $_POST['apellido'];
-            registrarBitacora($bitacoraObj, $id_modulo, $mensajeAccion, '', json_encode($datos_nuevos));
+            // registrarBitacora($bitacoraObj, $id_modulo, $mensajeAccion, '', json_encode($datos_nuevos)); // Manejado por Trigger en la BD
             $resultado = array('accion' => 'incluir', 'mensaje' => 'Usuario registrado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
 
@@ -196,7 +195,8 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
 function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id', 'cedula', 'nombre', 'apellido', 'telefono', 'correo', 'rol', 'foto_actual']);
+        validar_requeridos(['id', 'cedula', 'nombre', 'apellido', 'telefono', 'correo', 'foto_actual']);
+        if (!isset($_POST['rol'])) { $_POST['rol'] = ''; }
 
         $respuestaVieja = $obj->procesarDatos(['id' => $_POST['id'], 'accion' => 'buscar']);
         $datosPrevios = '';

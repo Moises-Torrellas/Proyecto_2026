@@ -259,7 +259,7 @@ if (isset($solo_lista) && $solo_lista === true) : ?>
                     <div class="row row_final">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="btn_guardar" data-accion="incluir">Confirmar Préstamo</button>
-                            <button type="button" class="btn btn_verde" onclick="limpia()">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

@@ -162,6 +162,16 @@ class ModeloTasaCambios extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
+            // Truncar a 2 decimales exactos sin redondear
+            $tasa_str = (string) $this->valor_tasa;
+            $punto_pos = strpos($tasa_str, '.');
+            if ($punto_pos !== false) {
+                // Corta la cadena justo 2 espacios después del punto decimal
+                $this->valor_tasa = substr($tasa_str, 0, $punto_pos + 3);
+            }
+            // Garantizar el formato final (ej. si era 35.1, rellenar a 35.10)
+            $this->valor_tasa = number_format((float) $this->valor_tasa, 2, '.', '');
+
             // 1. Verificamos que la moneda exista
             if (!$this->verificarExistencia('codigo_moneda', $this->codigo_moneda, 'monedas', NULL, bloquear: true)) {
                 throw new Exception("La moneda seleccionada no existe.");
@@ -230,7 +240,6 @@ class ModeloTasaCambios extends Conexion
             $conex = NULL;
         }
     }
-
     private function Sincronizar(): array
     {
         try {

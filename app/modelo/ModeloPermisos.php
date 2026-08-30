@@ -81,31 +81,19 @@ class ModeloPermisos extends Conexion
             $conex = $this->conexSG();
             $params = [];
 
-            // Consulta ajustada con alias para evitar choques de nombres en la vista
-            $sentencia = "SELECT 
-                            p.id_permiso, 
-                            p.nombre AS nombre_permiso, 
-                            p.clave, 
-                            p.descripcion, 
-                            p.estatus AS estatus_permiso, 
-                            m.id_modulo, 
-                            m.nombre_modulo, 
-                            m.estatus AS estatus_modulo,
-                            m.icono 
-                          FROM permisos p 
-                          INNER JOIN modulos m ON p.id_modulo = m.id_modulo 
-                          WHERE 1=1";
+            // Consulta ajustada usando la vista
+            $sentencia = "SELECT * FROM vista_consulta_permisos WHERE 1=1";
 
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
                 // El filtro sigue buscando por el nombre del permiso o su clave
-                $sentencia .= " AND (p.nombre LIKE :f1 OR p.clave LIKE :f2)";
+                $sentencia .= " AND (nombre_permiso LIKE :f1 OR clave LIKE :f2)";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
             }
 
             // Ordenamiento vital para que el ciclo while de la vista agrupe por módulo
-            $sentencia .= " ORDER BY m.id_modulo ASC, p.id_permiso ASC";
+            $sentencia .= " ORDER BY id_modulo ASC, id_permiso ASC";
             
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);

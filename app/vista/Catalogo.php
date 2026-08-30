@@ -177,7 +177,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

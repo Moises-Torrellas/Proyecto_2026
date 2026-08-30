@@ -245,6 +245,10 @@ function enviaAjax(datos) {
                 else if (lee.accion == "buscar") {
                     modificar(lee.datos);
                 }
+                else if (lee.accion == "reporte") {
+                    if (typeof cerrarAlertaEspara === 'function') cerrarAlertaEspara();
+                    window.open(lee.archivo, "_blank");
+                }
                 else if (lee.accion == "error") {
                     muestraMensaje("error", 3000, "Error", lee.mensaje);
                 }

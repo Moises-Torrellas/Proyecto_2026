@@ -128,6 +128,18 @@ class ModeloPremios extends Conexion
                 }
             }
 
+            // Verificar si el tipo de premio esta siendo modificado y si esta asociado
+            $stmtTipo = $conex->prepare("SELECT tipo FROM premios WHERE codigo_premio = :id");
+            $stmtTipo->execute([':id' => $this->codigo_premio]);
+            $tipoActual = $stmtTipo->fetchColumn();
+
+            if ($tipoActual !== $this->tipo) {
+                if ($this->verificarExistencia('codigo_premio', $this->codigo_premio, 'palmares_grupal', NULL, bloquear:true) ||
+                    $this->verificarExistencia('codigo_premio', $this->codigo_premio, 'palmares_individual', NULL, bloquear:true)) {
+                    throw new Exception('TYPE_ASSOCIATED');
+                }
+            }
+
             $sentencia = "UPDATE premios SET nombre = :nombre, tipo = :tipo WHERE codigo_premio = :codigo_premio"; // Ajustado a la BD
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);

@@ -148,6 +148,8 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_CEDULA => 'Ya existe un representante registrado con esta cédula.',
                 DUPLICATE_PHONE  => 'Ya existe un representante registrado con este teléfono.',
+                DUPLICATE_EMAIL  => 'El correo ingresado ya pertenece a un representante registrado.',
+                DUPLICATE_INSTAGRAM => 'El instagram ingresado ya pertenece a un representante registrado.',
                 'UNDER_AGE_ATHLETE' => 'La cédula corresponde a un atleta registrado que es menor de edad y no puede ser representante.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en el registro.'
@@ -195,6 +197,8 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_CEDULA => 'Ya existe un representante registrado con esta cédula.',
                 DUPLICATE_PHONE  => 'Ya existe un representante registrado con este teléfono.',
+                DUPLICATE_EMAIL  => 'El correo ingresado ya pertenece a un representante registrado.',
+                DUPLICATE_INSTAGRAM => 'El instagram ingresado ya pertenece a un representante registrado.',
                 'UNDER_AGE_ATHLETE' => 'La cédula corresponde a un atleta registrado que es menor de edad y no puede ser representante.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'

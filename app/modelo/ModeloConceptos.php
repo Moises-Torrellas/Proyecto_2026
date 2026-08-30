@@ -19,7 +19,8 @@ class ModeloConceptos extends Conexion
         $this->campoWhitelist = [
             'nombre' => 'nombre',
             'monto' => 'monto',
-            'id' => 'codigo_concepto'
+            'id' => 'codigo_concepto',
+            'frecuencia' => 'frecuencia'
         ];
         //Definimos la llave primaria de la tabla en la base de datos
         $this->llavePrimaria = 'codigo_concepto';
@@ -96,6 +97,16 @@ class ModeloConceptos extends Conexion
 
             $datos = $stmt->fetchAll();
 
+            // Consultar el símbolo de la moneda base del sistema
+            $stmtMoneda = $conex->prepare("SELECT simbolo FROM monedas WHERE base = 1 AND estatus = 1 LIMIT 1");
+            $stmtMoneda->execute();
+            $simbolo_base = $stmtMoneda->fetchColumn() ?: '$';
+
+            // Añadir el símbolo a cada registro
+            foreach ($datos as &$dato) {
+                $dato['simbolo_base'] = $simbolo_base;
+            }
+
             return array('accion' => 'consultar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Concepto', $e->getMessage(), 'Modelo_Consultar');
@@ -109,7 +120,7 @@ class ModeloConceptos extends Conexion
     {
         try {
             $conex = $this->conex();
-            $sentencia = "SELECT * FROM conceptos WHERE estatus = 1";
+            $sentencia = "SELECT * FROM conceptos WHERE estatus = 1 AND frecuencia != 'T'";
             $stmt = $conex->prepare($sentencia);
             $stmt->execute();
             $datos = $stmt->fetchAll();
@@ -130,6 +141,11 @@ class ModeloConceptos extends Conexion
             $conex->beginTransaction();
             if ($this->verificarExistencia('nombre', $this->nombre, 'conceptos', NULL, bloquear: true)) {
                 throw new Exception(DUPLICATE_NAME);
+            }
+            if ($this->frecuencia === 'T') {
+                if ($this->verificarExistencia('frecuencia', 'T', 'conceptos', 1, bloquear: true)) {
+                    throw new Exception("MULTA_EXISTENTE");
+                }
             }
 
             $sentencia = "INSERT INTO conceptos (`nombre`, `monto`, `frecuencia`, `dias_gracia`) VALUES (:nombre, :monto, :frecuencia, :dias)";
@@ -166,6 +182,13 @@ class ModeloConceptos extends Conexion
             if (!$this->verificarExistenciaPropia('nombre', $this->nombre, $this->id, 'conceptos', NULL, bloquear: true)) {
                 if ($this->verificarExistencia('nombre', $this->nombre, 'conceptos', NULL, bloquear: true)) {
                     throw new Exception(DUPLICATE_NAME);
+                }
+            }
+            if ($this->frecuencia === 'T') {
+                if ($this->verificarExistencia('frecuencia', 'T', 'conceptos', 1, bloquear: true)) {
+                    if (!$this->verificarExistenciaPropia('frecuencia', 'T', $this->id, 'conceptos', 1, bloquear: true)) {
+                        throw new Exception("MULTA_EXISTENTE");
+                    }
                 }
             }
 
@@ -223,7 +246,7 @@ class ModeloConceptos extends Conexion
             if (!$this->verificarExistencia('id', $this->id, 'conceptos', NULL, bloquear: true)) {
                 throw new Exception(INVALID_ID);
             }
-            if (!$this->verificarExistencia('id', $this->id, 'cargos', NULL, bloquear: true)) {
+            if ($this->verificarExistencia('id', $this->id, 'cargos', NULL, bloquear: true)) {
                 throw new Exception(ASSOCIATES);
             }
             $sentencia = "DELETE FROM conceptos WHERE codigo_concepto = :id";
@@ -290,7 +313,7 @@ class ModeloConceptos extends Conexion
             throw new Exception('Frecuencia inválido.');
         }
         if (!empty($datos['dias']) && !preg_match('/^[0-9]{1,3}$/', $datos['dias'])) {
-            throw new Exception('dias de pago inválido.');
+            throw new Exception('dias de cargo inválido.');
         }
     }
 }

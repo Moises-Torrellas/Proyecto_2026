@@ -20,13 +20,27 @@ function busqueda() {
 $(document).ready(function () {
     inicializarPaginador();
 
-    // Validación de Nombre
-    Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
+    // Diccionario de monedas permitidas
+    const monedasOficiales = {
+        "USD": { simbolo: "$", nombre: "Dólar" },
+        "VES": { simbolo: "Bs", nombre: "Bolívar" },
+        "EUR": { simbolo: "€", nombre: "Euro" }
+    };
 
-    Validacion("abreviatura", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{2,4}$/, "Solo letras entre 2 y 4 caracteres", "proceso");
+    // Autocompletar y bloquear campos al cambiar la abreviatura
+    $('#abreviatura').on('change', function () {
+        let iso = $(this).val();
+        if (monedasOficiales[iso]) {
+            $('#nombre').val(monedasOficiales[iso].nombre);
+            $('#simbolo').val(monedasOficiales[iso].simbolo);
+        }
+    });
 
-    Validacion("simbolo", /^[A-Za-z\u00f1\u00d1$€£]*$/, /^[A-Za-z\u00f1\u00d1$€£]{1,5}$/, "Ingrese un símbolo válido (Ej: $, Bs, €)", "proceso"
-    );
+    $('#abreviatura').select2({
+        placeholder: "Selecciona una opción",
+        allowClear: true,
+        dropdownParent: $('#contenedor_modal')
+    });
 
     $('#proceso').on('click', function () {
         accion = $(this).data("accion");
@@ -68,6 +82,11 @@ $(document).ready(function () {
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Moneda");
         $("#titulo_modal").text("Registrar Moneda");
+        
+        $('#nombre').closest('.colum').show();
+        $('#simbolo').closest('.colum').show();
+        $('#abreviatura option[value="Todas"]').remove();
+        
         abrirModal();
     });
 
@@ -77,7 +96,13 @@ $(document).ready(function () {
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
         $("#titulo_modal").text("Generar Reporte");
-        $('#nacionalidad').val(null).trigger('change');
+        
+        if ($('#abreviatura option[value="Todas"]').length === 0) {
+            $('#abreviatura').prepend('<option value="Todas" selected>Todas las Abreviaturas</option>');
+        }
+        $('#nombre').closest('.colum').hide();
+        $('#simbolo').closest('.colum').hide();
+
         abrirModal();
     });
 
@@ -139,20 +164,21 @@ $(document).ready(function () {
 
 });
 
-function validarEnvio(proceso) {
-    if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/,
-        $("#nombre"), $("#nombre_spam"), "Solo letras  entre 3 y 30 caracteres", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
+function validarEnvio(accion) {
+    if (accion == "generar") return true;
+
+    if (!$('#abreviatura').val()) {
+        muestraMensaje("error", 2000, "Error", "Tiene que seleccionar una Moneda (ISO)");
         return false;
     }
-    else if (validarkeyup(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{2,4}$/,
-        $('#abreviatura'), $("#abreviatura_spam"), "Solo letras entre 2 y 4 caracteres", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar una abreviatura valido");
+    
+    if ($('#nombre').val() === "") {
+        muestraMensaje("error", 2000, "Error", "El nombre de la moneda no puede estar vacío");
         return false;
     }
-    else if (validarkeyup(/^[A-Za-z\u00f1\u00d1$€£]{1,5}$/,
-        $('#simbolo'), $("#simbolo_spam"), "Ingrese un símbolo válido (Ej: $, Bs, €)", true)) {
-        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un simbolo valido");
+
+    if ($('#simbolo').val() === "") {
+        muestraMensaje("error", 2000, "Error", "El símbolo no puede estar vacío");
         return false;
     }
     return true;
@@ -181,7 +207,12 @@ function modificar(datos) {
     $("#titulo_modal").text("Modificar Moneda");
     $('#id').val(datos[0].codigo_moneda);
     $('#nombre').val(datos[0].nombre);
-    $('#abreviatura').val(datos[0].abreviatura);
+    
+    $('#nombre').closest('.colum').show();
+    $('#simbolo').closest('.colum').show();
+    $('#abreviatura option[value="Todas"]').remove();
+    
+    $('#abreviatura').val(datos[0].abreviatura).trigger('change');
     $('#simbolo').val(datos[0].simbolo);
 
     abrirModal();

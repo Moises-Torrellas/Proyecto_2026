@@ -294,8 +294,10 @@ function modificar(datos) {
     
     if (isSuperAdminEdit) {
         $('#roles').closest('.colum').hide();
+        $('#contraseña').closest('.colum').hide();
     } else {
         $('#roles').closest('.colum').show();
+        $('#contraseña').closest('.colum').show();
     }
     
     $('#row_permisos').hide();

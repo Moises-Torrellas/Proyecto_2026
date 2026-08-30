@@ -79,7 +79,7 @@
 
                             <!-- Tarjeta 2: Recaudacion -->
                             <div class="card_perfil">
-                                <h3><i data-lucide="dollar-sign"></i> Efectividad de Recaudación y Morosidad</h3>
+                                <h3><i data-lucide="dollar-sign"></i> Efectividad de Recaudación</h3>
                                 <div class="chart_switcher" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;">
                                     <button type="button" class="btn btn_azul btn-switch-grafico active" data-target="tipo_grafico_recaudacion" data-val="bar"><i data-lucide="bar-chart-2"></i> Barras</button>
                                     <button type="button" class="btn btn-switch-grafico" style="background-color: #ddd; color: #333;" data-target="tipo_grafico_recaudacion" data-val="line"><i data-lucide="activity"></i> Líneas</button>
@@ -101,7 +101,7 @@
                                             <div class="caja_formulario" style="margin-bottom: 0;">
                                                 <select name="filtro_concepto" id="filtro_concepto" class="formulario select">
                                                 </select>
-                                                <label for="filtro_concepto" class="titulo_formulario">Concepto de Pago</label>
+                                                <label for="filtro_concepto" class="titulo_formulario">Concepto de Cargo</label>
                                             </div>
                                         </div>
                                     </div>

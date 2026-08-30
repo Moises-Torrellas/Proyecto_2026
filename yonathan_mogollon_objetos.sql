@@ -42,7 +42,9 @@ CREATE TRIGGER trg_bloquear_articulos_danados
 BEFORE UPDATE ON articulos_inventario
 FOR EACH ROW
 BEGIN
-    IF NEW.id_estado = 2 THEN
+    DECLARE v_nivel TINYINT;
+    SELECT nivel_estado INTO v_nivel FROM estado_fisico WHERE id_estado = NEW.id_estado;
+    IF v_nivel = 3 THEN
         SET NEW.estatus = 3;
     END IF;
 END

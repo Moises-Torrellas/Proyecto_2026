@@ -28,6 +28,7 @@ if (comprobarAjax() && !empty($_POST)) {
     $respuesta = $objModelo->Consultar();
 
     $error_bd = '';
+    $registro = [];
     if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
         $error_bd = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : '';
     } else {

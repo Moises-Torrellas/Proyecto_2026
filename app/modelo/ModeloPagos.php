@@ -12,6 +12,7 @@ class ModeloPagos extends Conexion
     private $id_metodo;
     private $id_moneda;
     private $monto;
+    private $tasa;
     private $fecha;
     private $fecha_f;
     private $referencia;
@@ -47,6 +48,7 @@ class ModeloPagos extends Conexion
         $this->id_moneda  = $datos['moneda'] ?? null;
         $this->anulados   = $datos['anulados'] ?? null;
         $this->monto      = isset($datos['monto']) ? (float) $datos['monto'] : null;
+        $this->tasa       = isset($datos['tasa']) ? (float) $datos['tasa'] : 1.0;
         $this->fecha      = !empty($datos['fecha']) ? trim($datos['fecha']) : null;
         $this->fecha_f    = !empty($datos['fecha_f']) ? trim($datos['fecha_f']) : null;
         $this->referencia = isset($datos['referencia']) ? trim($datos['referencia']) : null;
@@ -124,16 +126,16 @@ class ModeloPagos extends Conexion
             $conex = $this->conex();
             $params = [];
 
-            $sentencia = "SELECT * FROM vista_pagos WHERE 1=1";
+            $sentencia = "SELECT v.* FROM vista_pagos v INNER JOIN pagos p ON v.id_pago = p.codigo_pago WHERE 1=1";
 
             if (!empty($filtro['filtro'])) {
                 $p = "%" . trim($filtro['filtro']) . "%";
                 $sentencia .= " AND (
-                concepto_pago LIKE :f1 OR 
-                nombre_atleta LIKE :f2 OR 
-                nombre_apellido LIKE :f3 OR
-                referencia LIKE :f4 OR
-                moneda LIKE :f5
+                v.concepto_pago LIKE :f1 OR 
+                v.nombre_atleta LIKE :f2 OR 
+                v.nombre_apellido LIKE :f3 OR
+                v.referencia LIKE :f4 OR
+                v.moneda LIKE :f5
             )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
@@ -143,32 +145,32 @@ class ModeloPagos extends Conexion
             }
 
             if (!empty($this->id_metodo)) {
-                $sentencia .= " AND id_metodos = :metodo";
+                $sentencia .= " AND p.codigo_metodo = :metodo";
                 $params[':metodo'] = $this->id_metodo;
             }
 
             if (!empty($this->id_moneda)) {
-                $sentencia .= " AND id_moneda = :moneda";
+                $sentencia .= " AND p.codigo_moneda = :moneda";
                 $params[':moneda'] = $this->id_moneda;
             }
 
             if (!empty($this->fecha) && !empty($this->fecha_f)) {
-                $sentencia .= " AND fecha_pago BETWEEN :fecha_inicio AND :fecha_fin";
+                $sentencia .= " AND v.fecha_pago BETWEEN :fecha_inicio AND :fecha_fin";
                 $params[':fecha_inicio'] = $this->fecha;
                 $params[':fecha_fin'] = $this->fecha_f;
             } else if (!empty($this->fecha)) {
-                $sentencia .= " AND fecha_pago = :fecha_inicio";
+                $sentencia .= " AND v.fecha_pago = :fecha_inicio";
                 $params[':fecha_inicio'] = $this->fecha;
             } else if (!empty($this->fecha_f)) {
-                $sentencia .= " AND fecha_pago = :fecha_fin";
+                $sentencia .= " AND v.fecha_pago = :fecha_fin";
                 $params[':fecha_fin'] = $this->fecha_f;
             }
 
             if (empty($this->anulados)) {
-                $sentencia .= " AND estatus = 1";
+                $sentencia .= " AND v.estatus = 1";
             }
 
-            $sentencia .= " ORDER BY fecha_pago DESC, id_pago DESC";
+            $sentencia .= " ORDER BY v.fecha_pago DESC, v.id_pago DESC";
 
             $stmt = $conex->prepare($sentencia);
             $stmt->execute($params);
@@ -262,7 +264,7 @@ class ModeloPagos extends Conexion
             $vueltosAll = $stmtVueltos->fetchAll();
             foreach ($vueltosAll as $v) {
                 if (isset($pagosAgrupados[$v['codigo_pago']])) {
-                    $monto_base = (float)$pagosAgrupados[$v['codigo_pago']]['monto_vuelto'];
+                    $monto_base = (float)$v['monto_base'];
                     $v['monto_exceso_base'] = $monto_base;
                     $v['tasa_usada'] = ($monto_base > 0) ? ((float)$v['monto_vuelto'] / $monto_base) : 0;
                     $pagosAgrupados[$v['codigo_pago']]['vueltos'][] = $v;
@@ -280,6 +282,12 @@ class ModeloPagos extends Conexion
         try {
             if (!is_array($this->id_cuenta) || empty($this->id_cuenta)) {
                 throw new Exception(EMPTY_SELECTION);
+            }
+            if ((float)$this->monto <= 0) {
+                throw new Exception("El monto del pago debe ser mayor a 0.");
+            }
+            if ((float)$this->tasa <= 0) {
+                throw new Exception("La tasa de cambio debe ser mayor a 0.");
             }
 
             $conex = $this->conex();
@@ -323,13 +331,7 @@ class ModeloPagos extends Conexion
             $stmtInsertDetalle = $conex->prepare("INSERT INTO detalles_pagos (codigo_pago, codigo_cargo, monto_abonado, tasa_cambio) VALUES (?, ?, ?, ?)");
 
             $vuelto = $this->monto;
-
-            $this->objTasa = new ModeloTasaCambios();
-            $datosTasa = $this->objTasa->ConsultarTasaDelDia($conex, $this->fecha, $this->id_moneda);
-            if (isset($datosTasa['accion']) && $datosTasa['accion'] === 'error') {
-                throw new Exception($datosTasa['mensaje']);
-            }
-            $tasa_cambio = (float)$datosTasa['tasa'];
+            $tasa_cambio = $this->tasa;
             // -----------------------------
             $this->objCuentas = new ModeloCuentasCobrar();
 
@@ -364,6 +366,10 @@ class ModeloPagos extends Conexion
 
                 // El estatus del cargo ahora se actualiza automáticamente mediante el trigger en la BD
                 $stmtInsertDetalle->execute([$id_pago, $id_cobrar, $monto_abonado_cuenta, $tasa_cambio]);
+            }
+
+            if ($vuelto == $this->monto) {
+                throw new Exception("Las cuentas seleccionadas no poseen deuda pendiente.");
             }
 
             $conex->commit();
@@ -411,15 +417,70 @@ class ModeloPagos extends Conexion
         $conex = null;
         try {
             $conex = $this->conex();
-            
-            $stmt = $conex->prepare("CALL RegistrarVueltoSeguro(:metodo, :pago, :moneda, :monto, :fecha, :referencia)");
+            if ((float)$datos['monto_vuelto'] <= 0) {
+                throw new Exception("El monto del vuelto debe ser mayor a 0.");
+            }
+
+            // 1. Obtener monto_pago original y moneda base del pago
+            $stmtPago = $conex->prepare("SELECT monto_pago, codigo_moneda FROM pagos WHERE codigo_pago = ?");
+            $stmtPago->execute([$datos['codigo_pago']]);
+            $pagoData = $stmtPago->fetch();
+            if (!$pagoData) {
+                throw new Exception("El pago original no existe.");
+            }
+            $monto_pago = (float)$pagoData['monto_pago'];
+            $moneda_pago = $pagoData['codigo_moneda'];
+
+            // 2. Calcular total abonado (en moneda base del pago)
+            $stmtAbonos = $conex->prepare("SELECT SUM(monto_abonado * tasa_cambio) as total_abonado FROM detalles_pagos WHERE codigo_pago = ?");
+            $stmtAbonos->execute([$datos['codigo_pago']]);
+            $abonosData = $stmtAbonos->fetch();
+            $total_abonado = (float)($abonosData['total_abonado'] ?? 0);
+
+            // 3. Calcular vuelto esperado base inicial
+            $vuelto_esperado_base = round($monto_pago - $total_abonado, 2);
+
+            // 4. Restar vueltos anteriores ya entregados (en moneda base)
+            $stmtVueltos = $conex->prepare("SELECT SUM(monto_base) as total_vueltos_base FROM vueltos WHERE codigo_pago = ?");
+            $stmtVueltos->execute([$datos['codigo_pago']]);
+            $vueltosData = $stmtVueltos->fetch();
+            $total_vueltos_base = (float)($vueltosData['total_vueltos_base'] ?? 0);
+
+            $vuelto_disponible_base = round($vuelto_esperado_base - $total_vueltos_base, 2);
+
+            if ($vuelto_disponible_base <= 0) {
+                throw new Exception("Ya no queda saldo disponible para dar vuelto en este pago.");
+            }
+
+            // 5. Calcular el equivalente en la moneda base del pago
+            $monto_base_calculado = (float)$datos['monto_vuelto'];
+            if ($datos['codigo_moneda'] != $moneda_pago) {
+                if(!$this->objTasa) { $this->objTasa = new ModeloTasaCambios(); }
+                $tasaPagoReq = $this->objTasa->ConsultarTasasDisponibles(['codigo_moneda' => $moneda_pago, 'fecha' => $datos['fecha_vuelto'] ?? date('Y-m-d')]);
+                $tasa_pago_val = (!empty($tasaPagoReq['datos'])) ? (float)$tasaPagoReq['datos'][0]['valor_tasa'] : 1.0;
+                
+                $tasaVueltoReq = $this->objTasa->ConsultarTasasDisponibles(['codigo_moneda' => $datos['codigo_moneda'], 'fecha' => $datos['fecha_vuelto'] ?? date('Y-m-d')]);
+                $tasa_vuelto_val = (!empty($tasaVueltoReq['datos'])) ? (float)$tasaVueltoReq['datos'][0]['valor_tasa'] : 1.0;
+                
+                // Convertimos el vuelto a USD (dividiendo por su tasa), luego a la moneda del pago (multiplicando por su tasa)
+                $monto_base_calculado = ($monto_base_calculado / $tasa_vuelto_val) * $tasa_pago_val;
+            }
+
+            $monto_base_calculado = round($monto_base_calculado, 2);
+
+            if ($monto_base_calculado > ($vuelto_disponible_base + 0.05)) {
+                throw new Exception("El vuelto solicitado excede el saldo disponible restante de este pago.");
+            }
+
+            $stmt = $conex->prepare("CALL RegistrarVueltoSeguro(:metodo, :pago, :moneda, :monto, :fecha, :referencia, :monto_base)");
             $stmt->execute([
                 ':metodo' => $datos['codigo_metodo'],
                 ':pago' => $datos['codigo_pago'],
                 ':moneda' => $datos['codigo_moneda'],
                 ':monto' => $datos['monto_vuelto'],
                 ':fecha' => $datos['fecha_vuelto'] ?? date('Y-m-d'),
-                ':referencia' => $datos['referencia'] ?? null
+                ':referencia' => $datos['referencia'] ?? null,
+                ':monto_base' => $monto_base_calculado
             ]);
 
             return ['accion' => 'exito_vuelto', 'mensaje' => 'Vuelto registrado exitosamente (SP)'];

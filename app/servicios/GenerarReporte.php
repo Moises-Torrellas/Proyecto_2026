@@ -97,10 +97,28 @@ class GenerarReporte
                         'apellidos' => 'Apellidos',
                         'genero' => 'Género',
                         'fecha_nac' => 'Fecha Nac.',
+                        'edad' => 'Edad (Cálculo Automático)', // Se calculará abajo
                         'nombre_categoria' => 'Categoría',
                         'nombre_posicion' => 'Posición',
                         'nombre_rep' => 'Representante',
-                        'estatus' => 'Estatus'
+                        'estatus' => 'Estatus',
+                        'peso_kg' => 'Peso (Kg)',
+                        'estatura_cm' => 'Estatura (cm)',
+                        'dorsal' => 'Dorsal',
+                        'fecha_ingreso' => 'Fecha Ingreso',
+                        'lugar_nacimiento' => 'Lugar Nac.',
+                        'correo' => 'Correo',
+                        'instagram' => 'Instagram',
+                        'municipio' => 'Municipio',
+                        'talla_pantalon' => 'Talla Pantalón',
+                        'talla_franela' => 'Talla Franela',
+                        'talla_calzado' => 'Talla Calzado',
+                        'tipo_sangre' => 'Tipo Sangre',
+                        'es_alergico' => 'Es Alérgico (1=Sí/0=No)',
+                        'alergias_detalle' => 'Detalle Alergias',
+                        'fecha_retiro' => 'Fecha Retiro',
+                        'motivo_retiro' => 'Motivo Retiro',
+                        'fecha_reingreso' => 'Fecha Reingreso'
                     ],
                     'Representantes' => [
                         'cedula' => 'Cédula',
@@ -118,8 +136,8 @@ class GenerarReporte
                     ],
                     'Categorías' => [
                         'nombre' => 'Categoría',
-                        'edad_minima' => 'Edad Mínima',
-                        'edad_maxima' => 'Edad Máxima'
+                        'edad_min' => 'Edad Mínima',
+                        'edad_max' => 'Edad Máxima'
                     ],
                     'Métodos de Pago' => [
                         'nombre' => 'Método',
@@ -205,7 +223,6 @@ class GenerarReporte
                         'estatus_txt' => 'Estatus'
                     ],
                     'Catalogo' => [
-                        'id_catalogo' => 'Código',
                         'nombre' => 'Nombre del Artículo',
                         'categoria_nombre' => 'Categoría',
                         'talla' => 'Talla',
@@ -230,6 +247,15 @@ class GenerarReporte
                         'codigo_club' => 'Código Interno',
                         'fecha_asignacion' => 'Fecha de Asignación',
                         'estatus_txt' => 'Estatus'
+                    ],
+                    'Devoluciones' => [
+                        'doc_identidad' => 'Cédula/Doc.',
+                        'nombre_completo' => 'Atleta',
+                        'codigo_club' => 'Código Interno',
+                        'articulo_nombre' => 'Artículo',
+                        'fecha_vista' => 'Fecha de Devolución',
+                        'estado_fisico' => 'Condición Física',
+                        'observacion' => 'Observación'
                     ]
                 ];
 
@@ -307,6 +333,22 @@ class GenerarReporte
                             $datosEstructurados[] = $r;
                         }
                     }
+                } elseif ($moduloOriginal === 'Devoluciones') {
+                    foreach ($datos as $atleta) {
+                        if (!empty($atleta['devoluciones'])) {
+                            foreach ($atleta['devoluciones'] as $dev) {
+                                $subFila = [];
+                                $subFila['doc_identidad'] = $atleta['doc_identidad'] ?? 'Sin CI';
+                                $subFila['nombre_completo'] = $atleta['nombre_completo'] ?? 'Desconocido';
+                                $subFila['codigo_club'] = $dev['codigo_club'] ?? 'N/A';
+                                $subFila['articulo_nombre'] = $dev['articulo_nombre'] ?? 'N/A';
+                                $subFila['fecha_vista'] = $dev['fecha_vista'] ?? 'N/A';
+                                $subFila['estado_fisico'] = $dev['estado_fisico'] ?? 'N/A';
+                                $subFila['observacion'] = $dev['observacion'] ?? 'Sin observaciones';
+                                $datosEstructurados[] = $subFila;
+                            }
+                        }
+                    }
                 } elseif ($moduloOriginal === 'InventarioFisico') {
                     foreach ($datos as $grupo) {
                         if (!empty($grupo['piezas'])) {
@@ -374,6 +416,14 @@ class GenerarReporte
                                 $val = trim($d['nombre_rep'] . ' ' . ($d['apellido_rep'] ?? ''));
                             } elseif ($key == 'genero') {
                                 $val = ($val == 'H') ? 'Hombre' : 'Mujer';
+                            } elseif ($key == 'estatus') {
+                                $val = ((int)$val === 1) ? 'Activo' : 'Retirado';
+                            } elseif ($key == 'edad' && !empty($d['fecha_nac'])) {
+                                $anioNacimiento = date('Y', strtotime($d['fecha_nac']));
+                                $anioActual = date('Y');
+                                $val = $anioActual - $anioNacimiento;
+                            } elseif ($key == 'es_alergico') {
+                                $val = ((int)$val === 1) ? 'Sí' : 'No';
                             }
                         }
 

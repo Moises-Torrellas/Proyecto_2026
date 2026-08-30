@@ -281,6 +281,7 @@ function enviaAjax(datos) {
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
+                    cerrarModal();
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } else if (lee.accion == "eliminar") {
                     consultar();

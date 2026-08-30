@@ -155,7 +155,14 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
 function generar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $respuesta = $obj->ProcesarDatos(['accion' => 'consultar']);
+        $filtros = ['accion' => 'consultar'];
+        if (!empty($_POST['id_catalogo'])) {
+            $filtros['id_catalogo'] = $_POST['id_catalogo'];
+        }
+        if (!empty($_POST['id_estado'])) {
+            $filtros['id_estado'] = $_POST['id_estado'];
+        }
+        $respuesta = $obj->ProcesarDatos($filtros);
         $datos = $respuesta['datos'] ?? [];
 
         if (empty($datos)) {

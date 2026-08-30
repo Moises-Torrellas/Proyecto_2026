@@ -299,7 +299,7 @@ endif;
                                                                         <label><?= htmlspecialchars($det['concepto']) ?></label>
                                                                         <span><?= htmlspecialchars($det['atleta']) ?></span>
                                                                         <small>Abono: <b style="color:#28a745;"><?= number_format($det['monto'], 2, ',', '.') ?> <?= htmlspecialchars($det['moneda']) ?></b></small>
-                                                                        <small>Tasa: <b style="color:#28a745;"><?= number_format($det['tasa'], 4, ',', '.') ?> <?= htmlspecialchars($det['moneda_tasa']) ?></b></small>
+                                                                        <small>Tasa: <b style="color:#28a745;"><?= number_format($det['tasa'], 2, ',', '.') ?> <?= htmlspecialchars($det['moneda_tasa']) ?></b></small>
                                                                     </div>
                                                                 </div>
                                                             <?php endforeach; ?>
@@ -320,7 +320,7 @@ endif;
                                             <label>Vuelto Entregado</label>
                                             <span>Monto Devuelto: <b style="color:#28a745;"><?= number_format($v['monto_vuelto'], 2, ',', '.') ?> <?= htmlspecialchars($v['simbolo'] . ' ' . $v['abreviatura']) ?></b></span>
                                             <small>Exceso Base: <?= number_format($v['monto_exceso_base'], 2, ',', '.') ?> <?= htmlspecialchars($dato['abre'] ?? '') ?></small>
-                                            <small>Tasa Usada: <?= ($v['tasa_usada'] > 0 && $v['tasa_usada'] != 1) ? number_format($v['tasa_usada'], 4, ',', '.') . ' ' . htmlspecialchars($v['abreviatura']) : '1.0000' ?></small>
+                                            <small>Tasa Usada: <?= ($v['tasa_usada'] > 0 && $v['tasa_usada'] != 1) ? number_format($v['tasa_usada'], 2, ',', '.') . ' ' . htmlspecialchars($v['abreviatura']) : '1.00' ?></small>
                                             <small>Método: <?= htmlspecialchars($v['nombre_metodo_vuelto'] ?? 'N/A') ?></small>
                                             <small>Fecha: <?= date('d/m/Y', strtotime($v['fecha_vuelto'])) ?></small>
                                             <?php if(!empty($v['referencia'])): ?>
@@ -449,7 +449,7 @@ endif;
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>

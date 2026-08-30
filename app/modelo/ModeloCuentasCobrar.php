@@ -57,21 +57,29 @@ class ModeloCuentasCobrar extends Conexion
             $conex = $this->conex();
             $params = [];
 
-            // Se mantiene el uso de tu vista, asegúrate de que la vista en BD esté apuntando a la tabla 'cargos'
+            // Ahora la sentencia es directa porque la vista ya incluye el documento_identidad
             $sentencia = "SELECT * FROM vista_cargos WHERE 1=1";
 
             if (!empty($filtro['filtro'])) {
                 $p = "%" . trim($filtro['filtro']) . "%";
                 $sentencia .= " AND (
-                atleta_nombre LIKE :f1 OR 
-                atleta_apellido LIKE :f2 OR 
-                concepto_nombre LIKE :f3 OR
-                estatus_texto LIKE :f5
+                CONCAT(atleta_nombre, ' ', atleta_apellido) LIKE :f1 OR 
+                atleta_nombre LIKE :f2 OR 
+                atleta_apellido LIKE :f3 OR 
+                concepto_nombre LIKE :f4 OR
+                documento_identidad LIKE :f5 OR
+                fecha_emision LIKE :f6 OR
+                DATE_FORMAT(fecha_emision, '%d-%m-%Y') LIKE :f7 OR
+                DATE_FORMAT(fecha_emision, '%d/%m/%Y') LIKE :f8
             )";
                 $params[':f1'] = $p;
                 $params[':f2'] = $p;
                 $params[':f3'] = $p;
+                $params[':f4'] = $p;
                 $params[':f5'] = $p;
+                $params[':f6'] = $p;
+                $params[':f7'] = $p;
+                $params[':f8'] = $p;
             }
 
             if (!empty($filtro['atleta'])) {
@@ -82,9 +90,12 @@ class ModeloCuentasCobrar extends Conexion
                 $sentencia .= " AND id_concepto = :concepto";
                 $params[':concepto'] = $filtro['concepto'];
             }
-            if (!empty($filtro['fecha_inicio']) && !empty($filtro['fecha_fin'])) {
-                $sentencia .= " AND fecha_emision BETWEEN :fecha_inicio AND :fecha_fin";
+            if (!empty($filtro['fecha_inicio'])) {
+                $sentencia .= " AND fecha_emision >= :fecha_inicio";
                 $params[':fecha_inicio'] = $filtro['fecha_inicio'];
+            }
+            if (!empty($filtro['fecha_fin'])) {
+                $sentencia .= " AND fecha_emision <= :fecha_fin";
                 $params[':fecha_fin'] = $filtro['fecha_fin'];
             }
 
@@ -189,26 +200,26 @@ class ModeloCuentasCobrar extends Conexion
             }
 
             $conex->commit();
-            
+
             // Construir una descripción más amigable para la bitácora
             $stmtConcepto = $conex->prepare("SELECT nombre FROM conceptos WHERE codigo_concepto = :concepto LIMIT 1");
             $stmtConcepto->bindParam(':concepto', $this->codigo_concepto);
             $stmtConcepto->execute();
             $nombreConcepto = $stmtConcepto->fetchColumn();
-            
+
             $desc_atletas = count($this->codigo_atleta) . " atleta(s)";
             if (count($this->codigo_atleta) === 1) {
                 $stmtAtleta = $conex->prepare("SELECT p_nombre, p_apellidos FROM atletas WHERE codigo_atleta = :atleta LIMIT 1");
                 $stmtAtleta->bindParam(':atleta', $this->codigo_atleta[0]);
                 $stmtAtleta->execute();
-                $aInfo = $stmtAtleta->fetch(PDO::FETCH_ASSOC);
+                $aInfo = $stmtAtleta->fetch();
                 if ($aInfo) {
                     $desc_atletas = $aInfo['p_nombre'] . " " . $aInfo['p_apellidos'];
                 }
             }
-            
+
             $desc_bitacora = "Generó el Cargo: {$nombreConcepto} De {$desc_atletas} para la fecha {$this->fecha_emision}";
-            
+
             $datos_nuevos = [
                 'id_concepto' => $this->codigo_concepto,
                 'id_atleta' => $this->codigo_atleta,
@@ -260,7 +271,7 @@ class ModeloCuentasCobrar extends Conexion
             $stmt->execute();
 
             $conex->commit();
-            
+
             // Obtener descripción para bitácora
             $b_nuevo = $this->Buscar($this->codigo_cargo);
             $desc_bitacora = "Modificó el Cargo ID " . $this->codigo_cargo;
@@ -337,7 +348,7 @@ class ModeloCuentasCobrar extends Conexion
             $stmt->execute();
 
             $conex->commit();
-            
+
             $desc_bitacora = "Anuló el Cargo ID " . $this->codigo_cargo;
             if (isset($b_previo['datos'][0])) {
                 $fila = $b_previo['datos'][0];

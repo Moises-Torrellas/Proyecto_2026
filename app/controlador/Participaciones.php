@@ -81,7 +81,11 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 }
 
 function consultar($obj, $permisos): void {
-    $respuesta = $obj->Consultar();
+    $filtro = [];
+    if (isset($_POST['filtro'])) {
+        $filtro['filtro'] = $_POST['filtro'];
+    }
+    $respuesta = $obj->Consultar($filtro);
     $registro = $respuesta['datos'] ?? []; 
     $solo_lista = true;
     include (__DIR__.'/../vista/Participaciones.php');

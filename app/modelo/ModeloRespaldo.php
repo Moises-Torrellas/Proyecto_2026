@@ -136,7 +136,7 @@ class ModeloRespaldo extends Conexion
 
             // Calculamos el peso y guardamos en bds2 con estatus = 1 y id_usuario
             $pesoCalculado = round(filesize($rutaCompleta) / 1024, 2) . ' KB';
-            $idUsuario = $_SESSION['idUsuario'] ?? 1;
+            $idUsuario = $_SESSION['id'];
             
             $conex = $this->conex();
             $sql = "INSERT INTO bds2.respaldos (nombre_archivo, peso, fecha_creacion, id_usuario, estatus) VALUES (?, ?, NOW(), ?, 1)";

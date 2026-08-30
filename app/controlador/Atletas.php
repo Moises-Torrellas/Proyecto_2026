@@ -244,6 +244,9 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_CEDULA => 'La cedula ingresada ya pertenece a un atleta registrado.',
                 DUPLICATE_PHONE  => 'El telefono ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_EMAIL  => 'El correo ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_INSTAGRAM => 'El instagram ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_DORSAL => 'El dorsal ingresado ya está en uso por un atleta activo en esta categoría.',
                 INVALID_ID       => 'La categoria ingresada no existe en los registros del club.',
                 INVALID_ID . '0' => 'La posicion ingresada no existe en los registros del club.',
                 INVALID_ID . '1' => 'El representante ingresado no existe en los registros del club.',
@@ -347,6 +350,9 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_CEDULA => 'La cedula ingresada ya pertenece a un atleta registrado.',
                 DUPLICATE_PHONE  => 'El telefono ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_EMAIL  => 'El correo ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_INSTAGRAM => 'El instagram ingresado ya pertenece a un atleta registrado.',
+                DUPLICATE_DORSAL => 'El dorsal ingresado ya está en uso por un atleta activo en esta categoría.',
                 INVALID_ID       => 'La categoria ingresada no existe en los registros del club.',
                 INVALID_ID . '0' => 'La posicion ingresada no existe en los registros del club.',
                 INVALID_ID . '1' => 'El representante ingresado no existe en los registros del club.',
@@ -456,6 +462,7 @@ function reinscribir($obj, $id_modulo, $bitacoraObj): void
             $resultado = array('accion' => 'reinscribir', 'mensaje' => 'Atleta re-inscrito exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
+                DUPLICATE_DORSAL => 'El dorsal ingresado ya está en uso por un atleta activo en esta categoría.',
                 DB_CONNECTION    => 'Ocurrió un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado al re-inscribir al atleta.'
             };

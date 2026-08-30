@@ -215,9 +215,9 @@ if (!function_exists('formatearFechaTorneo')) {
                     </div>
 
                     <div class="row">
-                        <div class="colum" style="width: 100%;">
+                        <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="ubicacion" name="ubicacion" placeholder="Ej: Cancha Múltiple del Este, Barquisimeto">
+                                <input type="text" class="formulario" id="ubicacion" name="ubicacion">
                                 <label for="ubicacion" class="titulo_formulario">Ubicación</label>
                                 <span class="mensaje" id="ubicacion_spam"></span>
                             </div>
@@ -227,7 +227,7 @@ if (!function_exists('formatearFechaTorneo')) {
                     <div class="row">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="proceso"></button>
-                            <button type="button" class="btn btn_verde" id="limpiar">Limpiar</button>
+
                         </div>
                     </div>
                 </form>
