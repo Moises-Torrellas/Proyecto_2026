@@ -76,4 +76,43 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // Lógica para abrir manual de usuario
+    const btnManual = document.getElementById('incluir');
+    if (btnManual) {
+        btnManual.addEventListener('click', function () {
+            confirmar('¿Está seguro de que quiere abrir el manual de usuario en otra pestaña?', function (confirmado) {
+                if (confirmado) {
+                    var datos = new FormData();
+                    datos.append('accion', 'obtener_manual');
+                    enviaAjax(datos);
+                }
+            });
+        });
+    }
 });
+
+function enviaAjax(datos) {
+    $.ajax({
+        async: true,
+        url: "",
+        type: "POST",
+        contentType: false,
+        data: datos,
+        processData: false,
+        cache: false,
+        success: function (respuesta) {
+            try {
+                var lee = JSON.parse(respuesta);
+                if (lee.accion === "reporte") {
+                    window.open(lee.archivo, '_blank');
+                }
+            } catch (e) {
+                console.error("Error al procesar la respuesta:", e);
+            }
+        },
+        error: function (error) {
+            console.error("Error en la petición:", error);
+        }
+    });
+}

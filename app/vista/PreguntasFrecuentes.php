@@ -25,6 +25,9 @@
                             <input type="text" placeholder="Buscar pregunta..." autocomplete="off" id="busqueda">
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
+                        <div class="botones">
+                            <button class="btn btn_azul" id="incluir">Abrir Manual de Usuario</button>
+                        </div>
                     </div>
 
                     <!-- Contenedor del acordeón -->
@@ -189,7 +192,7 @@
                                         <p>Para añadir una nueva forma de pago, dirígete al módulo de <strong>Métodos de Pago</strong> y haz clic en el botón verde <strong>"Nuevo Método de Pago"</strong>. En la ventana emergente, ingresa el Nombre (ej. Transferencia, Efectivo, Pago Móvil) y selecciona en la lista desplegable si este método exige un número de Referencia al momento de cobrar ("Sí" o "No"). Por último, presiona el botón verde <strong>"Registrar Método"</strong>.</p>
                                     </div>
                                 </div>
-                                
+
                                 <div class="faq_item">
                                     <button class="faq_question">
                                         ¿Cómo registrar un nuevo concepto de cobro?
@@ -235,7 +238,7 @@
                         <div class="faq_section">
                             <h3 class="faq_category">Inventario</h3>
                             <div class="faq_accordion">
-                                
+
                                 <!-- Preguntas de Inventario -->
                                 <div class="faq_item">
                                     <button class="faq_question">
