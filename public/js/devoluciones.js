@@ -130,18 +130,16 @@ $(document).ready(function () {
         $('#lbl_fecha').text('Fecha de Devolución');
 
         // Ocultar asignaciones que ya fueron devueltas o anuladas (estatus diferente de 1)
-        $("#id_asignacion option").each(function() {
-            let estatus = $(this).attr("data-estatus");
-            let valor = $(this).val();
-
-            if (valor === "") {
-                $(this).prop("disabled", false).show();
-            } else if (estatus != "1") {
-                $(this).prop("disabled", true).hide();
-            } else {
-                $(this).prop("disabled", false).show();
-            }
-        });
+        $("#id_asignacion").empty().append('<option value="">Seleccione una asignación...</option>');
+        if (window.asignaciones_global) {
+            window.asignaciones_global.forEach(a => {
+                if (String(a.estatus_asignacion) === "1" || String(a.estatus_asignacion).toLowerCase() === "activa") {
+                    let nomAtleta = a.atleta || '';
+                    let nomArticulo = a.articulo || '';
+                    $("#id_asignacion").append(`<option value="${a.id_asignacion}" data-estatus="${a.estatus_asignacion}">${nomArticulo} (${nomAtleta})</option>`);
+                }
+            });
+        }
 
         $('#id_asignacion').val("").trigger('change');
         $('#id_estado').val("").trigger('change');
@@ -260,7 +258,7 @@ function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
     $("#btn_guardar").text("Guardar Cambios").attr("data-accion", "modificar");
 
     // Mostrar campos de registro, ocultar campos de reporte
-    $('#col_asignacion').show();
+    $('#col_asignacion').hide(); // Oculto al modificar según lo requerido
     $('#row_observacion').show();
     $('#row_atleta_reporte').hide();
     $('#col_fecha_hasta').hide();
@@ -276,9 +274,14 @@ function editar(id_devolucion, id_asignacion, id_estado, fecha, observacion) {
     }
     $("#observacion").val(observacion);
     
-    $("#id_asignacion option").each(function() {
-        $(this).prop("disabled", false).show();
-    });
+    $("#id_asignacion").empty().append('<option value="">Seleccione una asignación...</option>');
+    if (window.asignaciones_global) {
+        window.asignaciones_global.forEach(a => {
+            let nomAtleta = a.atleta || '';
+            let nomArticulo = a.articulo || '';
+            $("#id_asignacion").append(`<option value="${a.id_asignacion}" data-estatus="${a.estatus_asignacion}">${nomArticulo} (${nomAtleta})</option>`);
+        });
+    }
     
     $("#id_asignacion").val(id_asignacion).trigger('change');
     $("#id_estado").val(id_estado).trigger('change');
@@ -301,6 +304,7 @@ function anular(id_devolucion) {
 }
 
 function poblarCombos(asignaciones, estados, atletas) {
+    window.asignaciones_global = asignaciones;
     let comboAsignacion = $("#id_asignacion");
     let comboEstado = $("#id_estado");
     let comboAtleta = $("#filtro_atleta");
