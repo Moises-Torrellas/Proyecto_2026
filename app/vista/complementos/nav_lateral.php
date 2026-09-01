@@ -162,7 +162,7 @@
             <?php
             if (($nivelUsuario === 1 || $nivelUsuario === 2) && ($puedeVer(_MD_USUARIOS_, 'ingresar_usuarios') || $puedeVer(_MD_ROLES_, 'ingresar_rol') || $puedeVer(_MD_PERMISOS_, 'ingresar_permisos') || $puedeVer(_MD_MODULO_, 'ingresar_modulos') || $puedeVer(_MD_BITACORA_, 'ingresar_bitacora') || $puedeVer(_MD_RESPALDO_, 'ingresar_respaldo'))) : ?>
                 <li class="nav_identificador">
-                    <span class="identificador_texto"><i data-lucide="settings" class="opciones_i"></i> General</span>
+                    <span class="identificador_texto"><i data-lucide="lock-keyhole" class="opciones_i"></i> Seguridad</span>
                     <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
                 </li>
                 <li class="nav_opciones">
