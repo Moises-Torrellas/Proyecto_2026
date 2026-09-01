@@ -598,7 +598,11 @@ class ModeloAtletas extends Conexion
                           FROM vista_atletas v
                           JOIN atletas a ON v.id_atleta = a.codigo_atleta
                           LEFT JOIN contacto_atleta c ON v.id_atleta = c.codigo_atleta
-                          LEFT JOIN inscripciones i ON v.id_atleta = i.codigo_atleta AND i.estatus = 1
+                          LEFT JOIN inscripciones i ON i.codigo_inscripcion = (
+                              SELECT codigo_inscripcion FROM inscripciones 
+                              WHERE codigo_atleta = v.id_atleta 
+                              ORDER BY codigo_inscripcion DESC LIMIT 1
+                          )
                           LEFT JOIN datos_medicos dm ON v.id_atleta = dm.codigo_atleta
                           WHERE v.id_atleta = :id";
             $stmt = $conex->prepare($sentencia);
@@ -749,10 +753,18 @@ class ModeloAtletas extends Conexion
                 }
             }
 
+            if (!empty($this->correo)) {
+                $stmtVerifCorreo = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE correo = :correo AND codigo_atleta != :id");
+                $stmtVerifCorreo->execute([':correo' => $this->correo, ':id' => $this->id]);
+                if ($stmtVerifCorreo->fetchColumn() > 0) {
+                    throw new Exception(DUPLICATE_EMAIL);
+                }
+            }
+
             $conex->beginTransaction();
 
-            $sqlInsc = "INSERT INTO inscripciones (codigo_atleta, codigo_categoria, codigo_posicion, dorsal, peso_kg, estatura_cm, fecha_inscripcion, estatus) 
-                    VALUES (:ca, :cc, :cp, :dorsal, :peso, :estatura, CURDATE(), 1)";
+            $sqlInsc = "INSERT INTO inscripciones (codigo_atleta, codigo_categoria, codigo_posicion, dorsal, peso_kg, estatura_cm, talla_pantalon, talla_franela, talla_calzado, fecha_inscripcion, estatus) 
+                    VALUES (:ca, :cc, :cp, :dorsal, :peso, :estatura, :tp, :tf, :tc, CURDATE(), 1)";
             $stmtInsc = $conex->prepare($sqlInsc);
             $stmtInsc->execute([
                 ':ca'       => $this->id,
@@ -760,7 +772,19 @@ class ModeloAtletas extends Conexion
                 ':cp'       => $this->posicion,
                 ':dorsal'   => $this->dorsal,
                 ':peso'     => $this->peso_kg,
-                ':estatura' => $this->estatura_cm
+                ':estatura' => $this->estatura_cm,
+                ':tp'       => $this->talla_pantalon,
+                ':tf'       => $this->talla_franela,
+                ':tc'       => $this->talla_calzado
+            ]);
+
+            $sqlMed = "UPDATE datos_medicos SET tipo_sangre = :ts, es_alergico = :ea, alergias_detalle = :ad WHERE codigo_atleta = :id";
+            $stmtMed = $conex->prepare($sqlMed);
+            $stmtMed->execute([
+                ':ts' => $this->tipo_sangre,
+                ':ea' => $this->es_alergico,
+                ':ad' => $this->alergias_detalle,
+                ':id' => $this->id
             ]);
 
             $conex->commit();

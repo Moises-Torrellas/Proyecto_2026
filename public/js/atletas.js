@@ -413,16 +413,54 @@ function validarEnvio(proceso) {
     }
 
 
-    if ($('#correo').val() != "" && $('#correo').val() != null) {
+    if ($('#correo').val() === "" || $('#correo').val() === null) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un correo electrónico");
+        return false;
+    } else {
         if (validarkeyup(/^[a-zA-Z0-9@._\-]*$/, $('#correo'), $("#correo_spam"), "Ejemplo: usuario@dominio.com", true) || validarkeyup(/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, $('#correo'), $("#correo_spam"), "Ejemplo: usuario@dominio.com", true)) {
             muestraMensaje("error", 2000, "Error", "Debe ingresar un correo válido");
             return false;
         }
     }
 
-    if ($('#talla_calzado').val() != "" && $('#talla_calzado').val() != null) {
+    if ($('#peso').val() === "" || $('#peso').val() === null) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar el peso");
+        return false;
+    }
+
+    if ($('#estatura').val() === "" || $('#estatura').val() === null) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar la estatura");
+        return false;
+    }
+
+    if ($('#talla_pantalon').val() === "" || $('#talla_pantalon').val() === null) {
+        muestraMensaje("error", 2000, "Error", "Debe elegir una talla de pantalón");
+        return false;
+    }
+
+    if ($('#talla_franela').val() === "" || $('#talla_franela').val() === null) {
+        muestraMensaje("error", 2000, "Error", "Debe elegir una talla de franela");
+        return false;
+    }
+
+    if ($('#talla_calzado').val() === "" || $('#talla_calzado').val() === null) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar la talla de calzado");
+        return false;
+    } else {
         if (validarkeyup(/^(1[0-9]|[2-4][0-9]|50)$/, $('#talla_calzado'), $("#talla_calzado_spam"), "Solo números del 10 al 50", true)) {
             muestraMensaje("error", 2000, "Error", "La talla de calzado debe ser un número del 10 al 50");
+            return false;
+        }
+    }
+
+    if ($('#tipo_sangre').val() === "" || $('#tipo_sangre').val() === null) {
+        muestraMensaje("error", 2000, "Error", "Debe elegir un tipo de sangre");
+        return false;
+    }
+
+    if ($('#es_alergico').is(':checked')) {
+        if ($('#alergias_detalle').val().trim() === "") {
+            muestraMensaje("error", 2000, "Error", "Debe especificar las alergias");
             return false;
         }
     }

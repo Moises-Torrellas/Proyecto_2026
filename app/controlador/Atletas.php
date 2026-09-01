@@ -167,7 +167,11 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['fecha_nac', 'nombre', 'apellido', 'posicion', 'categoria', 'genero']);
+        validar_requeridos(['fecha_nac', 'nombre', 'apellido', 'posicion', 'categoria', 'genero', 'peso', 'estatura', 'talla_pantalon', 'talla_franela', 'talla_calzado', 'tipo_sangre', 'correo']);
+        
+        if (!empty($_POST['es_alergico']) && empty(trim($_POST['alergias_detalle']))) {
+            throw new Exception('Debe especificar las alergias.');
+        }
 
         $fechaNacObj = new DateTime($_POST['fecha_nac']);
         $hoy = new DateTime();
@@ -269,7 +273,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id', 'fecha_nac', 'nombre', 'apellido', 'posicion', 'categoria', 'genero', 'foto_actual']);
+        validar_requeridos(['id', 'fecha_nac', 'nombre', 'apellido', 'posicion', 'categoria', 'genero', 'foto_actual', 'peso', 'estatura', 'talla_pantalon', 'talla_franela', 'talla_calzado', 'tipo_sangre', 'correo']);
+
+        if (!empty($_POST['es_alergico']) && empty(trim($_POST['alergias_detalle']))) {
+            throw new Exception('Debe especificar las alergias.');
+        }
 
         $fechaNacObj = new DateTime($_POST['fecha_nac']);
         $hoy = new DateTime();
@@ -431,7 +439,11 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 function reinscribir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id', 'posicion', 'categoria']);
+        validar_requeridos(['id', 'posicion', 'categoria', 'peso', 'estatura', 'correo', 'talla_pantalon', 'talla_franela', 'talla_calzado', 'tipo_sangre']);
+
+        if (!empty($_POST['es_alergico']) && empty(trim($_POST['alergias_detalle']))) {
+            throw new Exception('Debe especificar las alergias.');
+        }
 
         $datos = [
             'id' => $_POST['id'],
@@ -440,6 +452,13 @@ function reinscribir($obj, $id_modulo, $bitacoraObj): void
             'dorsal' => $_POST['dorsal'] ?? 0,
             'peso' => $_POST['peso'] ?? 0,
             'estatura' => $_POST['estatura'] ?? 0,
+            'correo' => filter_var($_POST['correo'] ?? '', FILTER_SANITIZE_EMAIL),
+            'talla_pantalon' => $_POST['talla_pantalon'] ?? '',
+            'talla_franela' => $_POST['talla_franela'] ?? '',
+            'talla_calzado' => $_POST['talla_calzado'] ?? '',
+            'tipo_sangre' => $_POST['tipo_sangre'] ?? '',
+            'es_alergico' => $_POST['es_alergico'] ?? 0,
+            'alergias_detalle' => $_POST['alergias_detalle'] ?? '',
             'accion' => 'reinscribir'
         ];
 
@@ -462,6 +481,7 @@ function reinscribir($obj, $id_modulo, $bitacoraObj): void
             $resultado = array('accion' => 'reinscribir', 'mensaje' => 'Atleta re-inscrito exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
+                DUPLICATE_EMAIL  => 'El correo ingresado ya pertenece a un atleta registrado.',
                 DUPLICATE_DORSAL => 'El dorsal ingresado ya está en uso por un atleta activo en esta categoría.',
                 DB_CONNECTION    => 'Ocurrió un error al conectarse con la base de datos.',
                 default          => 'Ocurrió un error inesperado al re-inscribir al atleta.'
