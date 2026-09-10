@@ -208,25 +208,13 @@ class ModeloParticipaciones extends Conexion
             $stmtPrevio->execute([':id' => $this->codigo_participacion]);
             $datosPrevios = $stmtPrevio->fetch(PDO::FETCH_ASSOC);
 
-            $stmtEstado = $conex->prepare("SELECT t.estatus FROM torneos t JOIN participaciones p ON t.codigo_torneo = p.codigo_torneo WHERE p.codigo_participacion = :id");
-            $stmtEstado->execute([':id' => $this->codigo_participacion]);
-            $estatusTorneo = $stmtEstado->fetchColumn();
 
-            if ($estatusTorneo == 2 || $estatusTorneo == 3) {
-                throw new Exception('STATUS_ERROR');
-            }
 
             if (!$this->verificarExistencia('codigo_torneo', $this->codigo_torneo, 'torneos', null)) {
                 throw new Exception(INVALID_ID);
             }
 
-            $stmtNuevo = $conex->prepare("SELECT estatus FROM torneos WHERE codigo_torneo = :id");
-            $stmtNuevo->execute([':id' => $this->codigo_torneo]);
-            $estatusNuevo = $stmtNuevo->fetchColumn();
 
-            if ($estatusNuevo == 2 || $estatusNuevo == 3) {
-                throw new Exception('STATUS_ERROR');
-            }
             if (!$this->verificarExistencia('codigo_equipo', $this->codigo_equipo, 'equipos', null)) {
                 throw new Exception(INVALID_ID . '0');
             }
@@ -279,13 +267,7 @@ class ModeloParticipaciones extends Conexion
             $stmtPrevio->execute([':id' => $this->codigo_participacion]);
             $datosPrevios = $stmtPrevio->fetch(PDO::FETCH_ASSOC);
 
-            $stmtEstado = $conex->prepare("SELECT t.estatus FROM torneos t JOIN participaciones p ON t.codigo_torneo = p.codigo_torneo WHERE p.codigo_participacion = :id");
-            $stmtEstado->execute([':id' => $this->codigo_participacion]);
-            $estatusTorneo = $stmtEstado->fetchColumn();
 
-            if ($estatusTorneo == 2 || $estatusTorneo == 3) {
-                throw new Exception('STATUS_ERROR');
-            }
 
             $sql = "DELETE FROM participaciones WHERE codigo_participacion = :codigo_participacion";
             $stmt = $conex->prepare($sql);

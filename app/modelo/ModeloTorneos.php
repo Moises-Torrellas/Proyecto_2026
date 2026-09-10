@@ -235,6 +235,22 @@ class ModeloTorneos extends Conexion
         if (!empty($datos['fecha_inicio']) && !empty($datos['fecha_fin']) && strtotime($datos['fecha_inicio']) > strtotime($datos['fecha_fin'])) {
             throw new Exception('La fecha de inicio no puede ser mayor que la fecha de fin.');
         }
+
+        if (!empty($datos['estatus']) && !empty($datos['fecha_inicio']) && !empty($datos['fecha_fin'])) {
+            $hoy = strtotime(date('Y-m-d'));
+            $inicio = strtotime($datos['fecha_inicio']);
+            $fin = strtotime($datos['fecha_fin']);
+            
+            if ($datos['estatus'] == 1 && $inicio <= $hoy) {
+                throw new Exception('Un torneo "Por Disputarse" debe tener un rango de fecha futura.');
+            }
+            if ($datos['estatus'] == 2 && ($inicio > $hoy || $fin < $hoy)) {
+                throw new Exception('Un torneo "En Curso" debe tener un rango de fecha que esté transcurriendo.');
+            }
+            if ($datos['estatus'] == 3 && $fin >= $hoy) {
+                throw new Exception('Un torneo "Finalizado" debe tener un rango de fecha que ya pasó.');
+            }
+        }
     }
 
     public function ConsultarProximos(): array

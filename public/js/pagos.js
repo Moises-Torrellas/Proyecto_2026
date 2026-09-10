@@ -252,7 +252,7 @@ $(document).ready(function () {
 
         cuentaSeleccionadaActual = primeraCuenta;
 
-        let htmlDeudas = '<div class="alerta-info-deuda" style="background-color: #f0f7ff; border-left: 4px solid #007bff; padding: 10px; margin-top: 5px; border-radius: 4px;"><p style="margin: 0; font-size: 13px; color: #333;">⚠️ <strong>Cuentas seleccionadas:</strong></p><ul style="margin: 5px 0 0 20px;">';
+        let htmlDeudas = '<div class="alerta-info-deuda" style="background-color: #f0f7ff; border-left: 4px solid #007bff; padding: 10px; margin-top: 5px; border-radius: 4px;"><p style="margin: 0; font-size: 13px; color: #333;"><strong>Cuentas seleccionadas:</strong></p><ul style="margin: 5px 0 0 20px;">';
 
         idsCobrar.forEach(id => {
             let cuenta = listadoCuentas.find(c => c.codigo_cargo == id);
@@ -406,7 +406,7 @@ function solicitarTasaAPI() {
                     });
 
                     selectTasa.prop('disabled', false);
-                    $('#label_tasa').html(`Tasa <strong style="color: #28a745;">(${isoPago} ➔ ${isoCuenta})</strong>`);
+                    $('#label_tasa').html(`Tasa <strong style="color: #28a745;">(${isoPago} - ${isoCuenta})</strong>`);
 
                 } else {
                     selectTasa.append('<option value="" disabled selected>No hay tasas disponibles</option>');
@@ -454,16 +454,16 @@ function recalcularAmortizacion() {
         let desgloseSaldoHtml = "";
 
         if (saldoRestante > 0) {
-            desgloseSaldoHtml = `<br/>📉 El saldo pendiente total pasará de <strong>${deudaTotalPendiente.toFixed(2)} ${simDeuda}</strong> a <strong style="color: #dc3545;">${saldoRestante.toFixed(2)} ${simDeuda}</strong>.`;
+            desgloseSaldoHtml = `<br/>El saldo pendiente total pasará de <strong>${deudaTotalPendiente.toFixed(2)} ${simDeuda}</strong> a <strong style="color: #dc3545;">${saldoRestante.toFixed(2)} ${simDeuda}</strong>.`;
         } else if (saldoRestante === 0) {
-            desgloseSaldoHtml = `<br/>🎉 ¡La deuda seleccionada quedará <strong>totalmente saldada</strong>!`;
+            desgloseSaldoHtml = `<br/>¡La deuda seleccionada quedará <strong>totalmente saldada</strong>!`;
         } else {
-            desgloseSaldoHtml = `<br/>🪙 Quedará un saldo a favor de <strong style="color: #28a745;">${Math.abs(saldoRestante).toFixed(2)} ${simDeuda}</strong>.`;
+            desgloseSaldoHtml = `<br/>Quedará un saldo a favor de <strong style="color: #28a745;">${Math.abs(saldoRestante).toFixed(2)} ${simDeuda}</strong>.`;
         }
 
         $('#monto_equivalente_ayuda').html(`
             <div style="background-color: #e2f0d9; border-left: 4px solid #385723; padding: 10px; border-radius: 4px; margin-top: 8px; font-size: 13px; color: #222;">
-                🟢 Los <strong>${monto.toFixed(2)} ${isoPago}</strong> ingresados equivalen al cambio a: 
+                Los <strong>${monto.toFixed(2)} ${isoPago}</strong> ingresados equivalen al cambio a: 
                 <strong style="font-size: 14px; color: #385723;">${montoAmortizado.toFixed(2)} ${simDeuda} (${isoDeuda})</strong>.${desgloseSaldoHtml}
             </div>
         `);
@@ -509,7 +509,7 @@ function solicitarTasaVueltoAPI() {
         return;
     }
 
-    $('#label_tasa_vuelto').html(`Tasa <strong style="color: #28a745; font-size:11px;">(${isoVuelto} ➔ ${isoCuenta})</strong>`);
+    $('#label_tasa_vuelto').html(`Tasa <strong style="color: #28a745; font-size:11px;">(${isoVuelto} - ${isoCuenta})</strong>`);
 
     let cuentaObj = listadoMonedas.find(m => m.abreviatura.toUpperCase() === isoCuenta);
     let idMonedaCuenta = cuentaObj ? cuentaObj.codigo_moneda : null;
@@ -844,7 +844,7 @@ function enviaAjax(datos) {
                         construirSelect('codigo_moneda_vuelto', listadoMonedas, 'codigo_moneda', 'simbolo', 'nombre');
                         construirSelect('codigo_metodo_vuelto', listadoMetodosVuelto, 'codigo_metodo', 'nombre', 'nec_referencia');
 
-                        // 🔥 SOLUCIÓN: Unificar el ID del modal para evitar problemas de capa (z-index)
+                        // SOLUCIÓN: Unificar el ID del modal para evitar problemas de capa (z-index)
                         $('#codigo_moneda_vuelto').select2({
                             placeholder: "Selecciona una Moneda",
                             dropdownParent: $('#secundario_modal_contenedor')

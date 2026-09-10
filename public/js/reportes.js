@@ -545,6 +545,9 @@ function cargarGraficoReporte(datosServidor, tipoReporte) {
                 },
                 color: '#ffffff',
                 backgroundColor: function(context) {
+                    if (tipoGrafico === 'pie' || tipoGrafico === 'doughnut') {
+                        return 'rgba(0, 0, 0, 0.6)';
+                    }
                     return context.dataset.borderColor;
                 },
                 borderRadius: 4,

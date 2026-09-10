@@ -38,7 +38,7 @@ $(document).ready(function () {
     Validacion("contraseña_r", /^[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]*$/, /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/, "8-20 caracteres, incluye Mayúscula, Minúscula, Número y Carácter Especial");
 
 
-    // Al hacer clic en Enviar Código (sec_1 → sec_2)
+    // Al hacer clic en Enviar Código (sec_1 -> sec_2)
     $("#comprobar").click(function () {
         if (validarCedula()) {
             var datos = new FormData($('#c')[0]);
@@ -48,7 +48,7 @@ $(document).ready(function () {
         }
     });
 
-    // Al hacer clic en Enviar Código (sec_2 → sec_3)
+    // Al hacer clic en Enviar Código (sec_2 -> sec_3)
     $("#comprobarCodigo").click(function () {
         if (validarCodigo()) {
             var datos = new FormData($('#r')[0]);

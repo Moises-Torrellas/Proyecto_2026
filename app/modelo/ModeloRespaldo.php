@@ -7,7 +7,9 @@ use PDO;
 
 class ModeloRespaldo extends Conexion
 {
-    private $mysqlPath;
+    private $mysqlDumpPath;
+    private $mysqlCliPath;
+    private $dbHost;
     private $dbName;
     private $user;
     private $pass;
@@ -20,22 +22,18 @@ class ModeloRespaldo extends Conexion
         $this->llavePrimaria = '';
         
         // Asignamos las credenciales dinámicamente desde las constantes de configuración
+        $this->dbHost = _DB_HOST_;
         $this->dbName = _DB_NAME_;
         $this->user   = _DB_USER_;
         $this->pass   = _DB_PASS_;
         
-        // 1. Detectar automáticamente la ruta de mysqldump según la PC / Servidor
+        // 1. Detectar automáticamente la ruta de mysqldump y mysql según la PC / Servidor
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            // Si es Windows probamos ambas unidades
-            if (file_exists('C:\xampp\mysql\bin\mysqldump.exe')) {
-                $this->mysqlPath = 'C:\xampp\mysql\bin\mysqldump.exe';
-            } elseif (file_exists('D:\xampp\mysql\bin\mysqldump.exe')) {
-                $this->mysqlPath = 'D:\xampp\mysql\bin\mysqldump.exe';
-            } else {
-                $this->mysqlPath = 'mysqldump'; 
-            }
+            $this->mysqlDumpPath = $this->detectarBinarioWindows('mysqldump.exe');
+            $this->mysqlCliPath  = $this->detectarBinarioWindows('mysql.exe');
         } else {
-            $this->mysqlPath = 'mysqldump'; 
+            $this->mysqlDumpPath = 'mysqldump'; 
+            $this->mysqlCliPath  = 'mysql'; 
         }
 
         // 2. Definimos la ruta segura para guardar los archivos
@@ -123,14 +121,20 @@ class ModeloRespaldo extends Conexion
             $rutaCompleta = $this->rutaSegura . $nombreArchivo;
 
             $paramPassword = !empty($this->pass) ? "--password=\"{$this->pass}\"" : "";
-            $comando = "\"{$this->mysqlPath}\" --user={$this->user} {$paramPassword} {$this->dbName} > \"{$rutaCompleta}\" 2>&1";
+            $comando = "\"{$this->mysqlDumpPath}\" --host={$this->dbHost} --user={$this->user} {$paramPassword} {$this->dbName} > \"{$rutaCompleta}\" 2>&1";
             
+            $output = [];
             $resultado = null;
-            system($comando, $resultado);
+            exec($comando, $output, $resultado);
 
             if ($resultado !== 0) {
-                $errorConsola = file_exists($rutaCompleta) ? file_get_contents($rutaCompleta) : 'Error desconocido';
+                $errorConsola = file_exists($rutaCompleta) ? file_get_contents($rutaCompleta) : implode("\n", $output);
                 if (file_exists($rutaCompleta)) unlink($rutaCompleta);
+                
+                // Aseguramos que el error sea UTF-8 válido para no romper json_encode
+                $errorConsola = mb_convert_encoding($errorConsola, 'UTF-8', 'auto');
+                
+                logs('Respaldo', "Comando fallido: {$comando} | Error: " . trim($errorConsola), 'Modelo_Generar');
                 throw new Exception("Error de MySQL: " . trim($errorConsola));
             }
 
@@ -161,20 +165,21 @@ class ModeloRespaldo extends Conexion
                 throw new Exception('El archivo de respaldo no existe en el servidor.');
             }
 
-            // Para restaurar archivos con DELIMITER y TRIGGERS, no podemos usar PDO::exec() 
-            // porque no entiende los delimitadores nativos del cliente mysql.
-            // Usaremos el cliente mysql vía consola, tal como usamos mysqldump.
-            
-            $mysqlCli = str_replace('mysqldump', 'mysql', $this->mysqlPath);
+            // Usaremos el cliente mysql vía consola
             $paramPassword = !empty($this->pass) ? "--password=\"{$this->pass}\"" : "";
             
             // Ejecutamos la restauración inyectando el script sql con <
-            $comando = "\"{$mysqlCli}\" --user={$this->user} {$paramPassword} {$this->dbName} < \"{$rutaCompleta}\" 2>&1";
+            $comando = "\"{$this->mysqlCliPath}\" --host={$this->dbHost} --user={$this->user} {$paramPassword} {$this->dbName} < \"{$rutaCompleta}\" 2>&1";
             
+            $output = [];
             $resultado = null;
-            system($comando, $resultado);
+            exec($comando, $output, $resultado);
 
             if ($resultado !== 0) {
+                $errorConsola = implode("\n", $output);
+                $errorConsola = mb_convert_encoding($errorConsola, 'UTF-8', 'auto');
+                
+                logs('Respaldo', "Comando fallido: {$comando} | Error: " . trim($errorConsola), 'Modelo_Restaurar');
                 throw new Exception('Error de sintaxis o ejecución al restaurar usando el comando MySQL.');
             }
 
@@ -208,5 +213,90 @@ class ModeloRespaldo extends Conexion
         } catch (Exception $e) {
             return ['accion' => 'error', 'codigo' => 'No se pudo eliminar el archivo.'];
         }
+    }
+
+    /**
+     * Detecta automáticamente la ruta de un binario MySQL en Windows (mysqldump.exe o mysql.exe).
+     * Determina la ruta exacta consultando al servidor MySQL activo para evitar conflictos
+     * entre XAMPP y Laragon.
+     */
+    private function detectarBinarioWindows(string $nombreBinario): string
+    {
+        $fallback = str_replace('.exe', '', $nombreBinario);
+        
+        try {
+            // ── Prioridad 1: Preguntarle al propio servidor MySQL dónde está instalado ──
+            // Esto resuelve el problema de si el usuario está usando Laragon o XAMPP
+            // independientemente de en qué carpeta esté guardado el proyecto.
+            $conex = $this->conex();
+            $stmt = $conex->query("SELECT @@basedir as base");
+            if ($stmt) {
+                $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (!empty($resultado['base'])) {
+                    // Limpiamos la ruta y construimos la ruta al binario
+                    $baseDir = rtrim($resultado['base'], '/\\');
+                    $rutaExacta = $baseDir . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . $nombreBinario;
+                    if (file_exists($rutaExacta)) {
+                        return $rutaExacta;
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // Si no podemos consultar la base de datos por alguna razón, continuamos con el escaneo manual
+        }
+
+        // ── Prioridad 2: Escaneo manual (Fallback) ──
+        $unidades = ['C:', 'D:'];
+        $esLaragon = stripos(__DIR__, 'laragon') !== false;
+
+        if ($esLaragon) {
+            $ruta = $this->buscarEnLaragon($unidades, $nombreBinario);
+            if ($ruta) return $ruta;
+            
+            $ruta = $this->buscarEnXampp($unidades, $nombreBinario);
+            if ($ruta) return $ruta;
+        } else {
+            $ruta = $this->buscarEnXampp($unidades, $nombreBinario);
+            if ($ruta) return $ruta;
+            
+            $ruta = $this->buscarEnLaragon($unidades, $nombreBinario);
+            if ($ruta) return $ruta;
+        }
+
+        return $fallback;
+    }
+
+    private function buscarEnXampp(array $unidades, string $nombreBinario): ?string
+    {
+        foreach ($unidades as $u) {
+            $ruta = $u . '\\xampp\\mysql\\bin\\' . $nombreBinario;
+            if (file_exists($ruta)) {
+                return $ruta;
+            }
+        }
+        return null;
+    }
+
+    private function buscarEnLaragon(array $unidades, string $nombreBinario): ?string
+    {
+        $carpetasBin = ['mysql', 'mariadb'];
+        foreach ($unidades as $u) {
+            foreach ($carpetasBin as $carpeta) {
+                $basePath = $u . '\\laragon\\bin\\' . $carpeta;
+                if (!is_dir($basePath)) {
+                    continue;
+                }
+                $subdirs = glob($basePath . '\\*', GLOB_ONLYDIR);
+                if (!empty($subdirs)) {
+                    foreach ($subdirs as $dir) {
+                        $candidato = $dir . '\\bin\\' . $nombreBinario;
+                        if (file_exists($candidato)) {
+                            return $candidato;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
