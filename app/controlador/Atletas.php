@@ -210,11 +210,11 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $datos['es_alergico'] = $_POST['es_alergico'] ?? 0;
         $datos['alergias_detalle'] = $_POST['alergias_detalle'] ?? '';
 
-        if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
-            throw new Exception('La foto del atleta es obligatoria.');
+        if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+            $foto_nombre = subirImagen($_FILES['foto'], 'atleta', $datos['fecha_nac'], 'atletas', 'default.png');
+        } else {
+            $foto_nombre = 'default.png';
         }
-
-        $foto_nombre = subirImagen($_FILES['foto'], 'atleta', $datos['fecha_nac'], 'atletas', 'default.png');
 
         $datos['foto'] = [$foto_nombre];
         $datos['accion'] = 'incluir';

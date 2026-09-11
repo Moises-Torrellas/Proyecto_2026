@@ -84,7 +84,7 @@ class GenerarDocumentosWord
                 'unit' => 'pct',
                 'cellMargin' => 0,
             ]);
-            $tableNombre->addRow();
+            $tableNombre->addRow(Converter::cmToTwip(2.8));
             
             // Celda de texto (nombre + disciplina) - ocupa mayor parte
             $cellText = $tableNombre->addCell(
@@ -116,7 +116,9 @@ class GenerarDocumentosWord
                     'marginTop' => Converter::cmToPoint(0.2),
                 ]);
             } else {
-                $cellFoto->addText("Foto", ['size' => 10, 'name' => 'Arial'], $pCenter);
+                $cellFoto->addTextBreak(2, ['size' => 10], self::$pStyle);
+                $cellFoto->addText("Foto", ['size' => 10, 'name' => 'Arial', 'color' => '808080'], $pCenter);
+                $cellFoto->addTextBreak(2, ['size' => 10], self::$pStyle);
             }
 
             $section->addTextBreak(1, ['size' => 6], self::$pStyle);
@@ -224,8 +226,7 @@ class GenerarDocumentosWord
             self::addSeparatorLine($section);
 
             $section->addText("D A T O   B A N C A R I O", ['bold' => true, 'size' => 10, 'name' => 'Arial'], self::$pStyle);
-            $section->addText("Número de cuenta del Banco de Venezuela", $fontNormal, self::$pStyle);
-            $section->addText("0102 0308 2100 0102 1596", ['bold' => true, 'size' => 14, 'name' => 'Arial'], self::$pStyle);
+            $section->addText("INGRESAR DATOS BANCARIOS", ['bold' => true, 'size' => 12, 'name' => 'Arial'], self::$pStyle);
 
             // ============ SEPARADOR: ANEXAR DOCUMENTACION ============
             self::addSeparatorLine($section);

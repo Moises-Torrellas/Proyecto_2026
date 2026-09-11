@@ -465,14 +465,6 @@ function validarEnvio(proceso) {
         }
     }
 
-    if (proceso == "incluir") {
-        if ($('#foto').val() == "" || $('#foto')[0].files.length === 0) {
-            muestraMensaje("error", 2000, "Error", "Debe seleccionar una foto para el atleta");
-            return false;
-        }
-    }
-
-
     if (!validarCategoria()) {
         muestraMensaje("error", 2000, "Error", "La edad del atleta debe estar dentro de la categoría elegida");
         return false;

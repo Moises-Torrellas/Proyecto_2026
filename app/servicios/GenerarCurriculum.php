@@ -38,7 +38,7 @@ class GenerarCurriculum
             $logo = file_exists($ruta_logo) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ruta_logo)) : '';
             $logo_footer = file_exists($ruta_logo_footer) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ruta_logo_footer)) : '';
             $ext_foto = pathinfo($ruta_foto, PATHINFO_EXTENSION);
-            $foto = (file_exists($ruta_foto) && !empty($atleta['foto'])) ? 'data:image/' . $ext_foto . ';base64,' . base64_encode(file_get_contents($ruta_foto)) : '';
+            $foto = (file_exists($ruta_foto) && !empty($atleta['foto']) && $atleta['foto'] !== 'default.png') ? 'data:image/' . $ext_foto . ';base64,' . base64_encode(file_get_contents($ruta_foto)) : '';
             include __DIR__ . "/../vista/reportes/curriculum/{$nombreVista}.php";
             $html = ob_get_clean();
 
