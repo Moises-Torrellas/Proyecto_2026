@@ -36,7 +36,7 @@
                             $idxAux++;
                         }
 
-                        $claseEstadoGeneral = ($totalGoles > 0) ? 'estado_exito' : 'estado_neutral';
+                        $claseEstadoGeneral = 'estado_exito';
                             ?>
                 <div class="listado_contenedor_grupal">
 
@@ -194,7 +194,7 @@
                                             $idxAux++;
                                         }
 
-                                        $claseEstadoGeneral = ($totalGoles > 0) ? 'estado_exito' : 'estado_neutral';
+                                        $claseEstadoGeneral = 'estado_exito';
                     ?>
         <div class="listado_contenedor_grupal">
 
@@ -296,7 +296,8 @@
                     <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
-                                <select name="participacion" id="participacion" class="formulario select">
+                                <input type="hidden" id="participacion_real" name="participacion">
+                                <select name="torneo" id="participacion" class="formulario select">
 
                                 </select>
                                 <label for="participacion" class="titulo_formulario">Participación / Torneo</label>

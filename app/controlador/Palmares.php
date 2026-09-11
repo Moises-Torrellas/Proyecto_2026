@@ -87,6 +87,12 @@ function manejarSolicitudPalmares($obj, $id_modulo, $bitacoraObj, array $permiso
                 if (empty($permisos['modificar_palmares'])) throw new Exception('No tienes permisos para modificar palmarés.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
+            case 'atletas_participacion':
+                echo json_encode($obj->ProcesarDatos(['accion' => 'atletas_participacion', 'torneo' => $_POST['torneo'] ?? null]));
+                break;
+            case 'equipos_participacion':
+                echo json_encode($obj->ProcesarDatos(['accion' => 'equipos_participacion', 'torneo' => $_POST['torneo'] ?? null]));
+                break;
             case 'generar':
                 if (empty($permisos['generar_palmares'])) throw new Exception('No tienes permisos para generar reporte de palmarés.');
                 generar($obj, $id_modulo, $bitacoraObj);
@@ -224,7 +230,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            $idNuevo = $obj->id ?? ''; // O donde se guarde
+            $idNuevo = $obj->getId() ?? ''; // O donde se guarde
             $datos_nuevos_json = "";
             if ($tipo_palmares === 'individual') {
                 $dn = $obj->BuscarIndividual((int)$idNuevo)['datos'][0] ?? [];

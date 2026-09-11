@@ -35,9 +35,14 @@ class ModeloPalmares extends Conexion
         $this->modeloParticipaciones = $modelo;
     }
 
-    public function setModeloPremios(ModeloPremios $modelo): void
+    public function setModeloPremios($modeloPremios): void
     {
-        $this->modeloPremios = $modelo;
+        $this->modeloPremios = $modeloPremios;
+    }
+
+    public function getId()
+    {
+        return $this->id;
     }
 
     public function ProcesarDatos(array $datos): array
@@ -59,8 +64,57 @@ class ModeloPalmares extends Conexion
             'incluir'   => $this->Incluir(),
             'modificar' => $this->Modificar(),
             'eliminar'  => $this->Eliminar(),
+            'atletas_participacion' => $this->ObtenerAtletasParticipacion(),
+            'equipos_participacion' => $this->ObtenerEquiposParticipacion(),
             default => throw new Exception('La acción solicitada para el palmarés no es válida.')
         };
+    }
+
+    private function ObtenerAtletasParticipacion(): array
+    {
+        try {
+            $conex = $this->conex();
+            $stmt = $conex->prepare("
+                SELECT a.codigo_atleta AS id_atleta, a.p_nombre AS nombres, a.p_apellidos AS apellidos,
+                CASE 
+                    WHEN MAX(ia.numero_doc) IS NOT NULL AND MAX(ia.numero_doc) <> '' THEN MAX(ia.numero_doc)
+                    ELSE CONCAT('R-', MAX(r.cedula))
+                END AS doc_identidad
+                FROM atletas a
+                INNER JOIN detalles_participacion dp ON a.codigo_atleta = dp.codigo_atleta
+                INNER JOIN participaciones p ON dp.codigo_participacion = p.codigo_participacion
+                LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta
+                LEFT JOIN atleta_representante ar ON a.codigo_atleta = ar.codigo_atleta
+                LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
+                WHERE p.codigo_torneo = :torneo
+                GROUP BY a.codigo_atleta, a.p_nombre, a.p_apellidos
+                ORDER BY a.p_nombre ASC
+            ");
+            $stmt->execute([':torneo' => $this->id_torneo]);
+            return ['accion' => 'atletas_participacion', 'datos' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+        } catch (Exception $e) {
+            logs('Palmares', $e->getMessage(), 'Modelo_ObtenerAtletasParticipacion');
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+        }
+    }
+
+    private function ObtenerEquiposParticipacion(): array
+    {
+        try {
+            $conex = $this->conex();
+            $stmt = $conex->prepare("
+                SELECT DISTINCT e.codigo_equipo AS id_equipos, e.nombre AS nombre
+                FROM equipos e
+                INNER JOIN participaciones p ON e.codigo_equipo = p.codigo_equipo
+                WHERE p.codigo_torneo = :torneo
+                ORDER BY e.nombre ASC
+            ");
+            $stmt->execute([':torneo' => $this->id_torneo]);
+            return ['accion' => 'equipos_participacion', 'datos' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+        } catch (Exception $e) {
+            logs('Palmares', $e->getMessage(), 'Modelo_ObtenerEquiposParticipacion');
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
+        }
     }
 
     public function ConsultarIndividual(array $filtro = []): array
@@ -236,6 +290,10 @@ class ModeloPalmares extends Conexion
                 // 3. Insertar
                 $stmtIn = $conex->prepare("INSERT INTO palmares_individual (codigo_premio, codigo_dtll_prtc) VALUES (:premio, :detalle)");
                 $stmtIn->execute([':premio' => $this->id_premio, ':detalle' => $codDetalle]);
+                
+                $stmtId = $conex->prepare("SELECT codigo_individual FROM palmares_individual WHERE codigo_premio = :premio AND codigo_dtll_prtc = :detalle ORDER BY codigo_individual DESC LIMIT 1");
+                $stmtId->execute([':premio' => $this->id_premio, ':detalle' => $codDetalle]);
+                $this->id = $stmtId->fetchColumn();
 
             } else {
                 // 1. Obtener codigo_participacion del equipo en el torneo
@@ -257,9 +315,24 @@ class ModeloPalmares extends Conexion
                 // 3. Insertar
                 $stmtIn = $conex->prepare("CALL ProcesarPalmaresGrupal(:participacion, :premio)");
                 $stmtIn->execute([':participacion' => $codParticipacion, ':premio' => $this->id_premio]);
+                $stmtIn->closeCursor(); // Libera los resultados del SP para permitir la siguiente consulta
+                
+                $stmtId = $conex->prepare("SELECT codigo_grupal FROM palmares_grupal WHERE codigo_premio = :premio AND codigo_participacion = :participacion ORDER BY codigo_grupal DESC LIMIT 1");
+                $stmtId->execute([':premio' => $this->id_premio, ':participacion' => $codParticipacion]);
+                $this->id = $stmtId->fetchColumn();
             }
 
-            $conex->commit();
+            try {
+                if ($conex->inTransaction()) {
+                    $conex->commit();
+                }
+            } catch (\PDOException $e) {
+                // Si el SP ya hizo commit internamente, ignoramos este error
+                if (strpos($e->getMessage(), 'There is no active transaction') === false) {
+                    throw $e;
+                }
+            }
+            
             return ['accion' => 'exito'];
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) {

@@ -54,18 +54,22 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
             case 'MultiConsulta':
                 if (empty($permisos['ingresar_estadistica'])) throw new Exception('No tienes permisos para consultar las estadisticas.');
 
-                $modeloPart = new ModeloParticipaciones();
                 $modeloAtl = new ModeloAtletas();
-
-                $PartRespuesta = $modeloPart->Consultar(['estatus_torneo' => 3]);
+                $TorneosRespuesta = $obj->ConsultarTorneosConParticipacion();
                 $AtlRespuesta = $modeloAtl->ConsultarAtletas();
 
                 echo json_encode([
                     'accion'          => 'MultiConsulta',
-                    'participaciones' => $PartRespuesta['datos'] ?? [], // Enviamos participaciones al frontend
+                    'torneos'         => $TorneosRespuesta['datos'] ?? [],
                     'atletas'         => $AtlRespuesta['datos'] ?? []
                 ]);
 
+                break;
+            case 'AtletasPorTorneo':
+                if (empty($permisos['ingresar_estadistica'])) throw new Exception('No tienes permisos.');
+                if (empty($_POST['torneo'])) throw new Exception('Torneo no recibido.');
+                $id = (int)$_POST['torneo'];
+                echo json_encode($obj->ConsultarAtletasPorTorneo($id));
                 break;
             case 'buscar':
                 if (empty($permisos['modificar_estadistica'])) throw new Exception('No tienes permisos para modificar las estadisticas.');
@@ -169,7 +173,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $resultado = $obj->procesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            $idNuevo = $obj->id ?? ''; 
+            $idNuevo = $obj->getId() ?? ''; 
             $dn = $obj->Buscar((int)$idNuevo)['datos'][0] ?? [];
             unset($dn['id_estadisticas']);
             $datos_nuevos_json = json_encode($dn);

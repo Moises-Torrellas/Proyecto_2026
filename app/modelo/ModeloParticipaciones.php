@@ -58,7 +58,7 @@ class ModeloParticipaciones extends Conexion
             t.fecha_inicio,
             e.codigo_equipo, 
             e.nombre AS equipo_nombre,
-            (SELECT COUNT(DISTINCT de.codigo_atleta) FROM detalles_equipos de WHERE de.codigo_equipo = e.codigo_equipo) AS cantidad_atletas
+            (SELECT COUNT(DISTINCT dp.codigo_atleta) FROM detalles_participacion dp WHERE dp.codigo_participacion = p.codigo_participacion) AS cantidad_atletas
         FROM participaciones p
         INNER JOIN torneos t ON p.codigo_torneo = t.codigo_torneo
         INNER JOIN equipos e ON p.codigo_equipo = e.codigo_equipo
@@ -147,6 +147,15 @@ class ModeloParticipaciones extends Conexion
             $datosNuevos = $stmtNuevoInfo->fetch(PDO::FETCH_ASSOC);
 
             $stmt->execute();
+            $idParticipacion = (int)$conex->lastInsertId();
+
+            $sqlSnapshot = "INSERT INTO detalles_participacion (codigo_participacion, codigo_atleta, goles, asistencias, penalizaciones, goles_contra, partidos_jugados, average)
+                            SELECT :codigo_participacion, codigo_atleta, 0, 0, 0, 0, 0, 0
+                            FROM detalles_equipos WHERE codigo_equipo = :codigo_equipo";
+            $stmtSnapshot = $conex->prepare($sqlSnapshot);
+            $stmtSnapshot->bindValue(':codigo_participacion', $idParticipacion, PDO::PARAM_INT);
+            $stmtSnapshot->bindValue(':codigo_equipo', $this->codigo_equipo, PDO::PARAM_INT);
+            $stmtSnapshot->execute();
             $conex->commit();
 
             return array('accion' => 'exito', 'nuevo' => json_encode($datosNuevos));
@@ -238,6 +247,19 @@ class ModeloParticipaciones extends Conexion
             $datosNuevos = $stmtNuevoInfo->fetch(PDO::FETCH_ASSOC);
 
             $stmt->execute();
+
+            $sqlDelSnap = "DELETE FROM detalles_participacion WHERE codigo_participacion = :codigo_participacion";
+            $stmtDelSnap = $conex->prepare($sqlDelSnap);
+            $stmtDelSnap->bindValue(':codigo_participacion', $this->codigo_participacion, PDO::PARAM_INT);
+            $stmtDelSnap->execute();
+
+            $sqlSnapshot = "INSERT INTO detalles_participacion (codigo_participacion, codigo_atleta, goles, asistencias, penalizaciones, goles_contra, partidos_jugados, average)
+                            SELECT :codigo_participacion, codigo_atleta, 0, 0, 0, 0, 0, 0
+                            FROM detalles_equipos WHERE codigo_equipo = :codigo_equipo";
+            $stmtSnapshot = $conex->prepare($sqlSnapshot);
+            $stmtSnapshot->bindValue(':codigo_participacion', $this->codigo_participacion, PDO::PARAM_INT);
+            $stmtSnapshot->bindValue(':codigo_equipo', $this->codigo_equipo, PDO::PARAM_INT);
+            $stmtSnapshot->execute();
             $conex->commit();
 
             return array('accion' => 'exito', 'previo' => json_encode($datosPrevios), 'nuevo' => json_encode($datosNuevos));
@@ -269,6 +291,11 @@ class ModeloParticipaciones extends Conexion
 
 
 
+            $sqlDelSnap = "DELETE FROM detalles_participacion WHERE codigo_participacion = :codigo_participacion";
+            $stmtDelSnap = $conex->prepare($sqlDelSnap);
+            $stmtDelSnap->bindValue(':codigo_participacion', $this->codigo_participacion, PDO::PARAM_INT);
+            $stmtDelSnap->execute();
+
             $sql = "DELETE FROM participaciones WHERE codigo_participacion = :codigo_participacion";
             $stmt = $conex->prepare($sql);
             $stmt->bindValue(':codigo_participacion', $this->codigo_participacion, PDO::PARAM_INT);
@@ -288,17 +315,16 @@ class ModeloParticipaciones extends Conexion
         }
     }
 
-    public function validarParticipacionIndividual(int $codigo_torneo, int $codigo_atleta): bool
+    public function validarParticipacionIndividual(int $codigo_participacion, int $codigo_atleta): bool
     {
         $conex = null;
         try {
             $conex = $this->conex();
             $stmt = $conex->prepare(
-                "SELECT COUNT(*) FROM participaciones par
-                INNER JOIN detalles_equipos de ON par.codigo_equipo = de.codigo_equipo
-                WHERE par.codigo_torneo = :codigo_torneo AND de.codigo_atleta = :codigo_atleta"
+                "SELECT COUNT(*) FROM detalles_participacion 
+                WHERE codigo_participacion = :codigo_participacion AND codigo_atleta = :codigo_atleta"
             );
-            $stmt->bindValue(':codigo_torneo', $codigo_torneo, PDO::PARAM_INT);
+            $stmt->bindValue(':codigo_participacion', $codigo_participacion, PDO::PARAM_INT);
             $stmt->bindValue(':codigo_atleta', $codigo_atleta, PDO::PARAM_INT);
             $stmt->execute();
 

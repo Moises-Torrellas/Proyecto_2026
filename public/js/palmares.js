@@ -21,6 +21,65 @@ $(document).ready(function () {
     inicializarPaginadorPalmares('individual');
     inicializarPaginadorPalmares('grupal');
 
+    // 3.5 Filtros de Torneo para Atletas y Equipos
+    $('#torneo_ind').on('change', function() {
+        var idTorneo = $(this).val();
+        if (idTorneo) {
+            $.ajax({
+                url: '',
+                type: 'POST',
+                data: { accion: 'atletas_participacion', torneo: idTorneo },
+                beforeSend: function (request) {
+                    request.setRequestHeader("X-CSRF-TOKEN", token);
+                },
+                success: function(respuesta) {
+                    try {
+                        var resp = JSON.parse(respuesta);
+                        construirSelect('atleta', resp.datos, 'id_atleta', 'nombres', 'apellidos', 'doc_identidad');
+                        if (window.atleta_a_seleccionar) {
+                            let isDisabled = $('#atleta').prop('disabled');
+                            $('#atleta').prop('disabled', false);
+                            $('#atleta').val(window.atleta_a_seleccionar).trigger('change');
+                            if (isDisabled) $('#atleta').prop('disabled', true);
+                            window.atleta_a_seleccionar = null;
+                        }
+                    } catch(e) { console.error("Error al parsear atletas_participacion:", e); }
+                }
+            });
+        } else {
+            $('#atleta').empty().append('<option value="" selected disabled>Seleccione una opción</option>');
+        }
+    });
+
+    $('#torneo_grp').on('change', function() {
+        var idTorneo = $(this).val();
+        if (idTorneo) {
+            $.ajax({
+                url: '',
+                type: 'POST',
+                data: { accion: 'equipos_participacion', torneo: idTorneo },
+                beforeSend: function (request) {
+                    request.setRequestHeader("X-CSRF-TOKEN", token);
+                },
+                success: function(respuesta) {
+                    try {
+                        var resp = JSON.parse(respuesta);
+                        construirSelect('equipo', resp.datos, 'id_equipos', 'nombre', 'categoria');
+                        if (window.equipo_a_seleccionar) {
+                            let isDisabled = $('#equipo').prop('disabled');
+                            $('#equipo').prop('disabled', false);
+                            $('#equipo').val(window.equipo_a_seleccionar).trigger('change');
+                            if (isDisabled) $('#equipo').prop('disabled', true);
+                            window.equipo_a_seleccionar = null;
+                        }
+                    } catch(e) { console.error("Error al parsear equipos_participacion:", e); }
+                }
+            });
+        } else {
+            $('#equipo').empty().append('<option value="" selected disabled>Seleccione una opción</option>');
+        }
+    });
+
     // 4. Manejo del botón Limpiar
     $('#limpiar').on('click', function (e) {
         // Evita que main.js ejecute su limpia() primero y muestre todos los contenedores
@@ -72,6 +131,13 @@ $(document).ready(function () {
                         let tipo = $('#tipo_palmares').val();
                         let idTorneo = (tipo === 'individual') ? $('#torneo_ind').val() : $('#torneo_grp').val();
                         datos.append('torneo', idTorneo);
+                        
+                        // Los campos atleta y equipo también están deshabilitados, hay que agregarlos manualmente
+                        if (tipo === 'individual') {
+                            datos.append('atleta', $('#atleta').val());
+                        } else {
+                            datos.append('equipo', $('#equipo').val());
+                        }
 
                         enviaAjax(datos);
                     }
@@ -253,8 +319,8 @@ function abrirModalPalmares(tipo) {
     $('#tipo_palmares').val(tipo);
     $('#id').val('');
 
-   // 1. PRIMERO habilita los selects de torneo
-    $('#torneo_ind, #torneo_grp').prop('disabled', false);
+   // 1. PRIMERO habilita los selects de torneo y entidades
+    $('#torneo_ind, #torneo_grp, #atleta, #equipo').prop('disabled', false);
 
     // 2. LUEGO resetea todos y dispara el change para que Select2 se entere de que ya están habilitados
     $('#torneo_ind, #torneo_grp, #premio_ind, #premio_grp, #atleta, #equipo').val(null).trigger('change');
@@ -319,15 +385,20 @@ function llenarModal(data, tipo) {
         $('#seccion_individual').show();
         $('#seccion_grupal').hide();
 
-        // 1. Primero habilitamos para que Select2 pueda aceptar el cambio
+        // 1. Guardamos el atleta a seleccionar para cuando responda el ajax
+        window.atleta_a_seleccionar = data.id_atleta;
+        
+        // 2. Primero habilitamos para que Select2 pueda aceptar el cambio
         $('#torneo_ind').prop('disabled', false);
-        // 2. Asignamos el valor y disparamos el cambio
+        // 3. Asignamos el valor y disparamos el cambio (esto hará la petición ajax)
         $('#torneo_ind').val(data.id_torneo).trigger('change');
-        // 3. Ahora que el valor está puesto, lo bloqueamos visualmente
+        // 4. Ahora que el valor está puesto, lo bloqueamos visualmente
         $('#torneo_ind').prop('disabled', true);
         
         $('#premio_ind').val(data.id_premio).trigger('change');
-        $('#atleta').val(data.id_atleta).trigger('change');
+        
+        // Atleta y torneo se bloquean
+        $('#atleta').prop('disabled', true);
         
     } else {
         // Haz lo mismo para el bloque grupal
@@ -335,12 +406,14 @@ function llenarModal(data, tipo) {
         $('#seccion_individual').hide();
         $('#seccion_grupal').show();
 
+        window.equipo_a_seleccionar = data.id_equipo;
+
         $('#torneo_grp').prop('disabled', false);
         $('#torneo_grp').val(data.id_torneo).trigger('change');
         $('#torneo_grp').prop('disabled', true);
 
         $('#premio_grp').val(data.id_premio).trigger('change');
-        $('#equipo').val(data.id_equipo).trigger('change');
+        $('#equipo').prop('disabled', true);
     }
 
     $('#proceso').text('Modificar Palmarés').data('accion', 'modificar');

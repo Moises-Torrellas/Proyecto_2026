@@ -40,6 +40,11 @@ class ModeloEstadisticas extends Conexion
         $this->ModeloParticipaciones = $obj;
     }
 
+    public function getId()
+    {
+        return $this->id;
+    }
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {
@@ -88,7 +93,7 @@ class ModeloEstadisticas extends Conexion
                     INNER JOIN atletas a ON dp.codigo_atleta = a.codigo_atleta
                     INNER JOIN participaciones p ON dp.codigo_participacion = p.codigo_participacion
                     INNER JOIN torneos t ON p.codigo_torneo = t.codigo_torneo
-                    WHERE 1=1";
+                    WHERE dp.estatus_estadistica = 1";
 
             if (!empty($filtro['filtro'])) {
                 $p = "%" . trim($filtro['filtro']) . "%";
@@ -128,6 +133,54 @@ class ModeloEstadisticas extends Conexion
         }
     }
 
+    public function ConsultarTorneosConParticipacion(): array
+    {
+        try {
+            $conex = $this->conex();
+            $stmt = $conex->prepare(
+                "SELECT DISTINCT t.codigo_torneo, t.nombre, t.fecha_inicio
+                FROM torneos t
+                INNER JOIN participaciones p ON t.codigo_torneo = p.codigo_torneo
+                WHERE t.estatus = 3
+                ORDER BY t.fecha_inicio DESC"
+            );
+            $stmt->execute();
+            return array('accion' => 'torneos', 'datos' => $stmt->fetchAll(PDO::FETCH_ASSOC));
+        } catch (Exception $e) {
+            return array('accion' => 'error');
+        }
+    }
+
+    public function ConsultarAtletasPorTorneo(int $torneo): array
+    {
+        try {
+            $conex = $this->conex();
+            $stmt = $conex->prepare(
+                "SELECT a.codigo_atleta, a.p_nombre, a.p_apellidos, MAX(c.nombre) AS categoria, dp.codigo_participacion,
+                CASE 
+                    WHEN MAX(ia.numero_doc) IS NOT NULL AND MAX(ia.numero_doc) <> '' THEN MAX(ia.numero_doc)
+                    ELSE CONCAT('R-', MAX(r.cedula))
+                END AS documento_identidad
+                FROM detalles_participacion dp
+                INNER JOIN participaciones p ON dp.codigo_participacion = p.codigo_participacion
+                INNER JOIN atletas a ON dp.codigo_atleta = a.codigo_atleta
+                LEFT JOIN identidad_atleta ia ON a.codigo_atleta = ia.codigo_atleta
+                LEFT JOIN atleta_representante ar ON a.codigo_atleta = ar.codigo_atleta
+                LEFT JOIN representantes r ON ar.codigo_representante = r.codigo_representante
+                LEFT JOIN inscripciones i ON a.codigo_atleta = i.codigo_atleta
+                LEFT JOIN categorias c ON i.codigo_categoria = c.codigo_categoria
+                WHERE p.codigo_torneo = :torneo
+                GROUP BY a.codigo_atleta, a.p_nombre, a.p_apellidos, dp.codigo_participacion
+                ORDER BY a.p_nombre ASC"
+            );
+            $stmt->bindValue(':torneo', $torneo, PDO::PARAM_INT);
+            $stmt->execute();
+            return array('accion' => 'atletas_participacion', 'datos' => $stmt->fetchAll(PDO::FETCH_ASSOC));
+        } catch (Exception $e) {
+            return array('accion' => 'error');
+        }
+    }
+
     private function Incluir(): array
     {
         $conex = null;
@@ -151,9 +204,11 @@ class ModeloEstadisticas extends Conexion
                 throw new Exception(DUPLICATE);
             }
 
-            $sql = "INSERT INTO detalles_participacion 
-                    (codigo_participacion, codigo_atleta, goles, asistencias, penalizaciones, goles_contra, partidos_jugados, average) 
-                    VALUES (:participacion, :atleta, :goles, :asistencias, :penalizaciones, :goles_c, :partidos, :average)";
+            $sql = "UPDATE detalles_participacion SET 
+                        estatus_estadistica = 1,
+                        goles = :goles, asistencias = :asistencias, penalizaciones = :penalizaciones, 
+                        goles_contra = :goles_c, partidos_jugados = :partidos, average = :average
+                    WHERE codigo_participacion = :participacion AND codigo_atleta = :atleta";
 
             $stmt = $conex->prepare($sql);
 
@@ -168,7 +223,10 @@ class ModeloEstadisticas extends Conexion
             $stmt->bindValue(':average', $this->average);
 
             $stmt->execute();
-            $this->id = $conex->lastInsertId();
+            // Obtenemos el ID para guardarlo en bitacora si se necesita
+            $stmtId = $conex->prepare("SELECT codigo_dtll_prtc FROM detalles_participacion WHERE codigo_participacion = :p AND codigo_atleta = :a");
+            $stmtId->execute([':p' => $this->participacion, ':a' => $this->atleta]);
+            $this->id = $stmtId->fetchColumn();
             $conex->commit();
 
             return array('accion' => 'exito');
@@ -190,7 +248,7 @@ class ModeloEstadisticas extends Conexion
             $conex = $this->conex();
             $sql = "SELECT 
                         dp.codigo_dtll_prtc AS id_estadisticas, 
-                        dp.codigo_participacion AS id_torneo,
+                        p.codigo_torneo AS id_torneo,
                         dp.codigo_atleta AS id_atleta, 
                         dp.goles, dp.asistencias, dp.penalizaciones, 
                         dp.partidos_jugados, dp.average, dp.goles_contra,
@@ -252,6 +310,7 @@ class ModeloEstadisticas extends Conexion
             }
 
             $sql = "UPDATE detalles_participacion SET 
+                        estatus_estadistica = 1,
                         codigo_participacion = :participacion, 
                         codigo_atleta = :atleta, 
                         goles = :goles, 
@@ -299,7 +358,11 @@ class ModeloEstadisticas extends Conexion
                 throw new Exception(INVALID_ID);
             }
 
-            $sql = "DELETE FROM detalles_participacion WHERE codigo_dtll_prtc = :id";
+            $sql = "UPDATE detalles_participacion SET 
+                        estatus_estadistica = 0,
+                        goles = 0, asistencias = 0, penalizaciones = 0, 
+                        goles_contra = 0, partidos_jugados = 0, average = 0
+                    WHERE codigo_dtll_prtc = :id";
             $stmt = $conex->prepare($sql);
             $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
             $stmt->execute();
@@ -324,7 +387,8 @@ class ModeloEstadisticas extends Conexion
             $conex = $this->conex();
             $stmt = $conex->prepare(
                 "SELECT COUNT(*) FROM detalles_participacion 
-                WHERE codigo_participacion = :id_participacion AND codigo_atleta = :id_atleta"
+                WHERE codigo_participacion = :id_participacion AND codigo_atleta = :id_atleta 
+                AND estatus_estadistica = 1"
             );
             $stmt->bindValue(':id_participacion', $id_participacion, PDO::PARAM_INT);
             $stmt->bindValue(':id_atleta', $id_atleta, PDO::PARAM_INT);

@@ -1,5 +1,6 @@
 $('#busqueda').off('keyup').on('keyup', busqueda);
 let timerBusqueda;
+let atletaSeleccionadoTemporal = null;
 function consultar() {
     let datos = new FormData();
     datos.append('accion', 'consultar');
@@ -25,6 +26,24 @@ function MultiConsulta() {
 
 $(document).ready(function () {
     MultiConsulta();
+
+    $('#participacion').on('change', function () {
+        let id_torneo = $(this).val();
+        if (id_torneo) {
+            let datos = new FormData();
+            datos.append('accion', 'AtletasPorTorneo');
+            datos.append('torneo', id_torneo);
+            enviaAjax(datos);
+        } else {
+            $('#atleta').empty().append('<option value="" selected disabled>Seleccione una opción</option>');
+            $('#participacion_real').val('');
+        }
+    });
+
+    $('#atleta').on('change', function () {
+        let participacion_id = $(this).find('option:selected').attr('data-participacion');
+        $('#participacion_real').val(participacion_id);
+    });
     const $inputs = $('#goles, #asistencias, #penalizaciones, #goles_c, #partido, #average');
 
     // 1. Establecer el valor inicial en 0 si están vacíos al cargar
@@ -86,9 +105,11 @@ $(document).ready(function () {
             if (validarEnvio(accion)) {
                 confirmar('¿Está seguro que quiere modificar estas Estadísticas?', function (confirmado) {
                     if (confirmado) {
+                        $('#participacion, #atleta').prop('disabled', false);
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');
                         enviaAjax(datos);
+                        $('#participacion, #atleta').prop('disabled', true);
                     }
                 });
             }
@@ -116,6 +137,7 @@ $(document).ready(function () {
 
     $("#incluir").on("click", function () {
         limpia();
+        $('#participacion, #atleta').prop('disabled', false);
         $('#seccion_metricas').show();
         $('#goles, #asistencias, #penalizaciones, #goles_c, #partido, #average').val("0");
         $("#proceso").data("accion", "incluir");
@@ -263,7 +285,10 @@ function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3
             textoMostrar = `${escapeHTML(dato[campo1])} - ${escapeHTML(dato[campo2])}`;
         }
         else if (idSelect === 'atleta' && campo1 && campo2 && campo3) {
-            textoMostrar = `${escapeHTML(dato[campo1])} ${escapeHTML(dato[campo2])} - ${escapeHTML(dato[campo3])}/${escapeHTML(dato[campo4])}`;
+            textoMostrar = `${escapeHTML(dato[campo1])} ${escapeHTML(dato[campo2])} - ${escapeHTML(dato[campo3])} / ${escapeHTML(dato[campo4])}`;
+            if (dato.codigo_participacion) {
+                atributosExtra = `data-participacion="${escapeHTML(String(dato.codigo_participacion))}"`;
+            }
         }
         else {
             textoMostrar = escapeHTML(String(dato[campo1]));
@@ -294,17 +319,17 @@ function modificar(datos) {
 
     // 3. Asignar los valores devueltos por el método Buscar() a cada input/select
     $('#id').val(datos[0].id_estadisticas);
-    $('#participacion').val(datos[0].id_torneo);
-    $('#atleta').val(datos[0].id_atleta);
+    atletaSeleccionadoTemporal = datos[0].id_atleta;
+    $('#participacion').val(datos[0].id_torneo).trigger('change');
     $('#goles').val(datos[0].goles);
     $('#asistencias').val(datos[0].asistencias);
     $('#penalizaciones').val(datos[0].penalizaciones);
     $('#goles_c').val(datos[0].goles_contra);      // Mapea con 'goles_contra' del SELECT
     $('#partido').val(datos[0].partidos_jugados);   // Mapea con 'partidos_jugados' del SELECT
     $('#average').val(datos[0].average);
-
-    $('#participacion').trigger('change');
-    $('#atleta').trigger('change');
+    
+    $('#participacion, #atleta').prop('disabled', true);
+    
     abrirModal();
 }
 
@@ -341,8 +366,15 @@ function enviaAjax(datos) {
             try {
                 var lee = JSON.parse(respuesta);
                 if (lee.accion == "MultiConsulta") {
-                    construirSelect('participacion', lee.participaciones, 'codigo_participacion', 'torneo_nombre', 'fecha_inicio');
-                    construirSelect('atleta', lee.atletas, 'codigo_atleta', 'p_nombre', 'p_apellidos', 'documento_identidad','categoria');
+                    construirSelect('participacion', lee.torneos, 'codigo_torneo', 'nombre', 'fecha_inicio');
+                } else if (lee.accion == "atletas_participacion") {
+                    construirSelect('atleta', lee.datos, 'codigo_atleta', 'p_nombre', 'p_apellidos', 'documento_identidad','categoria');
+                    // Limpiar el hidden
+                    $('#participacion_real').val('');
+                    if (atletaSeleccionadoTemporal) {
+                        $('#atleta').val(atletaSeleccionadoTemporal).trigger('change');
+                        atletaSeleccionadoTemporal = null;
+                    }
                 } else if (lee.accion == "incluir") {
                     consultar();
                     limpia();
