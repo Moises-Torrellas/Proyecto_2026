@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 11-09-2026 a las 03:27:08
+-- Tiempo de generación: 11-09-2026 a las 03:48:06
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -20,11 +20,14 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `bds2`
 --
+CREATE DATABASE IF NOT EXISTS `bds2` DEFAULT CHARACTER SET utf8 COLLATE utf8_spanish_ci;
+USE `bds2`;
 
 DELIMITER $$
 --
 -- Procedimientos
 --
+DROP PROCEDURE IF EXISTS `pa_incluir_bitacora`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `pa_incluir_bitacora` (IN `p_modulo` INT, IN `p_acciones` VARCHAR(255), IN `p_previos` VARCHAR(255), IN `p_nuevos` VARCHAR(255), IN `p_entorno` VARCHAR(50), IN `p_usuario` INT, OUT `p_resultado` INT)   BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -46,6 +49,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `pa_incluir_bitacora` (IN `p_modulo`
     SET p_resultado = 1;
 END$$
 
+DROP PROCEDURE IF EXISTS `pa_incluir_usuario`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `pa_incluir_usuario` (IN `p_cedula` VARCHAR(10), IN `p_nombre` VARCHAR(35), IN `p_apellido` VARCHAR(35), IN `p_foto` VARCHAR(255), IN `p_telefono` VARCHAR(15), IN `p_contra` VARCHAR(255), IN `p_correo` VARCHAR(60), IN `p_rol` INT, OUT `p_resultado` INT)   BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -70,6 +74,7 @@ END$$
 --
 -- Funciones
 --
+DROP FUNCTION IF EXISTS `funcion_estado_cuenta_usuario`$$
 CREATE DEFINER=`root`@`localhost` FUNCTION `funcion_estado_cuenta_usuario` (`p_id_usuario` INT) RETURNS VARCHAR(20) CHARSET utf8 COLLATE utf8_spanish_ci DETERMINISTIC BEGIN
     DECLARE v_bloqueo TINYINT;
     DECLARE v_resultado VARCHAR(20);
@@ -89,6 +94,7 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `funcion_estado_cuenta_usuario` (`p_i
     RETURN v_resultado;
 END$$
 
+DROP FUNCTION IF EXISTS `funcion_obtener_nombre_rol`$$
 CREATE DEFINER=`root`@`localhost` FUNCTION `funcion_obtener_nombre_rol` (`p_id_rol` INT) RETURNS VARCHAR(35) CHARSET utf8 COLLATE utf8_spanish_ci DETERMINISTIC BEGIN
     DECLARE v_nombre VARCHAR(35);
     
@@ -108,6 +114,7 @@ DELIMITER ;
 -- Estructura de tabla para la tabla `bitacora`
 --
 
+DROP TABLE IF EXISTS `bitacora`;
 CREATE TABLE `bitacora` (
   `id_bitacora` int(11) NOT NULL,
   `id_modulo` int(11) NOT NULL,
@@ -125,6 +132,7 @@ CREATE TABLE `bitacora` (
 -- Estructura de tabla para la tabla `excepciones`
 --
 
+DROP TABLE IF EXISTS `excepciones`;
 CREATE TABLE `excepciones` (
   `id_excepcion` int(11) NOT NULL,
   `id_permiso` int(11) NOT NULL,
@@ -138,6 +146,7 @@ CREATE TABLE `excepciones` (
 -- Estructura de tabla para la tabla `modulos`
 --
 
+DROP TABLE IF EXISTS `modulos`;
 CREATE TABLE `modulos` (
   `id_modulo` int(11) NOT NULL,
   `nombre_modulo` varchar(50) NOT NULL,
@@ -191,6 +200,7 @@ INSERT INTO `modulos` (`id_modulo`, `nombre_modulo`, `descripcion`, `icono`, `es
 -- Estructura de tabla para la tabla `notificaciones`
 --
 
+DROP TABLE IF EXISTS `notificaciones`;
 CREATE TABLE `notificaciones` (
   `id_notificacion` int(11) NOT NULL,
   `id_usuario` int(11) NOT NULL,
@@ -207,6 +217,7 @@ CREATE TABLE `notificaciones` (
 -- Estructura de tabla para la tabla `permisos`
 --
 
+DROP TABLE IF EXISTS `permisos`;
 CREATE TABLE `permisos` (
   `id_permiso` int(11) NOT NULL,
   `id_modulo` int(11) NOT NULL,
@@ -367,6 +378,7 @@ INSERT INTO `permisos` (`id_permiso`, `id_modulo`, `nombre`, `clave`, `descripci
 -- Estructura de tabla para la tabla `permisos_rol`
 --
 
+DROP TABLE IF EXISTS `permisos_rol`;
 CREATE TABLE `permisos_rol` (
   `id_permiso_rol` int(11) NOT NULL,
   `id_permiso` int(11) NOT NULL,
@@ -379,6 +391,7 @@ CREATE TABLE `permisos_rol` (
 -- Estructura de tabla para la tabla `respaldos`
 --
 
+DROP TABLE IF EXISTS `respaldos`;
 CREATE TABLE `respaldos` (
   `id_respaldo` int(11) NOT NULL,
   `id_usuario` int(11) NOT NULL,
@@ -394,6 +407,7 @@ CREATE TABLE `respaldos` (
 -- Estructura de tabla para la tabla `roles`
 --
 
+DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `id_rol` int(11) NOT NULL,
   `nombre_rol` varchar(35) NOT NULL,
@@ -416,6 +430,7 @@ INSERT INTO `roles` (`id_rol`, `nombre_rol`, `descripcion`, `nivel_rol`, `estatu
 -- Estructura de tabla para la tabla `usuarios`
 --
 
+DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE `usuarios` (
   `idUsuario` int(11) NOT NULL,
   `cedulaUsuario` varchar(10) NOT NULL,
@@ -442,6 +457,7 @@ INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellido
 --
 -- Disparadores `usuarios`
 --
+DROP TRIGGER IF EXISTS `disparador_despues_insertar_usuario`;
 DELIMITER $$
 CREATE TRIGGER `disparador_despues_insertar_usuario` AFTER INSERT ON `usuarios` FOR EACH ROW BEGIN
     DECLARE v_nombre_rol VARCHAR(35);
@@ -468,6 +484,7 @@ DELIMITER ;
 -- Estructura Stand-in para la vista `vista_consulta_bitacora`
 -- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_consulta_bitacora`;
 CREATE TABLE `vista_consulta_bitacora` (
 `id_bitacora` int(11)
 ,`nombreUsuario` varchar(35)
@@ -489,6 +506,7 @@ CREATE TABLE `vista_consulta_bitacora` (
 -- Estructura Stand-in para la vista `vista_consulta_permisos`
 -- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_consulta_permisos`;
 CREATE TABLE `vista_consulta_permisos` (
 `id_permiso` int(11)
 ,`nombre_permiso` varchar(100)
@@ -507,6 +525,7 @@ CREATE TABLE `vista_consulta_permisos` (
 -- Estructura Stand-in para la vista `vista_consulta_usuarios`
 -- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_consulta_usuarios`;
 CREATE TABLE `vista_consulta_usuarios` (
 `idUsuario` int(11)
 ,`cedulaUsuario` varchar(10)
@@ -528,7 +547,8 @@ CREATE TABLE `vista_consulta_usuarios` (
 --
 DROP TABLE IF EXISTS `vista_consulta_bitacora`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_consulta_bitacora`  AS SELECT `b`.`id_bitacora` AS `id_bitacora`, `u`.`nombreUsuario` AS `nombreUsuario`, `u`.`apellidoUsuario` AS `apellidoUsuario`, `u`.`cedulaUsuario` AS `cedulaUsuario`, `m`.`nombre_modulo` AS `nombre_modulo`, `m`.`icono` AS `icono`, `b`.`acciones` AS `acciones`, `b`.`datos_previos` AS `datos_previos`, `b`.`datos_nuevos` AS `datos_nuevos`, `b`.`entorno` AS `entorno`, cast(`b`.`fecha_hora` as date) AS `fecha`, cast(`b`.`fecha_hora` as time) AS `hora` FROM ((`bitacora` `b` join `usuarios` `u` on(`u`.`idUsuario` = `b`.`idUsuario`)) join `modulos` `m` on(`m`.`id_modulo` = `b`.`id_modulo`)) ;
+DROP VIEW IF EXISTS `vista_consulta_bitacora`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_consulta_bitacora`  AS SELECT `b`.`id_bitacora` AS `id_bitacora`, `u`.`nombreUsuario` AS `nombreUsuario`, `u`.`apellidoUsuario` AS `apellidoUsuario`, `u`.`cedulaUsuario` AS `cedulaUsuario`, `m`.`nombre_modulo` AS `nombre_modulo`, `m`.`icono` AS `icono`, `b`.`acciones` AS `acciones`, `b`.`datos_previos` AS `datos_previos`, `b`.`datos_nuevos` AS `datos_nuevos`, `b`.`entorno` AS `entorno`, cast(`b`.`fecha_hora` as date) AS `fecha`, cast(`b`.`fecha_hora` as time) AS `hora` FROM ((`bitacora` `b` join `usuarios` `u` on(`u`.`idUsuario` = `b`.`idUsuario`)) join `modulos` `m` on(`m`.`id_modulo` = `b`.`id_modulo`)) ;
 
 -- --------------------------------------------------------
 
@@ -537,7 +557,8 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `vista_consulta_permisos`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_consulta_permisos`  AS SELECT `p`.`id_permiso` AS `id_permiso`, `p`.`nombre` AS `nombre_permiso`, `p`.`clave` AS `clave`, `p`.`descripcion` AS `descripcion`, `p`.`estatus` AS `estatus_permiso`, `m`.`id_modulo` AS `id_modulo`, `m`.`nombre_modulo` AS `nombre_modulo`, `m`.`estatus` AS `estatus_modulo`, `m`.`icono` AS `icono` FROM (`permisos` `p` join `modulos` `m` on(`p`.`id_modulo` = `m`.`id_modulo`)) ;
+DROP VIEW IF EXISTS `vista_consulta_permisos`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_consulta_permisos`  AS SELECT `p`.`id_permiso` AS `id_permiso`, `p`.`nombre` AS `nombre_permiso`, `p`.`clave` AS `clave`, `p`.`descripcion` AS `descripcion`, `p`.`estatus` AS `estatus_permiso`, `m`.`id_modulo` AS `id_modulo`, `m`.`nombre_modulo` AS `nombre_modulo`, `m`.`estatus` AS `estatus_modulo`, `m`.`icono` AS `icono` FROM (`permisos` `p` join `modulos` `m` on(`p`.`id_modulo` = `m`.`id_modulo`)) ;
 
 -- --------------------------------------------------------
 
@@ -546,7 +567,8 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `vista_consulta_usuarios`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_consulta_usuarios`  AS SELECT `u`.`idUsuario` AS `idUsuario`, `u`.`cedulaUsuario` AS `cedulaUsuario`, `u`.`nombreUsuario` AS `nombreUsuario`, `u`.`apellidoUsuario` AS `apellidoUsuario`, `u`.`foto` AS `foto`, `u`.`telefonoUsuario` AS `telefonoUsuario`, `u`.`correo` AS `correo`, `u`.`id_rol` AS `id_rol`, `u`.`bloqueo` AS `bloqueo`, `r`.`nombre_rol` AS `nombre_rol`, `u`.`ultimo_ingreso` AS `ultimo_ingreso` FROM (`usuarios` `u` join `roles` `r` on(`r`.`id_rol` = `u`.`id_rol`)) WHERE `u`.`estatus` <> 0 ;
+DROP VIEW IF EXISTS `vista_consulta_usuarios`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_consulta_usuarios`  AS SELECT `u`.`idUsuario` AS `idUsuario`, `u`.`cedulaUsuario` AS `cedulaUsuario`, `u`.`nombreUsuario` AS `nombreUsuario`, `u`.`apellidoUsuario` AS `apellidoUsuario`, `u`.`foto` AS `foto`, `u`.`telefonoUsuario` AS `telefonoUsuario`, `u`.`correo` AS `correo`, `u`.`id_rol` AS `id_rol`, `u`.`bloqueo` AS `bloqueo`, `r`.`nombre_rol` AS `nombre_rol`, `u`.`ultimo_ingreso` AS `ultimo_ingreso` FROM (`usuarios` `u` join `roles` `r` on(`r`.`id_rol` = `u`.`id_rol`)) WHERE `u`.`estatus` <> 0 ;
 
 --
 -- Índices para tablas volcadas
