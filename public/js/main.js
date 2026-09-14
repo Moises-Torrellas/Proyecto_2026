@@ -868,6 +868,12 @@ function cargarNotificacionesEnPanel() {
 
             } else {
                 listaUl.innerHTML = `<li class="item_noti"><p class="noti_mensaje" style="padding: 10px; text-align: center; width: 100%; color: var(--texto-principal);">No tienes notificaciones por ahora.</p></li>`;
+                // Ocultar el badge cuando no hay notificaciones sin leer
+                const badge = document.getElementById("campana-notificaciones-badge");
+                if (badge) {
+                    badge.textContent = "0";
+                    badge.classList.add("ocultar");
+                }
             }
         })
         .catch(err => console.error("Error al cargar historial desde el .htaccess:", err));

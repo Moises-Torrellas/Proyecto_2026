@@ -122,10 +122,10 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         validar_requeridos(['nombre', 'edad_min', 'edad_max']);
 
         $datos = [
-            'nombre'      => $_POST['nombre'],
-            'edad_minima' => $_POST['edad_min'],
-            'edad_maxima' => $_POST['edad_max'],
-            'accion'      => 'incluir'
+            'nombre'   => $_POST['nombre'],
+            'edad_min' => $_POST['edad_min'],
+            'edad_max' => $_POST['edad_max'],
+            'accion'   => 'incluir'
         ];
 
         $resultado = $obj->procesarDatos($datos);
@@ -159,11 +159,11 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         validar_requeridos(['id', 'nombre', 'edad_min', 'edad_max']);
 
         $datos = [
-            'id'          => $_POST['id'],
-            'nombre'      => $_POST['nombre'],
-            'edad_minima' => $_POST['edad_min'],
-            'edad_maxima' => $_POST['edad_max'],
-            'accion'      => 'modificar'
+            'id'       => $_POST['id'],
+            'nombre'   => $_POST['nombre'],
+            'edad_min' => $_POST['edad_min'],
+            'edad_max' => $_POST['edad_max'],
+            'accion'   => 'modificar'
         ];
 
         $consultar_datos_previos = $obj->Buscar($_POST['id']);

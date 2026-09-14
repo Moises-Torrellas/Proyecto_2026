@@ -61,9 +61,7 @@ class ModeloCategorias extends Conexion
             // 2. BUSCADOR GENERAL (Por nombre de categoría)
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
-                $sentencia .= " AND (
-                nombre LIKE :f1
-                ";
+                $sentencia .= " AND (nombre LIKE :f1)";
                 $params[':f1'] = $p;
             }
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 11-09-2026 a las 03:27:57
+-- Tiempo de generación: 14-09-2026 a las 19:39:46
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -22,6 +22,308 @@ SET time_zone = "+00:00";
 --
 CREATE DATABASE IF NOT EXISTS `cannibalsbd2` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;
 USE `cannibalsbd2`;
+
+DELIMITER $$
+--
+-- Procedimientos
+--
+DROP PROCEDURE IF EXISTS `EliminarCatalogoSeguro`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarCatalogoSeguro` (IN `p_id_catalogo` INT, OUT `p_resultado` INT)   BEGIN
+    DECLARE v_existe INT;
+    DECLARE v_en_uso INT;
+
+    -- Si hay un fallo de integridad, se deshace todo
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_resultado = 0; 
+    END;
+
+    START TRANSACTION;
+
+    -- Validar si el catálogo existe
+    SELECT COUNT(*) INTO v_existe FROM catalogo WHERE id_catalogo = p_id_catalogo FOR UPDATE;
+    
+    -- Validar si tiene artículos físicos amarrados en el inventario
+    SELECT COUNT(*) INTO v_en_uso FROM articulos_inventario WHERE id_catalogo = p_id_catalogo;
+
+    IF v_existe = 0 THEN
+        SET p_resultado = -1; -- -1: No existe
+        ROLLBACK;
+    ELSEIF v_en_uso > 0 THEN
+        SET p_resultado = -2; -- -2: No se puede borrar, tiene artículos físicos
+        ROLLBACK;
+    ELSE
+        -- Todo en orden, procedemos a eliminar
+        DELETE FROM catalogo WHERE id_catalogo = p_id_catalogo;
+        COMMIT;
+        SET p_resultado = 1; -- 1: Éxito
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `ProcesarDevolucionSegura`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ProcesarDevolucionSegura` (IN `p_id_asignacion` INT, IN `p_id_estado` INT, IN `p_observacion` VARCHAR(255))   BEGIN
+    DECLARE v_estatus INT;
+    
+    -- Manejador de errores para hacer rollback automático si algo falla
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL; -- Reenvía el error a PHP para que lo capture
+    END;
+
+    START TRANSACTION;
+    
+    -- 1. Consultamos el estatus actual bloqueando la fila (FOR UPDATE)
+    SELECT estatus INTO v_estatus 
+    FROM asignaciones 
+    WHERE id_asignacion = p_id_asignacion 
+    FOR UPDATE;
+    
+    -- 2. Validamos que la asignación siga estando activa (Estatus 1 = En Uso)
+    IF v_estatus = 1 THEN
+        
+        -- Cambiamos el estatus (asumiendo que 2 significa "Devuelto" o inactivo)
+        UPDATE asignaciones SET estatus = 2 WHERE id_asignacion = p_id_asignacion;
+        
+        -- Registramos la devolución
+        INSERT INTO devoluciones (id_asignacion, id_estado, fecha_devolucion, observacion) 
+        VALUES (p_id_asignacion, p_id_estado, CURDATE(), p_observacion);
+        
+        COMMIT;
+        
+    ELSE
+        -- Si el estatus no es 1, abortamos lanzando una alerta que atrapará PHP
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Error de Concurrencia: Esta asignación ya fue devuelta o procesada por otro usuario.';
+    END IF;
+
+END$$
+
+DROP PROCEDURE IF EXISTS `ProcesarPalmaresGrupal`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ProcesarPalmaresGrupal` (IN `p_id_participacion` INT, IN `p_id_premio` INT)   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+    INSERT INTO palmares_grupal (codigo_participacion, codigo_premio) 
+    VALUES (p_id_participacion, p_id_premio);
+    COMMIT;
+END$$
+
+DROP PROCEDURE IF EXISTS `RegistrarAtletaCompleto`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `RegistrarAtletaCompleto` (IN `p_doc_identidad` VARCHAR(20), IN `p_p_nombre` VARCHAR(50), IN `p_s_nombre` VARCHAR(50), IN `p_p_apellidos` VARCHAR(50), IN `p_s_apellidos` VARCHAR(50), IN `p_genero` CHAR(1), IN `p_fecha_nac` DATE, IN `p_telefono` VARCHAR(20), IN `p_direccion` VARCHAR(255), IN `p_representante` INT, IN `p_categoria` INT, IN `p_posicion` INT, IN `p_dorsal` INT, IN `p_peso_kg` DECIMAL(5,2), IN `p_estatura_cm` DECIMAL(5,2), IN `p_foto` VARCHAR(255), IN `p_lugar_nacimiento` VARCHAR(255), IN `p_correo` VARCHAR(255), IN `p_municipio` VARCHAR(255), IN `p_instagram` VARCHAR(255), IN `p_talla_pantalon` VARCHAR(10), IN `p_talla_franela` VARCHAR(10), IN `p_talla_calzado` VARCHAR(10), IN `p_tipo_sangre` VARCHAR(5), IN `p_es_alergico` TINYINT(1), IN `p_alergias_detalle` TEXT, OUT `p_resultado` INT)   BEGIN
+    DECLARE v_codigo_atleta INT;
+
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_resultado = 0;
+    END;
+
+    
+    SET p_resultado = NULL;
+
+    IF p_doc_identidad IS NOT NULL AND p_doc_identidad != '' THEN
+        IF (SELECT COUNT(*) FROM identidad_atleta WHERE numero_doc = p_doc_identidad) > 0 THEN
+            SET p_resultado = -1; 
+        END IF;
+    END IF;
+
+    IF p_resultado IS NULL AND p_telefono IS NOT NULL AND p_telefono != '' THEN
+        IF (SELECT COUNT(*) FROM contacto_atleta WHERE telefono = p_telefono) > 0 THEN
+            SET p_resultado = -2; 
+        END IF;
+    END IF;
+
+    
+    IF p_resultado IS NULL THEN
+        START TRANSACTION;
+
+        
+        INSERT INTO atletas (p_nombre, s_nombre, p_apellidos, s_apellidos, genero, fecha_nac, foto, lugar_nacimiento) 
+        VALUES (p_p_nombre, p_s_nombre, p_p_apellidos, p_s_apellidos, p_genero, p_fecha_nac, p_foto, p_lugar_nacimiento);
+        
+        
+        SET v_codigo_atleta = LAST_INSERT_ID();
+
+        
+        IF p_telefono != '' OR p_direccion != '' OR p_correo != '' OR p_municipio != '' OR p_instagram != '' THEN
+            INSERT INTO contacto_atleta (codigo_atleta, direccion, telefono, correo, municipio, instagram) 
+            VALUES (v_codigo_atleta, IFNULL(p_direccion, ''), IFNULL(p_telefono, ''), p_correo, p_municipio, p_instagram);
+        END IF;
+
+        
+        IF p_doc_identidad != '' THEN
+            INSERT INTO identidad_atleta (codigo_atleta, tipo_doc, numero_doc) 
+            VALUES (v_codigo_atleta, 'V', p_doc_identidad);
+        END IF;
+
+        
+        IF p_representante IS NOT NULL AND p_representante != 0 THEN
+            INSERT INTO atleta_representante (codigo_atleta, codigo_representante) 
+            VALUES (v_codigo_atleta, p_representante);
+        END IF;
+
+        
+        INSERT INTO inscripciones (codigo_atleta, codigo_categoria, codigo_posicion, dorsal, peso_kg, estatura_cm, fecha_inscripcion, estatus, talla_pantalon, talla_franela, talla_calzado) 
+        VALUES (v_codigo_atleta, p_categoria, p_posicion, p_dorsal, p_peso_kg, p_estatura_cm, CURDATE(), 1, p_talla_pantalon, p_talla_franela, p_talla_calzado);
+
+        
+        INSERT INTO datos_medicos (codigo_atleta, tipo_sangre, es_alergico, alergias_detalle)
+        VALUES (v_codigo_atleta, p_tipo_sangre, p_es_alergico, p_alergias_detalle);
+
+        
+        COMMIT;
+        SET p_resultado = 1; 
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `RegistrarParticipacionSegura`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `RegistrarParticipacionSegura` (IN `p_id_equipo` INT, IN `p_id_torneo` INT)   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+    INSERT INTO participaciones (codigo_equipo, codigo_torneo) 
+    VALUES (p_id_equipo, p_id_torneo);
+    COMMIT;
+END$$
+
+DROP PROCEDURE IF EXISTS `RegistrarPremioSeguro`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `RegistrarPremioSeguro` (IN `p_id_atleta` INT, IN `p_descripcion` VARCHAR(255), IN `p_monto_premio` DECIMAL(10,2))   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+    
+    INSERT INTO premios (id_atleta, descripcion, monto, fecha_entrega) 
+    VALUES (p_id_atleta, p_descripcion, p_monto_premio, CURDATE());
+    
+    COMMIT;
+END$$
+
+DROP PROCEDURE IF EXISTS `RegistrarVueltoSeguro`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `RegistrarVueltoSeguro` (IN `p_codigo_metodo` INT, IN `p_codigo_pago` INT, IN `p_codigo_moneda` INT, IN `p_monto_vuelto` DECIMAL(10,2), IN `p_fecha_vuelto` DATE, IN `p_referencia` VARCHAR(255), IN `p_monto_base` DECIMAL(10,2))   BEGIN
+        DECLARE EXIT HANDLER FOR SQLEXCEPTION
+        BEGIN
+            ROLLBACK;
+        END;
+    
+        START TRANSACTION;
+        INSERT INTO vueltos (codigo_metodo, codigo_pago, codigo_moneda, monto_vuelto, fecha_vuelto, referencia, monto_base) 
+        VALUES (p_codigo_metodo, p_codigo_pago, p_codigo_moneda, p_monto_vuelto, p_fecha_vuelto, p_referencia, p_monto_base);
+        COMMIT;
+    END$$
+
+DROP PROCEDURE IF EXISTS `RetirarArticuloSeguro`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `RetirarArticuloSeguro` (IN `p_articulo` INT, OUT `p_resultado` INT)   BEGIN
+    DECLARE v_estatus TINYINT;
+
+    -- Manejador de errores: Si la base de datos falla, se hace ROLLBACK automático
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_resultado = 0; -- 0: Error de BD
+    END;
+
+    -- Iniciamos la transacción segura
+    START TRANSACTION;
+
+    -- Consultamos y bloqueamos el registro momentáneamente
+    SELECT estatus INTO v_estatus FROM articulos_inventario WHERE codigo_articulo = p_articulo FOR UPDATE;
+
+    IF v_estatus IS NULL THEN
+        SET p_resultado = -1; -- -1: El equipo no existe
+        ROLLBACK;
+    ELSEIF v_estatus != 1 THEN
+        SET p_resultado = -2; -- -2: El equipo está en uso o ya fue retirado
+        ROLLBACK;
+    ELSE
+        -- Retiramos el artículo (estatus 3 según tu lógica)
+        UPDATE articulos_inventario SET estatus = 3 WHERE codigo_articulo = p_articulo;
+        
+        COMMIT; -- Guardamos cambios
+        SET p_resultado = 1; -- 1: Éxito
+    END IF;
+END$$
+
+--
+-- Funciones
+--
+DROP FUNCTION IF EXISTS `EsAptoParaUso`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `EsAptoParaUso` (`p_id_estado` INT) RETURNS TINYINT(4) READS SQL DATA BEGIN
+    DECLARE v_nivel TINYINT;
+    SELECT nivel_estado INTO v_nivel FROM estado_fisico WHERE id_estado = p_id_estado;
+    -- Si el nivel del estado es 1 (Excelente), retorna 1 (Sí). Si no, retorna 0 (No).
+    RETURN IF(v_nivel = 1, 1, 0);
+END$$
+
+DROP FUNCTION IF EXISTS `ObtenerMontoAbonado`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `ObtenerMontoAbonado` (`p_codigo_cargo` INT) RETURNS DECIMAL(10,2) READS SQL DATA BEGIN
+    DECLARE total DECIMAL(10,2);
+    
+    SELECT COALESCE(SUM(dp.monto_abonado), 0.00) INTO total
+    FROM detalles_pagos dp
+    INNER JOIN pagos p ON dp.codigo_pago = p.codigo_pago
+    WHERE dp.codigo_cargo = p_codigo_cargo 
+    AND p.estatus = 1;
+    
+    RETURN total;
+END$$
+
+DROP FUNCTION IF EXISTS `ObtenerTasaActual`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `ObtenerTasaActual` () RETURNS DECIMAL(10,2) DETERMINISTIC BEGIN
+    DECLARE v_tasa DECIMAL(10,2);
+    SELECT valor_tasa INTO v_tasa FROM tasa_cambios ORDER BY fecha_actualizacion DESC LIMIT 1;
+    RETURN COALESCE(v_tasa, 1.00);
+END$$
+
+DROP FUNCTION IF EXISTS `ObtenerTorneosAtleta`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `ObtenerTorneosAtleta` (`p_id_atleta` INT) RETURNS INT(11) DETERMINISTIC BEGIN
+    DECLARE v_total INT;
+    SELECT COUNT(DISTINCT part.codigo_torneo) INTO v_total 
+    FROM detalles_participacion dp 
+    INNER JOIN participaciones part ON dp.codigo_participacion = part.codigo_participacion 
+    WHERE dp.codigo_atleta = p_id_atleta;
+    RETURN COALESCE(v_total, 0);
+END$$
+
+DROP FUNCTION IF EXISTS `ObtenerTotalPremiosEquipo`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `ObtenerTotalPremiosEquipo` (`p_id_equipo` INT) RETURNS INT(11) DETERMINISTIC BEGIN
+    DECLARE v_total INT;
+    SELECT COUNT(*) INTO v_total 
+    FROM palmares_grupal pg 
+    INNER JOIN participaciones p ON pg.codigo_participacion = p.codigo_participacion 
+    WHERE p.codigo_equipo = p_id_equipo;
+    RETURN COALESCE(v_total, 0);
+END$$
+
+DROP FUNCTION IF EXISTS `StockDisponibleCatalogo`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `StockDisponibleCatalogo` (`p_id_catalogo` INT) RETURNS INT(11) READS SQL DATA BEGIN
+    DECLARE v_total INT;
+    -- Cuenta cuántos artículos físicos de ese catálogo están libres (estatus 1) y en excelente estado (id_estado 1)
+    SELECT COUNT(*) INTO v_total FROM articulos_inventario 
+    WHERE id_catalogo = p_id_catalogo AND estatus = 1 AND id_estado = 1;
+    RETURN v_total;
+END$$
+
+DROP FUNCTION IF EXISTS `TotalDevolucionesMes`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `TotalDevolucionesMes` (`p_mes` INT, `p_anio` INT) RETURNS INT(11) DETERMINISTIC BEGIN
+    DECLARE v_total INT;
+    SELECT COUNT(*) INTO v_total FROM devoluciones WHERE MONTH(fecha_devolucion) = p_mes AND YEAR(fecha_devolucion) = p_anio;
+    RETURN COALESCE(v_total, 0);
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
