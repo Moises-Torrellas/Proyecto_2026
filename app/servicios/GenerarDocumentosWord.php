@@ -215,11 +215,17 @@ class GenerarDocumentosWord
                 
                 $listItemRun = $section->addListItemRun(0, ['listType' => \PhpOffice\PhpWord\Style\ListItem::TYPE_BULLET_FILLED], self::$pStyle);
                 $listItemRun->addText("{$anioTorneo}, ", $fontBold9);
-                $listItemRun->addText("{$torneo['nombre_torneo']}. Posición: {$atleta['nombre_posicion']}. Categoría: {$atleta['nombre_categoria']}. ", $fontNormal);
-                $listItemRun->addText("Logro de equipo: ", $fontBold9);
-                $listItemRun->addText("{$textoLogroEquipo}. ", $fontNormal);
-                $listItemRun->addText("Logro Individual: ", $fontBold9);
-                $listItemRun->addText("{$textoLogroInd}.", $fontNormal);
+                $listItemRun->addText("{$torneo['nombre_torneo']}. Posición: {$atleta['nombre_posicion']}. Categoría: {$atleta['nombre_categoria']}.", $fontNormal);
+                
+                if ($textoLogroEquipo !== 'N/A') {
+                    $listItemRun->addText(" Logro de equipo: ", $fontBold9);
+                    $listItemRun->addText("{$textoLogroEquipo}.", $fontNormal);
+                }
+                
+                if ($textoLogroInd !== 'N/A') {
+                    $listItemRun->addText(" Logro Individual: ", $fontBold9);
+                    $listItemRun->addText("{$textoLogroInd}.", $fontNormal);
+                }
             }
             
             // ============ SEPARADOR: DATO BANCARIO ============

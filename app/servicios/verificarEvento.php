@@ -105,7 +105,7 @@ class verificarEvento extends Conexion {
             if (!empty($tasasActualizadas)) {
                 $detalleTasas = implode(' | ', $tasasActualizadas);
                 $msg = "Las tasas de cambio fueron actualizadas automáticamente a la fecha de hoy ({$fechaHoy}). {$detalleTasas}";
-                $this->notificacion->notificarATodos("Tasa de Cambio Actualizada", $msg, 3);
+                $this->notificacion->notificarATodos("Tasa de Cambio Actualizada", $msg, 5);
             }
 
         } catch (Exception $e) {

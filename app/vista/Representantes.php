@@ -21,18 +21,6 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <small>Telefono</small>
                             <span><?= $dato['telefono'] ?></span>
                         </div>
-                        <div class="listado_dato_grupo">
-                            <small>Direccion</small>
-                            <span><?= $dato['direccion'] ?></span>
-                        </div>
-                        <div class="listado_dato_grupo">
-                            <small>Correo</small>
-                            <span><?= $dato['correo'] ?: 'No Aplica' ?></span>
-                        </div>
-                        <div class="listado_dato_grupo">
-                            <small>Instagram</small>
-                            <span><?= $dato['instagram'] ?: 'No Aplica' ?></span>
-                        </div>
                     </div>
 
                     <div class="listado_col_acciones">
@@ -43,6 +31,35 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <?php if (!empty($permisos['eliminar_representante'])) : ?>
                                 <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_representante'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                             <?php endif; ?>
+                        </div>
+                        <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                    </div>
+                </div>
+
+                <div class="listado_detalle_oculto">
+                    <div class="detalle_expandido_container">
+                        <div class="detalle_fila">
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Dirección</label>
+                                    <span><?= htmlspecialchars(!empty($dato['direccion']) ? $dato['direccion'] : 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="mail"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Correo Electrónico</label>
+                                    <span><?= htmlspecialchars(!empty($dato['correo']) ? $dato['correo'] : 'No Aplica') ?></span>
+                                </div>
+                            </div>
+                            <div class="detalle_card">
+                                <div class="detalle_card_icon"><i data-lucide="instagram"></i></div>
+                                <div class="detalle_card_txt">
+                                    <label>Instagram</label>
+                                    <span><?= htmlspecialchars(!empty($dato['instagram']) ? $dato['instagram'] : 'No Aplica') ?></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -108,18 +125,6 @@ if (isset($solo_lista) && $solo_lista === true) :
                                                     <small>Telefono</small>
                                                     <span><?= $dato['telefono'] ?></span>
                                                 </div>
-                                                <div class="listado_dato_grupo">
-                                                    <small>Direccion</small>
-                                                    <span><?= $dato['direccion'] ?></span>
-                                                </div>
-                                                <div class="listado_dato_grupo">
-                                                    <small>Correo</small>
-                                                    <span><?= $dato['correo'] ?: 'No Aplica' ?></span>
-                                                </div>
-                                                <div class="listado_dato_grupo">
-                                                    <small>Instagram</small>
-                                                    <span><?= $dato['instagram'] ?: 'No Aplica' ?></span>
-                                                </div>
                                             </div>
 
                                             <div class="listado_col_acciones">
@@ -130,6 +135,35 @@ if (isset($solo_lista) && $solo_lista === true) :
                                                     <?php if (!empty($permisos['eliminar_representante'])) : ?>
                                                         <button id="cbt_r" class="btn_t cbt_r" onclick="eliminar(<?= $dato['codigo_representante'] ?>)" data-tippy-content="Eliminar"><i class="fi fi-sr-trash-xmark"></i></button>
                                                     <?php endif; ?>
+                                                </div>
+                                                <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>
+                                            </div>
+                                        </div>
+
+                                        <div class="listado_detalle_oculto">
+                                            <div class="detalle_expandido_container">
+                                                <div class="detalle_fila">
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="map-pin"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Dirección</label>
+                                                            <span><?= htmlspecialchars(!empty($dato['direccion']) ? $dato['direccion'] : 'No Aplica') ?></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="mail"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Correo Electrónico</label>
+                                                            <span><?= htmlspecialchars(!empty($dato['correo']) ? $dato['correo'] : 'No Aplica') ?></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detalle_card">
+                                                        <div class="detalle_card_icon"><i data-lucide="instagram"></i></div>
+                                                        <div class="detalle_card_txt">
+                                                            <label>Instagram</label>
+                                                            <span><?= htmlspecialchars(!empty($dato['instagram']) ? $dato['instagram'] : 'No Aplica') ?></span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

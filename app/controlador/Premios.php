@@ -121,7 +121,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
         $validaciones = [
-            'nombre' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
+            'nombre' => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
             'tipo'   => ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválido. Solo se permite G o I.']
         ];
 
@@ -165,7 +165,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         // Ajustado a codigo_premio
         $validaciones = [
             'codigo_premio' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Código inválido.'],
-            'nombre'        => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
+            'nombre'        => ['regla' => '/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{3,30}$/', 'mensaje' => 'Nombre inválido.'],
             'tipo'          => ['regla' => '/^[GI]$/', 'mensaje' => 'Tipo inválido. Solo se permite G o I.']
         ];
 

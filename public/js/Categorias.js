@@ -229,7 +229,6 @@ function enviaAjax(datos) {
                 if (lee.accion == "incluir") {
                     consultar();
                     limpia();
-                    cerrarModal(); // Agregado para que se cierre al guardar
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 }
                 else if (lee.accion == "eliminar") {

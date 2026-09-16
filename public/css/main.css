@@ -548,9 +548,7 @@ option {
     padding: 15px 25px;
     cursor: pointer;
     transition: background 0.2s ease;
-    height: 80px;
     min-height: 80px;
-    max-height: 80px;
     background: transparent;
 }
 
@@ -632,13 +630,12 @@ option {
     width: 100%;
     text-align: center;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .listado_resaltado {
     color: #34d314 !important;
     font-weight: 800 !important;
+    white-space: normal !important;
 }
 
 /* 6. BOTONES */

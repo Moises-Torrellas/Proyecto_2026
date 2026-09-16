@@ -845,7 +845,7 @@ class ModeloAtletas extends Conexion
         if (!empty($datos['direccion']) && !preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-\/]{5,150}$/', $datos['direccion'])) {
             throw new Exception('Direccion inválida.');
         }
-        if (!empty($datos['foto_actual']) && !preg_match('/^atleta_\d{4}-\d{2}-\d{2}_\d+\.(png|jpg|jpeg|webp)$/', $datos['foto_actual'])) {
+        if (!empty($datos['foto_actual']) && $datos['foto_actual'] !== 'default.png' && !preg_match('/^atleta_\d{4}-\d{2}-\d{2}_\d+\.(png|jpg|jpeg|webp)$/', $datos['foto_actual'])) {
             throw new Exception('El nombre de la foto tiene un formato inválido o una extensión no permitida.');
         }
         if (!empty($datos['edad']) && !preg_match('/^[0-9]{1,2}$/', $datos['edad'])) {

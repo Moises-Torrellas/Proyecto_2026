@@ -765,6 +765,9 @@ function cargarNotificacionesEnPanel() {
                     } else if (noti.tipo == 2) { // 2 = Cargos Atrasados
                         iconName = "credit-card";
                         iconClass = "icon_noti_info";
+                    } else if (noti.tipo == 5) { // 5 = Tasa de Cambio
+                        iconName = "circle-dollar-sign";
+                        iconClass = "icon_noti_success";
                     }
 
                     let btnVisto = "";
@@ -889,6 +892,7 @@ function renderizarNotificacionSuperior(titulo, mensaje, tipo) {
     if (tipo == 1) { nombreIcono = "cake"; colorIcono = "#ec4899"; }
     else if (tipo == 3) { nombreIcono = "trophy"; colorIcono = "#eab308"; }
     else if (tipo == 2) { nombreIcono = "credit-card"; colorIcono = "#ef4444"; }
+    else if (tipo == 5) { nombreIcono = "circle-dollar-sign"; colorIcono = "#22c55e"; }
 
     const contenidoHTML = `
         <div style="display: flex; align-items: center; gap: 10px; text-align: left;">

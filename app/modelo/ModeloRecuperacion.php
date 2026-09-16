@@ -155,15 +155,15 @@ class ModeloRecuperacion extends Conexion
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
             // IMPORTANTE: Mantén tu correo principal y contraseña de aplicación para la conexión
-            $mail->Username   = 'soporte.sigmasell@gmail.com'; 
-            $mail->Password   = 'tfutvwetzdkevpwu';           
+            $mail->Username   = $_ENV['EMAIL_R']; 
+            $mail->Password   = $_ENV['PASS_EMAIL'];           
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;   
             $mail->Port       = 465;
             $mail->CharSet    = 'UTF-8';                       
 
             // 3. Remitente y Destinatario
             // AQUÍ COLOCAS TU CORREO ALTERNATIVO COMO REMITENTE
-            $mail->setFrom('soporte.cannibalslara@gmail.com', 'Soporte de Cannibals Lara');
+            $mail->setFrom($_ENV['EMAIL_RE'], 'Soporte de Cannibals Lara');
             $mail->addAddress($correo, $destinatario);
 
             // 4. Diseño del Cuerpo del Correo (HTML)
