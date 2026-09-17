@@ -532,7 +532,6 @@ option {
     border: 1px solid var(--borde-color);
     border-radius: 12px;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    overflow: hidden; /* Importante para que el detalle no rompa el radio del borde */
 }
 
 .listado_contenedor_grupal.expandido {
@@ -691,6 +690,8 @@ option {
     display: none;
     background-color: var(--fondo-principal);
     border-top: 1px dashed var(--borde-color);
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
 }
 
 .listado_detalle_contenido {

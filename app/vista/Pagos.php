@@ -388,13 +388,19 @@ endif;
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
+                                <input type="text" class="formulario campo_deshabilitado" id="total_pagar" readonly>
+                                <label for="total_pagar" class="titulo_formulario">Total a Pagar</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
                                 <input type="text" class="formulario" id="monto" name="monto">
                                 <label for="monto" class="titulo_formulario">Monto del Pago</label>
                                 <span class="mensaje" id="monto_spam"></span>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
                         <div class="colum">
                             <div class="caja_formulario">
                                 <input type="text" class="formulario" id="monto_cambio" readonly>

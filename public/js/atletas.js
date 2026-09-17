@@ -141,6 +141,7 @@ $(document).ready(function () {
         placeholder: "Selecciona una opción",
         allowClear: true,
         dropdownParent: $('#contenedor_modal'),
+        
     });
 
     $("#incluir").on("click", function () {
@@ -869,4 +870,4 @@ function enviaAjax(datos) {
         complete: function () { },
     });
 }
-
+

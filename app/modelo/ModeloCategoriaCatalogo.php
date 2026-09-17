@@ -9,13 +9,15 @@ class ModeloCategoriaCatalogo extends Conexion
     private $id_categoria; 
     private $nombre;
     private $descripcion;
+    private $tipo_talla;
 
     public function __construct()
     {
         parent::__construct();
         $this->campoWhitelist = [
             'id_categoria' => 'id_categoria', 
-            'nombre' => 'nombre'
+            'nombre' => 'nombre',
+            'tipo_talla' => 'tipo_talla'
         ];
         $this->llavePrimaria = 'id_categoria';
     }
@@ -30,6 +32,7 @@ class ModeloCategoriaCatalogo extends Conexion
         $this->id_categoria = $datos['id_categoria'] ?? null; 
         $this->nombre = mb_convert_case(trim($datos['nombre'] ?? ''), MB_CASE_TITLE, "UTF-8");
         $this->descripcion = $datos['descripcion'] ?? null;
+        $this->tipo_talla = $datos['tipo_talla'] ?? 'Numerico';
         
         $accion = $datos['accion'] ?? null;
         
@@ -58,7 +61,7 @@ class ModeloCategoriaCatalogo extends Conexion
 
             if (!empty($this->nombre)) {
                 $sentencia .= " AND nombre LIKE :nombre";
-                $params[':nombre'] = trim($this->nombre) . "%";
+                $params[':nombre'] = "%".trim($this->nombre) . "%";
             }
 
             $sentencia .= " ORDER BY id_categoria ASC";
@@ -81,7 +84,8 @@ class ModeloCategoriaCatalogo extends Conexion
         // BITÁCORA: Armamos el JSON de los datos nuevos
         $datos_nuevos = [
             'nombre' => $this->nombre,
-            'descripcion' => $this->descripcion
+            'descripcion' => $this->descripcion,
+            'tipo_talla' => $this->tipo_talla
         ];
 
         try {
@@ -90,10 +94,11 @@ class ModeloCategoriaCatalogo extends Conexion
             }
 
             $conex = $this->conex();
-            $sentencia = "INSERT INTO categoria_catalogo (`nombre`, `descripcion`) VALUES (:nombre, :descripcion)";
+            $sentencia = "INSERT INTO categoria_catalogo (`nombre`, `descripcion`, `tipo_talla`) VALUES (:nombre, :descripcion, :tipo_talla)";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':descripcion', $this->descripcion);
+            $stmt->bindParam(':tipo_talla', $this->tipo_talla);
             $stmt->execute();
 
             return array('accion' => 'incluir', 'mensaje' => 'Categoría registrada exitosamente.', 'datos_nuevos' => json_encode($datos_nuevos));
@@ -111,7 +116,8 @@ class ModeloCategoriaCatalogo extends Conexion
         $datos_nuevos = [
             'id_categoria' => $this->id_categoria,
             'nombre' => $this->nombre,
-            'descripcion' => $this->descripcion
+            'descripcion' => $this->descripcion,
+            'tipo_talla' => $this->tipo_talla
         ];
 
         try {
@@ -123,11 +129,13 @@ class ModeloCategoriaCatalogo extends Conexion
             $conex = $this->conex();
             $sentencia = "UPDATE categoria_catalogo SET 
             nombre = :nombre, 
-            descripcion = :descripcion
+            descripcion = :descripcion,
+            tipo_talla = :tipo_talla
             WHERE id_categoria = :id_categoria";
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':descripcion', $this->descripcion);
+            $stmt->bindParam(':tipo_talla', $this->tipo_talla);
             $stmt->bindParam(':id_categoria', $this->id_categoria); 
             $stmt->execute();
 
@@ -191,10 +199,10 @@ class ModeloCategoriaCatalogo extends Conexion
         if (!empty($datos['id_categoria']) && !preg_match('/^[0-9]+$/', $datos['id_categoria'])) {
             throw new Exception('Id inválido.');
         }
-        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-Z0-9\-\s]{2,30}$/', $datos['nombre'])) {
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\-\s]{2,30}$/', $datos['nombre'])) {
             throw new Exception('Nombre de categoría inválido.');
         }
-        if (!empty($datos['descripcion']) && !preg_match('/^[a-zA-Z0-9\-\s]{2,30}$/', $datos['descripcion'])) {
+        if (!empty($datos['descripcion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\-\s]{1,30}$/', $datos['descripcion'])) {
             throw new Exception('Descripción inválida.');
         }
     }

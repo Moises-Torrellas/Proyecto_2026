@@ -268,11 +268,29 @@ function poblarCombos(atletas, equipos) {
     }
 
     if (equipos && equipos.length > 0) {
+        let agrupados = {};
         equipos.forEach(e => {
-            let nombreMostrar = e.nombre_catalogo || e.articulo || e.nombre || ("Artículo " + e.codigo_articulo);
-            let codigoClub = (e.codigo_club && e.codigo_club.trim() !== "") ? ` - ${e.codigo_club}` : " - (Sin código en BD)";
-            comboEquipo.append(`<option value="${e.codigo_articulo}">${nombreMostrar}${codigoClub}</option>`);
+            let key = e.id_catalogo || e.codigo_articulo;
+            if (!agrupados[key]) {
+                agrupados[key] = {
+                    codigo_articulo: e.codigo_articulo,
+                    articulo: e.articulo || e.nombre || ("Artículo " + e.codigo_articulo),
+                    talla: e.talla || '',
+                    cantidad: 0
+                };
+            }
+            agrupados[key].cantidad++;
         });
+
+        for (let key in agrupados) {
+            let g = agrupados[key];
+            let nombreMostrar = g.articulo;
+            if (g.talla && g.talla.trim() !== '') {
+                nombreMostrar += ` - Talla ${g.talla}`;
+            }
+            nombreMostrar += ` (${g.cantidad} disponibles)`;
+            comboEquipo.append(`<option value="${g.codigo_articulo}">${nombreMostrar}</option>`);
+        }
     }
 
     comboAtleta.trigger('change');

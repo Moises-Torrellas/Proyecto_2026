@@ -125,7 +125,10 @@ function incluir($obj, $id_modulo, $bitacoraObj): void {
             $resultado = array('accion' => 'exito', 'mensaje' => 'Asignación procesada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                VALIDATION    => 'El artículo seleccionado ya no está disponible.',
+                'ERR_EQUIPO_NO_EXISTE' => 'El artículo seleccionado no existe.',
+                'ERR_EQUIPO_OCUPADO'   => 'El artículo seleccionado ya no está disponible.',
+                'ERR_POSICION_NO_COINCIDE' => 'El atleta no juega en la posición requerida para este equipamiento.',
+                'ERR_ATLETA_NO_EXISTE' => 'El atleta seleccionado no existe.',
                 DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
                 default       => 'Ocurrió un error inesperado al procesar la asignación.'
             };
@@ -164,11 +167,13 @@ function modificar($obj, $id_modulo, $bitacoraObj): void {
             $resultado = array('accion' => 'exito', 'mensaje' => 'Asignación modificada exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                INVALID_ID    => 'La asignación original no fue encontrada.',
-                'ERR_ESTATUS' => 'No puede modificar una asignación que ya ha sido devuelta o anulada.',
-                VALIDATION    => 'El nuevo artículo seleccionado no está disponible.',
-                DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
-                default       => 'Ocurrió un error inesperado al modificar.'
+                'ERR_NO_EXISTE'            => 'La asignación que intenta modificar no existe.',
+                'ERR_ESTATUS'              => 'No se puede editar una asignación ya devuelta o anulada.',
+                'ERR_EQUIPO_NO_EXISTE'     => 'El artículo seleccionado no existe.',
+                'ERR_EQUIPO_NO_DISPONIBLE' => 'El nuevo artículo seleccionado no está disponible.',
+                'ERR_POSICION_NO_COINCIDE' => 'El atleta no juega en la posición requerida para este equipamiento.',
+                DB_CONNECTION              => 'Ocurrió un error al conectarse con la base de datos.',
+                default                    => 'Ocurrió un error inesperado al modificar la asignación.'
             };
             registrarBitacora($bitacoraObj, $id_modulo, "Falló al modificar asignación ID: " . $datos['id_asignacion'] . " - " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
         }

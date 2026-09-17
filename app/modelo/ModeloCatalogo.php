@@ -11,6 +11,7 @@ class ModeloCatalogo extends Conexion
     private $stock_minimo;
     private $id_categoria;
     private $talla;
+    private $codigo_posicion;
 
     public function __construct()
     {
@@ -20,7 +21,8 @@ class ModeloCatalogo extends Conexion
             'nombre' => 'nombre',
             'stock_minimo' => 'stock_minimo',
             'id_categoria' => 'id_categoria',
-            'talla' => 'talla'
+            'talla' => 'talla',
+            'codigo_posicion' => 'codigo_posicion'
         ];
         $this->llavePrimaria = 'id_catalogo';
     }
@@ -38,6 +40,7 @@ class ModeloCatalogo extends Conexion
         $this->stock_minimo = $datos['stock_minimo'] ?? 0;
         $this->id_categoria = $datos['id_categoria'] ?? null;
         $this->talla = mb_strtoupper(trim($datos['talla'] ?? ''), "UTF-8");
+        $this->codigo_posicion = empty($datos['codigo_posicion']) ? null : $datos['codigo_posicion'];
 
         $accion = $datos['accion'] ?? null;
         return match ($accion) {
@@ -59,6 +62,7 @@ class ModeloCatalogo extends Conexion
             // SUBCONSULTA 1: Para obtener el nombre de la categoría sin usar INNER JOIN
             $sentencia = "SELECT c.*, 
                                  (SELECT cat.nombre FROM categoria_catalogo cat WHERE cat.id_categoria = c.id_categoria) as categoria_nombre,
+                                 (SELECT pos.nombre FROM posiciones pos WHERE pos.codigo_posicion = c.codigo_posicion) as posicion_nombre,
                                  StockDisponibleCatalogo(c.id_catalogo) AS stock_actual
                           FROM catalogo c
                           WHERE 1=1"; 
@@ -108,7 +112,8 @@ class ModeloCatalogo extends Conexion
             'nombre'       => $this->nombre,
             'stock_minimo' => $this->stock_minimo,
             'id_categoria' => $this->id_categoria,
-            'talla'        => $this->talla
+            'talla'        => $this->talla,
+            'codigo_posicion' => $this->codigo_posicion
         ];
 
         try {
@@ -119,14 +124,15 @@ class ModeloCatalogo extends Conexion
                 throw new Exception("La categoría seleccionada no existe.");
             }
 
-            $sentencia = "INSERT INTO catalogo (`nombre`, `stock_minimo`, `id_categoria`, `talla`) 
-                          VALUES (:nombre, :stock_minimo, :id_categoria, :talla)";
+            $sentencia = "INSERT INTO catalogo (`nombre`, `stock_minimo`, `id_categoria`, `talla`, `codigo_posicion`) 
+                          VALUES (:nombre, :stock_minimo, :id_categoria, :talla, :codigo_posicion)";
             
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':stock_minimo', $this->stock_minimo);
             $stmt->bindParam(':id_categoria', $this->id_categoria);
             $stmt->bindParam(':talla', $this->talla);
+            $stmt->bindParam(':codigo_posicion', $this->codigo_posicion);
             $stmt->execute();
 
             $conex->commit();
@@ -150,7 +156,8 @@ class ModeloCatalogo extends Conexion
             'nombre'       => $this->nombre,
             'stock_minimo' => $this->stock_minimo,
             'id_categoria' => $this->id_categoria,
-            'talla'        => $this->talla
+            'talla'        => $this->talla,
+            'codigo_posicion' => $this->codigo_posicion
         ];
 
         try {
@@ -165,7 +172,8 @@ class ModeloCatalogo extends Conexion
                           nombre = :nombre, 
                           stock_minimo = :stock_minimo, 
                           id_categoria = :id_categoria, 
-                          talla = :talla 
+                          talla = :talla,
+                          codigo_posicion = :codigo_posicion
                           WHERE id_catalogo = :id_catalogo";
 
             $stmt = $conex->prepare($sentencia);
@@ -173,6 +181,7 @@ class ModeloCatalogo extends Conexion
             $stmt->bindParam(':stock_minimo', $this->stock_minimo);
             $stmt->bindParam(':id_categoria', $this->id_categoria);
             $stmt->bindParam(':talla', $this->talla);
+            $stmt->bindParam(':codigo_posicion', $this->codigo_posicion);
             $stmt->bindParam(':id_catalogo', $this->id_catalogo);
             $stmt->execute();
 
@@ -252,8 +261,11 @@ class ModeloCatalogo extends Conexion
         if (isset($datos['stock_minimo']) && $datos['stock_minimo'] !== '' && !preg_match('/^[0-9]+$/', $datos['stock_minimo'])) {
             throw new Exception('Stock mínimo debe ser un número entero.');
         }
-        if (!empty($datos['talla']) && !preg_match('/^[a-zA-Z0-9\s\-\/]{1,10}$/', $datos['talla'])) {
+        if (!empty($datos['talla']) && !preg_match('/^[a-zA-Z0-9\s\-\/]{1,20}$/', $datos['talla'])) {
             throw new Exception('Talla inválida.');
+        }
+        if (!empty($datos['codigo_posicion']) && !preg_match('/^[0-9]+$/', $datos['codigo_posicion'])) {
+            throw new Exception('Posición inválida.');
         }
     }
 }

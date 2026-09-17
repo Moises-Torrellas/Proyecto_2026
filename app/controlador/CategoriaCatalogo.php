@@ -119,11 +119,12 @@ function buscar($obj, $permisos): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['nombre', 'descripcion']);
+        validar_requeridos(['nombre', 'tipo_talla']);
 
         $datos = [
             'nombre'      => $_POST['nombre'],
-            'descripcion' => $_POST['descripcion'],
+            'descripcion' => $_POST['descripcion'] ?? '',
+            'tipo_talla'  => $_POST['tipo_talla'] ?? 'Numerico',
             'accion'      => 'incluir'
         ];  
 
@@ -148,12 +149,13 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id_categoria', 'nombre', 'descripcion']);
+        validar_requeridos(['id_categoria', 'nombre', 'tipo_talla']);
 
         $datos = [
             'id_categoria' => $_POST['id_categoria'], 
             'nombre'       => $_POST['nombre'],
-            'descripcion'  => $_POST['descripcion'],
+            'descripcion'  => $_POST['descripcion'] ?? '',
+            'tipo_talla'   => $_POST['tipo_talla'] ?? 'Numerico',
             'accion'       => 'modificar'
         ];
 

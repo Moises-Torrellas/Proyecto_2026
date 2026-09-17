@@ -281,8 +281,11 @@ public function ConsultarArticulosLibres(): array {
             // Si asignar un artículo haría que el stock baje al mínimo o por debajo, no aparece.
             $sql = "SELECT e.codigo_articulo, 
                            e.codigo_club, 
-                           IFNULL((SELECT nombre FROM catalogo c WHERE c.id_catalogo = e.id_catalogo), 'Artículo sin registrar') as articulo 
+                           c.id_catalogo,
+                           c.nombre as articulo,
+                           c.talla
                     FROM articulos_inventario e 
+                    INNER JOIN catalogo c ON c.id_catalogo = e.id_catalogo
                     WHERE e.estatus = 1";
                     
             $articulos = $conex->query($sql)->fetchAll(PDO::FETCH_ASSOC);

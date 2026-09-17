@@ -26,6 +26,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <small>Stock Mínimo</small>
                             <span class="listado_resaltado"><?= htmlspecialchars($dato['stock_minimo']) ?> unds.</span>
                         </div>
+                        <div class="listado_dato_grupo">
+                            <small>Posición</small>
+                            <span><?= !empty($dato['posicion_nombre']) ? htmlspecialchars($dato['posicion_nombre']) : 'Todas' ?></span>
+                        </div>
                     </div>
 
                     <div class="listado_col_acciones">
@@ -107,6 +111,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                                                     <small>Stock Mínimo</small>
                                                     <span class="listado_resaltado"><?= htmlspecialchars($dato['stock_minimo']) ?> unds.</span>
                                                 </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Posición</small>
+                                                    <span><?= !empty($dato['posicion_nombre']) ? htmlspecialchars($dato['posicion_nombre']) : 'Todas' ?></span>
+                                                </div>
                                             </div>
 
                                             <div class="listado_col_acciones">
@@ -168,9 +176,22 @@ if (isset($solo_lista) && $solo_lista === true) :
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <input type="text" class="formulario" id="talla" name="talla">
-                                <label for="talla" class="titulo_formulario">Talla (Opcional)</label>
+                                <select name="talla" id="talla" class="formulario select">
+                                    <option value="">Seleccione una categoría primero</option>
+                                </select>
+                                <label for="talla" class="titulo_formulario">Talla</label>
                                 <span class="mensaje" id="talla_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select name="codigo_posicion" id="codigo_posicion" class="formulario select">
+                                    <option value="">Todas las posiciones</option>
+                                </select>
+                                <label for="codigo_posicion" class="titulo_formulario">Posición</label>
+                                <span class="mensaje" id="codigo_posicion_span"></span>
                             </div>
                         </div>
                     </div>

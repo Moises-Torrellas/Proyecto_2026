@@ -31,20 +31,27 @@ class ModeloRepresentantes extends Conexion
     }
     private function ValidarExpresiones(array $datos): void
     {
+        $accion = $datos['accion'] ?? '';
+
         if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
             throw new Exception('Id inválido.');
         }
-        if (!empty($datos['cedula']) && !preg_match('/^[0-9]{7,8}$/', $datos['cedula'])) {
-            throw new Exception('Cédula inválida.');
+        if (!empty($datos['cedula'])) {
+            $regla_doc = ($accion === 'generar') ? '/^[0-9]{1,8}$/' : '/^[0-9]{7,8}$/';
+            if (!preg_match($regla_doc, $datos['cedula'])) throw new Exception('Cédula inválida.');
         }
-        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/', $datos['nombre'])) {
-            throw new Exception('Nombre inválido.');
+        if (!empty($datos['nombre'])) {
+            $regla = ($accion === 'generar') ? '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,60}$/' : '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/';
+            if (!preg_match($regla, $datos['nombre'])) throw new Exception('Nombre inválido.');
         }
-        if (!empty($datos['apellido']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/', $datos['apellido'])) {
-            throw new Exception('Apellido inválido.');
+        if (!empty($datos['apellido'])) {
+            $regla = ($accion === 'generar') ? '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,60}$/' : '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/';
+            if (!preg_match($regla, $datos['apellido'])) throw new Exception('Apellido inválido.');
         }
         if (!empty($datos['telefono']) && !preg_match('/^[0-9]{4}[-]{1}[0-9]{7}$/', $datos['telefono'])) {
-            throw new Exception('Teléfono inválido.');
+            if ($accion !== 'generar' || !preg_match('/^[0-9-]{1,12}$/', $datos['telefono'])) {
+                throw new Exception('Teléfono inválido.');
+            }
         }
         if (!empty($datos['direccion']) && !preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-\/]{5,150}$/', $datos['direccion'])) {
             throw new Exception('Dirección inválida.');
@@ -122,8 +129,8 @@ class ModeloRepresentantes extends Conexion
             }
 
             if (!empty($this->nacionalidad)) {
-                $sentencia .= " AND nacionalidad LIKE :nacionalidad";
-                $params[':nacionalidad'] = "%" . trim($this->nacionalidad) . "%";
+                $sentencia .= " AND tipo_doc LIKE :tipo_doc";
+                $params[':tipo_doc'] = trim($this->nacionalidad) . "%";
             }
 
 

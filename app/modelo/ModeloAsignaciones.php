@@ -199,12 +199,27 @@ class ModeloAsignaciones extends Conexion
                 return ['accion' => 'error', 'codigo' => 'ERR_ATLETA_NO_EXISTE', 'datos_nuevos' => json_encode($datos_nuevos)];
             }
 
-            $stmtCheck = $conex->prepare("SELECT estatus FROM articulos_inventario WHERE codigo_articulo = ? FOR UPDATE");
+            $stmtCheck = $conex->prepare("
+                SELECT ai.estatus, c.codigo_posicion 
+                FROM articulos_inventario ai 
+                INNER JOIN catalogo c ON ai.id_catalogo = c.id_catalogo
+                WHERE ai.codigo_articulo = ? FOR UPDATE
+            ");
             $stmtCheck->execute([$this->codigo_articulo]);
-            $estadoEquipo = $stmtCheck->fetchColumn();
+            $articulo = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
-            if ($estadoEquipo === false) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_EXISTE', 'datos_nuevos' => json_encode($datos_nuevos)];
-            if ($estadoEquipo != 1) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_OCUPADO', 'datos_nuevos' => json_encode($datos_nuevos)];
+            if (!$articulo) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_EXISTE', 'datos_nuevos' => json_encode($datos_nuevos)];
+            if ($articulo['estatus'] != 1) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_OCUPADO', 'datos_nuevos' => json_encode($datos_nuevos)];
+
+            if (!empty($articulo['codigo_posicion'])) {
+                $stmtAtleta = $conex->prepare("SELECT codigo_posicion FROM inscripciones WHERE codigo_atleta = ? AND estatus = 1 LIMIT 1");
+                $stmtAtleta->execute([$this->codigo_atleta]);
+                $posicion_atleta = $stmtAtleta->fetchColumn();
+                
+                if ($posicion_atleta != $articulo['codigo_posicion']) {
+                    return ['accion' => 'error', 'codigo' => 'ERR_POSICION_NO_COINCIDE', 'datos_nuevos' => json_encode($datos_nuevos)];
+                }
+            }
 
             $sqlInsert = "INSERT INTO asignaciones (codigo_atleta, codigo_articulo, fecha_asignacion, estatus) VALUES (?, ?, ?, 1)";
             $stmtInsert = $conex->prepare($sqlInsert);
@@ -254,12 +269,50 @@ class ModeloAsignaciones extends Conexion
             $viejoEquipo = $datosViejos['codigo_articulo'];
 
             if ($viejoEquipo != $this->codigo_articulo) {
-                $stmtCheck = $conex->prepare("SELECT estatus FROM articulos_inventario WHERE codigo_articulo = ? FOR UPDATE");
+                $stmtCheck = $conex->prepare("
+                    SELECT ai.estatus, c.codigo_posicion 
+                    FROM articulos_inventario ai 
+                    INNER JOIN catalogo c ON ai.id_catalogo = c.id_catalogo
+                    WHERE ai.codigo_articulo = ? FOR UPDATE
+                ");
                 $stmtCheck->execute([$this->codigo_articulo]);
-                if ($stmtCheck->fetchColumn() != 1) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_DISPONIBLE', 'datos_nuevos' => json_encode($datos_nuevos)];
+                $articulo = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$articulo) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_EXISTE', 'datos_nuevos' => json_encode($datos_nuevos)];
+                if ($articulo['estatus'] != 1) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_DISPONIBLE', 'datos_nuevos' => json_encode($datos_nuevos)];
+
+                if (!empty($articulo['codigo_posicion'])) {
+                    $stmtAtleta = $conex->prepare("SELECT codigo_posicion FROM atletas WHERE codigo_atleta = ? LIMIT 1");
+                    $stmtAtleta->execute([$this->codigo_atleta]);
+                    $posicion_atleta = $stmtAtleta->fetchColumn();
+                    
+                    if ($posicion_atleta != $articulo['codigo_posicion']) {
+                        return ['accion' => 'error', 'codigo' => 'ERR_POSICION_NO_COINCIDE', 'datos_nuevos' => json_encode($datos_nuevos)];
+                    }
+                }
 
                 $this->objArticulos->CambiarEstatus($viejoEquipo, 1, $conex); // Libera el viejo
                 $this->objArticulos->CambiarEstatus($this->codigo_articulo, 2, $conex); // Ocupa el nuevo
+            } else {
+                // Verificar si se cambia de atleta manteniendo el equipo, debemos validar la posición igual
+                $stmtCheck = $conex->prepare("
+                    SELECT c.codigo_posicion 
+                    FROM articulos_inventario ai 
+                    INNER JOIN catalogo c ON ai.id_catalogo = c.id_catalogo
+                    WHERE ai.codigo_articulo = ?
+                ");
+                $stmtCheck->execute([$this->codigo_articulo]);
+                $codigo_posicion = $stmtCheck->fetchColumn();
+                
+                if (!empty($codigo_posicion)) {
+                    $stmtAtleta = $conex->prepare("SELECT codigo_posicion FROM atletas WHERE codigo_atleta = ? LIMIT 1");
+                    $stmtAtleta->execute([$this->codigo_atleta]);
+                    $posicion_atleta = $stmtAtleta->fetchColumn();
+                    
+                    if ($posicion_atleta != $codigo_posicion) {
+                        return ['accion' => 'error', 'codigo' => 'ERR_POSICION_NO_COINCIDE', 'datos_nuevos' => json_encode($datos_nuevos)];
+                    }
+                }
             }
 
             $sqlUpdate = "UPDATE asignaciones SET codigo_atleta = ?, codigo_articulo = ?, fecha_asignacion = ? WHERE id_asignacion = ?";

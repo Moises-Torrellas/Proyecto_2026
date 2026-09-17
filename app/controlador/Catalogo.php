@@ -2,6 +2,7 @@
 
 use App\modelo\ModeloCatalogo;
 use App\modelo\ModeloCategoriaCatalogo;
+use App\modelo\ModeloPosiciones;
 use App\servicios\GenerarReporte;
 
 require_once __DIR__ . '/Base.php';
@@ -97,9 +98,13 @@ function MultiConsulta(): void
         $modeloCat = new ModeloCategoriaCatalogo();
         $catRespuesta = $modeloCat->Consultar();
 
+        $modeloPosiciones = new ModeloPosiciones();
+        $posRespuesta = $modeloPosiciones->Consultar();
+
         echo json_encode([
             'accion'     => 'MultiConsulta',
-            'categorias' => $catRespuesta['datos'] ?? []
+            'categorias' => $catRespuesta['datos'] ?? [],
+            'posiciones' => $posRespuesta['datos'] ?? []
         ]);
     } catch (Exception $e) {
         logs('Catalogo', $e->getMessage(), 'Controlador_MultiConsulta');
@@ -133,6 +138,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             'id_categoria' => $_POST['id_categoria'],
             'stock_minimo' => $_POST['stock_minimo'],
             'talla'        => $_POST['talla'] ?? null,
+            'codigo_posicion' => $_POST['codigo_posicion'] ?? null,
             'accion'       => 'incluir'
         ];
 
@@ -166,6 +172,7 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
             'id_categoria' => $_POST['id_categoria'],
             'stock_minimo' => $_POST['stock_minimo'],
             'talla'        => $_POST['talla'] ?? null,
+            'codigo_posicion' => $_POST['codigo_posicion'] ?? null,
             'accion'       => 'modificar'
         ];
 

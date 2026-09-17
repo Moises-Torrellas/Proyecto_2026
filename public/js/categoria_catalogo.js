@@ -24,8 +24,12 @@ $(document).ready(function () {
 
     // 2. Validaciones en tiempo real para Categorías
     // Nombre: Letras, números, espacios y guiones (Ej: "U-12", "Sub 20")
-    Validacion("nombre", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras, números y guiones)", "proceso");
-    Validacion("descripcion", /^[A-Za-z0-9\-\b\s]*$/, /^[A-Za-z0-9\-\b\s]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras, números y guiones)", "proceso");
+    Validacion("nombre", /^[A-Za-z\-\b\s\u00C0-\u017F]*$/, /^[A-Za-z\-\b\s\u00C0-\u017F]{2,30}$/, "Permitido entre 2 y 30 caracteres (letras y guiones)", "proceso");
+    Validacion("descripcion", /^[A-Za-z\-\b\s\u00C0-\u017F]*$/, /^[A-Za-z\-\b\s\u00C0-\u017F]{0,30}$/, "Opcional. Máximo 30 caracteres", "proceso");
+
+    if ($.fn.select2) {
+        $('#tipo_talla').select2({ minimumResultsForSearch: Infinity, dropdownParent: $('.contenedor_modal') });
+    }
 
     // 3. Lógica de los Botones Guardar/Modificar
     $('#proceso').on('click', function () {
@@ -166,13 +170,15 @@ function eliminar(id_categoria) { // Parámetro ajustado
 }
 
 function validarEnvio(proceso) {
-    if (validarkeyup(/^[A-Za-z0-9\-\b\s]{2,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 2 y 30 caracteres (letras, números y guiones)", true)) {
+    if (validarkeyup(/^[A-Za-z\-\b\s\u00C0-\u017F]{2,30}$/, $("#nombre"), $("#nombre_spam"), "Permitido entre 2 y 30 caracteres (letras y guiones)", true)) {
         muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre de categoría válido");
         return false;
     }
-    else if (validarkeyup(/^[A-Za-z0-9\-\b\s]{2,30}$/, $("#descripcion"), $("#descripcion_spam"), "Permitido entre 2 y 30 caracteres (letras, números y guiones)", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar una descripción válida");
-        return false;
+    if ($("#descripcion").val().trim() !== '') {
+        if (validarkeyup(/^[A-Za-z\-\b\s\u00C0-\u017F]{1,30}$/, $("#descripcion"), $("#descripcion_spam"), "Permitido entre 1 y 30 caracteres", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar una descripción válida");
+            return false;
+        }
     }
     
     return true;
@@ -187,6 +193,7 @@ function modificar(datos) {
     $('#id_categoria').val(datos[0].id_categoria);
     $('#nombre').val(datos[0].nombre);
     $('#descripcion').val(datos[0].descripcion);
+    $('#tipo_talla').val(datos[0].tipo_talla).trigger('change');
 
     abrirModal();
 }

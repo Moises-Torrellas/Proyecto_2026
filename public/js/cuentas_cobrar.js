@@ -84,7 +84,7 @@ $(document).ready(function () {
         let accion = $(this).data("accion");
         if (accion == "incluir") {
             if (validarEnvio(accion)) {
-                confirmar('¿Esta seguro que quiere generar esta(s) cuenta(s) por cobrar?', function (confirmado) {
+                confirmar('¿Esta seguro que quiere generar esto(s) cargos(s)?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         let montoStr = $('#monto_total').val() || "";
@@ -133,7 +133,7 @@ $(document).ready(function () {
         limpia();
         $("#proceso").data("accion", "incluir");
         $("#proceso").text("Registrar Cargo");
-        $('#titulo_modal').text('Nueva Cuenta por Cobrar');
+        $('#titulo_modal').text('Nuevo Cargo');
         $('#id_atleta').val(null).trigger('change');
         $('#id_concepto').val(null).trigger('change');
         $('#id_atleta').prop('disabled', false);
@@ -167,7 +167,7 @@ $(document).ready(function () {
         limpia();
         $("#proceso").data("accion", "generar");
         $("#proceso").text("Generar Reporte");
-        $("#titulo_modal").text("Reporte de Cuentas");
+        $("#titulo_modal").text("Reporte de Cargos");
         
         $('#campos_cargo').hide();
         $('#rango_fechas').show();
@@ -401,7 +401,7 @@ function limpia() {
             },
             {
                 element: '#incluir',
-                popover: { title: 'Nuevo Cargo', description: 'Si pulsa aqui se abrira un modal para generar una nueva cuenta por cobrar.', position: 'bottom' }
+                popover: { title: 'Nuevo Cargo', description: 'Si pulsa aqui se abrira un modal para generar un nuevo cargo por cobrar.', position: 'bottom' }
             },
             {
                 element: '#generar',

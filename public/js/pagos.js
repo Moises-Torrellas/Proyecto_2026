@@ -108,12 +108,14 @@ $(document).ready(function () {
         $('#fecha_f').closest('.colum').hide();
         $('#anulados').closest('.colum').hide();
         $('#monto_cambio').closest('.colum').show();
+        $('#total_pagar').closest('.colum').show();
         $('#cuenta').val(null).trigger('change');
         $('#metodo').val(null).trigger('change');
         $('#moneda').val(null).trigger('change');
         $('#monto').val('');
         $('#tasa').val('');
         $('#referencia').val('');
+        $('#total_pagar').val('');
 
         $('#referencia').prop('disabled', false).removeClass("campo_deshabilitado");
 
@@ -152,6 +154,7 @@ $(document).ready(function () {
         $('#fecha_f').closest('.colum').show();
         $('#anulados').closest('.colum').show();
         $('#monto_cambio').closest('.colum').hide();
+        $('#total_pagar').closest('.colum').hide();
         abrirModal();
     });
 
@@ -228,6 +231,7 @@ $(document).ready(function () {
             cuentaSeleccionadaActual = null;
             $('#detalles_deuda_ayuda').html('');
             $('#monto_equivalente_ayuda').html('');
+            $('#total_pagar').val('');
             return;
         }
 
@@ -265,6 +269,16 @@ $(document).ready(function () {
         htmlDeudas += '</ul></div>';
 
         $('#detalles_deuda_ayuda').html(htmlDeudas);
+
+        // Calcular y mostrar el total a pagar
+        let totalPagar = 0;
+        idsCobrar.forEach(id => {
+            let c = listadoCuentas.find(cuenta => cuenta.codigo_cargo == id);
+            if (c) totalPagar += parseFloat(c.monto_pendiente) || 0;
+        });
+        let simboloTotal = primeraCuenta.simbolo_moneda || '';
+        $('#total_pagar').val(totalPagar.toFixed(2) + ' ' + simboloTotal);
+
         solicitarTasaAPI();
     });
 

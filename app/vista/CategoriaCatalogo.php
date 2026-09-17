@@ -16,7 +16,11 @@ if (isset($solo_lista) && $solo_lista === true) :
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Descripción</small>
-                            <span><?= htmlspecialchars($dato['descripcion']) ?></span>
+                            <span><?= !empty($dato['descripcion']) ? htmlspecialchars($dato['descripcion']) : '<span style="color: #999; font-style: italic;">Sin Descripción</span>' ?></span>
+                        </div>
+                        <div class="listado_dato_grupo">
+                            <small>Tipo de Talla</small>
+                            <span><?= htmlspecialchars($dato['tipo_talla']) ?></span>
                         </div>
                     </div>
 
@@ -88,7 +92,11 @@ if (isset($solo_lista) && $solo_lista === true) :
                                                 </div>
                                                 <div class="listado_dato_grupo">
                                                     <small>Descripción</small>
-                                                    <span><?= htmlspecialchars($dato['descripcion']) ?></span>
+                                                    <span><?= !empty($dato['descripcion']) ? htmlspecialchars($dato['descripcion']) : '<span style="color: #999; font-style: italic;">Sin Descripción</span>' ?></span>
+                                                </div>
+                                                <div class="listado_dato_grupo">
+                                                    <small>Tipo de Talla</small>
+                                                    <span><?= htmlspecialchars($dato['tipo_talla']) ?></span>
                                                 </div>
                                             </div>
 
@@ -140,6 +148,19 @@ if (isset($solo_lista) && $solo_lista === true) :
                                 <input type="text" class="formulario" id="descripcion" name="descripcion">
                                 <label for="descripcion" class="titulo_formulario">Descripción</label>
                                 <span class="mensaje" id="descripcion_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <select class="formulario select" id="tipo_talla" name="tipo_talla">
+                                    <option value="Numerico">Numérico</option>
+                                    <option value="Letras">Letras (S, M, L)</option>
+                                    <option value="Categorico">Categórico (Junior, Senior)</option>
+                                </select>
+                                <label for="tipo_talla" class="titulo_formulario">Tipo de Talla</label>
                             </div>
                         </div>
                     </div>

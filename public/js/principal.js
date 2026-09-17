@@ -9,7 +9,7 @@ $(document).ready(function () {
     // 2. Configuración del Driver.js (Tour)
     const pasos = [
         { element: '#navegacion', popover: { title: 'Menu del Sistema', description: 'Aquí consigues todas las opciones.', position: 'right' } },
-        { element: '#asistente', popover: { title: 'Sydney', description: 'Interactúa con tu asistente.', position: 'bottom' } },
+        { element: '#asistente', popover: { title: 'Cani', description: 'Interactúa con tu asistente.', position: 'bottom' } },
         { element: '#noti', popover: { title: 'Notificaciones', description: 'Panel de avisos.', position: 'bottom' } },
         { element: '#info_usuario', popover: { title: 'Usuario', description: 'Menu de configuración personal.', position: 'left' } }
     ];

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-09-2026 a las 19:39:46
+-- Tiempo de generación: 18-09-2026 a las 00:36:28
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -341,6 +341,24 @@ CREATE TABLE `articulos_inventario` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
+-- Volcado de datos para la tabla `articulos_inventario`
+--
+
+INSERT INTO `articulos_inventario` (`codigo_articulo`, `id_estado`, `id_catalogo`, `codigo_club`, `estatus`) VALUES
+(1, 1, 8, 'CL-0001', 2),
+(2, 1, 7, 'CL-0002', 1),
+(3, 1, 8, 'CL-0003', 2),
+(4, 1, 8, 'CL-0004', 1),
+(5, 1, 8, 'CL-0005', 1),
+(6, 1, 7, 'CL-0006', 1),
+(7, 1, 5, 'CL-0007', 1),
+(8, 1, 5, 'CL-0008', 1),
+(9, 1, 4, 'CL-0009', 1),
+(10, 1, 5, 'CL-0010', 2),
+(11, 1, 6, 'CL-0011', 1),
+(12, 1, 2, 'CL-0012', 1);
+
+--
 -- Disparadores `articulos_inventario`
 --
 DROP TRIGGER IF EXISTS `trg_bloquear_articulos_danados`;
@@ -369,6 +387,16 @@ CREATE TABLE `asignaciones` (
   `fecha_asignacion` date NOT NULL,
   `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `asignaciones`
+--
+
+INSERT INTO `asignaciones` (`id_asignacion`, `codigo_atleta`, `codigo_articulo`, `fecha_asignacion`, `estatus`) VALUES
+(1, 1, 1, '2026-09-16', 1),
+(2, 1, 10, '2026-09-16', 1),
+(3, 1, 7, '2026-09-16', 3),
+(4, 2, 3, '2026-09-16', 1);
 
 --
 -- Disparadores `asignaciones`
@@ -402,6 +430,14 @@ CREATE TABLE `atletas` (
   `lugar_nacimiento` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `atletas`
+--
+
+INSERT INTO `atletas` (`codigo_atleta`, `p_nombre`, `s_nombre`, `p_apellidos`, `s_apellidos`, `genero`, `fecha_nac`, `foto`, `lugar_nacimiento`) VALUES
+(1, 'Diego', 'Alexandro', 'Reinoso', 'Chirinos', 'H', '2011-12-07', 'atleta_2011-12-07_1789499479.jpg', 'Barquisimeto'),
+(2, 'Andrea', 'Valentina', 'Chirinos', 'Torres', 'M', '2015-01-05', 'atleta_2015-01-05_1789499422.jpg', 'Barquisimeto');
+
 -- --------------------------------------------------------
 
 --
@@ -414,6 +450,14 @@ CREATE TABLE `atleta_representante` (
   `codigo_atleta` int(11) NOT NULL,
   `codigo_representante` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `atleta_representante`
+--
+
+INSERT INTO `atleta_representante` (`codigo_at_re`, `codigo_atleta`, `codigo_representante`) VALUES
+(1, 1, 1),
+(2, 2, 1);
 
 -- --------------------------------------------------------
 
@@ -433,6 +477,16 @@ CREATE TABLE `cargos` (
   `multado` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `cargos`
+--
+
+INSERT INTO `cargos` (`codigo_cargo`, `codigo_concepto`, `codigo_atleta`, `monto_total`, `fecha_emision`, `estatus`, `codigo_moneda`, `multado`) VALUES
+(1, 2, 1, 25.00, '2026-09-15', 1, 2, 0),
+(2, 1, 1, 30.00, '2026-09-15', 1, 2, 0),
+(3, 2, 2, 25.00, '2026-09-15', 1, 2, 0),
+(4, 1, 2, 30.00, '2026-09-15', 1, 2, 0);
+
 -- --------------------------------------------------------
 
 --
@@ -445,8 +499,22 @@ CREATE TABLE `catalogo` (
   `nombre` varchar(255) NOT NULL,
   `stock_minimo` int(11) NOT NULL,
   `Id_categoria` int(11) NOT NULL,
+  `codigo_posicion` int(11) DEFAULT NULL,
   `talla` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `catalogo`
+--
+
+INSERT INTO `catalogo` (`id_catalogo`, `nombre`, `stock_minimo`, `Id_categoria`, `codigo_posicion`, `talla`) VALUES
+(2, 'Casco Con Rejillas', 1, 2, NULL, 'S'),
+(3, 'Coderas Ccs', 1, 5, NULL, '10'),
+(4, 'Espinilleras Css', 1, 5, NULL, '10'),
+(5, 'Pads', 1, 6, 3, 'SENIOR'),
+(6, 'Catcher', 1, 6, 3, 'SENIOR'),
+(7, 'Sticks De Fibra De Carbono', 1, 3, NULL, 'SENIOR'),
+(8, 'Stick De Fibra De Carbono', 1, 3, NULL, 'JUVENIL');
 
 -- --------------------------------------------------------
 
@@ -462,6 +530,20 @@ CREATE TABLE `categorias` (
   `edad_max` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `categorias`
+--
+
+INSERT INTO `categorias` (`codigo_categoria`, `nombre`, `edad_min`, `edad_max`) VALUES
+(1, 'INICIAL', 3, 4),
+(2, 'U-6', 5, 6),
+(3, 'U-8', 7, 8),
+(4, 'U-10', 9, 10),
+(5, 'U-12', 11, 12),
+(6, 'U-14', 13, 14),
+(7, 'U-17', 15, 17),
+(8, 'SENIOR', 18, 50);
+
 -- --------------------------------------------------------
 
 --
@@ -472,8 +554,20 @@ DROP TABLE IF EXISTS `categoria_catalogo`;
 CREATE TABLE `categoria_catalogo` (
   `id_categoria` int(11) NOT NULL,
   `nombre` varchar(255) NOT NULL,
+  `tipo_talla` enum('Numerico','Categorico','Letras') NOT NULL DEFAULT 'Numerico',
   `descripcion` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `categoria_catalogo`
+--
+
+INSERT INTO `categoria_catalogo` (`id_categoria`, `nombre`, `tipo_talla`, `descripcion`) VALUES
+(2, 'Cascos', 'Letras', ''),
+(3, 'Stick', 'Categorico', ''),
+(4, 'Espinilleras', 'Numerico', ''),
+(5, 'Coderas', 'Numerico', ''),
+(6, 'Protecciones', 'Categorico', '');
 
 -- --------------------------------------------------------
 
@@ -491,6 +585,14 @@ CREATE TABLE `conceptos` (
   `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `conceptos`
+--
+
+INSERT INTO `conceptos` (`codigo_concepto`, `nombre`, `monto`, `frecuencia`, `dias_gracia`, `estatus`) VALUES
+(1, 'Mensualidad', 30.00, 'M', 0, 1),
+(2, 'Inscripción', 25.00, 'A', 0, 1);
+
 -- --------------------------------------------------------
 
 --
@@ -507,6 +609,14 @@ CREATE TABLE `contacto_atleta` (
   `instagram` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `contacto_atleta`
+--
+
+INSERT INTO `contacto_atleta` (`codigo_atleta`, `direccion`, `telefono`, `correo`, `municipio`, `instagram`) VALUES
+(1, '', '', 'diegoreinoso747@gmail.com', 'Iribarren', ''),
+(2, '', '', 'yasmelbi2011@hotmail.com', 'Iribarren', '');
+
 -- --------------------------------------------------------
 
 --
@@ -521,6 +631,14 @@ CREATE TABLE `datos_medicos` (
   `alergias_detalle` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `datos_medicos`
+--
+
+INSERT INTO `datos_medicos` (`codigo_atleta`, `tipo_sangre`, `es_alergico`, `alergias_detalle`) VALUES
+(1, 'A+', 1, 'Mariscos, polvo, olores fuertes'),
+(2, 'B+', 0, '');
+
 -- --------------------------------------------------------
 
 --
@@ -533,6 +651,14 @@ CREATE TABLE `detalles_equipos` (
   `codigo_equipo` int(11) NOT NULL,
   `codigo_atleta` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `detalles_equipos`
+--
+
+INSERT INTO `detalles_equipos` (`codigo_detalle`, `codigo_equipo`, `codigo_atleta`) VALUES
+(2, 1, 1),
+(3, 2, 1);
 
 -- --------------------------------------------------------
 
@@ -598,6 +724,21 @@ CREATE TABLE `detalles_participacion` (
   `estatus_estadistica` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `detalles_participacion`
+--
+
+INSERT INTO `detalles_participacion` (`codigo_dtll_prtc`, `codigo_participacion`, `codigo_atleta`, `goles`, `asistencias`, `penalizaciones`, `goles_contra`, `partidos_jugados`, `average`, `estatus_estadistica`) VALUES
+(1, 1, 1, 0, 0, 0, 0, 0, 0.00, 0),
+(2, 2, 1, 0, 0, 0, 0, 0, 0.00, 0),
+(3, 3, 1, 0, 0, 0, 0, 0, 0.00, 0),
+(4, 4, 1, 0, 0, 0, 0, 0, 0.00, 0),
+(5, 5, 1, 0, 0, 0, 0, 0, 0.00, 0),
+(6, 6, 1, 0, 0, 0, 0, 0, 0.00, 0),
+(7, 7, 1, 0, 0, 0, 0, 0, 0.00, 0),
+(8, 8, 1, 0, 0, 0, 0, 0, 0.00, 0),
+(9, 9, 1, 0, 0, 0, 0, 0, 0.00, 0);
+
 -- --------------------------------------------------------
 
 --
@@ -638,6 +779,14 @@ CREATE TABLE `equipos` (
   `nombre` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `equipos`
+--
+
+INSERT INTO `equipos` (`codigo_equipo`, `nombre`) VALUES
+(1, 'Cannibals Lara U17'),
+(2, 'Coyotes De Carabobo');
+
 -- --------------------------------------------------------
 
 --
@@ -651,6 +800,15 @@ CREATE TABLE `estado_fisico` (
   `nivel_estado` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `estado_fisico`
+--
+
+INSERT INTO `estado_fisico` (`id_estado`, `nombre`, `nivel_estado`) VALUES
+(1, 'Excelente', 1),
+(2, 'Regular', 2),
+(3, 'Dañado', 3);
+
 -- --------------------------------------------------------
 
 --
@@ -663,6 +821,14 @@ CREATE TABLE `identidad_atleta` (
   `tipo_doc` enum('V','E','P') NOT NULL,
   `numero_doc` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `identidad_atleta`
+--
+
+INSERT INTO `identidad_atleta` (`codigo_atleta`, `tipo_doc`, `numero_doc`) VALUES
+(1, 'V', '34772516'),
+(2, 'V', '36552840');
 
 -- --------------------------------------------------------
 
@@ -686,6 +852,14 @@ CREATE TABLE `inscripciones` (
   `talla_calzado` varchar(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `inscripciones`
+--
+
+INSERT INTO `inscripciones` (`codigo_inscripcion`, `codigo_atleta`, `codigo_categoria`, `codigo_posicion`, `dorsal`, `peso_kg`, `estatura_cm`, `fecha_inscripcion`, `estatus`, `talla_pantalon`, `talla_franela`, `talla_calzado`) VALUES
+(1, 1, 7, 3, 7, 70, 170, '2026-09-15', 1, 'L', 'L', '38'),
+(2, 2, 5, 2, 16, 50, 145, '2026-09-15', 1, 'M', 'M', '37');
+
 -- --------------------------------------------------------
 
 --
@@ -699,6 +873,15 @@ CREATE TABLE `metodos_pago` (
   `nec_referencia` tinyint(4) NOT NULL,
   `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `metodos_pago`
+--
+
+INSERT INTO `metodos_pago` (`codigo_metodo`, `nombre`, `nec_referencia`, `estatus`) VALUES
+(1, 'Transferencia', 1, 1),
+(2, 'Pago Movil', 1, 1),
+(3, 'Efectivo', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -715,6 +898,14 @@ CREATE TABLE `monedas` (
   `base` tinyint(4) NOT NULL DEFAULT 2,
   `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `monedas`
+--
+
+INSERT INTO `monedas` (`codigo_moneda`, `nombre`, `abreviatura`, `simbolo`, `base`, `estatus`) VALUES
+(1, 'Bolívar', 'VES', 'Bs', 2, 1),
+(2, 'Dólar', 'USD', '$', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -745,6 +936,17 @@ CREATE TABLE `palmares_grupal` (
   `codigo_participacion` int(11) NOT NULL,
   `codigo_premio` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `palmares_grupal`
+--
+
+INSERT INTO `palmares_grupal` (`codigo_grupal`, `codigo_participacion`, `codigo_premio`) VALUES
+(1, 1, 1),
+(2, 8, 2),
+(3, 2, 1),
+(4, 3, 2),
+(5, 4, 1);
 
 --
 -- Disparadores `palmares_grupal`
@@ -780,6 +982,14 @@ CREATE TABLE `palmares_individual` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
+-- Volcado de datos para la tabla `palmares_individual`
+--
+
+INSERT INTO `palmares_individual` (`codigo_individual`, `codigo_premio`, `codigo_dtll_prtc`) VALUES
+(1, 6, 1),
+(2, 3, 1);
+
+--
 -- Disparadores `palmares_individual`
 --
 DROP TRIGGER IF EXISTS `trg_antes_insertar_palmares_individual`;
@@ -813,6 +1023,21 @@ CREATE TABLE `participaciones` (
   `codigo_equipo` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `participaciones`
+--
+
+INSERT INTO `participaciones` (`codigo_participacion`, `codigo_torneo`, `codigo_equipo`) VALUES
+(1, 1, 1),
+(2, 2, 1),
+(3, 3, 1),
+(4, 4, 1),
+(5, 5, 1),
+(6, 6, 1),
+(7, 7, 1),
+(8, 2, 2),
+(9, 8, 1);
+
 -- --------------------------------------------------------
 
 --
@@ -827,6 +1052,16 @@ CREATE TABLE `posiciones` (
   `descripcion` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `posiciones`
+--
+
+INSERT INTO `posiciones` (`codigo_posicion`, `nombre`, `abreviatura`, `descripcion`) VALUES
+(1, 'Delantero', 'DC', ''),
+(2, 'Defensa', 'DF', ''),
+(3, 'Portero', 'PR', ''),
+(4, 'Medio Campista', 'MC', '');
+
 -- --------------------------------------------------------
 
 --
@@ -839,6 +1074,18 @@ CREATE TABLE `premios` (
   `tipo` enum('I','G') NOT NULL,
   `nombre` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `premios`
+--
+
+INSERT INTO `premios` (`codigo_premio`, `tipo`, `nombre`) VALUES
+(1, 'G', 'Campeón'),
+(2, 'G', '2Do Lugar'),
+(3, 'I', 'Mvp'),
+(4, 'I', 'Maximo Goleador'),
+(5, 'I', 'Maximo Asistedor'),
+(6, 'I', 'Mejor Portero');
 
 -- --------------------------------------------------------
 
@@ -858,6 +1105,13 @@ CREATE TABLE `representantes` (
   `correo` varchar(255) DEFAULT NULL,
   `instagram` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `representantes`
+--
+
+INSERT INTO `representantes` (`codigo_representante`, `cedula`, `telefono`, `direccion`, `nombre`, `apellido`, `tipo_doc`, `correo`, `instagram`) VALUES
+(1, '12944555', '0416-5533382', 'Calle 60 Entre Carrera 14A Y 14B Edificio Pozo Blanco Apartamento 8A', 'Yasmelbi', 'Chirinos', 'V', 'yasmelbi2011@hotmail.com', '@marchirojs');
 
 -- --------------------------------------------------------
 
@@ -888,6 +1142,15 @@ CREATE TABLE `tasa_cambios` (
   `tipo` enum('automatica','manual') NOT NULL DEFAULT 'manual'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+--
+-- Volcado de datos para la tabla `tasa_cambios`
+--
+
+INSERT INTO `tasa_cambios` (`codigo_tasa`, `codigo_moneda`, `fecha`, `valor_tasa`, `tipo`) VALUES
+(1, 1, '2026-09-15', '842.20', 'automatica'),
+(2, 2, '2026-09-15', '1.00', 'automatica'),
+(3, 1, '2026-09-16', '846.51', 'automatica');
+
 -- --------------------------------------------------------
 
 --
@@ -903,6 +1166,20 @@ CREATE TABLE `torneos` (
   `ubicacion` varchar(255) NOT NULL,
   `estatus` tinyint(4) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `torneos`
+--
+
+INSERT INTO `torneos` (`codigo_torneo`, `nombre`, `fecha_inicio`, `fecha_fin`, `ubicacion`, `estatus`) VALUES
+(1, 'VALENCIA 2022', '2022-12-19', '2022-12-21', 'Estado Valencia', 3),
+(2, 'VALENCIA 2023 MARZO', '2023-03-17', '2023-03-19', 'Estado Valencia', 3),
+(3, 'VALENCIA 2023 JUNIO', '2023-06-23', '2023-06-25', 'Estado Valencia', 3),
+(4, 'VALENCIA 2024 ABRIL', '2024-04-19', '2024-04-21', 'Estado Valencia', 3),
+(5, 'VALENCIA 2024 NOVIEMBRE', '2024-11-02', '2024-11-04', 'Estado Valencia', 3),
+(6, 'PUERTO ORDAZ 2025', '2025-02-15', '2025-02-17', 'Estado Bolivar', 3),
+(7, 'VALENCIA 2026 FEBRERO', '2026-02-20', '2026-02-22', 'Estado Valencia', 3),
+(8, 'MARACAIBO 2026', '2026-10-24', '2026-10-25', 'Estado Zulia', 1);
 
 -- --------------------------------------------------------
 
@@ -1295,7 +1572,8 @@ ALTER TABLE `catalogo`
   ADD PRIMARY KEY (`id_catalogo`),
   ADD KEY `Id_categoria` (`Id_categoria`),
   ADD KEY `idx_catalogo_busqueda` (`nombre`,`talla`),
-  ADD KEY `idx_catalogo_categoria` (`Id_categoria`);
+  ADD KEY `idx_catalogo_categoria` (`Id_categoria`),
+  ADD KEY `fk_catalogo_posicion` (`codigo_posicion`);
 
 --
 -- Indices de la tabla `categorias`
@@ -1490,67 +1768,67 @@ ALTER TABLE `vueltos`
 -- AUTO_INCREMENT de la tabla `articulos_inventario`
 --
 ALTER TABLE `articulos_inventario`
-  MODIFY `codigo_articulo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_articulo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `asignaciones`
 --
 ALTER TABLE `asignaciones`
-  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `atletas`
 --
 ALTER TABLE `atletas`
-  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `atleta_representante`
 --
 ALTER TABLE `atleta_representante`
-  MODIFY `codigo_at_re` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_at_re` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `cargos`
 --
 ALTER TABLE `cargos`
-  MODIFY `codigo_cargo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_cargo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `catalogo`
 --
 ALTER TABLE `catalogo`
-  MODIFY `id_catalogo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_catalogo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `codigo_categoria` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `categoria_catalogo`
 --
 ALTER TABLE `categoria_catalogo`
-  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `conceptos`
 --
 ALTER TABLE `conceptos`
-  MODIFY `codigo_concepto` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_concepto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `contacto_atleta`
 --
 ALTER TABLE `contacto_atleta`
-  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_equipos`
 --
 ALTER TABLE `detalles_equipos`
-  MODIFY `codigo_detalle` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_pagos`
@@ -1562,7 +1840,7 @@ ALTER TABLE `detalles_pagos`
 -- AUTO_INCREMENT de la tabla `detalles_participacion`
 --
 ALTER TABLE `detalles_participacion`
-  MODIFY `codigo_dtll_prtc` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_dtll_prtc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `devoluciones`
@@ -1574,37 +1852,37 @@ ALTER TABLE `devoluciones`
 -- AUTO_INCREMENT de la tabla `equipos`
 --
 ALTER TABLE `equipos`
-  MODIFY `codigo_equipo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_equipo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `estado_fisico`
 --
 ALTER TABLE `estado_fisico`
-  MODIFY `id_estado` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_estado` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `identidad_atleta`
 --
 ALTER TABLE `identidad_atleta`
-  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_atleta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `inscripciones`
 --
 ALTER TABLE `inscripciones`
-  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_inscripcion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `metodos_pago`
 --
 ALTER TABLE `metodos_pago`
-  MODIFY `codigo_metodo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_metodo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `monedas`
 --
 ALTER TABLE `monedas`
-  MODIFY `codigo_moneda` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_moneda` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
@@ -1616,37 +1894,37 @@ ALTER TABLE `pagos`
 -- AUTO_INCREMENT de la tabla `palmares_grupal`
 --
 ALTER TABLE `palmares_grupal`
-  MODIFY `codigo_grupal` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_grupal` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `palmares_individual`
 --
 ALTER TABLE `palmares_individual`
-  MODIFY `codigo_individual` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_individual` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `participaciones`
 --
 ALTER TABLE `participaciones`
-  MODIFY `codigo_participacion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_participacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `posiciones`
 --
 ALTER TABLE `posiciones`
-  MODIFY `codigo_posicion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_posicion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `premios`
 --
 ALTER TABLE `premios`
-  MODIFY `codigo_premio` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_premio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `representantes`
 --
 ALTER TABLE `representantes`
-  MODIFY `codigo_representante` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_representante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `retiros`
@@ -1658,13 +1936,13 @@ ALTER TABLE `retiros`
 -- AUTO_INCREMENT de la tabla `tasa_cambios`
 --
 ALTER TABLE `tasa_cambios`
-  MODIFY `codigo_tasa` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_tasa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `torneos`
 --
 ALTER TABLE `torneos`
-  MODIFY `codigo_torneo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_torneo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `vueltos`
@@ -1709,7 +1987,8 @@ ALTER TABLE `cargos`
 -- Filtros para la tabla `catalogo`
 --
 ALTER TABLE `catalogo`
-  ADD CONSTRAINT `catalogo_ibfk_1` FOREIGN KEY (`Id_categoria`) REFERENCES `categoria_catalogo` (`id_categoria`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `catalogo_ibfk_1` FOREIGN KEY (`Id_categoria`) REFERENCES `categoria_catalogo` (`id_categoria`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `fk_catalogo_posicion` FOREIGN KEY (`codigo_posicion`) REFERENCES `posiciones` (`codigo_posicion`);
 
 --
 -- Filtros para la tabla `contacto_atleta`

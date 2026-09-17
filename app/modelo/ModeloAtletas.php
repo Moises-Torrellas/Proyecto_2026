@@ -36,10 +36,6 @@ class ModeloAtletas extends Conexion
     private $es_alergico;
     private $alergias_detalle;
 
-    private $ObjCat;
-    private $ObjRep;
-    private $ObjPos;
-
 
     public function __construct()
     {
@@ -49,25 +45,28 @@ class ModeloAtletas extends Conexion
             'categoria' => 'codigo_categoria',
             'posicion' => 'codigo_posicion',
             'representante' => 'codigo_representante',
-            'id' => 'codigo_atleta'
+            'id' => 'codigo_atleta',
+            'doc_identidad' => 'numero_doc',
+            'correo' => 'correo',
+            'instagram' => 'instagram',
+            'dorsal' => 'dorsal'
         ];
         $this->llavePrimaria = 'codigo_atleta';
     }
 
-
-    public function setModeloCategorias(ModeloCategorias $modeloCat)
+    private function verificarDorsalCategoria($dorsal, $categoria, $id_atleta = null): bool
     {
-        $this->ObjCat = $modeloCat;
-    }
-
-    public function setModeloPosiciones(ModeloPosiciones $modeloPos)
-    {
-        $this->ObjPos = $modeloPos;
-    }
-
-    public function setModeloRepresentantes(ModeloRepresentantes $modeloRep)
-    {
-        $this->ObjRep = $modeloRep;
+        if (empty($dorsal) || empty($categoria)) return true;
+        
+        $conex = $this->conex();
+        if ($id_atleta !== null) {
+            $stmt = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1 AND codigo_atleta != :id");
+            $stmt->execute([':dorsal' => $dorsal, ':categoria' => $categoria, ':id' => $id_atleta]);
+        } else {
+            $stmt = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1");
+            $stmt->execute([':dorsal' => $dorsal, ':categoria' => $categoria]);
+        }
+        return $stmt->fetchColumn() == 0;
     }
 
     public function ProcesarDatos(array $datos): array
@@ -167,15 +166,15 @@ class ModeloAtletas extends Conexion
             // 3. FILTROS ESPECÍFICOS
             if (!empty($this->doc_identidad)) {
                 $sentencia .= " AND doc_identidad LIKE :doc_i";
-                $params[':doc_i'] = "__" . trim($this->doc_identidad) . "%";
+                $params[':doc_i'] = trim($this->doc_identidad) . "%";
             }
             if (!empty($this->nombre)) {
                 $sentencia .= " AND nombres LIKE :nombre";
-                $params[':nombre'] = '%' . trim($this->nombre) . "%";
+                $params[':nombre'] = trim($this->nombre) . "%";
             }
             if (!empty($this->apellido)) {
                 $sentencia .= " AND apellidos LIKE :apellido";
-                $params[':apellido'] = '%' . trim($this->apellido) . "%";
+                $params[':apellido'] = trim($this->apellido) . "%";
             }
             if (!empty($this->categoria)) {
                 $sentencia .= " AND id_categoria = :id_cat";
@@ -273,15 +272,19 @@ class ModeloAtletas extends Conexion
         ];
 
         try {
-            // Mantenemos las verificaciones de tus otros objetos en PHP
-            if (!$this->ObjCat->verificarCategoria($this->categoria)) {
+            
+            $ObjCat = new ModeloCategorias();
+            $ObjPos = new ModeloPosiciones();
+            $ObjRep = new ModeloRepresentantes();
+
+            if (!$ObjCat->verificarCategoria($this->categoria)) {
                 throw new Exception(INVALID_ID);
             }
-            if (!$this->ObjPos->verificarPosiciones($this->posicion)) {
+            if (!$ObjPos->verificarPosiciones($this->posicion)) {
                 throw new Exception(INVALID_ID . '0');
             }
             if (!empty($this->representante) && $this->representante !== '0') {
-                if (!$this->ObjRep->verificarRepresentantes($this->representante)) {
+                if (!$ObjRep->verificarRepresentantes($this->representante)) {
                     throw new Exception(INVALID_ID . '1');
                 }
             }
@@ -297,29 +300,20 @@ class ModeloAtletas extends Conexion
 
             $conex = $this->conex();
 
-            // Verificaciones de duplicados en PHP para correo, instagram y dorsal
-            if (!empty($this->correo)) {
-                $stmtVerifCorreo = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE correo = :correo");
-                $stmtVerifCorreo->execute([':correo' => $this->correo]);
-                if ($stmtVerifCorreo->fetchColumn() > 0) {
-                    throw new Exception(DUPLICATE_EMAIL);
-                }
+            if (!empty($this->doc_identidad) && $this->verificarExistencia('doc_identidad', $this->doc_identidad, 'identidad_atleta', null)) {
+                throw new Exception(DUPLICATE_CEDULA);
             }
-
-            if (!empty($this->instagram)) {
-                $stmtVerifInsta = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE instagram = :instagram");
-                $stmtVerifInsta->execute([':instagram' => $this->instagram]);
-                if ($stmtVerifInsta->fetchColumn() > 0) {
-                    throw new Exception(DUPLICATE_INSTAGRAM);
-                }
+            if (!empty($this->telefono) && $this->verificarExistencia('telefono', $this->telefono, 'contacto_atleta', null)) {
+                throw new Exception(DUPLICATE_PHONE);
             }
-
-            if (!empty($this->dorsal) && !empty($this->categoria)) {
-                $stmtVerifDorsal = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1");
-                $stmtVerifDorsal->execute([':dorsal' => $this->dorsal, ':categoria' => $this->categoria]);
-                if ($stmtVerifDorsal->fetchColumn() > 0) {
-                    throw new Exception(DUPLICATE_DORSAL);
-                }
+            if (!empty($this->correo) && $this->verificarExistencia('correo', $this->correo, 'contacto_atleta', null)) {
+                throw new Exception(DUPLICATE_EMAIL);
+            }
+            if (!empty($this->instagram) && $this->verificarExistencia('instagram', $this->instagram, 'contacto_atleta', null)) {
+                throw new Exception(DUPLICATE_INSTAGRAM);
+            }
+            if (!$this->verificarDorsalCategoria($this->dorsal, $this->categoria)) {
+                throw new Exception(DUPLICATE_DORSAL);
             }
 
             // Llamamos al procedimiento almacenado pasando parámetros y declarando @resultado
@@ -409,14 +403,18 @@ class ModeloAtletas extends Conexion
         ];
 
         try {
-            if (!$this->verificarExistencia('categoria', $this->categoria, 'categorias', NULL)) {
+            $ObjCat = new ModeloCategorias();
+            $ObjPos = new ModeloPosiciones();
+            $ObjRep = new ModeloRepresentantes();
+
+            if (!$ObjCat->verificarCategoria($this->categoria)) {
                 throw new Exception(INVALID_ID);
             }
-            if (!$this->verificarExistencia('posicion', $this->posicion, 'posiciones', NULL)) {
+            if (!$ObjPos->verificarPosiciones($this->posicion)) {
                 throw new Exception(INVALID_ID . '0');
             }
             if (!empty($this->representante) && $this->representante !== '0') {
-                if (!$this->verificarExistencia('representante', $this->representante, 'representantes', NULL)) {
+                if (!$ObjRep->verificarRepresentantes($this->representante)) {
                     throw new Exception(INVALID_ID . '1');
                 }
             }
@@ -424,44 +422,36 @@ class ModeloAtletas extends Conexion
             $conex = $this->conex();
             $conex->beginTransaction();
 
-            if ($this->doc_identidad !== null && $this->doc_identidad !== '') {
-                $stmtVerifDoc = $conex->prepare("SELECT COUNT(*) FROM identidad_atleta WHERE numero_doc = :doc AND codigo_atleta != :id");
-                $stmtVerifDoc->execute([':doc' => $this->doc_identidad, ':id' => $this->id]);
-                if ($stmtVerifDoc->fetchColumn() > 0) {
+            if (!empty($this->doc_identidad)) {
+                if ($this->verificarExistencia('doc_identidad', $this->doc_identidad, 'identidad_atleta', null) &&
+                    !$this->verificarExistenciaPropia('doc_identidad', $this->doc_identidad, $this->id, 'identidad_atleta', null)) {
                     throw new Exception(DUPLICATE_CEDULA);
                 }
             }
 
-            if ($this->telefono !== null && $this->telefono !== '') {
-                $stmtVerifTel = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE telefono = :tel AND codigo_atleta != :id");
-                $stmtVerifTel->execute([':tel' => $this->telefono, ':id' => $this->id]);
-                if ($stmtVerifTel->fetchColumn() > 0) {
+            if (!empty($this->telefono)) {
+                if ($this->verificarExistencia('telefono', $this->telefono, 'contacto_atleta', null) &&
+                    !$this->verificarExistenciaPropia('telefono', $this->telefono, $this->id, 'contacto_atleta', null)) {
                     throw new Exception(DUPLICATE_PHONE);
                 }
             }
 
             if (!empty($this->correo)) {
-                $stmtVerifCorreo = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE correo = :correo AND codigo_atleta != :id");
-                $stmtVerifCorreo->execute([':correo' => $this->correo, ':id' => $this->id]);
-                if ($stmtVerifCorreo->fetchColumn() > 0) {
+                if ($this->verificarExistencia('correo', $this->correo, 'contacto_atleta', null) &&
+                    !$this->verificarExistenciaPropia('correo', $this->correo, $this->id, 'contacto_atleta', null)) {
                     throw new Exception(DUPLICATE_EMAIL);
                 }
             }
 
             if (!empty($this->instagram)) {
-                $stmtVerifInsta = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE instagram = :instagram AND codigo_atleta != :id");
-                $stmtVerifInsta->execute([':instagram' => $this->instagram, ':id' => $this->id]);
-                if ($stmtVerifInsta->fetchColumn() > 0) {
+                if ($this->verificarExistencia('instagram', $this->instagram, 'contacto_atleta', null) &&
+                    !$this->verificarExistenciaPropia('instagram', $this->instagram, $this->id, 'contacto_atleta', null)) {
                     throw new Exception(DUPLICATE_INSTAGRAM);
                 }
             }
 
-            if (!empty($this->dorsal) && !empty($this->categoria)) {
-                $stmtVerifDorsal = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1 AND codigo_atleta != :id");
-                $stmtVerifDorsal->execute([':dorsal' => $this->dorsal, ':categoria' => $this->categoria, ':id' => $this->id]);
-                if ($stmtVerifDorsal->fetchColumn() > 0) {
-                    throw new Exception(DUPLICATE_DORSAL);
-                }
+            if (!$this->verificarDorsalCategoria($this->dorsal, $this->categoria, $this->id)) {
+                throw new Exception(DUPLICATE_DORSAL);
             }
 
             // Separar nombres y apellidos
@@ -743,20 +733,31 @@ class ModeloAtletas extends Conexion
         ];
 
         try {
-            $conex = $this->conex();
+            $ObjCat = new ModeloCategorias();
+            $ObjPos = new ModeloPosiciones();
+            $ObjRep = new ModeloRepresentantes();
 
-            if (!empty($this->dorsal) && !empty($this->categoria)) {
-                $stmtVerifDorsal = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1 AND codigo_atleta != :id");
-                $stmtVerifDorsal->execute([':dorsal' => $this->dorsal, ':categoria' => $this->categoria, ':id' => $this->id]);
-                if ($stmtVerifDorsal->fetchColumn() > 0) {
-                    throw new Exception(DUPLICATE_DORSAL);
+            if (!$ObjCat->verificarCategoria($this->categoria)) {
+                throw new Exception(INVALID_ID);
+            }
+            if (!$ObjPos->verificarPosiciones($this->posicion)) {
+                throw new Exception(INVALID_ID . '0');
+            }
+            if (!empty($this->representante) && $this->representante !== '0') {
+                if (!$ObjRep->verificarRepresentantes($this->representante)) {
+                    throw new Exception(INVALID_ID . '1');
                 }
             }
 
+            $conex = $this->conex();
+
+            if (!$this->verificarDorsalCategoria($this->dorsal, $this->categoria, $this->id)) {
+                throw new Exception(DUPLICATE_DORSAL);
+            }
+
             if (!empty($this->correo)) {
-                $stmtVerifCorreo = $conex->prepare("SELECT COUNT(*) FROM contacto_atleta WHERE correo = :correo AND codigo_atleta != :id");
-                $stmtVerifCorreo->execute([':correo' => $this->correo, ':id' => $this->id]);
-                if ($stmtVerifCorreo->fetchColumn() > 0) {
+                if ($this->verificarExistencia('correo', $this->correo, 'contacto_atleta', null) &&
+                    !$this->verificarExistenciaPropia('correo', $this->correo, $this->id, 'contacto_atleta', null)) {
                     throw new Exception(DUPLICATE_EMAIL);
                 }
             }

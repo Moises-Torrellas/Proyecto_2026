@@ -1,5 +1,6 @@
 $('#busqueda').off('keyup').on('keyup', busqueda);
 let timerBusqueda;
+let categoriasDatos = [];
 
 function consultar() {
     let datos = new FormData();
@@ -34,13 +35,8 @@ $(document).ready(function () {
         $(this).val(input);
     });
 
-    $("#talla").on("input", function () {
-        $(this).val($(this).val().toUpperCase());
-    });
-
     Validacion("nombre", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-\.]*$/, /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-\.]{3,50}$/, "Entre 3 y 50 caracteres", "proceso");
     Validacion("stock_minimo", /^[0-9\b]*$/, /^[0-9]+$/, "Debe ingresar un número entero", "proceso");
-    Validacion("talla", /^[A-Z0-9\s\-\/]*$/, /^[A-Z0-9\s\-\/]{0,10}$/, "Máximo 10 caracteres permitidos", "proceso");
 
     $('#proceso').on('click', function () {
         let accion = $(this).data("accion");
@@ -79,7 +75,34 @@ $(document).ready(function () {
 
     if ($.fn.select2) {
         $('#id_categoria').select2({ placeholder: "Selecciona una Categoría", allowClear: true, dropdownParent: $('.contenedor_modal') });
+        $('#talla').select2({ placeholder: "Seleccione una talla (Opcional)", allowClear: true, dropdownParent: $('.contenedor_modal') });
+        $('#codigo_posicion').select2({ dropdownParent: $('.contenedor_modal') });
     }
+
+    $('#id_categoria').on('change', function() {
+        let id_cat = $(this).val();
+        let selectTalla = $('#talla');
+        selectTalla.empty();
+        selectTalla.append('<option value="">Ninguna</option>');
+        
+        if (id_cat) {
+            let cat = categoriasDatos.find(c => c.id_categoria == id_cat);
+            if (cat) {
+                let opciones = [];
+                if (cat.tipo_talla === 'Numerico') {
+                    opciones = ['5', '6', '7', '8', '9', '10', '11', '12', '13', '14'];
+                } else if (cat.tipo_talla === 'Letras') {
+                    opciones = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+                } else if (cat.tipo_talla === 'Categorico') {
+                    opciones = ['Infantil', 'Junior', 'Juvenil', 'Senior', 'Master'];
+                }
+                
+                opciones.forEach(opt => {
+                    selectTalla.append(`<option value="${opt.toUpperCase()}">${opt}</option>`);
+                });
+            }
+        }
+    });
 
     $("#incluir").on("click", function () {
         limpia();
@@ -91,9 +114,12 @@ $(document).ready(function () {
         $('#nombre').closest('.colum').show();
         $('#stock_minimo').closest('.colum').show();
         $('#talla').closest('.colum').show();
+        $('#codigo_posicion').closest('.colum').show();
         
         if ($.fn.select2) {
             $('#id_categoria').val(null).trigger('change');
+            $('#talla').val(null).trigger('change');
+            $('#codigo_posicion').val("").trigger('change');
         }
         abrirModal();
     });
@@ -107,6 +133,7 @@ $(document).ready(function () {
         $('#nombre').closest('.colum').hide();
         $('#stock_minimo').closest('.colum').hide();
         $('#talla').closest('.colum').show();
+        $('#codigo_posicion').closest('.colum').hide();
 
         if ($.fn.select2) {
             $('#id_categoria').val(null).trigger('change');
@@ -163,8 +190,8 @@ function validarEnvio(proceso) {
             muestraMensaje("error", 2000, "Error", "Tiene que ingresar una cantidad válida para el stock mínimo.");
             return false;
         }
-        if ($('#talla').val().trim() !== "") {
-            if (validarkeyup(/^[A-Z0-9\s\-\/]{1,10}$/, $('#talla'), $("#talla_spam"), "Máximo 10 caracteres", true)) {
+        if ($('#talla').val() && $('#talla').val().trim() !== "") {
+            if (validarkeyup(/^[A-Za-z0-9\s\-\/]{1,20}$/, $('#talla'), $("#talla_spam"), "Máximo 20 caracteres", true)) {
                 muestraMensaje("error", 2000, "Error", "El formato de la talla es inválido.");
                 return false;
             }
@@ -183,14 +210,26 @@ function modificar(datos) {
     $('#stock_minimo').closest('.colum').show();
     $('#talla').closest('.colum').show();
 
-    $('#id_catalogo').val(datos[0].id_catalogo);
+    $('#id_catalogo').val(datos[0].id_catalogo || datos[0].Id_catalogo);
     $('#nombre').val(datos[0].nombre);
     $('#stock_minimo').val(datos[0].stock_minimo);
-    $('#talla').val(datos[0].talla);
     
-    $('#id_categoria').val(datos[0].id_categoria);
+    let categoriaId = datos[0].id_categoria || datos[0].Id_categoria;
+    $('#id_categoria').val(categoriaId);
+    
     if ($.fn.select2) {
         $('#id_categoria').trigger('change');
+        
+        // Timeout para que id_categoria rellene el selectTalla antes de setearlo
+        setTimeout(() => {
+            $('#talla').val(datos[0].talla ? datos[0].talla.toUpperCase() : '').trigger('change');
+            $('#codigo_posicion').val(datos[0].codigo_posicion || "").trigger('change');
+        }, 100);
+    } else {
+        setTimeout(() => {
+            $('#talla').val(datos[0].talla ? datos[0].talla.toUpperCase() : '');
+            $('#codigo_posicion').val(datos[0].codigo_posicion || "");
+        }, 100);
     }
 
     abrirModal();
@@ -204,10 +243,12 @@ function crearConsulta(htmlRecibido) {
     if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
 }
 
-function construirSelect(idSelect, datos, campoId, campo1) {
+function construirSelect(idSelect, datos, campoId, campo1, textoDefault = 'Seleccione una opción') {
     var select = $('#' + idSelect);
     select.empty();
-    select.append('<option value="" selected disabled>Seleccione una opción</option>');
+    if (textoDefault !== null) {
+        select.append('<option value="" selected disabled>' + textoDefault + '</option>');
+    }
 
     datos.forEach(dato => {
         let textoMostrar = escapeHTML(String(dato[campo1]));
@@ -253,7 +294,10 @@ function enviaAjax(datos) {
                 var lee = JSON.parse(respuesta);
                 
                 if (lee.accion === "MultiConsulta") {
+                    categoriasDatos = lee.categorias;
                     construirSelect('id_categoria', lee.categorias, 'id_categoria', 'nombre');
+                    construirSelect('codigo_posicion', lee.posiciones, 'codigo_posicion', 'nombre', null);
+                    $('#codigo_posicion').prepend('<option value="" selected>Todas las posiciones</option>');
                 } 
                 else if (lee.accion === "incluir") {
                     consultar();

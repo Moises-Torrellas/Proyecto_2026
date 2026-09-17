@@ -219,13 +219,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $datos['foto'] = [$foto_nombre];
         $datos['accion'] = 'incluir';
 
-        $modeloCat = new ModeloCategorias();
-        $modeloRep = new ModeloRepresentantes();
-        $modeloPos = new ModeloPosiciones();
-
-        $obj->setModeloCategorias($modeloCat);
-        $obj->setModeloPosiciones($modeloPos);
-        $obj->setModeloRepresentantes($modeloRep);
+        $datos['accion'] = 'incluir';
 
         $resultado = $obj->ProcesarDatos($datos);
 
