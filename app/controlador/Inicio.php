@@ -64,7 +64,7 @@ function manejarSolicitudInicio($obj, $id_modulo, $bitacoraObj): void
 
 function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
 {
-    /*
+    
     $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
     
     // Tomamos la clave secreta directamente de las variables de entorno
@@ -94,7 +94,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['accion' => 'error', 'resultado' => 0, 'mensaje' => 'Validación de CAPTCHA fallida. Intenta de nuevo.']);
         exit();
-    } */
+    }
 
     validarCredenciales($_POST['cedula'] ?? '', $_POST['contraseña'] ?? '');
 

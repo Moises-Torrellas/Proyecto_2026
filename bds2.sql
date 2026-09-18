@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-09-2026 a las 00:35:48
+-- Tiempo de generación: 18-09-2026 a las 03:36:10
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -603,7 +603,69 @@ INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `datos_previos`,
 (469, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 18:29:20', 1),
 (470, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 19:46:37', 1),
 (471, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 20:30:30', 1),
-(472, 5, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 21:01:05', 1);
+(472, 5, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 21:01:05', 1),
+(473, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:38:25', 1),
+(474, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:38:39', 1),
+(475, 100, 'Modificó al Atleta: 34772516 - Diego Alexandro Reinoso Chirinos', '{\"nombres\":\"Diego Alexandro\",\"apellidos\":\"Reinoso Chirinos\",\"p_nombre\":\"Diego\",\"s_nombre\":\"Alexandro\",\"p_apellidos\":\"Reinoso\",\"s_apellidos\":\"Chirinos\",\"genero\":\"H\",\"fecha_nac\":\"2011-12-07\",\"foto\":\"atleta_2011-12-07_1789499479.jpg\",\"lugar_nacimiento\":\"Barq', '{\"doc_identidad\":\"34772516\",\"nombre\":\"Diego Alexandro\",\"apellido\":\"Reinoso Chirinos\",\"genero\":\"H\",\"fecha_nac\":\"2011-12-07\",\"telefono\":\"\",\"direccion\":\"\",\"representante\":\"1\",\"categoria\":\"7\",\"posicion\":\"3\",\"dorsal\":\"7\",\"peso_kg\":\"70\",\"estatura_cm\":\"170\",\"fot', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:38:46', 1),
+(476, 12, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:38:57', 1),
+(477, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:39:03', 1),
+(478, 100, 'Registró al Atleta: 29506932 - moises jesus torrellas colmenarez', '', '{\"doc_identidad\":\"29506932\",\"nombre\":\"Moises Jesus\",\"apellido\":\"Torrellas Colmenarez\",\"genero\":\"H\",\"fecha_nac\":\"2002-07-25\",\"telefono\":\"0412-0565231\",\"direccion\":\"Calle 8 Entre Carrera 14 Y Av. Circumbalacion\",\"representante\":\"\",\"categoria\":\"8\",\"posicion\"', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:42:14', 1),
+(479, 100, 'Falló al modificar al Atleta: 34772516 - La cedula ingresada ya pertenece a un atleta registrado.', '{\"nombres\":\"Moises Jesus\",\"apellidos\":\"Torrellas Colmenarez\",\"p_nombre\":\"Moises\",\"s_nombre\":\"Jesus\",\"p_apellidos\":\"Torrellas\",\"s_apellidos\":\"Colmenarez\",\"genero\":\"H\",\"fecha_nac\":\"2002-07-25\",\"foto\":\"default.png\",\"lugar_nacimiento\":\"El Tocuyo\",\"doc_identid', '{\"doc_identidad\":\"34772516\",\"nombre\":\"Moises Jesus\",\"apellido\":\"Torrellas Colmenarez\",\"genero\":\"H\",\"fecha_nac\":\"2002-07-25\",\"telefono\":\"0412-0565231\",\"direccion\":\"Calle 8 Entre Carrera 14 Y Av. Circumbalacion\",\"representante\":\"\",\"categoria\":\"8\",\"posicion\"', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:42:44', 1),
+(480, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:54:13', 1),
+(481, 12, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:54:18', 1),
+(482, 13, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:54:23', 1),
+(483, 13, 'Registro de Pago por el monto de 55 con referencia 252627', '', '{\"monto\":55,\"fecha\":\"2026-09-17\",\"referencia\":\"252627\",\"tasa_usada\":1}', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:55:37', 1),
+(484, 12, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:55:43', 1),
+(485, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:55:47', 1),
+(486, 100, 'Retiró al Atleta: 29506932 - Moises Torrellas', '{\"id_atleta\":3,\"nombres\":\"Moises Jesus\",\"apellidos\":\"Torrellas Colmenarez\",\"p_nombre\":\"Moises\",\"s_nombre\":\"Jesus\",\"p_apellidos\":\"Torrellas\",\"s_apellidos\":\"Colmenarez\",\"genero\":\"H\",\"fecha_nac\":\"2002-07-25\",\"foto\":\"default.png\",\"lugar_nacimiento\":\"El Tocuyo', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:55:56', 1),
+(487, 100, 'Re-inscribió al Atleta: 29506932 - Moises Torrellas', '{\"id_atleta\":3,\"nombres\":\"Moises Jesus\",\"apellidos\":\"Torrellas Colmenarez\",\"p_nombre\":\"Moises\",\"s_nombre\":\"Jesus\",\"p_apellidos\":\"Torrellas\",\"s_apellidos\":\"Colmenarez\",\"genero\":\"H\",\"fecha_nac\":\"2002-07-25\",\"foto\":\"default.png\",\"lugar_nacimiento\":\"El Tocuyo', '{\"categoria\":\"8\",\"posicion\":\"1\",\"dorsal\":\"12\",\"peso_kg\":\"95\",\"estatura_cm\":\"185\"}', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:56:11', 1),
+(488, 13, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 22:59:46', 1),
+(489, 13, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:07:16', 1),
+(490, 13, 'Anuló el Pago por el monto de $ 55.00 con referencia 252627 Motivo: No se hizo efectivo', '{\"monto\":\"55.00\",\"fecha\":\"2026-09-17\",\"referencia\":\"252627\",\"metodo\":\"Pago Movil\",\"moneda\":\"$\"}', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:07:41', 1),
+(491, 14, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:08:21', 1),
+(492, 14, 'Modificó el método de pago: Efectivo', '{\"nombre\":\"Efectivo\",\"nec_referencia\":1,\"estatus\":1}', '{\"nombre\":\"Efectivo\",\"nec_referencia\":\"2\"}', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:08:27', 1),
+(493, 13, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:08:31', 1),
+(494, 13, 'Registro de Pago por el monto de 55', '', '{\"monto\":55,\"fecha\":\"2026-09-17\",\"referencia\":\"No aplica\",\"tasa_usada\":1}', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:08:51', 1),
+(495, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:09:01', 1),
+(496, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:10:32', 1),
+(497, 100, 'Generó reporte de atletas en formato PDF.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:11:02', 1),
+(498, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:13:55', 1),
+(499, 100, 'Generó reporte de atletas en formato PDF.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:14:07', 1),
+(500, 100, 'Generó reporte de atletas en formato PDF.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:14:25', 1),
+(501, 100, 'Generó reporte de atletas en formato PDF.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:14:51', 1),
+(502, 100, 'Generó reporte de atletas en formato PDF.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:15:13', 1),
+(503, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:20:30', 1),
+(504, 100, 'Generó reporte de atletas en formato PDF.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:20:42', 1),
+(505, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:20:49', 1),
+(506, 9, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:25:52', 1),
+(507, 9, 'Generó reporte de representantes en PDF', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:26:05', 1),
+(508, 9, 'Generó reporte de representantes en PDF', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:27:28', 1),
+(509, 10, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:27:33', 1),
+(510, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:27:55', 1),
+(511, 11, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:28:56', 1),
+(512, 11, 'Generó reporte de categorías en PDF', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:30:48', 1),
+(513, 12, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:31:21', 1),
+(514, 5, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-17 23:33:22', 1),
+(515, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 00:49:40', 1),
+(516, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 00:49:45', 1),
+(517, 100, 'Modificó al Atleta: 34772516 - Diego Alexandro Reinoso Chirinosss', '{\"nombres\":\"Diego Alexandro\",\"apellidos\":\"Reinoso Chirinos\",\"p_nombre\":\"Diego\",\"s_nombre\":\"Alexandro\",\"p_apellidos\":\"Reinoso\",\"s_apellidos\":\"Chirinos\",\"genero\":\"H\",\"fecha_nac\":\"2011-12-07\",\"foto\":\"atleta_2011-12-07_1789499479.jpg\",\"lugar_nacimiento\":\"Barq', '{\"doc_identidad\":\"34772516\",\"nombre\":\"Diego Alexandro\",\"apellido\":\"Reinoso Chirinosss\",\"genero\":\"H\",\"fecha_nac\":\"2011-12-07\",\"telefono\":\"\",\"direccion\":\"\",\"representante\":\"1\",\"categoria\":\"7\",\"posicion\":\"3\",\"dorsal\":\"7\",\"peso_kg\":\"70\",\"estatura_cm\":\"170\",\"f', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 00:50:03', 1),
+(518, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 00:50:11', 1),
+(519, 106, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 00:53:11', 1),
+(520, 100, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 00:53:54', 1),
+(521, 100, 'Generó documento (ficha_tecnica) del atleta: Diego Alexandro Reinoso Chirinosss', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 00:54:10', 1),
+(522, 106, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:06:28', 1),
+(523, 106, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:22:11', 1),
+(524, 106, 'Generó el respaldo: backup_cannibalsbd2_2026-09-17_21-22-16.sql', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:22:18', 1),
+(525, 106, 'Restauró el sistema usando: backup_cannibalsbd2_2026-09-17_21-22-16.sql', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:22:23', 1),
+(526, 106, 'Eliminó el archivo de respaldo: backup_cannibalsbd2_2026-09-17_14-22-03.sql', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:22:31', 1),
+(527, 106, 'Eliminó el archivo de respaldo: backup_bds2_2026-09-18_03-15-27.sql', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:22:35', 1),
+(528, 106, 'Eliminó el archivo de respaldo: backup_cannibalsbd2_2026-09-17_21-22-16.sql', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:22:37', 1),
+(529, 106, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:23:50', 1),
+(530, 5, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:24:39', 1),
+(531, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:26:14', 1),
+(532, 5, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:35:08', 1),
+(533, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:35:46', 1),
+(534, 106, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-09-18 01:36:00', 1);
 
 -- --------------------------------------------------------
 
@@ -811,7 +873,11 @@ INSERT INTO `notificaciones` (`id_notificacion`, `id_usuario`, `titulo`, `mensaj
 (114, 1, 'Alerta de Inventario', '⚠️ El artículo \'Espinilleras Css (Talla: 10)\' ha alcanzado su stock mínimo. Stock disponible: 1 / Mínimo: 1.', 4, '2026-09-17 17:50:57', 2),
 (115, 12, 'Alerta de Inventario', '⚠️ El artículo \'Espinilleras Css (Talla: 10)\' ha alcanzado su stock mínimo. Stock disponible: 1 / Mínimo: 1.', 4, '2026-09-17 17:50:57', 1),
 (116, 1, 'Alerta de Inventario', '⚠️ El artículo \'Catcher (Talla: SENIOR)\' ha alcanzado su stock mínimo. Stock disponible: 1 / Mínimo: 1.', 4, '2026-09-17 17:50:57', 2),
-(117, 12, 'Alerta de Inventario', '⚠️ El artículo \'Catcher (Talla: SENIOR)\' ha alcanzado su stock mínimo. Stock disponible: 1 / Mínimo: 1.', 4, '2026-09-17 17:50:57', 1);
+(117, 12, 'Alerta de Inventario', '⚠️ El artículo \'Catcher (Talla: SENIOR)\' ha alcanzado su stock mínimo. Stock disponible: 1 / Mínimo: 1.', 4, '2026-09-17 17:50:57', 1),
+(118, 1, 'Tasa de Cambio Actualizada', 'Las tasas de cambio fueron actualizadas automáticamente a la fecha de hoy (2026-09-17). Bolívar (Bs): 847.4442', 5, '2026-09-17 22:38:25', 2),
+(119, 12, 'Tasa de Cambio Actualizada', 'Las tasas de cambio fueron actualizadas automáticamente a la fecha de hoy (2026-09-17). Bolívar (Bs): 847.4442', 5, '2026-09-17 22:38:25', 1),
+(120, 1, 'Tasa de Cambio Actualizada', 'Las tasas de cambio fueron actualizadas automáticamente a la fecha de hoy (2026-09-17). Bolívar (Bs): 847.4400', 5, '2026-09-17 22:38:46', 2),
+(121, 12, 'Tasa de Cambio Actualizada', 'Las tasas de cambio fueron actualizadas automáticamente a la fecha de hoy (2026-09-17). Bolívar (Bs): 847.4400', 5, '2026-09-17 22:38:46', 1);
 
 -- --------------------------------------------------------
 
@@ -1019,7 +1085,9 @@ CREATE TABLE `respaldos` (
 --
 
 INSERT INTO `respaldos` (`id_respaldo`, `id_usuario`, `nombre_archivo`, `peso`, `fecha_creacion`, `estatus`) VALUES
-(1, 1, 'backup_cannibalsbd2_2026-09-17_14-22-03.sql', '71.92 KB', '2026-09-17 14:22:07', 1);
+(1, 1, 'backup_cannibalsbd2_2026-09-17_14-22-03.sql', '71.92 KB', '2026-09-17 14:22:07', 2),
+(2, 1, 'backup_bds2_2026-09-18_03-15-27.sql', '133.6 KB', '2026-09-18 09:15:27', 2),
+(3, 1, 'backup_cannibalsbd2_2026-09-17_21-22-16.sql', '72.66 KB', '2026-09-18 09:22:18', 2);
 
 -- --------------------------------------------------------
 
@@ -1073,7 +1141,7 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`idUsuario`, `cedulaUsuario`, `nombreUsuario`, `apellidoUsuario`, `foto`, `telefonoUsuario`, `pass_hash`, `correo`, `id_rol`, `ultimo_ingreso`, `intentos_fallidos`, `estatus`, `bloqueo`) VALUES
-(1, '12345678', 'Admin', 'Admin', 'user_12345678_1783874906.jpg', '1234-5678909', '$2y$10$wX2681v1JKAWgLVNC4ILleAltRb1SSikv2T1aMknanUrC2.Vo3Y3i', 'admin@gmail.com', 1, '2026-09-17 14:19:56', 0, 1, 1),
+(1, '12345678', 'Admin', 'Admin', 'user_12345678_1783874906.jpg', '1234-5678909', '$2y$10$wX2681v1JKAWgLVNC4ILleAltRb1SSikv2T1aMknanUrC2.Vo3Y3i', 'admin@gmail.com', 1, '2026-09-18 09:35:46', 0, 1, 1),
 (12, '29506932', 'Moises', 'Torrellas', 'default.png', '0412-0565231', '$2y$10$9bWzrrjb5Er1IKPmSW5lIuT/PjRXHOZ4AL.ZibwMOTZeBt91/0ZEy', 'moitcj@gmail.com', 6, '2026-09-14 13:43:19', 3, 1, 2);
 
 --
@@ -1245,7 +1313,8 @@ ALTER TABLE `permisos_rol`
 -- Indices de la tabla `respaldos`
 --
 ALTER TABLE `respaldos`
-  ADD PRIMARY KEY (`id_respaldo`);
+  ADD PRIMARY KEY (`id_respaldo`),
+  ADD KEY `respaldos_ibfk_1` (`id_usuario`);
 
 --
 -- Indices de la tabla `roles`
@@ -1271,7 +1340,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=473;
+  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=535;
 
 --
 -- AUTO_INCREMENT de la tabla `excepciones`
@@ -1289,7 +1358,7 @@ ALTER TABLE `modulos`
 -- AUTO_INCREMENT de la tabla `notificaciones`
 --
 ALTER TABLE `notificaciones`
-  MODIFY `id_notificacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=118;
+  MODIFY `id_notificacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=122;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos`
@@ -1307,7 +1376,7 @@ ALTER TABLE `permisos_rol`
 -- AUTO_INCREMENT de la tabla `respaldos`
 --
 ALTER TABLE `respaldos`
-  MODIFY `id_respaldo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_respaldo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -1362,7 +1431,7 @@ ALTER TABLE `permisos_rol`
 -- Filtros para la tabla `respaldos`
 --
 ALTER TABLE `respaldos`
-  ADD CONSTRAINT `respaldos_ibfk_1` FOREIGN KEY (`id_respaldo`) REFERENCES `usuarios` (`idUsuario`);
+  ADD CONSTRAINT `respaldos_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`idUsuario`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `usuarios`

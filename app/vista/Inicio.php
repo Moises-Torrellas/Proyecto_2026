@@ -40,13 +40,13 @@
                             </div>
                         </div>
                     </div>
-                    <!-- <div class="row row_i">
+                    <div class="row row_i">
                         <div class="colum">
                             <div class="caja_formulario c_f_i" style="display: flex; justify-content: center; margin-bottom: 20px;">
                                 <div class="g-recaptcha" data-sitekey="<?php echo $_ENV['RECAPTCHA_SITE_KEY']; ?>"></div>
                             </div>
                         </div>
-                    </div> -->
+                    </div>
                     <div class="row row_i">
                         <div class="colum column_inicio">
                             <button type="button" class="btn btn_azul btn_inicio" id="ingreso">Iniciar Sesión</button>

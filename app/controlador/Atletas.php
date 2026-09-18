@@ -342,7 +342,6 @@ function modificar($obj, $id_modulo, $bitacoraObj): void
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Modificó al Atleta: " . $identificador . " - " . $datos['nombre'] . " " . $datos['apellido'], $datos_previos_json, $datos_nuevos_json);
 
-            // Verificador dinámico de eventos (Cumpleaños, etc.)
             require_once __DIR__ . '/../servicios/verificarEvento.php';
             $verificador = new \App\servicios\verificarEvento();
             $verificador->procesar();
