@@ -1,7 +1,7 @@
 <?php
-// =======================================================
+
 // 1. CARGA DE VARIABLES DE ENTORNO (.env)
-// =======================================================
+
 // Ajusta esta ruta dependiendo de dónde esté este config.php
 // Si config.php está dentro de una carpeta "config", esto retrocede un nivel a la raíz.
 $rutaEnv = __DIR__ . '/../.env'; 
@@ -13,23 +13,22 @@ if (file_exists($rutaEnv)) {
         putenv(sprintf('%s=%s', $clave, $valor));
     }
 } else {
-    die("Error crítico: No se encontró el archivo .env en la ruta: " . $rutaEnv);
+    error_log("FATAL: .env no encontrado en: " . $rutaEnv);
+    http_response_code(500);
+    die("Error interno del servidor. Contacte al administrador.");
 }
 
-// =======================================================
 // 2. CONFIGURACIÓN DE BASES DE DATOS (Protegidas)
-// =======================================================
 /* Base de Datos SG */
-define('_DB_NAME_SG_', 'bds2');
-define('_DB_HOST_SG_', 'localhost');
-define('_DB_USER_SG_', 'root');
-define('_DB_PASS_SG_', '');
-
-/* Base de Datos Principal */
-define('_DB_NAME_', 'cannibalsbd2');
-define('_DB_HOST_', 'localhost');
-define('_DB_USER_', 'root');
-define('_DB_PASS_', '');
+define('_DB_NAME_SG_', $_ENV['DB_NAME_SG'] ?? '');
+define('_DB_HOST_SG_', $_ENV['DB_HOST_SG'] ?? 'localhost');
+define('_DB_USER_SG_', $_ENV['DB_USER_SG'] ?? '');
+define('_DB_PASS_SG_', $_ENV['DB_PASS_SG'] ?? '');
+// Base de Datos Principal
+define('_DB_NAME_', $_ENV['DB_NAME'] ?? '');
+define('_DB_HOST_', $_ENV['DB_HOST'] ?? 'localhost');
+define('_DB_USER_', $_ENV['DB_USER'] ?? '');
+define('_DB_PASS_', $_ENV['DB_PASS'] ?? '');
 
 
 // =======================================================

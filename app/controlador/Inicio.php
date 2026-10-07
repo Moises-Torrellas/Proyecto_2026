@@ -2,6 +2,7 @@
 // app/controlador/Inicio.php
 
 use App\modelo\ModeloInicio;
+use App\servicios\RateLimit;
 
 // 1. Cargamos las funciones base
 require_once(__DIR__ . "/Base.php");
@@ -96,6 +97,8 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         exit();
     } */
 
+    $rateLimit->registrarIntento($ip);
+
     validarCredenciales($_POST['cedula'] ?? '', $_POST['contraseña'] ?? '');
 
     $datos = [
@@ -106,7 +109,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
     $respuesta = $obj->ProcesarDatos($datos);
 
     if (isset($respuesta['resultado']) && $respuesta['resultado'] == 1) {
-
+        session_regenerate_id(true);
         // Creación de variables de sesión
         $_SESSION['id']        = $respuesta['datos']['idUsuario'];
         $_SESSION['rol']       = $respuesta['datos']['nombre_rol'];
@@ -117,7 +120,12 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         $_SESSION['cedula']    = $respuesta['datos']['cedulaUsuario'];
         $_SESSION['nivel_rol'] = (int)$respuesta['datos']['nivel_rol'];
         $_SESSION['foto']      = $respuesta['datos']['foto'];
-        
+
+        $_SESSION['ip']         = $_SERVER['REMOTE_ADDR'];
+        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+        $_SESSION['login_time'] = time();
+        $_SESSION['last_activity'] = time();
+
         // Mapeo de permisos
         $permisosIndexados = [];
         if (isset($respuesta['permisos']) && is_array($respuesta['permisos'])) {
@@ -130,7 +138,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
             }
         }
         $_SESSION['permisos'] = $permisosIndexados;
-        
+
         registrarBitacora($bitacoraObj, $id_modulo, 'Inicio de sesión exitoso');
 
         $respuestaFinal = [
@@ -166,7 +174,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         }
     }
 
-    header('Content-Type: application/json; charset=utf-8'); 
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode($respuestaFinal);
     exit();
 }

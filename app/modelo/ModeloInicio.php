@@ -42,7 +42,8 @@ class ModeloInicio extends Conexion
 
             // Validar si el usuario existe
             if (!$resultado) {
-                return ['accion' => 'inicio', 'resultado' => 2, 'mensaje' => 'La cédula no existe'];
+                password_verify('dummy', '$2y$10$dummyhashfortimingatttackprevention12345678');
+                return ['accion' => 'inicio', 'resultado' => 0, 'mensaje' => 'Las credenciales proporcionadas no son correctas.'];
             }
 
             // Validar si el usuario está bloqueado (bloqueo == 1 corta el acceso)
@@ -64,12 +65,12 @@ class ModeloInicio extends Conexion
                     return ['accion' => 'bloqueado', 'resultado' => 0, 'mensaje' => 'Has superado el límite de intentos (3). Su usuario ha sido bloqueado por seguridad. Comuníquese con un administrador para desbloquear su usuario.', 'idUsuario' => $resultado['idUsuario']];
                 }
                 
-                return ['accion' => 'inicio', 'resultado' => 0, 'mensaje' => 'La contraseña es incorrecta. Intento ' . $intentos . ' de 3.'];
+                return ['accion' => 'inicio', 'resultado' => 0, 'mensaje' => 'Las credenciales proporcionadas no son correctas.'];
             }
             
             if ((int)$resultado['intentos_fallidos'] > 0) {
-                 $resetIntentos = $conex->prepare("UPDATE usuarios SET intentos_fallidos = 0 WHERE idUsuario = :id");
-                 $resetIntentos->execute([':id' => $resultado['idUsuario']]);
+                $resetIntentos = $conex->prepare("UPDATE usuarios SET intentos_fallidos = 0 WHERE idUsuario = :id");
+                $resetIntentos->execute([':id' => $resultado['idUsuario']]);
             }
 
             $permisos = [];
