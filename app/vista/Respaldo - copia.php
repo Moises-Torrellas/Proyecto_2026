@@ -69,9 +69,8 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <input type="text" placeholder="Buscar..." autocomplete="off" id="busqueda">
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
-                        <div class="botones" style="display: flex; gap: 10px;">
-                            <button class="btn btn_azul" id="btn_generar" data-tipo="principal">Crear Punto de Restauración</button>
-                            <button class="btn btn_azul" id="btn_generar_seguridad" data-tipo="seguridad" style="background-color: var(--color-secundario, #4CAF50);">Crear Punto de Restauración Seguridad</button>
+                        <div class="botones">
+                            <button class="btn btn_azul" id="btn_generar"> Crear Punto de Restauración</button>
                         </div>
                     </div>
                     

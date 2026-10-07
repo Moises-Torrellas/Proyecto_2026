@@ -85,7 +85,12 @@ function consultarBackups($obj, $permisos): void {
 
 function generarBackup($obj, $id_modulo, $bitacoraObj): void {
     try {
-        $resultado = $obj->ProcesarDatos(['accion' => 'generar']);
+        // Capturamos el tipo que viene desde el JS, por defecto 'principal'
+        $tipo = $_POST['tipo'] ?? 'principal';
+        
+        // Pasamos el tipo al modelo
+        $resultado = $obj->ProcesarDatos(['accion' => 'generar', 'tipo' => $tipo]);
+        
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             registrarBitacora($bitacoraObj, $id_modulo, "Generó el respaldo: " . $resultado['nombre']);
             $resultado = ['accion' => 'generar', 'mensaje' => 'Respaldo creado de forma segura en el servidor.'];

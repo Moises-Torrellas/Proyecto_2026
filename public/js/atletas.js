@@ -623,7 +623,7 @@ function enviarPeticionDocumento(id, tipoDocumento, anio) {
     datos.append('anio_inicio', anio);
 
     enviaAjax(datos);
-    abrirAlertaEspara('Generando Documento', 'Espere un momento');
+    //abrirAlertaEspara('Generando Documento', 'Espere un momento');
 }
 function modificar(datos) {
     limpia();

@@ -6,12 +6,16 @@ $(document).ready(function () {
     $('#busqueda').off('keyup').on('keyup', busqueda);
 
     // Botón para generar un nuevo respaldo
-    $("#btn_generar").on("click", function () {
-        confirmar('¿Desea crear un nuevo respaldo de la base de datos en este momento?', function (confirmado) {
+    $("#btn_generar, #btn_generar_seguridad").on("click", function () {
+        let tipo = $(this).data("tipo");
+        let baseDatosTexto = tipo === 'seguridad' ? 'de SEGURIDAD (bds2)' : 'PRINCIPAL';
+        
+        confirmar(`¿Desea crear un nuevo respaldo de la base de datos ${baseDatosTexto} en este momento?`, function (confirmado) {
             if (confirmado) {
                 abrirAlertaEspara('Creando Respaldo', 'Conectando con la base de datos, por favor espere...');
                 let datos = new FormData();
                 datos.append('accion', 'generar');
+                datos.append('tipo', tipo); // Enviamos el tipo de respaldo al controlador
                 enviaAjaxRespaldo(datos);
             }
         });
