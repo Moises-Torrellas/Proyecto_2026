@@ -14,7 +14,7 @@ RewriteRule ^(.*)$ index.php?pagina=$1 [QSA,L]
     Header set X-Content-Type-Options "nosniff"
 
     # HSTS (COMENTADO PARA DESARROLLO LOCAL SIN SSL)
-    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 
     # Content-Security-Policy (CSP) ajustada para permitir Google reCAPTCHA
     Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-src 'self' https://www.google.com;"

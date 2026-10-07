@@ -34,11 +34,11 @@ function validarEnvio() {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar una contraseña valido");
         return false;
     }
-    var response = grecaptcha.getResponse();
+    /* var response = grecaptcha.getResponse();
     if(response.length === 0) {
         muestraMensaje("error", 2000, "Error", "Por favor, verifica que no eres un robot marcando el CAPTCHA.");
         return false;
-    }
+    } */
     return true;
 }
 
@@ -68,29 +68,27 @@ function enviaAjax(datos) {
                         setTimeout(function () {
                             location.href = lee.url;
                         }, 2000)
-                    } else if (lee.resultado == 2) {
-                        muestraMensaje("error", 2000, "Error", lee.mensaje);
-                        $("#cedula").addClass("denegado");
-                        grecaptcha.reset();
                     } else {
                         muestraMensaje("error", 2000, "Error", lee.mensaje);
+                        $("#cedula").addClass("denegado");
                         $("#contraseña").addClass("denegado");
-                        grecaptcha.reset();
+                        if (typeof grecaptcha !== 'undefined' && $('.g-recaptcha').length > 0) grecaptcha.reset();
                     }
                 } else if (lee.accion == "denegado") {
                     muestraMensaje("error", 20000, "Acceso Denegado", lee.mensaje);
                     limpia();
-                    grecaptcha.reset();
+                    if (typeof grecaptcha !== 'undefined' && $('.g-recaptcha').length > 0) grecaptcha.reset();
                 } else if (lee.accion == "bloqueado") {
                     muestraMensaje("error", 20000, "Cuenta Bloqueada", lee.mensaje);
                     limpia();
                 } else if (lee.accion == "error") {
                     muestraMensaje("error", 20000, "Error", lee.mensaje);
-                    grecaptcha.reset();
+                    if (typeof grecaptcha !== 'undefined' && $('.g-recaptcha').length > 0) grecaptcha.reset();
                 }
             } catch (e) {
-                alert("Error en JSON " + e.name);
-                grecaptcha.reset();
+                // alert("Error en JSON " + e.name);
+                console.error("Error procesando respuesta:", e);
+                if (typeof grecaptcha !== 'undefined' && $('.g-recaptcha').length > 0) grecaptcha.reset();
             }
         },
 

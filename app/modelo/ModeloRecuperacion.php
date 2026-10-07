@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Modelo;
+
 use PHPMailer\PHPMailer\PHPMailer;
 use Exception;
 
@@ -57,10 +58,10 @@ class ModeloRecuperacion extends Conexion
                 $_SESSION['destinatario'] = $respuesta['nombreUsuario'] . ' ' . $respuesta['apellidoUsuario'];
                 $_SESSION['cedula_r'] = $this->cedula;
                 $_SESSION['verificacion'] = false;
-                return $this->enviarCorreo('Se envio un código a su correo.');
+                return $this->enviarCorreo('Se envio un código a su correo, El codigo expira en 30 minutos.');
             } else {
                 $this->conexion->rollBack();
-                return ['accion' => 'error', 'mensaje' => 'Cedula no encontrada.'];
+                return ['accion' => 'error', 'mensaje' => 'Si la cédula está registrada, recibirás un correo.'];
             }
         } catch (Exception $e) {
             if ($this->conexion && $this->conexion->inTransaction()) {
@@ -86,14 +87,27 @@ class ModeloRecuperacion extends Conexion
     public function ComprobarCodigo(): array
     {
         try {
-            if ($this->codigo == $_SESSION['codigo_verificacion']) {
-                unset($_SESSION['codigo']);
-                unset($_SESSION['destinatario']);
-                unset($_SESSION['correo']);
+            // Verificar expiración (30 minutos)
+            $timestamp = $_SESSION['codigo_timestamp'] ?? 0;
+            if ((time() - $timestamp) > 1800) {
+                unset($_SESSION['codigo_verificacion'], $_SESSION['codigo_timestamp'], $_SESSION['codigo_intentos']);
+                return ['accion' => 'error', 'mensaje' => 'El código ha expirado. Solicita uno nuevo.'];
+            }
+
+            // Limitar intentos de verificación
+            $_SESSION['codigo_intentos'] = ($_SESSION['codigo_intentos'] ?? 0) + 1;
+            if ($_SESSION['codigo_intentos'] > 5) {
+                unset($_SESSION['codigo_verificacion'], $_SESSION['codigo_timestamp'], $_SESSION['codigo_intentos']);
+                return ['accion' => 'error', 'mensaje' => 'Demasiados intentos. Solicita un nuevo código.'];
+            }
+
+            // Comparación segura con hash_equals
+            if (hash_equals($_SESSION['codigo_verificacion'], $this->codigo)) {
+                unset($_SESSION['codigo_verificacion'], $_SESSION['codigo_timestamp'], $_SESSION['codigo_intentos']);
                 $_SESSION['verificacion'] = true;
                 return ['accion' => 'comprobarCodigo', 'mensaje' => 'Código Validado.'];
             } else {
-                return ['accion' => 'error', 'mensaje' => 'el código no es correcto.'];
+                return ['accion' => 'error', 'mensaje' => 'El código no es correcto.'];
             }
         } catch (Exception $e) {
             error_log($e->getMessage());
@@ -155,11 +169,11 @@ class ModeloRecuperacion extends Conexion
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
             // IMPORTANTE: Mantén tu correo principal y contraseña de aplicación para la conexión
-            $mail->Username   = $_ENV['EMAIL_R']; 
-            $mail->Password   = $_ENV['PASS_EMAIL'];           
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;   
+            $mail->Username   = $_ENV['EMAIL_R'];
+            $mail->Password   = $_ENV['PASS_EMAIL'];
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
             $mail->Port       = 465;
-            $mail->CharSet    = 'UTF-8';                       
+            $mail->CharSet    = 'UTF-8';
 
             // 3. Remitente y Destinatario
             // AQUÍ COLOCAS TU CORREO ALTERNATIVO COMO REMITENTE
@@ -209,6 +223,8 @@ class ModeloRecuperacion extends Conexion
             // 5. Envío y Respuesta
             $mail->send();
             $_SESSION['codigo_verificacion'] = $codigo;
+            $_SESSION['codigo_timestamp'] = time();
+            $_SESSION['codigo_intentos'] = 0;
 
             return ['accion' => 'comprobar', 'mensaje' => $mensaje];
         } catch (Exception $e) {
