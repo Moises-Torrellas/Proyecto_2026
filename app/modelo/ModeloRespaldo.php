@@ -51,12 +51,11 @@ class ModeloRespaldo extends Conexion
         }
 
         $accion = $datos['accion'] ?? null;
-
         $filtro = $datos['filtro'] ?? '';
 
         return match ($accion) {
             'consultar' => $this->ConsultarBackups($filtro),
-            'generar'   => $this->GenerarBackup(),
+            'generar'   => $this->GenerarBackup($datos['tipo'] ?? 'principal'),
             'restaurar' => $this->RestaurarBackup($datos['archivo'] ?? ''),
             'eliminar'  => $this->EliminarBackup($datos['archivo'] ?? ''),
             default     => throw new Exception('La acción no es válida.')
@@ -113,15 +112,19 @@ class ModeloRespaldo extends Conexion
         }
     }
 
-    private function GenerarBackup(): array
+    private function GenerarBackup(string $tipo = 'principal'): array
     {
         try {
             $fecha = date('Y-m-d_H-i-s');
-            $nombreArchivo = "backup_{$this->dbName}_{$fecha}.sql";
+            
+            // Determinamos dinámicamente qué base de datos respaldar según el botón presionado
+            $dbTarget = ($tipo === 'seguridad') ? 'bds2' : $this->dbName;
+            
+            $nombreArchivo = "backup_{$dbTarget}_{$fecha}.sql";
             $rutaCompleta = $this->rutaSegura . $nombreArchivo;
 
             $paramPassword = !empty($this->pass) ? "--password=\"{$this->pass}\"" : "";
-            $comando = "\"{$this->mysqlDumpPath}\" --host={$this->dbHost} --user={$this->user} {$paramPassword} {$this->dbName} > \"{$rutaCompleta}\" 2>&1";
+            $comando = "\"{$this->mysqlDumpPath}\" --host={$this->dbHost} --user={$this->user} {$paramPassword} {$dbTarget} > \"{$rutaCompleta}\" 2>&1";
             
             $output = [];
             $resultado = null;
@@ -135,7 +138,7 @@ class ModeloRespaldo extends Conexion
                 $errorConsola = mb_convert_encoding($errorConsola, 'UTF-8', 'auto');
                 
                 logs('Respaldo', "Comando fallido: {$comando} | Error: " . trim($errorConsola), 'Modelo_Generar');
-                throw new Exception("Error de MySQL: " . trim($errorConsola));
+                throw new Exception("Error de MySQL al respaldar {$dbTarget}: " . trim($errorConsola));
             }
 
             // Calculamos el peso y guardamos en bds2 con estatus = 1 y id_usuario
@@ -165,11 +168,17 @@ class ModeloRespaldo extends Conexion
                 throw new Exception('El archivo de respaldo no existe en el servidor.');
             }
 
+            // Identificar a qué base de datos restaurar analizando el nombre del archivo
+            $targetDb = $this->dbName; // Base por defecto
+            if (preg_match('/^backup_(.+)_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})\.sql$/', $nombreLimpio, $matches)) {
+                $targetDb = $matches[1]; // Extraemos dinámicamente si es bds2 o la principal
+            }
+
             // Usaremos el cliente mysql vía consola
             $paramPassword = !empty($this->pass) ? "--password=\"{$this->pass}\"" : "";
             
-            // Ejecutamos la restauración inyectando el script sql con <
-            $comando = "\"{$this->mysqlCliPath}\" --host={$this->dbHost} --user={$this->user} {$paramPassword} {$this->dbName} < \"{$rutaCompleta}\" 2>&1";
+            // Ejecutamos la restauración inyectando el script sql con < en la DB correspondiente
+            $comando = "\"{$this->mysqlCliPath}\" --host={$this->dbHost} --user={$this->user} {$paramPassword} {$targetDb} < \"{$rutaCompleta}\" 2>&1";
             
             $output = [];
             $resultado = null;
@@ -180,7 +189,7 @@ class ModeloRespaldo extends Conexion
                 $errorConsola = mb_convert_encoding($errorConsola, 'UTF-8', 'auto');
                 
                 logs('Respaldo', "Comando fallido: {$comando} | Error: " . trim($errorConsola), 'Modelo_Restaurar');
-                throw new Exception('Error de sintaxis o ejecución al restaurar usando el comando MySQL.');
+                throw new Exception("Error de sintaxis o ejecución al restaurar {$targetDb} usando el comando MySQL.");
             }
 
             return ['accion' => 'exito'];
@@ -226,8 +235,6 @@ class ModeloRespaldo extends Conexion
         
         try {
             // ── Prioridad 1: Preguntarle al propio servidor MySQL dónde está instalado ──
-            // Esto resuelve el problema de si el usuario está usando Laragon o XAMPP
-            // independientemente de en qué carpeta esté guardado el proyecto.
             $conex = $this->conex();
             $stmt = $conex->query("SELECT @@basedir as base");
             if ($stmt) {
@@ -242,7 +249,7 @@ class ModeloRespaldo extends Conexion
                 }
             }
         } catch (Exception $e) {
-            // Si no podemos consultar la base de datos por alguna razón, continuamos con el escaneo manual
+            // Continuar con el escaneo manual si falla
         }
 
         // ── Prioridad 2: Escaneo manual (Fallback) ──

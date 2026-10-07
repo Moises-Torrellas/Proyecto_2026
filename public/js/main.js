@@ -289,15 +289,56 @@ $(document).ready(function () {
             let historial = $('#chat_historial');
             historial.scrollTop(historial[0].scrollHeight);
 
-            // 2. Simular respuesta del Bot con las NUEVAS clases
-            setTimeout(() => {
-                $('#chat_historial').append(`
-                <div class="asistente_msg asistente_bot">
-                    <div class="asistente_burbuja">Entendido, estoy procesando tu solicitud sobre: "${texto}"...</div>
-                </div>
+            // 2. Mostrar estado de pensando
+            let idPensando = "pensando_" + Date.now();
+            $('#chat_historial').append(`
+            <div id="${idPensando}" class="asistente_msg asistente_bot">
+                <div class="asistente_burbuja"><i>Cani está pensando...</i></div>
+            </div>
             `);
-                historial.scrollTop(historial[0].scrollHeight);
-            }, 1000);
+            historial.scrollTop(historial[0].scrollHeight);
+
+            // 3. Hacer la petición real a PHP
+            $.ajax({
+                url: '?pagina=IA',
+                type: 'POST',
+                data: {
+                    accion: 'generar',
+                    pregunta: texto
+                },
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                dataType: 'json',
+                success: function(respuesta) {
+                    $('#' + idPensando).remove();
+                    if (respuesta.status === 'success') {
+                        let textoFormateado = respuesta.data.replace(/\n/g, "<br>");
+                        $('#chat_historial').append(`
+                        <div class="asistente_msg asistente_bot">
+                            <div class="asistente_burbuja">${textoFormateado}</div>
+                        </div>
+                        `);
+                    } else {
+                        $('#chat_historial').append(`
+                        <div class="asistente_msg asistente_bot">
+                            <div class="asistente_burbuja">Uy, ocurrió un error: ${respuesta.mensaje}</div>
+                        </div>
+                        `);
+                    }
+                    historial.scrollTop(historial[0].scrollHeight);
+                },
+                error: function(xhr, status, error) {
+                    $('#' + idPensando).remove();
+                    $('#chat_historial').append(`
+                    <div class="asistente_msg asistente_bot">
+                        <div class="asistente_burbuja">Error de conexión con el servidor.</div>
+                    </div>
+                    `);
+                    historial.scrollTop(historial[0].scrollHeight);
+                    console.error(error);
+                }
+            });
         }
     }
 

@@ -274,8 +274,8 @@ class ModeloAtletas extends Conexion
         try {
             
             $ObjCat = new ModeloCategorias();
-            $ObjPos = new ModeloPosiciones();
             $ObjRep = new ModeloRepresentantes();
+            $ObjPos = new ModeloPosiciones();
 
             if (!$ObjCat->verificarCategoria($this->categoria)) {
                 throw new Exception(INVALID_ID);
