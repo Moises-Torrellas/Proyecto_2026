@@ -289,7 +289,7 @@ class ModeloAtletas extends Conexion
                 }
             }
 
-            // Separar nombres y apellidos antes de enviarlos a la BD
+            // Separar nombres y apellidos antes de enviarlos a la base de datos
             $nombresArr  = explode(' ', trim($this->nombre), 2);
             $p_nombre    = $nombresArr[0];
             $s_nombre    = $nombresArr[1] ?? '';

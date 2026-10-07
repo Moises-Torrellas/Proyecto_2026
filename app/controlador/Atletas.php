@@ -26,13 +26,13 @@ if (!class_exists($nombreClaseModelo)) {
     exit();
 }
 
-$objAtleta = new ModeloAtletas();
+$objAtletas = new ModeloAtletas();
 
 if (comprobarAjax() && !empty($_POST)) {
-    manejarSolicitudAtletas($objAtleta, $id_modulo, $bitacora, $permisos);
+    manejarSolicitudAtletas($objAtletas, $id_modulo, $bitacora, $permisos);
 } else {
     registrarBitacora($bitacora, $id_modulo, 'Ingreso al Modulo');
-    $respuesta = $objAtleta->Consultar();
+    $respuesta = $objAtletas->Consultar();
 
     $registro = [];
     $error_bd = '';
