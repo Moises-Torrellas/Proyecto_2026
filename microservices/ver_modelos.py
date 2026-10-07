@@ -1,7 +1,15 @@
 import requests
+import os
+from dotenv import load_dotenv
 
-# Pon tu API Key aquí
-api_key = "AIzaSyA0Uy0YDKISg0atLbX2TNMtiguVyvCFlQA"
+# Carga la clave secreta desde el archivo .env
+load_dotenv()
+api_key = os.getenv("GEMINI_API_KEY")
+
+# Verificamos que la clave se haya cargado correctamente
+if not api_key:
+    print("Error: No se encontró la GEMINI_API_KEY en el archivo .env")
+    exit()
 
 # Le preguntamos a Google qué modelos existen para tu cuenta
 url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
