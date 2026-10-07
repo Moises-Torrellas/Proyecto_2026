@@ -40,6 +40,7 @@ function manejarRuta($pagina): void
         'Inicio' => 'Inicio',
         'Principal' => 'Principal',
         'Usuarios' => 'Usuarios',
+        'IA' => 'IA',
         'Recuperacion' => 'Recuperacion',
         'Roles' => 'Roles',
         'Representantes' => 'Representantes',
