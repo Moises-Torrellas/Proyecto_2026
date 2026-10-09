@@ -31,8 +31,16 @@ function manejarRuta($pagina): void
         }
         // Finalmente, destruimos la sesión
         session_destroy();
-        // Redirigimos al usuario a la página de inicio después de cerrar sesión
-        header("Location: " . "Inicio");
+
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'accion'  => 'exito',
+                'mensaje' => 'Sesión cerrada exitosamente.'
+            ]);
+            exit();
+        }
+        header("Location: Inicio");
         exit();
     }
     // Definimos las rutas disponibles en el sistema
@@ -57,16 +65,16 @@ function manejarRuta($pagina): void
         'Notificaciones' => 'Notificaciones',
         'Pagos' => 'Pagos',
         'Respaldo' => 'Respaldo',
-        'CategoriaCatalogo'=>'CategoriaCatalogo',
+        'CategoriaCatalogo' => 'CategoriaCatalogo',
         'Premios' => 'Premios',
         'Reportes' => 'Reportes',
-        'Catalogo'=>'Catalogo',
+        'Catalogo' => 'Catalogo',
         'Devoluciones' => 'Devoluciones',
-        'Equipos'=>'Equipos',
+        'Equipos' => 'Equipos',
         'Asignaciones' => 'Asignaciones',
-        'ArticulosInventario'=>'ArticulosInventario',
-        'Palmares'=>'Palmares',
-        'Estadisticas'=>'Estadisticas',
+        'ArticulosInventario' => 'ArticulosInventario',
+        'Palmares' => 'Palmares',
+        'Estadisticas' => 'Estadisticas',
         'Participaciones' => 'Participaciones',
         'TasaCambios' => 'TasaCambios',
         'Modulos' => 'Modulos',
@@ -78,8 +86,19 @@ function manejarRuta($pagina): void
     if (array_key_exists($pagina, $rutas)) {
         // Verificamos si el usuario está autenticado antes de permitir el acceso a otras páginas
         if (!isset($_SESSION['id']) && $pagina !== 'Inicio' && $pagina !== 'Recuperacion') {
-            // Si el usuario no está autenticado, redirigimos a la página de inicio
-            header("Location: " . "Inicio");
+            // Si es AJAX → responder JSON
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                header('Content-Type: application/json; charset=utf-8');
+                http_response_code(401);
+                echo json_encode([
+                    'accion'  => 'redireccionar',
+                    'mensaje' => 'Acceso denegado: Tu sesión ha expirado o no has iniciado sesión.',
+                    'url'     => 'Inicio'
+                ]);
+                exit();
+            }
+            // Si es navegador (GET directo) → redirigir al login
+            header('Location: Inicio');
             exit();
         }
         // Construimos el nombre completo de la clase del controlador
@@ -92,7 +111,6 @@ function manejarRuta($pagina): void
             // Incluimos el archivo que ejecutará la lógica
             $pagina = $rutas[$pagina];
             require_once $archivoControlador;
-            
         } else {
             require_once(__DIR__ . "/../app/vista/complementos/404.php");
         }

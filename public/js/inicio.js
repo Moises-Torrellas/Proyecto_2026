@@ -2,7 +2,7 @@ $(document).ready(function () {
 
 
     Validacion("cedula", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Minimo 7 maximo 8 digitos, solo numeros");
-    
+
     Validacion("contraseña", /^[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]*$/, /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#\$%\^\&*\)\(+=._-])[0-9A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC!@#\$%\^\&*\)\(+=._-]{8,20}$/, "8-20 caracteres, incluye Mayúscula, Minúscula, Número y Carácter Especial");
 
     $("#cedula").on("input", function () {
@@ -94,11 +94,29 @@ function enviaAjax(datos) {
 
 
         error: function (request, status, err) {
+            // 1. Capturamos el error 401 No Autorizado que configuramos en PHP
+            if (request.status === 401) {
+                try {
+                    // Extraemos el JSON que viene en el texto de la respuesta de error
+                    var respuestaJson = JSON.parse(request.responseText);
+                    if (respuestaJson.accion === "redireccionar") {
+                        muestraMensaje("error", 3000, "Atención", respuestaJson.mensaje);
+                        // Redirigimos a la URL enviada por PHP (Inicio)
+                        setTimeout(function () {
+                            location.href = respuestaJson.url;
+                        }, 2000);
+                        return; // Cortamos la ejecución para no mostrar otros errores
+                    }
+                } catch (e) {
+                    console.error("Error al interpretar respuesta 401:", e);
+                }
+            }
 
+            // 2. Manejo de errores de red o servidor (timeouts, 500, etc.)
             if (status == "timeout") {
                 muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
             } else {
-                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + request + status + err);
+                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + request.status + " " + err);
             }
         },
         complete: function () { },

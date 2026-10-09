@@ -11,10 +11,16 @@
 !/backups/.gitkeep
 
 .env
+datos_prueba_postman.csv
+exposicion_postman.md
+Presentacion_Postman.pptx
+analisis-seguridad-login.md
+
 
 /public/img/usuarios/*
 /public/img/atletas/*
 /public/docs/reportes/*
+/storage/*
 # Otros archivos recomendados para tu entorno (XAMPP/Windows)
 .DS_Store
 Thumbs.db

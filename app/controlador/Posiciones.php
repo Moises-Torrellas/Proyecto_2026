@@ -125,7 +125,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $datos = [
             'nombre'     => $_POST['nombre'],
             'abreviatura' => $_POST['abreviatura'],
-            'descripcion'   => $_POST['descripcion'],
+            'descripcion'   => isset($_POST['descripcion']) ? $_POST['descripcion'] : '',
         ];
         $datos['accion'] = 'incluir';
 
@@ -135,7 +135,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
             $datos_nuevos_json = json_encode([
                 'nombre' => $_POST['nombre'],
                 'abreviatura' => $_POST['abreviatura'],
-                'descripcion' => $_POST['descripcion']
+                'descripcion' => isset($_POST['descripcion']) ? $_POST['descripcion'] : ''
             ]);
             registrarBitacora($bitacoraObj, $id_modulo, "Registró la posición: " . $_POST['nombre'], '', $datos_nuevos_json);
         }
