@@ -22,7 +22,8 @@
         "dompdf/dompdf": "^3.1",
         "cboden/ratchet": "^0.4.4",
         "phpoffice/phpspreadsheet": "^5.9",
-        "phpoffice/phpword": "^1.4"
+        "phpoffice/phpword": "^1.4",
+        "firebase/php-jwt": "^7.2"
     },
     "require-dev": {
         "designsecurity/progpilot": "^1.2"
