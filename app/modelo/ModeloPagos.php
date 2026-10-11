@@ -37,10 +37,11 @@ class ModeloPagos extends Conexion
 
     public function ProcesarDatos(array $datos): array
     {
-
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
         }
+
+        $this->ValidarExpresiones($datos);
 
         $this->id         = $datos['id'] ?? null;
         $this->id_cuenta  = $datos['cuenta'] ?? null;
@@ -55,9 +56,6 @@ class ModeloPagos extends Conexion
         $this->estatus    = $datos['estatus'] ?? 1;
 
         $accion = $datos['accion'] ?? null;
-
-        /* $usuario = $_GET['nombre'];
-        echo "Bienvenido, " . $usuario; */
 
         return match ($accion) {
             'incluir'   => $this->Incluir($datos),
@@ -558,7 +556,7 @@ class ModeloPagos extends Conexion
                 $conex->rollBack();
             }
             logs('Pagos', $e->getMessage(), 'Modelo_Eliminar');
-            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
+            return ['accion' => 'error', 'codigo' => $e->getMessage(), 'mensaje' => $e->getMessage()];
         } finally {
             $conex = null;
         }
@@ -578,6 +576,122 @@ class ModeloPagos extends Conexion
         } catch (Exception $e) {
             logs('Pagos', $e->getMessage(), 'Modelo_ConsultarMontoAbonado');
             return 0.0;
+        }
+    }
+
+    private function ValidarExpresiones(array $datos): void
+    {
+        $accion = $datos['accion'] ?? '';
+
+        if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', (string)$datos['id'])) {
+            throw new Exception('Id de pago inválido.');
+        }
+
+        if (!empty($datos['codigo_pago']) && !preg_match('/^[1-9][0-9]*$/', (string)$datos['codigo_pago'])) {
+            throw new Exception('Pago inválido.');
+        }
+
+        if (!empty($datos['cuenta'])) {
+            if (is_array($datos['cuenta'])) {
+                foreach ($datos['cuenta'] as $cta) {
+                    if (!preg_match('/^[1-9][0-9]*$/', (string)$cta)) {
+                        throw new Exception('Cuenta por cobrar inválida.');
+                    }
+                }
+            } else {
+                if (!preg_match('/^[1-9][0-9]*$/', (string)$datos['cuenta'])) {
+                    throw new Exception('Cuenta por cobrar inválida.');
+                }
+            }
+        }
+
+        if (!empty($datos['metodo']) && !preg_match('/^[1-9][0-9]*$/', (string)$datos['metodo'])) {
+            throw new Exception('Método de pago inválido.');
+        }
+
+        if (!empty($datos['codigo_metodo']) && !preg_match('/^[1-9][0-9]*$/', (string)$datos['codigo_metodo'])) {
+            throw new Exception('Método de pago inválido.');
+        }
+
+        if (!empty($datos['codigo_metodo_vuelto']) && !preg_match('/^[1-9][0-9]*$/', (string)$datos['codigo_metodo_vuelto'])) {
+            throw new Exception('Método de pago inválido.');
+        }
+
+        if (!empty($datos['moneda']) && !preg_match('/^[1-9][0-9]*$/', (string)$datos['moneda'])) {
+            throw new Exception('Moneda inválida.');
+        }
+
+        if (!empty($datos['codigo_moneda']) && !preg_match('/^[1-9][0-9]*$/', (string)$datos['codigo_moneda'])) {
+            throw new Exception('Moneda inválida.');
+        }
+
+        if (!empty($datos['codigo_moneda_vuelto']) && !preg_match('/^[1-9][0-9]*$/', (string)$datos['codigo_moneda_vuelto'])) {
+            throw new Exception('Moneda inválida.');
+        }
+
+        if (isset($datos['monto']) && $datos['monto'] !== '' && !preg_match('/^\d+(\.\d{1,2})?$/', (string)$datos['monto'])) {
+            throw new Exception('Monto del pago inválido.');
+        }
+
+        if (isset($datos['tasa']) && $datos['tasa'] !== '' && !preg_match('/^\d+(\.\d{1,4})?$/', (string)$datos['tasa'])) {
+            throw new Exception('Tasa de cambio inválida.');
+        }
+
+        if (!empty($datos['referencia']) && !preg_match('/^\d{4,12}$/', (string)$datos['referencia'])) {
+            throw new Exception('La referencia del pago debe tener entre 4 y 12 dígitos numéricos.');
+        }
+
+        if (!empty($datos['referencia_vuelto']) && !preg_match('/^\d{4,12}$/', (string)$datos['referencia_vuelto'])) {
+            throw new Exception('La referencia del vuelto debe tener entre 4 y 12 dígitos numéricos.');
+        }
+
+        if (!empty($datos['fecha']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$datos['fecha'])) {
+            throw new Exception('Formato de fecha inválido. Use AAAA-MM-DD.');
+        }
+
+        if (!empty($datos['fecha_f']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$datos['fecha_f'])) {
+            throw new Exception('Formato de fecha inválido. Use AAAA-MM-DD.');
+        }
+
+        if (!empty($datos['fecha_vuelto']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$datos['fecha_vuelto'])) {
+            throw new Exception('Formato de fecha inválido. Use AAAA-MM-DD.');
+        }
+
+        if (isset($datos['monto_vuelto']) && $datos['monto_vuelto'] !== '' && !preg_match('/^\d+(\.\d{1,2})?$/', (string)$datos['monto_vuelto'])) {
+            throw new Exception('Monto inválido.');
+        }
+
+        if (!empty($datos['motivo_anulacion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/', (string)$datos['motivo_anulacion'])) {
+            throw new Exception('Motivo de anulación inválido.');
+        }
+
+        if (isset($datos['anulados']) && !preg_match('/^[0-1]$/', (string)$datos['anulados'])) {
+            throw new Exception('Filtro de anulados inválido.');
+        }
+
+        if ($accion === 'incluir' || $accion === 'registrar_vuelto') {
+            if (!empty($datos['fecha'])) {
+                $this->validarLimitesFecha($datos['fecha']);
+            }
+            if (!empty($datos['fecha_vuelto'])) {
+                $this->validarLimitesFecha($datos['fecha_vuelto']);
+            }
+        }
+    }
+
+    private function validarLimitesFecha(string $fecha): void
+    {
+        if (empty($fecha)) return;
+        $time_ingresado = strtotime($fecha);
+        $time_actual = strtotime(date('Y-m-d'));
+
+        if ($time_ingresado > $time_actual) {
+            throw new Exception('La fecha ingresada no puede ser futura.');
+        }
+
+        $time_limite = strtotime('-2 months', $time_actual);
+        if ($time_ingresado < $time_limite) {
+            throw new Exception('La fecha ingresada no puede tener más de 2 meses de atraso.');
         }
     }
 }
