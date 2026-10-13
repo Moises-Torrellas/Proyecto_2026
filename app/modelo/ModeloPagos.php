@@ -331,7 +331,7 @@ class ModeloPagos extends Conexion
             $vuelto = $this->monto;
             $tasa_cambio = $this->tasa;
             // -----------------------------
-            $this->objCuentas = new ModeloCuentasCobrar();
+            $this->objCuentas = new ModeloCargos();
 
             foreach ($this->id_cuenta as $id_cobrar) {
                 if ($vuelto <= 0) break;
@@ -518,7 +518,7 @@ class ModeloPagos extends Conexion
             $detalles = $stmtDetalles->fetchAll();
 
             // 3. Devolvemos el estatus de esos cargos a "Pendiente" (1)
-            $this->objCuentas = new ModeloCuentasCobrar();
+            $this->objCuentas = new ModeloCargos();
             foreach ($detalles as $det) {
                 $codigo_cargo = (int) $det['codigo_cargo'];
 

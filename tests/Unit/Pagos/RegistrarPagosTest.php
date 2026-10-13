@@ -1,6 +1,6 @@
 <?php
 // Declaramos el espacio de nombres de la prueba dentro del paquete de pruebas unitarias de Pagos
-namespace tests\Unitary\Pagos;
+namespace tests\Unit\Pagos;
 
 // Importamos la clase base TestCase provista por el framework PHPUnit
 use PHPUnit\Framework\TestCase;
@@ -14,6 +14,7 @@ use Exception;
 use PDO;
 // Importamos la clase nativa PDOStatement para crear el Mock de las consultas preparadas
 use PDOStatement;
+use PHPUnit\Framework\Attributes\Group;
 // Importamos ReflectionClass para poder acceder e inyectar el mock en la propiedad estática privada de Conexion
 use ReflectionClass;
 
@@ -24,20 +25,10 @@ if (!defined('EMPTY_SELECTION')) {
 }
 
 // Definimos la clase de pruebas unitarias para el registro de pagos heredando de TestCase
+#[Group('unit')]
 class RegistrarPagosTest extends TestCase
 {
-    // Método que se ejecuta automáticamente después de cada prueba para limpiar el estado
-    protected function tearDown(): void
-    {
-        // Instanciamos el reflector sobre la clase abstracta Conexion
-        $reflector = new ReflectionClass(Conexion::class);
-        // Obtenemos acceso a la propiedad estática privada instancia
-        $propiedad = $reflector->getProperty('instancia');
-        // Restablecemos el valor de la propiedad estática a null para no afectar otras pruebas
-        $propiedad->setValue(null, null);
-        // Invocamos el método tearDown de la clase padre de PHPUnit
-        parent::tearDown();
-    }
+    
 
     // Caso 1: Verificar que ProcesarDatos lance una excepción si se le envía un arreglo vacío
     public function testProcesarDatosLanzaExcepcionCuandoLosDatosEstanVacios(): void

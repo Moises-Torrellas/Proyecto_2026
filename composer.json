@@ -5,7 +5,6 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/"
-            
         },
         "files": [
             "app/controlador/Base.php"
@@ -30,6 +29,10 @@
     },
     "require-dev": {
         "designsecurity/progpilot": "^1.2",
-        "phpunit/phpunit": "^11.5"
+        "phpunit/phpunit": "^11.5",
+        "codeception/codeception": "^5.3",
+        "codeception/module-webdriver": "^4.0",
+        "codeception/module-phpbrowser": "*",
+        "codeception/module-asserts": "*"
     }
 }

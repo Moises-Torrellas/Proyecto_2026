@@ -7,8 +7,10 @@ use App\modelo\ModeloAsignaciones;
 use App\modelo\ModeloArticulosInventario;
 use App\modelo\Conexion;
 use PDO;
+use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
+#[Group("integ")]
 class RegistrarAsignacionTest extends TestCase
 {
     // SOLUCIÓN ERROR 2: Se añade "?" para hacer que la propiedad acepte valores nulos (nullable)

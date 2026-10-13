@@ -54,7 +54,7 @@
                 </li>
                 <li class="nav_opciones">
                     <?php if ($puedeVer(_MD_CUENTAS_, 'ingresar_cargo')) : ?>
-                        <a type="button" href="CuentasCobrar" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Cargos</a>
+                        <a type="button" href="Cargos" class="opciones"><i class="opciones_i" data-lucide="hand-coins"></i> Cargos</a>
                     <?php endif; ?>
 
                     <?php if ($puedeVer(_MD_PAGOS_, 'ingresar_pago')) : ?>

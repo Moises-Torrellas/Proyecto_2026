@@ -1,12 +1,14 @@
 <?php
 
-namespace tests\Unitary\Inicio;
+namespace tests\Unit\Inicio;
 
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloInicio;
 use PDO;
 use PDOStatement;
+use PHPUnit\Framework\Attributes\Group;
 
+#[Group("unit")]
 class InicioTest extends TestCase{
     public function testProcesarDatosVacios(): void{
         $modelo = new ModeloInicio();

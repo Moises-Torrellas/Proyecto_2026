@@ -1,7 +1,7 @@
 <?php
 
 use App\modelo\ModeloPagos;
-use App\modelo\ModeloCuentasCobrar;
+use App\modelo\ModeloCargos;
 use App\modelo\ModeloMonedas;
 use App\modelo\ModeloMetodosPago;
 
@@ -124,7 +124,7 @@ function consultar($obj, $permisos): void
 function MultiConsulta(): void
 {
     try {
-        $modeloCuentas = new ModeloCuentasCobrar();
+        $modeloCuentas = new ModeloCargos();
         $modeloMonedas = new ModeloMonedas();
         $modeloMP      = new ModeloMetodosPago();
 

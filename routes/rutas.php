@@ -61,7 +61,7 @@ function manejarRuta($pagina): void
         'MetodosPago' => 'MetodosPago',
         'Conceptos' => 'Conceptos',
         'Monedas' => 'Monedas',
-        'CuentasCobrar' => 'CuentasCobrar',
+        'Cargos' => 'Cargos',
         'Notificaciones' => 'Notificaciones',
         'Pagos' => 'Pagos',
         'Respaldo' => 'Respaldo',

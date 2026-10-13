@@ -11,7 +11,7 @@ use PDO;
 use App\modelo\Conexion;
 use App\modelo\ModeloAtletas;
 use App\modelo\ModeloTorneos;
-use App\modelo\ModeloCuentasCobrar;
+use App\modelo\ModeloCargos;
 use App\modelo\ModeloNotificaciones;
 use App\modelo\ModeloTasaCambios;
 
@@ -30,7 +30,7 @@ class verificarEvento extends Conexion {
             // 2. Instanciamos los modelos
             $atletaModel = new ModeloAtletas();
             $torneoModel = new ModeloTorneos();
-            $cuentasModel = new ModeloCuentasCobrar();
+            $cuentasModel = new ModeloCargos();
 
             // --- CUMPLEAÑOS ---
             $atletas = $atletaModel->ConsultarCumple();
