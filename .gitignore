@@ -10,6 +10,8 @@
 # Excepto el archivo.gitkeep
 !/backups/.gitkeep
 
+/storage/*
+
 .env
 datos_prueba_postman.csv
 exposicion_postman.md
