@@ -73,7 +73,7 @@ function validar_datos(array $data): void
 function validar_requeridos(array $campos): void
 {
     foreach ($campos as $campo) {
-        if (!isset($_POST[$campo]) || trim($_POST[$campo]) === '') {
+        if (!isset($_POST[$campo]) || (is_array($_POST[$campo]) ? empty($_POST[$campo]) : trim($_POST[$campo]) === '')) {
             throw new Exception("El campo $campo es obligatorio.");
         }
     }

@@ -43,7 +43,20 @@ if (comprobarAjax() && !empty($_POST)) {
         $registro = $respuesta['datos'] ?? [];
     }
 
-    $variables = ['registro' => $registro, 'permisos' => $permisos, 'error_bd' => $error_bd];
+    // Permite registrar representantes desde el modal de atletas sin salir del módulo.
+    // Se valida aquí para no mostrar el botón a quien no pueda usar el controlador de Representantes
+    // (un acceso denegado redirige y regenera el token CSRF de la sesión).
+    $permisosRep = $_SESSION['permisos'][_MD_REPRESENTANTES_] ?? [];
+    $nivelUsuario = $_SESSION['nivel_rol'] ?? 99;
+    $puede_registrar_rep = ($nivelUsuario === 1 || $nivelUsuario === 2)
+        || (!empty($permisosRep['registrar_representante']) && !empty($permisosRep['ingresar_representantes']));
+
+    $variables = [
+        'registro' => $registro,
+        'permisos' => $permisos,
+        'error_bd' => $error_bd,
+        'puede_registrar_rep' => $puede_registrar_rep
+    ];
     cargarVista($pagina, $variables);
 }
 

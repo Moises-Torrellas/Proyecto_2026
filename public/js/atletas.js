@@ -145,27 +145,7 @@ $(document).ready(function () {
     });
 
     $("#incluir").on("click", function () {
-        limpia();
-        MultiConsulta();
-        $("#proceso").data("accion", "incluir");
-        $("#proceso").text("Registrar Atleta");
-        $("#titulo_modal").text("Registrar Atleta");
-        $('.titulo_des').show();
-        $('#fecha_nac, #lugar_nacimiento, #representante, #telefono, #direccion, #municipio, #correo, #instagram, #dorsal, #peso, #estatura, #talla_pantalon, #talla_franela, #talla_calzado, #tipo_sangre, #es_alergico, #alergias_detalle, #foto').closest('.colum').show();
-        $('#estatus').closest('.colum').hide().prop('disabled', true);
-        $("#todos").prop('disabled', true);
-        $("#genero").val("H").trigger('change');
-
-        $('#edad').prop('readonly', true);
-        $
-
-        $('#representante').val(null).trigger('change');
-        $('#posicion').val(null).trigger('change');
-        $('#categoria').val(null).trigger('change');
-        $('#dorsal').val('');
-        $('#peso').val('');
-        $('#estatura').val('');
-        $('#es_alergico').prop('checked', false).trigger('change');
+        prepararRegistro();
         abrirModal();
     });
 
@@ -180,6 +160,8 @@ $(document).ready(function () {
         $('#estatus').closest('.colum').show().prop('disabled', false);
         $('#edad').prop('readonly', false);
         $("#todos").prop('disabled', false);
+        // El reporte usa el formulario como filtros: se muestran todas las secciones juntas, sin pasos
+        desactivarAsistente();
         abrirModal();
     });
 
@@ -257,6 +239,83 @@ $(document).ready(function () {
         validarCategoria();
     });
 
+    // --- Asistente por pasos ---
+    $('#btn_siguiente').on('click', siguientePaso);
+    $('#btn_anterior').on('click', anteriorPaso);
+
+    // Pulsar un indicador: hacia atrás navega libre, hacia adelante valida cada sección intermedia
+    $('.asistente_indicador').on('click', function () {
+        if (!asistenteActivo()) return;
+        saltarAPaso(parseInt($(this).data('ir-paso'), 10));
+    });
+
+    $('.asistente_indicador').on('animationend', function () {
+        $(this).removeClass('sacudir');
+    });
+
+    // Evita que el navegador desplace la vista en horizontal al enfocar campos de otra sección
+    $('#asistente_vista').on('scroll', function () {
+        if (this.scrollLeft !== 0) this.scrollLeft = 0;
+    });
+
+    // Enter en un campo avanza a la siguiente sección (nunca envía el formulario)
+    $('#f').on('keydown', 'input', function (e) {
+        if (e.key === 'Enter' && asistenteActivo()) {
+            e.preventDefault();
+            if (pasoActual < obtenerPasos().length - 1) siguientePaso();
+        }
+    });
+
+    // --- Registro rápido de representante (modal apilado) ---
+    $("#rep_cedula").on("input", function () {
+        $(this).val($(this).val().replace(/[^0-9]/g, '').substring(0, 8));
+    });
+
+    $("#rep_telefono").on("input", function () {
+        var input = $(this).val().replace(/[^0-9]/g, '');
+        if (input.length > 4) {
+            input = input.substring(0, 4) + '-' + input.substring(4, 11);
+        }
+        $(this).val(input);
+    });
+
+    Validacion("rep_cedula", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Minimo 7 maximo 8 digitos, solo numeros", "proceso_rep");
+    Validacion("rep_nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras entre 3 y 60 caracteres", "proceso_rep");
+    Validacion("rep_apellido", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras entre 3 y 60 caracteres", "proceso_rep");
+    Validacion("rep_telefono", /^[0-9\-\b]*$/, /^[0-9]{4}[-]{1}[0-9]{7}$/, "El formato es 0400-0000000", "proceso_rep");
+    Validacion("rep_direccion", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.\-\/]*$/, /^.{5,150}$/, "Dirección muy corta o inválida", "proceso_rep");
+    Validacion("rep_correo", /^[a-zA-Z0-9@._\-]*$/, /^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, "Ejemplo: usuario@dominio.com", "proceso_rep");
+    Validacion("rep_instagram", /^[@a-zA-Z0-9._]*$/, /^[@a-zA-Z0-9._]{0,30}$/, "Usuario inválido", "proceso_rep");
+
+    $('#btn_nuevo_representante').on('click', function () {
+        limpiaRepresentante();
+        abrirModalRepresentante();
+    });
+
+    $('#cerrar_modal_rep').on('click', cerrarModalRepresentante);
+
+    $('#contenedor_modal_rep').on('click', function (e) {
+        if (e.target === this) cerrarModalRepresentante();
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape' && $('#contenedor_modal_rep').hasClass('modal_visible') && !Swal.isVisible()) {
+            cerrarModalRepresentante();
+        }
+    });
+
+    $('#proceso_rep').on('click', function () {
+        if (validarEnvioRepresentante()) {
+            confirmar('¿Está seguro que quiere registrar este representante?', function (confirmado) {
+                if (confirmado) {
+                    var datos = new FormData($('#f_rep')[0]);
+                    datos.append('accion', 'incluir');
+                    enviaAjaxRepresentante(datos);
+                }
+            });
+        }
+    });
+
 });
 
 function validarEdadAtleta(fechaValor) {
@@ -297,14 +356,14 @@ function validarEdadAtleta(fechaValor) {
     // 3. Regla: Representante
     if (edad < 18) {
         // Es menor: Requiere representante (habilitado)
-        $representante.prop("disabled", false).parent().removeClass("campo_deshabilitado");
+        $representante.prop("disabled", false).closest(".caja_formulario").removeClass("campo_deshabilitado");
 
         // Deshabilita tlf y dirección propios
         $telefono.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
         $direccion.prop("disabled", true).val("").parent().addClass("campo_deshabilitado");
     } else {
         // Es adulto: El representante es opcional (se deja habilitado)
-        $representante.prop("disabled", false).parent().removeClass("campo_deshabilitado");
+        $representante.prop("disabled", false).closest(".caja_formulario").removeClass("campo_deshabilitado");
 
         // Habilita tlf y dirección propios
         $telefono.prop("disabled", false).parent().removeClass("campo_deshabilitado");
@@ -319,55 +378,34 @@ function cargarEdad(fecha) {
     $('#edad').val(edad);
 }
 
-function validarEnvio(proceso) {
-    // 1. Fecha de Nacimiento (Primero en tu HTML)
+/* =========================================================
+   VALIDACIÓN POR SECCIONES (una función por paso del asistente)
+   Se conservan las mismas reglas que tenía validarEnvio,
+   solo que agrupadas según la sección donde está cada campo.
+   ========================================================= */
+function calcularEdadCalendario() {
+    const fecha = $('#fecha_nac').val();
+    if (!fecha) return 0;
+    // Se toma el año directamente del texto (Y-m-d) para evitar desfases de zona horaria
+    return new Date().getFullYear() - parseInt(fecha.substring(0, 4), 10);
+}
+
+// PASO 1: Datos Personales
+function validarPasoPersonales() {
     if ($('#fecha_nac').val() == "" || $('#fecha_nac').val() == null) {
         muestraMensaje("error", 2000, "Error", "La fecha de nacimiento es obligatoria");
         return false;
     }
 
-    // 2. Nombre
-    if (validarkeyup(/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre válido");
+    const edad = calcularEdadCalendario();
+    if (edad < 4) {
+        muestraMensaje("error", 3000, "Edad insuficiente", "El atleta debe tener al menos 4 años.");
         return false;
     }
-
-    // 3. Apellido
-    if (validarkeyup(/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,30}$/, $('#apellido'), $("#apellido_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
-        muestraMensaje("error", 2000, "Error", "Debe ingresar un apellido válido");
+    if (edad > 60) {
+        muestraMensaje("error", 3000, "Edad excedida", "El atleta no puede tener más de 60 años.");
         return false;
     }
-
-    // 4. Categoría (Select)
-    if ($('#categoria').val() == "" || $('#categoria').val() == null) {
-        muestraMensaje("error", 2000, "Error", "Debe elegir una categoría");
-        return false;
-    }
-
-    // 5. Posición (Select)
-    if ($('#posicion').val() == "" || $('#posicion').val() == null) {
-        muestraMensaje("error", 2000, "Error", "Debe elegir una posición");
-        return false;
-    }
-
-    // 6. Género (Select)
-    if ($('#genero').val() == "" || $('#genero').val() == null) {
-        muestraMensaje("error", 2000, "Error", "Debe elegir el género");
-        return false;
-    }
-
-    // Calculamos edad para las validaciones
-    const edadAtleta = $('#edad').val() || 0;
-
-    // 7. Representante (Obligatorio solo para menores de edad)
-    if (edadAtleta < 18) {
-        if ($('#representante').val() == "" || $('#representante').val() == null) {
-            muestraMensaje("error", 2000, "Error", "Debe seleccionar un representante");
-            return false;
-        }
-    }
-
-    // 8. Documento de Identidad (Cédula)
 
     if (!$("#doc_i").prop("disabled")) {
         if (validarkeyup(/^[0-9]{7,8}$/, $('#doc_i'), $("#doc_i_spam"), "Mínimo 7 máximo 8 dígitos", true)) {
@@ -376,20 +414,14 @@ function validarEnvio(proceso) {
         }
     }
 
-    // 9. Teléfono (Solo si NO está deshabilitado)
-    if (!$("#telefono").prop("disabled")) {
-        if (validarkeyup(/^[0-9]{4}[-]{1}[0-9]{7}$/, $('#telefono'), $("#telefono_spam"), "Formato: 0400-0000000", true)) {
-            muestraMensaje("error", 2000, "Error", "Debe ingresar un teléfono válido");
-            return false;
-        }
+    if (validarkeyup(/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,30}$/, $("#nombre"), $("#nombre_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un nombre válido");
+        return false;
     }
 
-    // 10. Dirección (Solo si NO está deshabilitado)
-    if (!$("#direccion").prop("disabled")) {
-        if ($('#direccion').val().trim().length < 5) {
-            muestraMensaje("error", 2000, "Error", "La dirección debe tener al menos 5 caracteres");
-            return false;
-        }
+    if (validarkeyup(/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,30}$/, $('#apellido'), $("#apellido_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un apellido válido");
+        return false;
     }
 
     if ($('#lugar_nacimiento').val() != "" && $('#lugar_nacimiento').val() != null) {
@@ -399,20 +431,49 @@ function validarEnvio(proceso) {
         }
     }
 
-    if ($('#municipio').val() != "" && $('#municipio').val() != null) {
-        if (validarkeyup(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, $('#municipio'), $("#municipio_spam"), "Mínimo 3 caracteres", true) || validarkeyup(/^.{3,50}$/, $('#municipio'), $("#municipio_spam"), "Mínimo 3 caracteres", true)) {
-            muestraMensaje("error", 2000, "Error", "Debe ingresar un municipio válido");
+    const genero = $('#genero').val();
+    if (genero == "" || genero == null || genero == "T") {
+        muestraMensaje("error", 2000, "Error", "Debe elegir el género");
+        return false;
+    }
+    return true;
+}
+
+// PASO 2: Datos Deportivos
+function validarPasoDeportivos() {
+    if ($('#categoria').val() == "" || $('#categoria').val() == null) {
+        muestraMensaje("error", 2000, "Error", "Debe elegir una categoría");
+        return false;
+    }
+
+    if ($('#posicion').val() == "" || $('#posicion').val() == null) {
+        muestraMensaje("error", 2000, "Error", "Debe elegir una posición");
+        return false;
+    }
+
+    if (validarCategoria() === false) {
+        muestraMensaje("error", 2000, "Error", "La edad del atleta debe estar dentro de la categoría elegida");
+        return false;
+    }
+    return true;
+}
+
+// PASO 3: Datos de Contacto
+function validarPasoContacto() {
+    // Representante obligatorio solo para menores de edad
+    if (calcularEdadCalendario() < 18) {
+        if ($('#representante').val() == "" || $('#representante').val() == null) {
+            muestraMensaje("error", 2000, "Error", "Debe seleccionar un representante");
             return false;
         }
     }
 
-    if ($('#instagram').val() != "" && $('#instagram').val() != null) {
-        if (validarkeyup(/^[@a-zA-Z0-9._]*$/, $('#instagram'), $("#instagram_spam"), "Usuario inválido", true) || validarkeyup(/^[@a-zA-Z0-9._]{0,30}$/, $('#instagram'), $("#instagram_spam"), "Usuario inválido", true)) {
-            muestraMensaje("error", 2000, "Error", "Debe ingresar un instagram válido");
+    if (!$("#telefono").prop("disabled")) {
+        if (validarkeyup(/^[0-9]{4}[-]{1}[0-9]{7}$/, $('#telefono'), $("#telefono_spam"), "Formato: 0400-0000000", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un teléfono válido");
             return false;
         }
     }
-
 
     if ($('#correo').val() === "" || $('#correo').val() === null) {
         muestraMensaje("error", 2000, "Error", "Debe ingresar un correo electrónico");
@@ -424,6 +485,31 @@ function validarEnvio(proceso) {
         }
     }
 
+    if ($('#instagram').val() != "" && $('#instagram').val() != null) {
+        if (validarkeyup(/^[@a-zA-Z0-9._]*$/, $('#instagram'), $("#instagram_spam"), "Usuario inválido", true) || validarkeyup(/^[@a-zA-Z0-9._]{0,30}$/, $('#instagram'), $("#instagram_spam"), "Usuario inválido", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un instagram válido");
+            return false;
+        }
+    }
+
+    if (!$("#direccion").prop("disabled")) {
+        if ($('#direccion').val().trim().length < 5) {
+            muestraMensaje("error", 2000, "Error", "La dirección debe tener al menos 5 caracteres");
+            return false;
+        }
+    }
+
+    if ($('#municipio').val() != "" && $('#municipio').val() != null) {
+        if (validarkeyup(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, $('#municipio'), $("#municipio_spam"), "Mínimo 3 caracteres", true) || validarkeyup(/^.{3,50}$/, $('#municipio'), $("#municipio_spam"), "Mínimo 3 caracteres", true)) {
+            muestraMensaje("error", 2000, "Error", "Debe ingresar un municipio válido");
+            return false;
+        }
+    }
+    return true;
+}
+
+// PASO 4: Salud y Medidas
+function validarPasoSalud() {
     if ($('#peso').val() === "" || $('#peso').val() === null) {
         muestraMensaje("error", 2000, "Error", "Debe ingresar el peso");
         return false;
@@ -465,10 +551,33 @@ function validarEnvio(proceso) {
             return false;
         }
     }
+    return true;
+}
 
-    if (!validarCategoria()) {
-        muestraMensaje("error", 2000, "Error", "La edad del atleta debe estar dentro de la categoría elegida");
-        return false;
+// Despacha la validación según la sección (data-paso) del índice recibido
+function validarPaso(indice) {
+    const clave = obtenerPasos().eq(indice).data('paso');
+    switch (clave) {
+        case 'personales': return validarPasoPersonales();
+        case 'deportivos': return validarPasoDeportivos();
+        case 'contacto': return validarPasoContacto();
+        case 'salud': return validarPasoSalud();
+        default: return true; // La foto es opcional
+    }
+}
+
+// Validación completa antes de enviar: recorre todas las secciones y,
+// si alguna falla, el asistente se desliza hasta ella.
+function validarEnvio(proceso) {
+    const total = obtenerPasos().length;
+    for (let i = 0; i < total; i++) {
+        if (!validarPaso(i)) {
+            if (asistenteActivo()) {
+                irAPaso(i);
+                marcarErrorPaso(i);
+            }
+            return false;
+        }
     }
     return true;
 }
@@ -690,6 +799,7 @@ function modificar(datos) {
     validarEdadAtleta(datos[0].fecha_nac);
     cargarEdad(datos[0].fecha_nac);
 
+    activarAsistente();
     abrirModal();
 }
 
@@ -800,7 +910,8 @@ function enviaAjax(datos) {
                     construirSelect('categoria', lee.categorias, 'codigo_categoria', 'nombre', 'edad_min', 'edad_max');
                 } else if (lee.accion == "incluir") {
                     consultar();
-                    limpia();
+                    // Deja el formulario listo para otro registro, de vuelta en la primera sección
+                    prepararRegistro();
                     muestraMensaje("success", 2000, "Registro Exitoso", lee.mensaje);
                 } else if (lee.accion == "eliminar") {
                     consultar();
@@ -868,6 +979,283 @@ function enviaAjax(datos) {
             }
         },
         complete: function () { },
+    });
+}
+
+/* =========================================================
+   ASISTENTE POR PASOS DEL FORMULARIO DE ATLETAS
+   Las secciones se deslizan horizontalmente; cada "Siguiente"
+   valida la sección actual antes de avanzar.
+   ========================================================= */
+let pasoActual = 0;
+
+function obtenerPasos() {
+    return $('#f .asistente_paso');
+}
+
+function asistenteActivo() {
+    return !$('#f').hasClass('asistente_inactivo');
+}
+
+// Prepara el formulario para un registro nuevo (usado al abrir y tras un registro exitoso)
+function prepararRegistro() {
+    limpia();
+    MultiConsulta();
+    $("#proceso").data("accion", "incluir");
+    $("#proceso").text("Registrar Atleta");
+    $("#titulo_modal").text("Registrar Atleta");
+    $('.titulo_des').show();
+    $('#fecha_nac, #lugar_nacimiento, #representante, #telefono, #direccion, #municipio, #correo, #instagram, #dorsal, #peso, #estatura, #talla_pantalon, #talla_franela, #talla_calzado, #tipo_sangre, #es_alergico, #alergias_detalle, #foto').closest('.colum').show();
+    $('#estatus').closest('.colum').hide().prop('disabled', true);
+    $("#todos").prop('disabled', true);
+    $("#genero").val("H").trigger('change');
+    $('#edad').prop('readonly', true);
+
+    $('#representante').val(null).trigger('change');
+    $('#posicion').val(null).trigger('change');
+    $('#categoria').val(null).trigger('change');
+    $('#dorsal').val('');
+    $('#peso').val('');
+    $('#estatura').val('');
+    $('#es_alergico').prop('checked', false).trigger('change');
+    activarAsistente();
+}
+
+function activarAsistente() {
+    $('#f').removeClass('asistente_inactivo');
+    // limpia() aplica .show() a los div del formulario agregando style="display: block";
+    // se remueven esos estilos en línea para que rijan las reglas de CSS (flex, grid, etc.)
+    $('#f').find('div, ol, li, span, p, form, section').css('display', '');
+    $('.asistente_indicador').removeClass('completado con_error sacudir');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof tippy !== 'undefined') tippy('[data-tippy-content]', { theme: 'light' });
+    irAPaso(0);
+}
+
+function desactivarAsistente() {
+    $('#f').addClass('asistente_inactivo');
+    $('#asistente_progreso, #asistente_navegacion').css('display', '');
+    $('#asistente_pista').css('transform', '');
+    $('#btn_anterior, #btn_siguiente').addClass('asistente_oculto');
+    $('#proceso').removeClass('asistente_oculto');
+    $('#asistente_vista').scrollTop(0);
+}
+
+function irAPaso(indice) {
+    const $pasos = obtenerPasos();
+    const total = $pasos.length;
+    indice = Math.max(0, Math.min(indice, total - 1));
+    pasoActual = indice;
+
+    $pasos.each(function (i) {
+        $(this).toggleClass('activo', i === indice);
+    });
+    $('#asistente_pista').css('transform', 'translateX(-' + (indice * 100) + '%)');
+    $('#asistente_vista').scrollLeft(0).stop().animate({ scrollTop: 0 }, 250);
+
+    actualizarProgreso();
+}
+
+function actualizarProgreso() {
+    const total = obtenerPasos().length;
+    const fraccion = total > 1 ? pasoActual / (total - 1) : 1;
+
+    const relleno = document.getElementById('asistente_linea_relleno');
+    if (relleno) relleno.style.setProperty('--progreso', fraccion);
+
+    $('#asistente_contador').text('Paso ' + (pasoActual + 1) + ' de ' + total);
+    $('#asistente_porcentaje').text(Math.round(fraccion * 100) + '%');
+
+    $('.asistente_indicador').each(function (i) {
+        $(this).toggleClass('activo', i === pasoActual).toggleClass('completado', i < pasoActual);
+        if (i < pasoActual) $(this).removeClass('con_error');
+    });
+
+    const esUltimo = pasoActual === total - 1;
+    $('#btn_anterior').toggleClass('asistente_oculto', pasoActual === 0);
+    $('#btn_siguiente').toggleClass('asistente_oculto', esUltimo);
+    $('#proceso').toggleClass('asistente_oculto', !esUltimo);
+}
+
+function siguientePaso() {
+    if (!validarPaso(pasoActual)) {
+        marcarErrorPaso(pasoActual);
+        return;
+    }
+    $('.asistente_indicador').eq(pasoActual).removeClass('con_error');
+    irAPaso(pasoActual + 1);
+}
+
+function anteriorPaso() {
+    irAPaso(pasoActual - 1);
+}
+
+function saltarAPaso(destino) {
+    if (isNaN(destino) || destino === pasoActual) return;
+    if (destino < pasoActual) {
+        irAPaso(destino);
+        return;
+    }
+    for (let i = pasoActual; i < destino; i++) {
+        if (!validarPaso(i)) {
+            irAPaso(i);
+            marcarErrorPaso(i);
+            return;
+        }
+    }
+    irAPaso(destino);
+}
+
+function marcarErrorPaso(indice) {
+    const $indicador = $('.asistente_indicador').eq(indice);
+    if (!$indicador.length) return;
+    $indicador.addClass('con_error').removeClass('sacudir');
+    void $indicador[0].offsetWidth; // Reinicia la animación de sacudida
+    $indicador.addClass('sacudir');
+}
+
+/* =========================================================
+   REGISTRO RÁPIDO DE REPRESENTANTE (sin salir del módulo)
+   Envía al controlador de Representantes por AJAX y, al guardar,
+   recarga el select y deja seleccionado al nuevo representante.
+   ========================================================= */
+function abrirModalRepresentante() {
+    $('#contenedor_modal_rep').addClass('modal_visible');
+    $('#modal_rep').addClass('expandir');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function cerrarModalRepresentante() {
+    $('#modal_rep').removeClass('expandir');
+    $('#contenedor_modal_rep').removeClass('modal_visible');
+}
+
+function limpiaRepresentante() {
+    const form = document.getElementById('f_rep');
+    if (!form) return;
+    form.reset();
+    $('#f_rep').find('.denegado').removeClass('denegado');
+    $('#f_rep').find('.mensaje').text('');
+}
+
+function validarEnvioRepresentante() {
+    if (!$('#rep_nacionalidad').val()) {
+        muestraMensaje("error", 2000, "Error", "Tiene que elegir una opción de nacionalidad");
+        return false;
+    }
+    if (validarkeyup(/^[0-9]{7,8}$/, $('#rep_cedula'), $("#rep_cedula_spam"), "Minimo 7 maximo 8 digitos, solo numeros", true)) {
+        muestraMensaje("error", 2000, "Error", "Tiene que ingresar una cedula valida");
+        return false;
+    }
+    if (validarkeyup(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, $("#rep_nombre"), $("#rep_nombre_spam"), "Solo letras entre 3 y 60 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un nombre valido");
+        return false;
+    }
+    if (validarkeyup(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, $('#rep_apellido'), $("#rep_apellido_spam"), "Solo letras entre 3 y 60 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un apellido valido");
+        return false;
+    }
+    if (validarkeyup(/^[0-9]{4}[-]{1}[0-9]{7}$/, $('#rep_telefono'), $("#rep_telefono_spam"), "El formato es 0400-0000000", true)) {
+        muestraMensaje("error", 2000, "Error", "Tiene que ingresar un telefono valido");
+        return false;
+    }
+    if (validarkeyup(/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-\/]{5,150}$/, $('#rep_direccion'), $("#rep_direccion_spam"), "Dirección inválida", true)) {
+        muestraMensaje("error", 2000, "Error", "Tiene que ingresar una direccion valida");
+        return false;
+    }
+    const correo = $('#rep_correo').val();
+    if (correo != "" && correo != null && (validarkeyup(/^[a-zA-Z0-9@._\-]*$/, $('#rep_correo'), $("#rep_correo_spam"), "Ejemplo: usuario@dominio.com", true) || validarkeyup(/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i, $('#rep_correo'), $("#rep_correo_spam"), "Ejemplo: usuario@dominio.com", true))) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un correo válido");
+        return false;
+    }
+    const instagram = $('#rep_instagram').val();
+    if (instagram != "" && instagram != null && validarkeyup(/^[@a-zA-Z0-9._]{0,30}$/, $('#rep_instagram'), $("#rep_instagram_spam"), "Usuario inválido", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un instagram válido");
+        return false;
+    }
+    return true;
+}
+
+function enviaAjaxRepresentante(datos) {
+    const $btn = $('#proceso_rep');
+    $.ajax({
+        async: true,
+        url: "Representantes", // Controlador de Representantes
+        type: "POST",
+        contentType: false,
+        data: datos,
+        processData: false,
+        cache: false,
+        timeout: 120000,
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+            $btn.prop('disabled', true).addClass('btn_bloqueado');
+        },
+        success: function (respuesta) {
+            let lee;
+            try {
+                lee = (typeof respuesta === 'object') ? respuesta : JSON.parse(respuesta);
+            } catch (e) {
+                console.error("Respuesta inesperada del controlador de Representantes:", respuesta);
+                muestraMensaje("error", 3000, "Error", "No se pudo registrar el representante. Verifique sus permisos o recargue la página.");
+                return;
+            }
+
+            if (lee.accion === "incluir") {
+                const cedula = $('#rep_cedula').val();
+                cerrarModalRepresentante();
+                limpiaRepresentante();
+                recargarRepresentantes(cedula);
+                muestraMensajeMini("success", 3000, "Representante registrado y seleccionado");
+            } else if (lee.accion === "error") {
+                muestraMensaje("error", 3000, "Error", lee.mensaje);
+            }
+        },
+        error: function (request, status, err) {
+            if (status == "timeout") {
+                muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
+            } else {
+                muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + status + ": " + err);
+            }
+        },
+        complete: function () {
+            $btn.prop('disabled', false).removeClass('btn_bloqueado');
+        },
+    });
+}
+
+// Recarga solo el select de representantes (sin tocar categoría/posición ya elegidas)
+// y selecciona al representante recién creado buscándolo por su cédula.
+function recargarRepresentantes(cedulaSeleccionar) {
+    const datos = new FormData();
+    datos.append('accion', 'MultiConsulta');
+    $.ajax({
+        async: true,
+        url: "",
+        type: "POST",
+        contentType: false,
+        data: datos,
+        processData: false,
+        cache: false,
+        timeout: 120000,
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRF-TOKEN", token);
+        },
+        success: function (respuesta) {
+            try {
+                const lee = (typeof respuesta === 'object') ? respuesta : JSON.parse(respuesta);
+                if (lee.accion !== "MultiConsulta") return;
+
+                const lista = lee.representantes || [];
+                construirSelect('representante', lista, 'codigo_representante', 'nombre', 'apellido', 'cedula');
+
+                const nuevo = lista.find(r => String(r.cedula) === String(cedulaSeleccionar));
+                $('#representante').val(nuevo ? nuevo.codigo_representante : null).trigger('change');
+                $('#representante_span').text('');
+            } catch (e) {
+                console.error("Error al recargar representantes:", respuesta);
+            }
+        }
     });
 }
 

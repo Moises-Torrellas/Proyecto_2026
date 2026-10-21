@@ -4,7 +4,7 @@ namespace App\modelo;
 
 use Exception;
 
-class ModeloCuentasCobrar extends Conexion
+class ModeloCargos extends Conexion
 {
     private $codigo_cargo;
     private $codigo_concepto;

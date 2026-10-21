@@ -1,6 +1,6 @@
 <?php
 
-use App\modelo\ModeloCuentasCobrar;
+use App\modelo\ModeloCargos;
 use App\modelo\ModeloAtletas;
 use App\modelo\ModeloConceptos;
 use App\modelo\ModeloMonedas;
@@ -15,14 +15,14 @@ $id_modulo = _MD_CUENTAS_;
 $permisos = procesarPermisos($id_modulo, 'ingresar_cargo');
 
 // 4. Lógica de despacho (Router interno)
-$nombreClaseModelo = 'App\modelo\ModeloCuentasCobrar';
+$nombreClaseModelo = 'App\modelo\ModeloCargos';
 
 if (!class_exists($nombreClaseModelo)) {
     require_once(__DIR__ . '/../vista/complementos/404.php');
     exit();
 }
 
-$objModelo = new ModeloCuentasCobrar();
+$objModelo = new ModeloCargos();
 
 if (comprobarAjax() && !empty($_POST)) {
     manejarSolicitudCuentasCobrar($objModelo, $id_modulo, $bitacora, $permisos);

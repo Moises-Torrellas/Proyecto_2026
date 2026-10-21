@@ -1,7 +1,7 @@
 <?php
 
 use App\modelo\ModeloPagos;
-use App\modelo\ModeloCuentasCobrar;
+use App\modelo\ModeloCargos;
 use App\modelo\ModeloMonedas;
 use App\modelo\ModeloMetodosPago;
 
@@ -124,7 +124,7 @@ function consultar($obj, $permisos): void
 function MultiConsulta(): void
 {
     try {
-        $modeloCuentas = new ModeloCuentasCobrar();
+        $modeloCuentas = new ModeloCargos();
         $modeloMonedas = new ModeloMonedas();
         $modeloMP      = new ModeloMetodosPago();
 
@@ -151,73 +151,27 @@ function MultiConsulta(): void
     }
 }
 
-function validarLimitesFecha($fecha) {
-    if (empty($fecha)) return;
-    $time_ingresado = strtotime($fecha);
-    $time_actual = strtotime(date('Y-m-d'));
-    
-    if ($time_ingresado > $time_actual) {
-        throw new Exception('La fecha ingresada no puede ser futura.');
-    }
-    
-    $time_limite = strtotime('-2 months', $time_actual);
-    if ($time_ingresado < $time_limite) {
-        throw new Exception('La fecha ingresada no puede tener más de 2 meses de atraso.');
-    }
-}
-
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validacionesArrays = [
-            'cuenta' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Cuenta por cobrar inválida.']
-        ];
-        validarArrays($validacionesArrays);
-
-        $validaciones = [
-            'metodo' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Método de pago inválido.'],
-            'moneda' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Moneda inválida.'],
-            'monto'  => ['regla' => '/^\d+(\.\d{1,2})?$/', 'mensaje' => 'Monto del pago inválido.'],
-        ];
+        validar_requeridos(['cuenta', 'metodo', 'moneda', 'monto', 'fecha']);
 
         $datos = [
-            'cuenta' => $_POST['cuenta'],
-            'metodo' => trim($_POST['metodo']),
-            'moneda' => trim($_POST['moneda']),
-            'monto'  => trim($_POST['monto']),
-            'tasa'   => isset($_POST['tasa']) ? trim($_POST['tasa']) : '1',
-            'fecha'  => trim($_POST['fecha']),
+            'cuenta'     => $_POST['cuenta'],
+            'metodo'     => trim($_POST['metodo']),
+            'moneda'     => trim($_POST['moneda']),
+            'monto'      => trim($_POST['monto']),
+            'tasa'       => isset($_POST['tasa']) ? trim($_POST['tasa']) : '1',
+            'fecha'      => trim($_POST['fecha']),
+            'referencia' => isset($_POST['referencia']) ? trim($_POST['referencia']) : '',
         ];
 
-        if (!empty($_POST['referencia'])) {
-            $validaciones['referencia'] = ['regla' => '/^\d{4,12}$/', 'mensaje' => 'La referencia del pago debe tener entre 4 y 12 dígitos numéricos.'];
-            $datos['referencia'] = trim($_POST['referencia']);
-        }
-
-        if (!empty($_POST['fecha'])) {
-            $validaciones['fecha'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
-        }
-
         if (isset($_POST['monto_vuelto']) && (float)$_POST['monto_vuelto'] > 0) {
-            $datos['monto_vuelto'] = trim($_POST['monto_vuelto']);
+            $datos['monto_vuelto']         = trim($_POST['monto_vuelto']);
             $datos['codigo_metodo_vuelto'] = trim($_POST['codigo_metodo_vuelto'] ?? '');
             $datos['codigo_moneda_vuelto'] = trim($_POST['codigo_moneda_vuelto'] ?? '');
-            $datos['referencia_vuelto'] = trim($_POST['referencia_vuelto'] ?? '');
-            $datos['fecha_vuelto'] = trim($_POST['fecha_vuelto'] ?? date('Y-m-d'));
-
-            if (!empty($_POST['referencia_vuelto'])) {
-                $validaciones['referencia_vuelto'] = ['regla' => '/^\d{4,12}$/', 'mensaje' => 'La referencia del vuelto debe tener entre 4 y 12 dígitos numéricos.'];
-            }
-        }
-
-        validar_datos($validaciones);
-
-        if (!empty($_POST['fecha'])) {
-            validarLimitesFecha($_POST['fecha']);
-        }
-        
-        if (isset($_POST['monto_vuelto']) && (float)$_POST['monto_vuelto'] > 0 && !empty($_POST['fecha_vuelto'])) {
-            validarLimitesFecha($_POST['fecha_vuelto']);
+            $datos['referencia_vuelto']    = trim($_POST['referencia_vuelto'] ?? '');
+            $datos['fecha_vuelto']         = trim($_POST['fecha_vuelto'] ?? date('Y-m-d'));
         }
 
         $datos['accion'] = 'incluir';
@@ -236,15 +190,13 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
                 'id_pago' => $resultado['id_pago'] ?? 0
             );
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-            $resultado['mensaje'] = match ($resultado['codigo']) {
+            $resultado['mensaje'] = match ($resultado['codigo'] ?? '') {
                 INVALID_ID         => 'El método de pago seleccionado no existe.',
                 INVALID_ID . '0'   => 'La moneda seleccionada no es válida.',
                 EMPTY_SELECTION    => 'Debe seleccionar al menos una cuenta por cobrar.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
-                default            => 'Ocurrió un error inesperado en el registro del pago.'
+                default            => $resultado['mensaje'] ?? 'Ocurrió un error inesperado en el registro del pago.'
             };
-
-            //$resultado['mensaje'] = 'Ocurrio un error en el registro del pago: ' . $resultado['mensaje'];
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
@@ -256,35 +208,32 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function eliminar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'id' => ['regla' => '/^[0-9]+$/', 'mensaje' => 'Id de pago inválido.'],
-            'motivo_anulacion' => ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/', 'mensaje' => 'Motivo de anulación inválido.']
-        ];
-        $_POST['id'] = trim($_POST['id']);
-        validar_datos($validaciones);
+        validar_requeridos(['id']);
 
         $datos = [
-            'id' => $_POST['id'],
-            'accion' => 'eliminar'
+            'id'               => trim($_POST['id']),
+            'motivo_anulacion' => trim($_POST['motivo_anulacion'] ?? 'Anulación voluntaria'),
+            'accion'           => 'eliminar'
         ];
 
         $resultado = $obj->ProcesarDatos($datos);
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             $desc_bitacora = $resultado['desc_bitacora'] ?? "Anulación del Pago: " . $datos['id'];
-            $desc_bitacora .= ' Motivo: ' . $_POST['motivo_anulacion'];
+            if (!empty($datos['motivo_anulacion'])) {
+                $desc_bitacora .= ' Motivo: ' . $datos['motivo_anulacion'];
+            }
             $datos_previos = $resultado['datos_previos'] ?? '';
             $datos_nuevos = '';
             registrarBitacora($bitacoraObj, $id_modulo, $desc_bitacora, $datos_previos, $datos_nuevos);
             $resultado = array('accion' => 'eliminar', 'mensaje' => 'Pago anulado exitosamente.');
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
-            $resultado['mensaje'] = match ($resultado['codigo']) {
+            $resultado['mensaje'] = match ($resultado['codigo'] ?? '') {
                 INVALID_ID         => 'El pago no existe.',
                 ALREADY_ANNULLED   => 'El pago ya se encuentra anulado.',
                 DB_CONNECTION      => 'Ocurrio un error al conectarse con la base de datos.',
-                default            => 'Ocurrió un error inesperado en la anulación del pago.'
+                default            => $resultado['mensaje'] ?? 'Ocurrió un error inesperado en la anulación del pago.'
             };
-            //$resultado['mensaje'] = 'Ocurrio un error en el registro del pago: ' . $resultado['mensaje'];
         }
         echo json_encode($resultado);
     } catch (Exception $e) {
@@ -296,31 +245,16 @@ function eliminar($obj, $id_modulo, $bitacoraObj): void
 function registrar_vuelto($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validaciones = [
-            'codigo_pago' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Pago inválido.'],
-            'codigo_metodo' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Método de pago inválido.'],
-            'codigo_moneda' => ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Moneda inválida.'],
-            'monto_vuelto' => ['regla' => '/^\d+(\.\d{1,2})?$/', 'mensaje' => 'Monto inválido.']
-        ];
-        
-        if (!empty($_POST['referencia_vuelto'])) {
-            $validaciones['referencia_vuelto'] = ['regla' => '/^\d{4,12}$/', 'mensaje' => 'La referencia del vuelto debe tener entre 4 y 12 dígitos numéricos.'];
-        }
-        
-        validar_datos($validaciones);
-
-        if (!empty($_POST['fecha_vuelto'])) {
-            validarLimitesFecha($_POST['fecha_vuelto']);
-        }
+        validar_requeridos(['codigo_pago', 'codigo_metodo', 'codigo_moneda', 'monto_vuelto']);
 
         $datos = [
-            'codigo_pago' => $_POST['codigo_pago'],
-            'codigo_metodo' => $_POST['codigo_metodo'],
-            'codigo_moneda' => $_POST['codigo_moneda'],
-            'monto_vuelto' => $_POST['monto_vuelto'],
-            'fecha_vuelto' => $_POST['fecha_vuelto'] ?? date('Y-m-d'),
-            'referencia' => $_POST['referencia_vuelto'] ?? '',
-            'accion' => 'registrar_vuelto'
+            'codigo_pago'   => trim($_POST['codigo_pago']),
+            'codigo_metodo' => trim($_POST['codigo_metodo']),
+            'codigo_moneda' => trim($_POST['codigo_moneda']),
+            'monto_vuelto'  => trim($_POST['monto_vuelto']),
+            'fecha_vuelto'  => trim($_POST['fecha_vuelto'] ?? date('Y-m-d')),
+            'referencia'    => trim($_POST['referencia_vuelto'] ?? ''),
+            'accion'        => 'registrar_vuelto'
         ];
 
         $resultado = $obj->ProcesarDatos($datos);
@@ -337,41 +271,26 @@ function registrar_vuelto($obj, $id_modulo, $bitacoraObj): void
 function generar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        $validacionesReporte = [];
         $datosFiltro = ['accion' => 'generar'];
 
         $datosFiltro['anulados'] = isset($_POST['anulados']) ? 1 : 0;
-        if (!empty($_POST['metodo'])) {
-            $validacionesReporte['metodo'] = ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Método de pago inválido.'];
-            $datosFiltro['metodo'] = $_POST['metodo'];
-        }
-        if (!empty($_POST['moneda'])) {
-            $validacionesReporte['moneda'] = ['regla' => '/^[1-9][0-9]*$/', 'mensaje' => 'Moneda inválida.'];
-            $datosFiltro['moneda'] = $_POST['moneda'];
-        }
-        if (!empty($_POST['fecha'])) {
-            $validacionesReporte['fecha'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
-            $datosFiltro['fecha'] = $_POST['fecha'];
-        }
-        if (!empty($_POST['fecha_f'])) {
-            $validacionesReporte['fecha_f'] = ['regla' => '/^\d{4}-\d{2}-\d{2}$/', 'mensaje' => 'Formato de fecha inválido. Use AAAA-MM-DD.'];
-            $datosFiltro['fecha_f'] = $_POST['fecha_f'];
-        }
-
-        validar_datos($validacionesReporte);
+        if (!empty($_POST['metodo']))  $datosFiltro['metodo']  = trim($_POST['metodo']);
+        if (!empty($_POST['moneda']))  $datosFiltro['moneda']  = trim($_POST['moneda']);
+        if (!empty($_POST['fecha']))   $datosFiltro['fecha']   = trim($_POST['fecha']);
+        if (!empty($_POST['fecha_f'])) $datosFiltro['fecha_f'] = trim($_POST['fecha_f']);
 
         $respuesta = $obj->procesarDatos($datosFiltro);
 
-        // NUEVO: Validar si el modelo retornó un error estructurado
         if (isset($respuesta['accion']) && $respuesta['accion'] === 'error') {
-            echo json_encode(['accion' => 'error', 'mensaje' => $respuesta['mensaje']]);
-            exit();
+            $mensajeError = ($respuesta['mensaje'] == DB_CONNECTION) ? 'Error al conectar con la base de datos.' : $respuesta['mensaje'];
+            echo json_encode(['accion' => 'error', 'mensaje' => $mensajeError]);
+            return;
         }
 
         $datos = $respuesta['datos'] ?? [];
         if (empty($datos)) {
             echo json_encode(['accion' => 'error', 'mensaje' => 'No se encontraron pagos para hacer el reporte.']);
-            exit();
+            return;
         }
         $nombreVista = 'R_Pagos';
         $objG = new GenerarReporte();

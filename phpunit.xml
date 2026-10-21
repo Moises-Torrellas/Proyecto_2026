@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php" colors="true">
+    <testsuites>
+        <testsuite name="Unit">
+            <!-- Asegúrate de que esta ruta coincida exactamente con el nombre de tu carpeta -->
+            <directory>./tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+    
+    <!-- En PHPUnit 11 se usa <source> en lugar de <coverage> -->
+    <source>
+        <include>
+            <directory suffix=".php">./app</directory>
+        </include>
+    </source>
+</phpunit>
