@@ -560,296 +560,486 @@ endif;
         </div>
     </section>
     <section class="contenedor_modal" id="contenedor_modal">
-        <div class="modal ocultar" id="modal">
+        <div class="modal modal_asistente ocultar" id="modal">
             <div class="cabecera_modal">
                 <h2 class="titulo_modal" id="titulo_modal"></h2>
                 <a type="button" class="cerrar_modal" id="cerrar_modal">&times;</a>
             </div>
-            <div class="contenido_modal">
-                <form id="f" autocomplete="off">
+            <div class="contenido_modal contenido_modal_asistente">
+                <form id="f" class="asistente_formulario" autocomplete="off">
                     <input type="hidden" id="id" name="id">
-                    <h4 class="titulo_des" style="margin-top: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--color-primario); padding-bottom: 5px; color: var(--color-primario);">Datos Personales</h4>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="date" class="formulario" id="fecha_nac" name="fecha_nac">
-                                <label for="fecha_nac" class="titulo_formulario">Fecha de Nacimiento</label>
-                                <span class="mensaje" id="fecha_nac_spam"></span>
-                            </div>
+
+                    <!-- ===== Barra de progreso del registro ===== -->
+                    <div class="asistente_progreso" id="asistente_progreso">
+                        <div class="asistente_progreso_info">
+                            <span class="asistente_progreso_contador" id="asistente_contador">Paso 1 de 5</span>
+                            <span class="asistente_progreso_porcentaje"><b id="asistente_porcentaje">0%</b> completado</span>
                         </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="doc_i" name="doc_i">
-                                <label for="doc_i" class="titulo_formulario">Documento de Identidad</label>
-                                <span class="mensaje" id="doc_i_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="nombre" name="nombre">
-                                <label for="nombre" class="titulo_formulario">Primer y Segundo Nombre</label>
-                                <span class="mensaje" id="nombre_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="apellido" name="apellido">
-                                <label for="apellido" class="titulo_formulario">Primer y Segundo Apellido</label>
-                                <span class="mensaje" id="apellido_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="lugar_nacimiento" name="lugar_nacimiento">
-                                <label for="lugar_nacimiento" class="titulo_formulario">Lugar de Nacimiento</label>
-                                <span class="mensaje" id="lugar_nacimiento_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="edad" name="edad" readonly>
-                                <label for="edad" class="titulo_formulario">Edad (Año Calendario)</label>
-                                <span class="mensaje" id="edad_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="genero" id="genero" class="formulario select">
-                                    <option id="todos" value="T" selected>Todos</option>
-                                    <option value="H">Hombre</option>
-                                    <option value="M">Mujer</option>
-                                </select>
-                                <label for="genero" class="titulo_formulario">Genero</label>
-                                <span class="mensaje" id="genero_span"></span>
-                            </div>
+                        <div class="asistente_indicadores_contenedor">
+                            <span class="asistente_linea_pista"></span>
+                            <span class="asistente_linea_relleno" id="asistente_linea_relleno"></span>
+                            <ol class="asistente_indicadores">
+                                <li class="asistente_indicador activo" data-ir-paso="0">
+                                    <span class="asistente_indicador_circulo">
+                                        <i data-lucide="user" class="icono_paso"></i>
+                                        <i data-lucide="check" class="icono_completado"></i>
+                                    </span>
+                                    <span class="asistente_indicador_texto">Personales</span>
+                                </li>
+                                <li class="asistente_indicador" data-ir-paso="1">
+                                    <span class="asistente_indicador_circulo">
+                                        <i data-lucide="trophy" class="icono_paso"></i>
+                                        <i data-lucide="check" class="icono_completado"></i>
+                                    </span>
+                                    <span class="asistente_indicador_texto">Deportivos</span>
+                                </li>
+                                <li class="asistente_indicador" data-ir-paso="2">
+                                    <span class="asistente_indicador_circulo">
+                                        <i data-lucide="contact" class="icono_paso"></i>
+                                        <i data-lucide="check" class="icono_completado"></i>
+                                    </span>
+                                    <span class="asistente_indicador_texto">Contacto</span>
+                                </li>
+                                <li class="asistente_indicador" data-ir-paso="3">
+                                    <span class="asistente_indicador_circulo">
+                                        <i data-lucide="heart-pulse" class="icono_paso"></i>
+                                        <i data-lucide="check" class="icono_completado"></i>
+                                    </span>
+                                    <span class="asistente_indicador_texto">Salud</span>
+                                </li>
+                                <li class="asistente_indicador" data-ir-paso="4">
+                                    <span class="asistente_indicador_circulo">
+                                        <i data-lucide="camera" class="icono_paso"></i>
+                                        <i data-lucide="check" class="icono_completado"></i>
+                                    </span>
+                                    <span class="asistente_indicador_texto">Foto</span>
+                                </li>
+                            </ol>
                         </div>
                     </div>
 
-                    <h4 class="titulo_des" style="margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid var(--color-primario); padding-bottom: 5px; color: var(--color-primario);">Datos Deportivos</h4>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="categoria" id="categoria" class="formulario select">
+                    <!-- ===== Secciones deslizables ===== -->
+                    <div class="asistente_vista" id="asistente_vista">
+                        <div class="asistente_pista" id="asistente_pista">
 
-                                </select>
-                                <label for="categoria" class="titulo_formulario">Categoria</label>
-                                <span class="mensaje" id="categoria_span"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="posicion" id="posicion" class="formulario select">
-
-                                </select>
-                                <label for="posicion" class="titulo_formulario">Posición</label>
-                                <span class="mensaje" id="posicion_span"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="number" class="formulario" id="dorsal" name="dorsal">
-                                <label for="dorsal" class="titulo_formulario">Dorsal</label>
-                                <span class="mensaje" id="dorsal_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="estatus" id="estatus" class="formulario select" disabled>
-                                    <option value="T" selected>Todos</option>
-                                    <option value="1">Activos</option>
-                                    <option value="2">Retirados</option>
-                                </select>
-                                <label for="estatus" class="titulo_formulario">Estatus</label>
-                                <span class="mensaje" id="estatus_span"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h4 class="titulo_des" style="margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid var(--color-primario); padding-bottom: 5px; color: var(--color-primario);">Datos de Contacto</h4>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="representante" id="representante" class="formulario select">
-
-                                </select>
-                                <label for="representante" class="titulo_formulario">Representante</label>
-                                <span class="mensaje" id="representante_span"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="telefono" name="telefono">
-                                <label for="telefono" class="titulo_formulario">Telefono</label>
-                                <span class="mensaje" id="telefono_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="correo" name="correo">
-                                <label for="correo" class="titulo_formulario">Correo Electrónico</label>
-                                <span class="mensaje" id="correo_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="instagram" name="instagram">
-                                <label for="instagram" class="titulo_formulario">Instagram (Opcional)</label>
-                                <span class="mensaje" id="instagram_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="direccion" name="direccion">
-                                <label for="direccion" class="titulo_formulario">Direccion</label>
-                                <span class="mensaje" id="direccion_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="municipio" name="municipio">
-                                <label for="municipio" class="titulo_formulario">Municipio</label>
-                                <span class="mensaje" id="municipio_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h4 class="titulo_des" style="margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid var(--color-primario); padding-bottom: 5px; color: var(--color-primario);">Salud y Medidas</h4>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="number" class="formulario" step="0.01" id="peso" name="peso">
-                                <label for="peso" class="titulo_formulario">Peso (kg)</label>
-                                <span class="mensaje" id="peso_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="number" class="formulario" id="estatura" name="estatura">
-                                <label for="estatura" class="titulo_formulario">Estatura (cm)</label>
-                                <span class="mensaje" id="estatura_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="talla_pantalon" id="talla_pantalon" class="formulario select">
-                                    <option value="" selected disabled>Seleccione...</option>
-                                    <option value="XS">XS</option>
-                                    <option value="S">S</option>
-                                    <option value="M">M</option>
-                                    <option value="L">L</option>
-                                    <option value="XL">XL</option>
-                                    <option value="XXL">XXL</option>
-                                </select>
-                                <label for="talla_pantalon" class="titulo_formulario">Talla de Pantalón</label>
-                                <span class="mensaje" id="talla_pantalon_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="talla_franela" id="talla_franela" class="formulario select">
-                                    <option value="" selected disabled>Seleccione...</option>
-                                    <option value="XS">XS</option>
-                                    <option value="S">S</option>
-                                    <option value="M">M</option>
-                                    <option value="L">L</option>
-                                    <option value="XL">XL</option>
-                                    <option value="XXL">XXL</option>
-                                </select>
-                                <label for="talla_franela" class="titulo_formulario">Talla de Franela</label>
-                                <span class="mensaje" id="talla_franela_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="talla_calzado" name="talla_calzado">
-                                <label for="talla_calzado" class="titulo_formulario">Talla de Calzado</label>
-                                <span class="mensaje" id="talla_calzado_spam"></span>
-                            </div>
-                        </div>
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <select name="tipo_sangre" id="tipo_sangre" class="formulario select">
-                                    <option value="" selected disabled>Seleccione...</option>
-                                    <option value="A+">A+</option>
-                                    <option value="A-">A-</option>
-                                    <option value="B+">B+</option>
-                                    <option value="B-">B-</option>
-                                    <option value="AB+">AB+</option>
-                                    <option value="AB-">AB-</option>
-                                    <option value="O+">O+</option>
-                                    <option value="O-">O-</option>
-                                </select>
-                                <label for="tipo_sangre" class="titulo_formulario">Tipo de Sangre</label>
-                                <span class="mensaje" id="tipo_sangre_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <label for="es_alergico" class="titulo_formulario">¿Es alérgico?</label>
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="es_alergico" name="es_alergico" class="checkbox" value="1">
-                                    <span class="custom-checkbox"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="colum" id="col_alergias_detalle">
-                            <div class="caja_formulario campo_deshabilitado">
-                                <input type="text" class="formulario" id="alergias_detalle" name="alergias_detalle" disabled>
-                                <label for="alergias_detalle" class="titulo_formulario">Detalle de alergias</label>
-                                <span class="mensaje" id="alergias_detalle_spam"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h4 class="titulo_des" style="margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid var(--color-primario); padding-bottom: 5px; color: var(--color-primario);">Foto de Perfil</h4>
-                    <div class="row">
-                        <div class="colum">
-                            <div class="caja_formulario subir_foto">
-
-                                <div class="preview_contenedor">
-                                    <img id="foto_previa" src="" style="display: none;">
-                                    <i id="icono_default" data-lucide="circle-user" style="display: block; width: 80px; height: 80px; color: var(--color-primario);"></i>
+                            <!-- PASO 1: Datos Personales -->
+                            <div class="asistente_paso activo" data-paso="personales">
+                                <div class="asistente_paso_cabecera">
+                                    <h4 class="titulo_des titulo_seccion">Datos Personales</h4>
+                                    <p class="asistente_paso_descripcion">Información básica e identificación del atleta.</p>
                                 </div>
-
-                                <input type="file" class="input_foto_oculto" id="foto" name="foto" accept="image/*">
-
-                                <label for="foto" class="btn_subir_foto">
-                                    <i data-lucide="upload-cloud"></i> Seleccionar Foto
-                                </label>
-
-                                <span class="mensaje" id="foto_spam"></span>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="date" class="formulario" id="fecha_nac" name="fecha_nac">
+                                            <label for="fecha_nac" class="titulo_formulario">Fecha de Nacimiento</label>
+                                            <span class="mensaje" id="fecha_nac_spam"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="doc_i" name="doc_i">
+                                            <label for="doc_i" class="titulo_formulario">Documento de Identidad</label>
+                                            <span class="mensaje" id="doc_i_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="nombre" name="nombre">
+                                            <label for="nombre" class="titulo_formulario">Primer y Segundo Nombre</label>
+                                            <span class="mensaje" id="nombre_spam"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="apellido" name="apellido">
+                                            <label for="apellido" class="titulo_formulario">Primer y Segundo Apellido</label>
+                                            <span class="mensaje" id="apellido_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="lugar_nacimiento" name="lugar_nacimiento">
+                                            <label for="lugar_nacimiento" class="titulo_formulario">Lugar de Nacimiento</label>
+                                            <span class="mensaje" id="lugar_nacimiento_spam"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="edad" name="edad" readonly>
+                                            <label for="edad" class="titulo_formulario">Edad (Año Calendario)</label>
+                                            <span class="mensaje" id="edad_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <select name="genero" id="genero" class="formulario select">
+                                                <option id="todos" value="T" selected>Todos</option>
+                                                <option value="H">Hombre</option>
+                                                <option value="M">Mujer</option>
+                                            </select>
+                                            <label for="genero" class="titulo_formulario">Genero</label>
+                                            <span class="mensaje" id="genero_span"></span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+
+                            <!-- PASO 2: Datos Deportivos -->
+                            <div class="asistente_paso" data-paso="deportivos">
+                                <div class="asistente_paso_cabecera">
+                                    <h4 class="titulo_des titulo_seccion">Datos Deportivos</h4>
+                                    <p class="asistente_paso_descripcion">Categoría, posición y dorsal con el que competirá.</p>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <select name="categoria" id="categoria" class="formulario select">
+
+                                            </select>
+                                            <label for="categoria" class="titulo_formulario">Categoria</label>
+                                            <span class="mensaje" id="categoria_span"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <select name="posicion" id="posicion" class="formulario select">
+
+                                            </select>
+                                            <label for="posicion" class="titulo_formulario">Posición</label>
+                                            <span class="mensaje" id="posicion_span"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="number" class="formulario" id="dorsal" name="dorsal">
+                                            <label for="dorsal" class="titulo_formulario">Dorsal</label>
+                                            <span class="mensaje" id="dorsal_spam"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <select name="estatus" id="estatus" class="formulario select" disabled>
+                                                <option value="T" selected>Todos</option>
+                                                <option value="1">Activos</option>
+                                                <option value="2">Retirados</option>
+                                            </select>
+                                            <label for="estatus" class="titulo_formulario">Estatus</label>
+                                            <span class="mensaje" id="estatus_span"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PASO 3: Datos de Contacto -->
+                            <div class="asistente_paso" data-paso="contacto">
+                                <div class="asistente_paso_cabecera">
+                                    <h4 class="titulo_des titulo_seccion">Datos de Contacto</h4>
+                                    <p class="asistente_paso_descripcion">Representante y medios para comunicarse con el atleta.</p>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario caja_con_accion">
+                                            <div class="caja_select_accion">
+                                                <select name="representante" id="representante" class="formulario select">
+
+                                                </select>
+                                            </div>
+                                            <?php if (!empty($puede_registrar_rep)) : ?>
+                                                <button type="button" class="btn_accion_campo" id="btn_nuevo_representante" data-tippy-content="Registrar nuevo representante">
+                                                    <i data-lucide="user-plus"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                            <label for="representante" class="titulo_formulario">Representante</label>
+                                            <span class="mensaje" id="representante_span"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="telefono" name="telefono">
+                                            <label for="telefono" class="titulo_formulario">Telefono</label>
+                                            <span class="mensaje" id="telefono_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="correo" name="correo">
+                                            <label for="correo" class="titulo_formulario">Correo Electrónico</label>
+                                            <span class="mensaje" id="correo_spam"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="instagram" name="instagram">
+                                            <label for="instagram" class="titulo_formulario">Instagram (Opcional)</label>
+                                            <span class="mensaje" id="instagram_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="direccion" name="direccion">
+                                            <label for="direccion" class="titulo_formulario">Direccion</label>
+                                            <span class="mensaje" id="direccion_spam"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="municipio" name="municipio">
+                                            <label for="municipio" class="titulo_formulario">Municipio</label>
+                                            <span class="mensaje" id="municipio_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PASO 4: Salud y Medidas -->
+                            <div class="asistente_paso" data-paso="salud">
+                                <div class="asistente_paso_cabecera">
+                                    <h4 class="titulo_des titulo_seccion">Salud y Medidas</h4>
+                                    <p class="asistente_paso_descripcion">Medidas físicas, tallas de uniforme e información médica.</p>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="number" class="formulario" step="0.01" id="peso" name="peso">
+                                            <label for="peso" class="titulo_formulario">Peso (kg)</label>
+                                            <span class="mensaje" id="peso_spam"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="number" class="formulario" id="estatura" name="estatura">
+                                            <label for="estatura" class="titulo_formulario">Estatura (cm)</label>
+                                            <span class="mensaje" id="estatura_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <select name="talla_pantalon" id="talla_pantalon" class="formulario select">
+                                                <option value="" selected disabled>Seleccione...</option>
+                                                <option value="XS">XS</option>
+                                                <option value="S">S</option>
+                                                <option value="M">M</option>
+                                                <option value="L">L</option>
+                                                <option value="XL">XL</option>
+                                                <option value="XXL">XXL</option>
+                                            </select>
+                                            <label for="talla_pantalon" class="titulo_formulario">Talla de Pantalón</label>
+                                            <span class="mensaje" id="talla_pantalon_spam"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <select name="talla_franela" id="talla_franela" class="formulario select">
+                                                <option value="" selected disabled>Seleccione...</option>
+                                                <option value="XS">XS</option>
+                                                <option value="S">S</option>
+                                                <option value="M">M</option>
+                                                <option value="L">L</option>
+                                                <option value="XL">XL</option>
+                                                <option value="XXL">XXL</option>
+                                            </select>
+                                            <label for="talla_franela" class="titulo_formulario">Talla de Franela</label>
+                                            <span class="mensaje" id="talla_franela_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="talla_calzado" name="talla_calzado">
+                                            <label for="talla_calzado" class="titulo_formulario">Talla de Calzado</label>
+                                            <span class="mensaje" id="talla_calzado_spam"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <select name="tipo_sangre" id="tipo_sangre" class="formulario select">
+                                                <option value="" selected disabled>Seleccione...</option>
+                                                <option value="A+">A+</option>
+                                                <option value="A-">A-</option>
+                                                <option value="B+">B+</option>
+                                                <option value="B-">B-</option>
+                                                <option value="AB+">AB+</option>
+                                                <option value="AB-">AB-</option>
+                                                <option value="O+">O+</option>
+                                                <option value="O-">O-</option>
+                                            </select>
+                                            <label for="tipo_sangre" class="titulo_formulario">Tipo de Sangre</label>
+                                            <span class="mensaje" id="tipo_sangre_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <label for="es_alergico" class="titulo_formulario">¿Es alérgico?</label>
+                                            <label class="checkbox-container">
+                                                <input type="checkbox" id="es_alergico" name="es_alergico" class="checkbox" value="1">
+                                                <span class="custom-checkbox"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="colum" id="col_alergias_detalle">
+                                        <div class="caja_formulario campo_deshabilitado">
+                                            <input type="text" class="formulario" id="alergias_detalle" name="alergias_detalle" disabled>
+                                            <label for="alergias_detalle" class="titulo_formulario">Detalle de alergias</label>
+                                            <span class="mensaje" id="alergias_detalle_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PASO 5: Foto de Perfil -->
+                            <div class="asistente_paso" data-paso="foto">
+                                <div class="asistente_paso_cabecera">
+                                    <h4 class="titulo_des titulo_seccion">Foto de Perfil</h4>
+                                    <p class="asistente_paso_descripcion">Opcional. Puede agregarla ahora o más adelante.</p>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario subir_foto">
+
+                                            <div class="preview_contenedor">
+                                                <img id="foto_previa" src="" style="display: none;">
+                                                <i id="icono_default" data-lucide="circle-user" style="display: block; width: 80px; height: 80px; color: var(--color-primario);"></i>
+                                            </div>
+
+                                            <input type="file" class="input_foto_oculto" id="foto" name="foto" accept="image/*">
+
+                                            <label for="foto" class="btn_subir_foto">
+                                                <i data-lucide="upload-cloud"></i> Seleccionar Foto
+                                            </label>
+
+                                            <span class="mensaje" id="foto_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
+                    <!-- ===== Navegación entre secciones ===== -->
+                    <div class="asistente_navegacion" id="asistente_navegacion">
+                        <button type="button" class="btn btn_verde asistente_btn asistente_oculto" id="btn_anterior">
+                            <i data-lucide="arrow-left"></i> Anterior
+                        </button>
+                        <button type="button" class="btn btn_azul asistente_btn asistente_btn_derecha" id="btn_siguiente">
+                            Siguiente <i data-lucide="arrow-right"></i>
+                        </button>
+                        <button type="button" class="btn btn_azul asistente_btn_final asistente_btn_derecha asistente_oculto" id="proceso"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <?php if (!empty($puede_registrar_rep)) : ?>
+    <!-- ===== Modal apilado: registro rápido de representante ===== -->
+    <section class="contenedor_modal contenedor_modal_apilado" id="contenedor_modal_rep">
+        <div class="modal modal_representante ocultar" id="modal_rep">
+            <div class="cabecera_modal">
+                <h2 class="titulo_modal">Registrar Representante</h2>
+                <a type="button" class="cerrar_modal" id="cerrar_modal_rep">&times;</a>
+            </div>
+            <div class="contenido_modal">
+                <form id="f_rep" autocomplete="off">
+                    <div class="aviso_modal">
+                        <i data-lucide="info"></i>
+                        <p>El progreso del registro del atleta se conserva. Al guardar, el representante quedará seleccionado automáticamente.</p>
+                    </div>
                     <div class="row">
                         <div class="colum">
-                            <button type="button" class="btn btn_azul" id="proceso"></button>
-
+                            <div class="caja_formulario">
+                                <select name="nacionalidad" id="rep_nacionalidad" class="formulario select">
+                                    <option value="V" selected>V - Venezolano</option>
+                                    <option value="E">E - Extrangero</option>
+                                    <option value="P">P - Pasaporte</option>
+                                </select>
+                                <label for="rep_nacionalidad" class="titulo_formulario">Tipo de Documento</label>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="rep_cedula" name="cedula">
+                                <label for="rep_cedula" class="titulo_formulario">Cedula</label>
+                                <span class="mensaje" id="rep_cedula_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="rep_nombre" name="nombre">
+                                <label for="rep_nombre" class="titulo_formulario">Nombre</label>
+                                <span class="mensaje" id="rep_nombre_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="rep_apellido" name="apellido">
+                                <label for="rep_apellido" class="titulo_formulario">Apellido</label>
+                                <span class="mensaje" id="rep_apellido_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="rep_telefono" name="telefono">
+                                <label for="rep_telefono" class="titulo_formulario">Telefono</label>
+                                <span class="mensaje" id="rep_telefono_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="rep_direccion" name="direccion">
+                                <label for="rep_direccion" class="titulo_formulario">Direccion</label>
+                                <span class="mensaje" id="rep_direccion_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="rep_correo" name="correo">
+                                <label for="rep_correo" class="titulo_formulario">Correo Electrónico</label>
+                                <span class="mensaje" id="rep_correo_spam"></span>
+                            </div>
+                        </div>
+                        <div class="colum">
+                            <div class="caja_formulario">
+                                <input type="text" class="formulario" id="rep_instagram" name="instagram">
+                                <label for="rep_instagram" class="titulo_formulario">Instagram (Opcional)</label>
+                                <span class="mensaje" id="rep_instagram_spam"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="colum">
+                            <button type="button" class="btn btn_azul" id="proceso_rep">Registrar Representante</button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
     </section>
+    <?php endif; ?>
     
     <section class="contenedor_modal" id="contenedor_modal_historial">
         <div class="modal ocultar" id="modal_historial">
