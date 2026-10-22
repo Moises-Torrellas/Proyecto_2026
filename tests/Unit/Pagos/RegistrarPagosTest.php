@@ -40,11 +40,6 @@ class RegistrarPagosTest extends TestCase
             {
                 return self::$pdoTemporal;
             }
-
-            public function getConexion(string $db = 'general')
-            {
-                return self::$pdoTemporal;
-            }
         };
 
         $modeloFake::$pdoTemporal = $pdoMock;

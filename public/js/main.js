@@ -455,8 +455,7 @@ function muestraMensaje(icono, tiempo, titulo, mensaje) {
         html: mensaje,
         showConfirmButton: true,
         confirmButtonText: 'Entendido',
-        confirmButtonColor: (icono === 'error') ? "#d30000" : "#00a200",
-        timer: tiempo, 
+        confirmButtonColor: (icono === 'error') ? "#d30000" : "#00a200", 
         customClass: {
             popup: "mi-popup",
             title: "mi-titulo",
@@ -612,7 +611,7 @@ function confirmarAnulacion(titulo, callback) {
 
             // 1. Validar que no esté vacío
             if (textoLimpio === "") {
-                return "Â¡Es obligatorio ingresar un motivo para la anulación!";
+                return "¡Es obligatorio ingresar un motivo para la anulación!";
             }
 
             // 2. Validar que cumpla con la longitud mínima (ej. 10 caracteres para que sea un motivo real)

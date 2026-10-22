@@ -57,7 +57,7 @@ class ModeloAtletas extends Conexion
     private function verificarDorsalCategoria($dorsal, $categoria, $id_atleta = null): bool
     {
         if (empty($dorsal) || empty($categoria)) return true;
-        
+
         $conex = $this->conex();
         if ($id_atleta !== null) {
             $stmt = $conex->prepare("SELECT COUNT(*) FROM inscripciones WHERE dorsal = :dorsal AND codigo_categoria = :categoria AND estatus = 1 AND codigo_atleta != :id");
@@ -272,17 +272,17 @@ class ModeloAtletas extends Conexion
         ];
 
         try {
-            
-            $ObjCat = new ModeloCategorias();
-            $ObjRep = new ModeloRepresentantes();
-            $ObjPos = new ModeloPosiciones();
 
+
+            $ObjCat = new ModeloCategorias();
             if (!$ObjCat->verificarCategoria($this->categoria)) {
                 throw new Exception(INVALID_ID);
             }
+            $ObjPos = new ModeloPosiciones();
             if (!$ObjPos->verificarPosiciones($this->posicion)) {
                 throw new Exception(INVALID_ID . '0');
             }
+            $ObjRep = new ModeloRepresentantes();
             if (!empty($this->representante) && $this->representante !== '0') {
                 if (!$ObjRep->verificarRepresentantes($this->representante)) {
                     throw new Exception(INVALID_ID . '1');
@@ -423,29 +423,37 @@ class ModeloAtletas extends Conexion
             $conex->beginTransaction();
 
             if (!empty($this->doc_identidad)) {
-                if ($this->verificarExistencia('doc_identidad', $this->doc_identidad, 'identidad_atleta', null) &&
-                    !$this->verificarExistenciaPropia('doc_identidad', $this->doc_identidad, $this->id, 'identidad_atleta', null)) {
+                if (
+                    $this->verificarExistencia('doc_identidad', $this->doc_identidad, 'identidad_atleta', null) &&
+                    !$this->verificarExistenciaPropia('doc_identidad', $this->doc_identidad, $this->id, 'identidad_atleta', null)
+                ) {
                     throw new Exception(DUPLICATE_CEDULA);
                 }
             }
 
             if (!empty($this->telefono)) {
-                if ($this->verificarExistencia('telefono', $this->telefono, 'contacto_atleta', null) &&
-                    !$this->verificarExistenciaPropia('telefono', $this->telefono, $this->id, 'contacto_atleta', null)) {
+                if (
+                    $this->verificarExistencia('telefono', $this->telefono, 'contacto_atleta', null) &&
+                    !$this->verificarExistenciaPropia('telefono', $this->telefono, $this->id, 'contacto_atleta', null)
+                ) {
                     throw new Exception(DUPLICATE_PHONE);
                 }
             }
 
             if (!empty($this->correo)) {
-                if ($this->verificarExistencia('correo', $this->correo, 'contacto_atleta', null) &&
-                    !$this->verificarExistenciaPropia('correo', $this->correo, $this->id, 'contacto_atleta', null)) {
+                if (
+                    $this->verificarExistencia('correo', $this->correo, 'contacto_atleta', null) &&
+                    !$this->verificarExistenciaPropia('correo', $this->correo, $this->id, 'contacto_atleta', null)
+                ) {
                     throw new Exception(DUPLICATE_EMAIL);
                 }
             }
 
             if (!empty($this->instagram)) {
-                if ($this->verificarExistencia('instagram', $this->instagram, 'contacto_atleta', null) &&
-                    !$this->verificarExistenciaPropia('instagram', $this->instagram, $this->id, 'contacto_atleta', null)) {
+                if (
+                    $this->verificarExistencia('instagram', $this->instagram, 'contacto_atleta', null) &&
+                    !$this->verificarExistenciaPropia('instagram', $this->instagram, $this->id, 'contacto_atleta', null)
+                ) {
                     throw new Exception(DUPLICATE_INSTAGRAM);
                 }
             }
@@ -614,7 +622,7 @@ class ModeloAtletas extends Conexion
         try {
             $codigo = ($id === null) ? $this->id : $id;
             $conex = $this->conex();
-            
+
             $sentencia = "SELECT 
                 i.fecha_inscripcion as fecha,
                 'Inscripción' as tipo,
@@ -635,13 +643,13 @@ class ModeloAtletas extends Conexion
             WHERE i.codigo_atleta = :id2
             
             ORDER BY fecha DESC";
-            
+
             $stmt = $conex->prepare($sentencia);
             $stmt->bindParam(':id1', $codigo, PDO::PARAM_INT);
             $stmt->bindParam(':id2', $codigo, PDO::PARAM_INT);
             $stmt->execute();
             $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             return array('accion' => 'historial', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Atletas', $e->getMessage(), 'Modelo_Historial');
@@ -756,8 +764,10 @@ class ModeloAtletas extends Conexion
             }
 
             if (!empty($this->correo)) {
-                if ($this->verificarExistencia('correo', $this->correo, 'contacto_atleta', null) &&
-                    !$this->verificarExistenciaPropia('correo', $this->correo, $this->id, 'contacto_atleta', null)) {
+                if (
+                    $this->verificarExistencia('correo', $this->correo, 'contacto_atleta', null) &&
+                    !$this->verificarExistenciaPropia('correo', $this->correo, $this->id, 'contacto_atleta', null)
+                ) {
                     throw new Exception(DUPLICATE_EMAIL);
                 }
             }

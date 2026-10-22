@@ -66,36 +66,38 @@ function manejarSolicitudInicio($obj, $id_modulo, $bitacoraObj): void
 function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
 {
 
-    /* $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
-    
-    // Tomamos la clave secreta directamente de las variables de entorno
-    $recaptcha_secret = $_ENV['RECAPTCHA_SECRET_KEY'] ?? ''; 
+    if (filter_var($_ENV['RECAPTCHA_ACTIVO'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+        $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
 
-    if (empty($recaptcha_response)) {
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['accion' => 'error', 'resultado' => 0, 'mensaje' => 'Por favor, completa el CAPTCHA.']);
-        exit();
+        // Tomamos la clave secreta directamente de las variables de entorno
+        $recaptcha_secret = $_ENV['RECAPTCHA_SECRET_KEY'] ?? '';
+
+        if (empty($recaptcha_response)) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['accion' => 'error', 'resultado' => 0, 'mensaje' => 'Por favor, completa el CAPTCHA.']);
+            exit();
+        }
+
+        // Petición a los servidores de Google para validar el token
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://www.google.com/recaptcha/api/siteverify');
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+            'secret' => $recaptcha_secret,
+            'response' => $recaptcha_response
+        ]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $respuesta_curl = curl_exec($ch);
+        curl_close($ch);
+
+        $datos_recaptcha = json_decode($respuesta_curl);
+
+        if (!$datos_recaptcha->success) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['accion' => 'error', 'resultado' => 0, 'mensaje' => 'Validación de CAPTCHA fallida. Intenta de nuevo.']);
+            exit();
+        }
     }
-
-    // Petición a los servidores de Google para validar el token
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, 'https://www.google.com/recaptcha/api/siteverify');
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-        'secret' => $recaptcha_secret,
-        'response' => $recaptcha_response
-    ]));
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $respuesta_curl = curl_exec($ch);
-    curl_close($ch);
-
-    $datos_recaptcha = json_decode($respuesta_curl);
-
-    if (!$datos_recaptcha->success) {
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['accion' => 'error', 'resultado' => 0, 'mensaje' => 'Validación de CAPTCHA fallida. Intenta de nuevo.']);
-        exit();
-    } */
 
     $rateLimit = new RateLimit(10, 60);
     $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
