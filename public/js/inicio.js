@@ -34,11 +34,15 @@ function validarEnvio() {
         muestraMensaje("error", 2000, "Error", "Tiene que ingresar una contraseña valido");
         return false;
     }
-    /* var response = grecaptcha.getResponse();
-    if(response.length === 0) {
-        muestraMensaje("error", 2000, "Error", "Por favor, verifica que no eres un robot marcando el CAPTCHA.");
-        return false;
-    } */
+
+    var recaptchaActivo = $('meta[name="recaptcha-activo"]').attr('content') === 'true';
+    if (recaptchaActivo && $('.g-recaptcha').length > 0 && typeof grecaptcha !== 'undefined') {
+        var response = grecaptcha.getResponse();
+        if (response.length === 0) {
+            muestraMensaje("error", 2000, "Error", "Por favor, verifica que no eres un robot marcando el CAPTCHA.");
+            return false;
+        }
+    }
     return true;
 }
 
