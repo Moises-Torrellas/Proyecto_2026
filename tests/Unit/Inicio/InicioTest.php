@@ -2,11 +2,13 @@
 
 namespace tests\Unit\Inicio;
 
+use App\modelo\Conexion;
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloInicio;
 use PDO;
 use PDOStatement;
 use PHPUnit\Framework\Attributes\Group;
+use ReflectionClass;
 
 #[Group("unit")]
 class InicioTest extends TestCase{
@@ -31,25 +33,15 @@ class InicioTest extends TestCase{
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willReturn($mock);
 
-        // 2. Arrange: Creamos un "Fake" (Falsificación) según Concepto 2.4
-        // Usamos una clase anónima para esquivar la restricción de métodos estáticos
-        $modeloFake = new class extends ModeloInicio {
-            // Propiedad estática para guardar nuestro Mock
-            public static $pdoTemporal;
-
-            // Sobrescribimos el método estático de la clase Conexion
-            public static function conexSG() {
-                return self::$pdoTemporal;
-            }
-        };
-
-        // Inyectamos nuestro PDO simulado en la clase falsa
-        $modeloFake::$pdoTemporal = $pdoMock;
+        $reflecion = new ReflectionClass(Conexion::class);
+        $propiedad = $reflecion->getProperty('instanciaSG');
+        $propiedad->setValue(null,$pdoMock);
 
         $datos = ['cedula'=>'78954125', 'clave'=>'MiClave123$'];
 
         // 3. Act: Ejecutamos la unidad
-        $resultado = $modeloFake->ProcesarDatos($datos);
+        $modelo = new ModeloInicio();
+        $resultado = $modelo->ProcesarDatos($datos);
 
         // 4. Assert: Afirmamos los resultados (ya puedes borrar el var_dump)
         $this->assertEquals('inicio', $resultado['accion']);
