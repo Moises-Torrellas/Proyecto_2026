@@ -35,6 +35,8 @@ class ModeloPagos extends Conexion
         $this->llavePrimaria = 'codigo_pago';
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {

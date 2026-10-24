@@ -31,6 +31,8 @@ class ModeloEstadisticas extends Conexion
         $this->llavePrimaria = 'codigo_dtll_prtc';
     }
 
+    use VerificarExistencia;
+
     public function setHistorial(ModeloHistorial $obj)
     {
         $this->ModeloHistorial = $obj;

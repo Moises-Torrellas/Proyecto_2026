@@ -29,6 +29,8 @@ class ModeloRepresentantes extends Conexion
 
         $this->llavePrimaria = 'codigo_representante';
     }
+
+    use VerificarExistencia;
     private function ValidarExpresiones(array $datos): void
     {
         $accion = $datos['accion'] ?? '';

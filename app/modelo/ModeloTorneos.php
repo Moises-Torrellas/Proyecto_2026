@@ -23,6 +23,8 @@ class ModeloTorneos extends Conexion
         $this->llavePrimaria = 'codigo_torneo'; // Ajustado a la BD
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {

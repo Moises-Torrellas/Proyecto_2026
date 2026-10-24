@@ -22,6 +22,8 @@ class ModeloCategoriaCatalogo extends Conexion
         $this->llavePrimaria = 'id_categoria';
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {

@@ -20,6 +20,8 @@ class ModeloModulos extends Conexion
 
         $this->llavePrimaria = 'id_modulo';
     }
+
+    use VerificarExistencia;
     private function ValidarExpresiones(array $datos): void
     {
         if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {

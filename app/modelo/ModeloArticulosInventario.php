@@ -14,6 +14,8 @@ class ModeloArticulosInventario extends Conexion
         $this->llavePrimaria = 'codigo_articulo';
     }
 
+    use VerificarExistencia;
+
     private $filtro;
     private $filtro_catalogo;
     private $filtro_estado;

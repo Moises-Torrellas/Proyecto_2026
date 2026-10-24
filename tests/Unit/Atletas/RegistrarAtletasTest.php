@@ -29,111 +29,13 @@ class RegistrarAtletasTest extends TestCase
     }
 
     /**
-     * Crea una instancia anónima de ModeloAtletas inyectando el mock de PDO.
+     * Inyecta el mock de PDO en la instancia singleton de Conexion.
      */
-    private function crearModeloConPDOMock(PDO $pdoMock): ModeloAtletas
+    private function crearModeloConPDOMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
         $propiedad = $reflector->getProperty('instancia');
         $propiedad->setValue(null, $pdoMock);
-
-        $modeloFake = new class extends ModeloAtletas {
-            public static $pdoTemporal;
-
-            public static function conex()
-            {
-                return self::$pdoTemporal;
-            }
-        };
-
-        $modeloFake::$pdoTemporal = $pdoMock;
-        return $modeloFake;
-    }
-
-    /**
-     * Configura un mock de PDO flexible para simular las consultas de verificación
-     * y la ejecución del procedimiento almacenado RegistrarAtletaCompleto.
-     */
-    private function configurarPdoMock(array $config = []): PDO
-    {
-        $categoriaExiste     = $config['categoriaExiste'] ?? true;
-        $posicionExiste      = $config['posicionExiste'] ?? true;
-        $representanteExiste = $config['representanteExiste'] ?? true;
-        $docExiste           = $config['docExiste'] ?? false;
-        $telefonoExiste      = $config['telefonoExiste'] ?? false;
-        $correoExiste        = $config['correoExiste'] ?? false;
-        $instagramExiste     = $config['instagramExiste'] ?? false;
-        $dorsalOcupado       = $config['dorsalOcupado'] ?? false;
-        $spResultado         = $config['spResultado'] ?? 1;
-        $spLanzaExcepcion    = $config['spLanzaExcepcion'] ?? false;
-
-        $pdoMock = $this->createMock(PDO::class);
-
-        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use (
-            $categoriaExiste,
-            $posicionExiste,
-            $representanteExiste,
-            $docExiste,
-            $telefonoExiste,
-            $correoExiste,
-            $instagramExiste,
-            $dorsalOcupado,
-            $spLanzaExcepcion,
-            &$config
-        ) {
-            $stmt = $this->createMock(PDOStatement::class);
-            $stmt->method('execute')->willReturn(true);
-            $stmt->method('closeCursor')->willReturn(true);
-
-            if (str_contains($sql, '`categorias`')) {
-                $stmt->method('fetchColumn')->willReturn($categoriaExiste ? 1 : 0);
-            } elseif (str_contains($sql, '`posiciones`')) {
-                $stmt->method('fetchColumn')->willReturn($posicionExiste ? 1 : 0);
-            } elseif (str_contains($sql, '`representantes`')) {
-                $stmt->method('fetchColumn')->willReturn($representanteExiste ? 1 : 0);
-            } elseif (str_contains($sql, '`identidad_atleta`')) {
-                $stmt->method('fetchColumn')->willReturn($docExiste ? 1 : 0);
-            } elseif (str_contains($sql, '`contacto_atleta`')) {
-                if (str_contains($sql, 'telefono')) {
-                    $stmt->method('fetchColumn')->willReturn($telefonoExiste ? 1 : 0);
-                } elseif (str_contains($sql, 'correo')) {
-                    $stmt->method('fetchColumn')->willReturn($correoExiste ? 1 : 0);
-                } elseif (str_contains($sql, 'instagram')) {
-                    $stmt->method('fetchColumn')->willReturn($instagramExiste ? 1 : 0);
-                } else {
-                    $stmt->method('fetchColumn')->willReturn(0);
-                }
-            } elseif (str_contains($sql, 'inscripciones')) {
-                $stmt->method('fetchColumn')->willReturn($dorsalOcupado ? 1 : 0);
-            } elseif (str_contains($sql, 'RegistrarAtletaCompleto')) {
-                if ($spLanzaExcepcion) {
-                    $stmt->method('execute')->willThrowException(
-                        is_object($spLanzaExcepcion) ? $spLanzaExcepcion : new Exception('Error en ejecución del procedimiento almacenado.')
-                    );
-                } else {
-                    $stmt->method('execute')->willReturnCallback(function ($params = null) use (&$config) {
-                        if (isset($config['capturarParametrosSP']) && is_callable($config['capturarParametrosSP'])) {
-                            ($config['capturarParametrosSP'])($params);
-                        }
-                        return true;
-                    });
-                }
-            } else {
-                $stmt->method('fetchColumn')->willReturn(1);
-            }
-
-            return $stmt;
-        });
-
-        $pdoMock->method('query')->willReturnCallback(function ($sql) use ($spResultado) {
-            $stmt = $this->createMock(PDOStatement::class);
-            if (str_contains($sql, '@resultado')) {
-                $stmt->method('fetch')->willReturn(['resultado' => $spResultado]);
-            }
-            return $stmt;
-        });
-
-        return $pdoMock;
     }
 
     /**
@@ -186,11 +88,18 @@ class RegistrarAtletasTest extends TestCase
     public function testCategoriaNoExiste(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['categoriaExiste' => false]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $stmtMock = $this->createMock(PDOStatement::class);
+        $stmtMock->method('execute')->willReturn(true);
+        $stmtMock->method('fetchColumn')->willReturn(0);
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturn($stmtMock);
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['categoria' => '99']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -202,11 +111,18 @@ class RegistrarAtletasTest extends TestCase
     public function testPosicionNoExiste(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['posicionExiste' => false]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $stmtMock = $this->createMock(PDOStatement::class);
+        $stmtMock->method('execute')->willReturn(true);
+        $stmtMock->method('fetchColumn')->willReturnOnConsecutiveCalls(1, 0);
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturn($stmtMock);
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['posicion' => '99']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -218,11 +134,18 @@ class RegistrarAtletasTest extends TestCase
     public function testRepresentanteNoExiste(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['representanteExiste' => false]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $stmtMock = $this->createMock(PDOStatement::class);
+        $stmtMock->method('execute')->willReturn(true);
+        $stmtMock->method('fetchColumn')->willReturnOnConsecutiveCalls(1, 1, 0);
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturn($stmtMock);
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['representante' => '99']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -231,26 +154,42 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 4: Atleta mayor de edad sin representante omite verificación de representante
-    public function testAtletaMayorDeEdadSinRepresentanteOmiteVerificacionRepresentante(): void
+    public function testMayorSinRepresentante(): void
     {
-        // Arrange: configuramos representanteExiste en false para garantizar que no se consulte
+        // Arrange
         $parametrosSP = null;
-        $pdoMock = $this->configurarPdoMock([
-            'representanteExiste' => false,
-            'capturarParametrosSP' => function ($params) use (&$parametrosSP) {
-                $parametrosSP = $params;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use (&$parametrosSP) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('closeCursor')->willReturn(true);
+            if (str_contains($sql, 'RegistrarAtletaCompleto')) {
+                $stmt->method('execute')->willReturnCallback(function ($params) use (&$parametrosSP) {
+                    $parametrosSP = $params;
+                    return true;
+                });
+            } else {
+                $stmt->method('execute')->willReturn(true);
+                $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones');
+                $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
             }
-        ]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
 
         $anioActual = (int)date('Y');
         $datos = $this->obtenerDatosAtletaValidos([
-            'fecha_nac'     => ($anioActual - 22) . '-01-15', // 22 años (mayor de edad)
+            'fecha_nac'     => ($anioActual - 22) . '-01-15',
             'edad'          => '22',
-            'representante' => '' // Sin representante
+            'representante' => ''
         ]);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -263,14 +202,21 @@ class RegistrarAtletasTest extends TestCase
      * ========================================================================= */
 
     // Caso 5: Documento de identidad ya existe en la base de datos
-    public function testDocIdentidadDuplicadoEnBd(): void
+    public function testCedulaDuplicada(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['docExiste' => true]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $stmtMock = $this->createMock(PDOStatement::class);
+        $stmtMock->method('execute')->willReturn(true);
+        $stmtMock->method('fetchColumn')->willReturn(1);
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturn($stmtMock);
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['doc_identidad' => '12345678']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -279,26 +225,45 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 6: Atleta menor de 9 años sin documento de identidad omite verificación de cédula
-    public function testAtletaMenorDeNueveAniosSinDocIdentidadOmiteVerificacionCedula(): void
+    public function testMenorSinCedula(): void
     {
-        // Arrange: docExiste en true para validar que no se consulta cuando doc_identidad viene vacío
+        // Arrange
         $parametrosSP = null;
-        $pdoMock = $this->configurarPdoMock([
-            'docExiste' => true,
-            'capturarParametrosSP' => function ($params) use (&$parametrosSP) {
-                $parametrosSP = $params;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use (&$parametrosSP) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('closeCursor')->willReturn(true);
+            if (str_contains($sql, 'RegistrarAtletaCompleto')) {
+                $stmt->method('execute')->willReturnCallback(function ($params) use (&$parametrosSP) {
+                    $parametrosSP = $params;
+                    return true;
+                });
+            } elseif (str_contains($sql, 'identidad_atleta')) {
+                $stmt->method('execute')->willReturn(true);
+                $stmt->method('fetchColumn')->willReturn(1);
+            } else {
+                $stmt->method('execute')->willReturn(true);
+                $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+                $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
             }
-        ]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
 
         $anioActual = (int)date('Y');
         $datos = $this->obtenerDatosAtletaValidos([
-            'fecha_nac'     => ($anioActual - 8) . '-06-10', // 8 años (menor de 9)
+            'fecha_nac'     => ($anioActual - 8) . '-06-10',
             'edad'          => '8',
-            'doc_identidad' => '' // No posee documento aún
+            'doc_identidad' => ''
         ]);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -307,14 +272,26 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 7: Teléfono ya existe en la base de datos
-    public function testTelefonoDuplicadoEnBd(): void
+    public function testTelefonoDuplicado(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['telefonoExiste' => true]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('execute')->willReturn(true);
+            if (str_contains($sql, 'identidad_atleta')) {
+                $stmt->method('fetchColumn')->willReturn(0);
+            } else {
+                $stmt->method('fetchColumn')->willReturn(1);
+            }
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['telefono' => '0414-1234567']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -323,20 +300,40 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 8: Atleta sin teléfono omite verificación de teléfono
-    public function testAtletaSinTelefonoOmiteVerificacionTelefono(): void
+    public function testSinTelefono(): void
     {
-        // Arrange: telefonoExiste en true para comprobar que se omite la verificación
+        // Arrange
         $parametrosSP = null;
-        $pdoMock = $this->configurarPdoMock([
-            'telefonoExiste' => true,
-            'capturarParametrosSP' => function ($params) use (&$parametrosSP) {
-                $parametrosSP = $params;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use (&$parametrosSP) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('closeCursor')->willReturn(true);
+            if (str_contains($sql, 'RegistrarAtletaCompleto')) {
+                $stmt->method('execute')->willReturnCallback(function ($params) use (&$parametrosSP) {
+                    $parametrosSP = $params;
+                    return true;
+                });
+            } elseif (str_contains($sql, 'contacto_atleta') && str_contains($sql, 'telefono')) {
+                $stmt->method('execute')->willReturn(true);
+                $stmt->method('fetchColumn')->willReturn(1);
+            } else {
+                $stmt->method('execute')->willReturn(true);
+                $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+                $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
             }
-        ]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['telefono' => '']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -345,14 +342,28 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 9: Correo electrónico ya existe en la base de datos
-    public function testCorreoDuplicadoEnBd(): void
+    public function testCorreoDuplicado(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['correoExiste' => true]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('execute')->willReturn(true);
+            if (str_contains($sql, 'correo')) {
+                $stmt->method('fetchColumn')->willReturn(1);
+            } elseif (str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes')) {
+                $stmt->method('fetchColumn')->willReturn(1);
+            } else {
+                $stmt->method('fetchColumn')->willReturn(0);
+            }
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['correo' => 'atleta@correo.com']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -361,14 +372,33 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 10: Atleta sin correo omite verificación de correo
-    public function testAtletaSinCorreoOmiteVerificacionCorreo(): void
+    public function testSinCorreo(): void
     {
-        // Arrange: correoExiste en true para comprobar que se omite la verificación
-        $pdoMock = $this->configurarPdoMock(['correoExiste' => true]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        // Arrange
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('closeCursor')->willReturn(true);
+            $stmt->method('execute')->willReturn(true);
+            if (str_contains($sql, 'contacto_atleta') && str_contains($sql, 'correo')) {
+                $stmt->method('fetchColumn')->willReturn(1);
+            } else {
+                $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+                $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
+            }
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['correo' => '']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -376,14 +406,28 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 11: Instagram ya existe en la base de datos
-    public function testInstagramDuplicadoEnBd(): void
+    public function testInstagramDuplicado(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['instagramExiste' => true]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('execute')->willReturn(true);
+            if (str_contains($sql, 'instagram')) {
+                $stmt->method('fetchColumn')->willReturn(1);
+            } elseif (str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes')) {
+                $stmt->method('fetchColumn')->willReturn(1);
+            } else {
+                $stmt->method('fetchColumn')->willReturn(0);
+            }
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['instagram' => '@atleta_2026']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -392,14 +436,33 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 12: Atleta sin Instagram omite verificación de Instagram
-    public function testAtletaSinInstagramOmiteVerificacionInstagram(): void
+    public function testSinInstagram(): void
     {
-        // Arrange: instagramExiste en true para comprobar que se omite la verificación
-        $pdoMock = $this->configurarPdoMock(['instagramExiste' => true]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        // Arrange
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('closeCursor')->willReturn(true);
+            $stmt->method('execute')->willReturn(true);
+            if (str_contains($sql, 'contacto_atleta') && str_contains($sql, 'instagram')) {
+                $stmt->method('fetchColumn')->willReturn(1);
+            } else {
+                $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+                $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
+            }
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['instagram' => '']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -407,14 +470,28 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 13: Dorsal ya ocupado en la misma categoría
-    public function testDorsalDuplicadoEnMismaCategoria(): void
+    public function testDorsalDuplicado(): void
     {
-        // Arrange: dorsalOcupado en true
-        $pdoMock = $this->configurarPdoMock(['dorsalOcupado' => true]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        // Arrange
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('execute')->willReturn(true);
+            if (str_contains($sql, 'inscripciones')) {
+                $stmt->method('fetchColumn')->willReturn(1);
+            } elseif (str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes')) {
+                $stmt->method('fetchColumn')->willReturn(1);
+            } else {
+                $stmt->method('fetchColumn')->willReturn(0);
+            }
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['dorsal' => '10', 'categoria' => '1']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -423,14 +500,33 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 14: Atleta sin dorsal permite registro sin verificar dorsal
-    public function testAtletaSinDorsalPermiteRegistroSinVerificarDorsal(): void
+    public function testSinDorsal(): void
     {
-        // Arrange: dorsalOcupado en true para comprobar que no bloquea si dorsal es 0
-        $pdoMock = $this->configurarPdoMock(['dorsalOcupado' => true]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        // Arrange
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('closeCursor')->willReturn(true);
+            $stmt->method('execute')->willReturn(true);
+            if (str_contains($sql, 'inscripciones')) {
+                $stmt->method('fetchColumn')->willReturn(1);
+            } else {
+                $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+                $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
+            }
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['dorsal' => '0']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -442,14 +538,29 @@ class RegistrarAtletasTest extends TestCase
      * ========================================================================= */
 
     // Caso 15: El procedimiento almacenado retorna -1 (Cédula duplicada en BD)
-    public function testProcedimientoAlmacenadoRetornaMenosUnoCedulaDuplicada(): void
+    public function testSpCedulaDuplicada(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['spResultado' => -1]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('execute')->willReturn(true);
+            $stmt->method('closeCursor')->willReturn(true);
+            $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+            $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => -1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos();
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -458,14 +569,29 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 16: El procedimiento almacenado retorna -2 (Teléfono duplicado en BD)
-    public function testProcedimientoAlmacenadoRetornaMenosDosTelefonoDuplicado(): void
+    public function testSpTelefonoDuplicado(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['spResultado' => -2]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('execute')->willReturn(true);
+            $stmt->method('closeCursor')->willReturn(true);
+            $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+            $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => -2]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos();
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -474,14 +600,29 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 17: El procedimiento almacenado retorna 0 (Error interno de BD)
-    public function testProcedimientoAlmacenadoRetornaCeroErrorBaseDatos(): void
+    public function testSpErrorBd(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['spResultado' => 0]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('execute')->willReturn(true);
+            $stmt->method('closeCursor')->willReturn(true);
+            $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+            $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 0]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos();
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -490,17 +631,28 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 18: Fallo o excepción SQL al ejecutar el procedimiento almacenado
-    public function testFalloSqlAlEjecutarProcedimientoAlmacenadoCapturaExcepcion(): void
+    public function testSpExcepcion(): void
     {
         // Arrange
         $mensajeExcepcion = 'SQLSTATE[HY000]: General error: 2006 MySQL server has gone away';
-        $pdoMock = $this->configurarPdoMock([
-            'spLanzaExcepcion' => new Exception($mensajeExcepcion)
-        ]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use ($mensajeExcepcion) {
+            $stmt = $this->createMock(PDOStatement::class);
+            if (str_contains($sql, 'RegistrarAtletaCompleto')) {
+                $stmt->method('execute')->willThrowException(new Exception($mensajeExcepcion));
+            } else {
+                $stmt->method('execute')->willReturn(true);
+                $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+                $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
+            }
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos();
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -513,20 +665,37 @@ class RegistrarAtletasTest extends TestCase
      * ========================================================================= */
 
     // Caso 19: Registro exitoso de atleta menor de edad con datos completos
-    public function testRegistroAtletaMenorDeEdadExitoso(): void
+    public function testRegistroExitoso(): void
     {
         // Arrange
         $parametrosSP = null;
-        $pdoMock = $this->configurarPdoMock([
-            'spResultado' => 1,
-            'capturarParametrosSP' => function ($params) use (&$parametrosSP) {
-                $parametrosSP = $params;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use (&$parametrosSP) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('closeCursor')->willReturn(true);
+            if (str_contains($sql, 'RegistrarAtletaCompleto')) {
+                $stmt->method('execute')->willReturnCallback(function ($params) use (&$parametrosSP) {
+                    $parametrosSP = $params;
+                    return true;
+                });
+            } else {
+                $stmt->method('execute')->willReturn(true);
+                $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+                $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
             }
-        ]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos();
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -547,23 +716,40 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 20: Registro exitoso de atleta con nombres y apellidos simples (sin segundo nombre/apellido)
-    public function testRegistroAtletaConNombreYApellidoSimples(): void
+    public function testNombresSimples(): void
     {
         // Arrange
         $parametrosSP = null;
-        $pdoMock = $this->configurarPdoMock([
-            'spResultado' => 1,
-            'capturarParametrosSP' => function ($params) use (&$parametrosSP) {
-                $parametrosSP = $params;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use (&$parametrosSP) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('closeCursor')->willReturn(true);
+            if (str_contains($sql, 'RegistrarAtletaCompleto')) {
+                $stmt->method('execute')->willReturnCallback(function ($params) use (&$parametrosSP) {
+                    $parametrosSP = $params;
+                    return true;
+                });
+            } else {
+                $stmt->method('execute')->willReturn(true);
+                $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+                $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
             }
-        ]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos([
             'nombre'   => 'Carlos',
             'apellido' => 'Perez'
         ]);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -575,22 +761,39 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 21: Registro exitoso cuando foto se proporciona como arreglo
-    public function testRegistroAtletaConFotoComoArreglo(): void
+    public function testFotoArreglo(): void
     {
         // Arrange
         $parametrosSP = null;
-        $pdoMock = $this->configurarPdoMock([
-            'spResultado' => 1,
-            'capturarParametrosSP' => function ($params) use (&$parametrosSP) {
-                $parametrosSP = $params;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use (&$parametrosSP) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('closeCursor')->willReturn(true);
+            if (str_contains($sql, 'RegistrarAtletaCompleto')) {
+                $stmt->method('execute')->willReturnCallback(function ($params) use (&$parametrosSP) {
+                    $parametrosSP = $params;
+                    return true;
+                });
+            } else {
+                $stmt->method('execute')->willReturn(true);
+                $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+                $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
             }
-        ]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos([
             'foto' => ['atleta_subida.png', 'otra_foto.png']
         ]);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -599,14 +802,29 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 22: Verificación de estructura y contenido de datos_nuevos en respuesta exitosa
-    public function testEstructuraYValoresDeDatosNuevosEnRespuestaExitosa(): void
+    public function testEstructuraDatosNuevos(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['spResultado' => 1]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('closeCursor')->willReturn(true);
+            $stmt->method('execute')->willReturn(true);
+            $esCatalogo = str_contains($sql, 'categorias') || str_contains($sql, 'posiciones') || str_contains($sql, 'representantes');
+            $stmt->method('fetchColumn')->willReturn($esCatalogo ? 1 : 0);
+            return $stmt;
+        });
+        $pdoMock->method('query')->willReturnCallback(function () {
+            $stmt = $this->createMock(PDOStatement::class);
+            $stmt->method('fetch')->willReturn(['resultado' => 1]);
+            return $stmt;
+        });
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos();
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
@@ -635,14 +853,21 @@ class RegistrarAtletasTest extends TestCase
     }
 
     // Caso 23: Respuesta de error incluye datos_nuevos en formato JSON
-    public function testRespuestaDeErrorIncluyeDatosNuevosEnJson(): void
+    public function testDatosNuevosEnError(): void
     {
         // Arrange
-        $pdoMock = $this->configurarPdoMock(['categoriaExiste' => false]);
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $stmtMock = $this->createMock(PDOStatement::class);
+        $stmtMock->method('execute')->willReturn(true);
+        $stmtMock->method('fetchColumn')->willReturn(0);
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturn($stmtMock);
+        $this->crearModeloConPDOMock($pdoMock);
+
         $datos = $this->obtenerDatosAtletaValidos(['categoria' => '99']);
 
         // Act
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert

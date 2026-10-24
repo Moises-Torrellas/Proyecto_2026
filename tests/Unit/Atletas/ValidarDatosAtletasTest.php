@@ -31,23 +31,11 @@ class ValidarDatosAtletasTest extends TestCase
     /**
      * Crea una instancia de ModeloAtletas inyectando un PDO simulado.
      */
-    private function crearModeloConPdoMock(PDO $pdoMock): ModeloAtletas
+    private function crearModeloConPdoMock(PDO $pdoMock)
     {
         $reflector = new ReflectionClass(Conexion::class);
         $propiedad = $reflector->getProperty('instancia');
         $propiedad->setValue(null, $pdoMock);
-
-        $modeloFake = new class extends ModeloAtletas {
-            public static $pdoTemporal;
-
-            public static function conex()
-            {
-                return self::$pdoTemporal;
-            }
-        };
-
-        $modeloFake::$pdoTemporal = $pdoMock;
-        return $modeloFake;
     }
 
     /**
@@ -61,12 +49,12 @@ class ValidarDatosAtletasTest extends TestCase
     }
 
     /**
-     * Obtiene el valor de una propiedad privada del modelo mediante Reflection.
+     * Obtiene el valor de un atributo privada del modelo mediante Reflection.
      */
-    private function obtenerPropiedad(ModeloAtletas $modelo, string $nombrePropiedad): mixed
+    private function obtenerAtributo(ModeloAtletas $modelo, string $nombreAtributo): mixed
     {
         $reflector = new ReflectionClass(ModeloAtletas::class);
-        $propiedad = $reflector->getProperty($nombrePropiedad);
+        $propiedad = $reflector->getProperty($nombreAtributo);
         return $propiedad->getValue($modelo);
     }
 
@@ -152,7 +140,8 @@ class ValidarDatosAtletasTest extends TestCase
         $stmtMock->method('fetchAll')->willReturn([]);
         $pdoMock->method('prepare')->willReturn($stmtMock);
 
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
+        $this->crearModeloConPdoMock($pdoMock);
+        $modelo = new ModeloAtletas();
 
         $datos = [
             'accion'            => 'generar',
@@ -175,21 +164,21 @@ class ValidarDatosAtletasTest extends TestCase
 
         $modelo->ProcesarDatos($datos);
 
-        $this->assertEquals('Carlos Alberto', $this->obtenerPropiedad($modelo, 'nombre'));
-        $this->assertEquals('Perez Martinez', $this->obtenerPropiedad($modelo, 'apellido'));
-        $this->assertEquals('Palavecino', $this->obtenerPropiedad($modelo, 'municipio'));
-        $this->assertEquals('Barquisimeto', $this->obtenerPropiedad($modelo, 'lugar_nacimiento'));
-        $this->assertEquals('Urb Las Mercedes Calle 4', $this->obtenerPropiedad($modelo, 'direccion'));
-        $this->assertEquals('atleta@correo.com', $this->obtenerPropiedad($modelo, 'correo'));
-        $this->assertEquals('0414-7654321', $this->obtenerPropiedad($modelo, 'telefono'));
-        $this->assertEquals('12345678', $this->obtenerPropiedad($modelo, 'doc_identidad'));
-        $this->assertEquals(0, $this->obtenerPropiedad($modelo, 'dorsal'));
-        $this->assertEquals(0.0, $this->obtenerPropiedad($modelo, 'peso_kg'));
-        $this->assertEquals(0, $this->obtenerPropiedad($modelo, 'estatura_cm'));
-        $this->assertEquals('Retiro Voluntario', $this->obtenerPropiedad($modelo, 'motivo_retiro'));
-        $this->assertEquals('atleta_2026-10-22_123456.jpg', $this->obtenerPropiedad($modelo, 'foto'));
-        $this->assertEquals(1, $this->obtenerPropiedad($modelo, 'es_alergico'));
-        $this->assertEquals('polen y polvo', $this->obtenerPropiedad($modelo, 'alergias_detalle'));
+        $this->assertEquals('Carlos Alberto', $this->obtenerAtributo($modelo, 'nombre'));
+        $this->assertEquals('Perez Martinez', $this->obtenerAtributo($modelo, 'apellido'));
+        $this->assertEquals('Palavecino', $this->obtenerAtributo($modelo, 'municipio'));
+        $this->assertEquals('Barquisimeto', $this->obtenerAtributo($modelo, 'lugar_nacimiento'));
+        $this->assertEquals('Urb Las Mercedes Calle 4', $this->obtenerAtributo($modelo, 'direccion'));
+        $this->assertEquals('atleta@correo.com', $this->obtenerAtributo($modelo, 'correo'));
+        $this->assertEquals('0414-7654321', $this->obtenerAtributo($modelo, 'telefono'));
+        $this->assertEquals('12345678', $this->obtenerAtributo($modelo, 'doc_identidad'));
+        $this->assertEquals(0, $this->obtenerAtributo($modelo, 'dorsal'));
+        $this->assertEquals(0.0, $this->obtenerAtributo($modelo, 'peso_kg'));
+        $this->assertEquals(0, $this->obtenerAtributo($modelo, 'estatura_cm'));
+        $this->assertEquals('Retiro Voluntario', $this->obtenerAtributo($modelo, 'motivo_retiro'));
+        $this->assertEquals('atleta_2026-10-22_123456.jpg', $this->obtenerAtributo($modelo, 'foto'));
+        $this->assertEquals(1, $this->obtenerAtributo($modelo, 'es_alergico'));
+        $this->assertEquals('polen y polvo', $this->obtenerAtributo($modelo, 'alergias_detalle'));
     }
 
     // Caso 4: Foto por defecto cuando no se suministra
@@ -201,8 +190,8 @@ class ValidarDatosAtletasTest extends TestCase
         $stmtMock->method('fetchAll')->willReturn([]);
         $pdoMock->method('prepare')->willReturn($stmtMock);
 
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
+        $this->crearModeloConPdoMock($pdoMock);
+        $modelo = new ModeloAtletas();
         $datos = [
             'accion' => 'generar',
             'nombre' => 'Luis'
@@ -210,7 +199,7 @@ class ValidarDatosAtletasTest extends TestCase
 
         $modelo->ProcesarDatos($datos);
 
-        $this->assertEquals('default.png', $this->obtenerPropiedad($modelo, 'foto'));
+        $this->assertEquals('default.png', $this->obtenerAtributo($modelo, 'foto'));
     }
 
     // Caso 5: Foto como string simple (no array)
@@ -222,8 +211,8 @@ class ValidarDatosAtletasTest extends TestCase
         $stmtMock->method('fetchAll')->willReturn([]);
         $pdoMock->method('prepare')->willReturn($stmtMock);
 
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
+        $this->crearModeloConPdoMock($pdoMock);
+        $modelo = new ModeloAtletas();
         $datos = [
             'accion' => 'generar',
             'foto'   => 'atleta_2026-10-22_9999.png'
@@ -231,7 +220,7 @@ class ValidarDatosAtletasTest extends TestCase
 
         $modelo->ProcesarDatos($datos);
 
-        $this->assertEquals('atleta_2026-10-22_9999.png', $this->obtenerPropiedad($modelo, 'foto'));
+        $this->assertEquals('atleta_2026-10-22_9999.png', $this->obtenerAtributo($modelo, 'foto'));
     }
 
     // Caso 6: ProcesarDatos enruta la acción 'generar' hacia Consultar()
@@ -247,8 +236,8 @@ class ValidarDatosAtletasTest extends TestCase
         $stmtMock->method('fetchAll')->willReturn($datosFilaSimulada);
         $pdoMock->method('prepare')->willReturn($stmtMock);
 
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
+        $this->crearModeloConPdoMock($pdoMock);
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos(['accion' => 'generar']);
 
         $this->assertIsArray($resultado);
@@ -272,8 +261,8 @@ class ValidarDatosAtletasTest extends TestCase
         $stmtMock->method('fetchAll')->willReturn($datosFilaSimulada);
         $pdoMock->method('prepare')->willReturn($stmtMock);
 
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
+        $this->crearModeloConPdoMock($pdoMock);
+        $modelo = new ModeloAtletas();
         $resultado = $modelo->ProcesarDatos(['accion' => 'buscar', 'id' => '1']);
 
         $this->assertIsArray($resultado);

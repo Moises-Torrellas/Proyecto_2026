@@ -44,6 +44,8 @@ class ModeloRespaldo extends Conexion
         }
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {

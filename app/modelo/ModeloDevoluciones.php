@@ -29,6 +29,8 @@ class ModeloDevoluciones extends Conexion
         $this->llavePrimaria = 'id_devolucion';
     }
 
+    use VerificarExistencia;
+
     public function setAsignaciones(ModeloAsignaciones $asig) { 
         $this->objAsignaciones = $asig; 
     }

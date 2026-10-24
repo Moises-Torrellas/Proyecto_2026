@@ -24,6 +24,8 @@ class ModeloRoles extends Conexion
         $this->llavePrimaria = 'id_rol';
     }
 
+    use VerificarExistencia;
+
     public function procesarDatos(array $datos)
     {
         if (empty($datos)) {
