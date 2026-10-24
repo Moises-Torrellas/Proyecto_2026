@@ -12,6 +12,7 @@
 !/backups/.gitkeep
 /reporte_cobertura/*
 /storage/*
+/tests/*
 
 .env
 datos_prueba_postman.csv
