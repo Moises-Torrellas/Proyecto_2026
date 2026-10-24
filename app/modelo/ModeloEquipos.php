@@ -22,6 +22,8 @@ class ModeloEquipos extends Conexion
         $this->llavePrimaria = 'codigo_equipo';
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {

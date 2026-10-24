@@ -24,6 +24,8 @@ class ModeloMonedas extends Conexion
         $this->llavePrimaria = 'codigo_moneda';
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos)
     {
         if (empty($datos)) {

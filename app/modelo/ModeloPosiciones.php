@@ -20,6 +20,8 @@ class ModeloPosiciones extends Conexion
         ];
         $this->llavePrimaria = 'codigo_posicion';
     }
+
+    use VerificarExistencia;
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {

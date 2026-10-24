@@ -21,6 +21,8 @@ class ModeloEstadoFisico extends Conexion
         $this->llavePrimaria = 'id_estado';
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {

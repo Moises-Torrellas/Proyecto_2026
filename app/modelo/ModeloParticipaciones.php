@@ -22,6 +22,8 @@ class ModeloParticipaciones extends Conexion
         $this->llavePrimaria = 'codigo_participacion';
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {

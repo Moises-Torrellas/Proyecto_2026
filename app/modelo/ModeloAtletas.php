@@ -54,6 +54,8 @@ class ModeloAtletas extends Conexion
         $this->llavePrimaria = 'codigo_atleta';
     }
 
+    use VerificarExistencia;
+
     private function verificarDorsalCategoria($dorsal, $categoria, $id_atleta = null): bool
     {
         if (empty($dorsal) || empty($categoria)) return true;

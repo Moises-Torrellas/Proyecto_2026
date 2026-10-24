@@ -26,6 +26,7 @@ class ModeloMetodosPago extends Conexion
         $this->llavePrimaria = 'codigo_metodo';
     }
 
+    use VerificarExistencia;
 
     public function ProcesarDatos(array $datos): array
     {

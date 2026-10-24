@@ -41,6 +41,8 @@ class ModeloUsuarios extends Conexion
         $this->objPermiso = new ModeloPermisos;
     }
 
+    use VerificarExistencia;
+
     public function procesarDatos(array $datos): array
     {
         if (empty($datos)) {

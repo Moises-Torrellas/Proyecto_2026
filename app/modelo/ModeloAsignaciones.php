@@ -19,7 +19,9 @@ class ModeloAsignaciones extends Conexion
     private $mostrar_inactivos;
     private $accion_actual; 
 
-    private $objArticulos; 
+    private $objArticulos;
+    
+    use VerificarExistencia;
 
     public function __construct()
     {

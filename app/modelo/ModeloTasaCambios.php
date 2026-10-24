@@ -26,6 +26,8 @@ class ModeloTasaCambios extends Conexion
         $this->llavePrimaria = 'codigo_tasa';
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {

@@ -27,6 +27,8 @@ class ModeloCargos extends Conexion
         $this->llavePrimaria = 'codigo_cargo';
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {

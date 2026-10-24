@@ -26,6 +26,8 @@ class ModeloConceptos extends Conexion
         $this->llavePrimaria = 'codigo_concepto';
     }
 
+    use VerificarExistencia;
+
 
     public function ProcesarDatos(array $datos): array
     {

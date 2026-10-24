@@ -23,6 +23,8 @@ class ModeloPremios extends Conexion
         $this->llavePrimaria = 'codigo_premio'; // Ajustado a la BD
     }
 
+    use VerificarExistencia;
+
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {
