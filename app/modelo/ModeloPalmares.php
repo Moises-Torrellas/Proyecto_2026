@@ -30,6 +30,8 @@ class ModeloPalmares extends Conexion
         ];
     }
 
+    use VerificarExistencia;
+
     public function setModeloParticipaciones(ModeloParticipaciones $modelo): void
     {
         $this->modeloParticipaciones = $modelo;
