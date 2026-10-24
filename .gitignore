@@ -10,7 +10,7 @@
 /reporte_cobertura/*
 # Excepto el archivo.gitkeep
 !/backups/.gitkeep
-
+/reporte_cobertura/*
 /storage/*
 
 .env
@@ -18,7 +18,7 @@ datos_prueba_postman.csv
 exposicion_postman.md
 Presentacion_Postman.pptx
 analisis-seguridad-login.md
-
+.phpunit.result.cache
 
 /public/img/usuarios/*
 /public/img/atletas/*
