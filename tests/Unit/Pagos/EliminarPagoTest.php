@@ -36,12 +36,7 @@ class EliminarPagoTest extends TestCase
         $modeloFake = new class extends ModeloPagos {
             public static $pdoTemporal;
 
-            public static function conex()
-            {
-                return self::$pdoTemporal;
-            }
-
-            public function getConexion(string $db = 'general')
+            public function conex()
             {
                 return self::$pdoTemporal;
             }

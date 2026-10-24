@@ -36,7 +36,7 @@ class RegistrarPagosTest extends TestCase
         $modeloFake = new class extends ModeloPagos {
             public static $pdoTemporal;
 
-            public static function conex()
+            public function conex()
             {
                 return self::$pdoTemporal;
             }

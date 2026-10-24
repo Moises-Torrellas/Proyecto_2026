@@ -20,30 +20,14 @@ abstract class Conexion
 
     protected function __construct() {}
 
-    public static function getConex()
+    protected function conex()
     {
-        if (self::$instancia === null) {
-            self::$instancia = self::crearConexion(_DB_HOST_, _DB_NAME_, _DB_USER_, _DB_PASS_);
-        }
-        return self::$instancia;
+        return self::$instancia ??= self::crearConexion(_DB_HOST_, _DB_NAME_, _DB_USER_, _DB_PASS_);
     }
 
-    public static function getConexSG()
+    protected function conexSG()
     {
-        if (self::$instanciaSG === null) {
-            self::$instanciaSG = self::crearConexion(_DB_HOST_SG_, _DB_NAME_SG_, _DB_USER_SG_, _DB_PASS_SG_);
-        }
-        return self::$instanciaSG;
-    }
-
-    public static function conex()
-    {
-        return self::getConex();
-    }
-
-    public static function conexSG()
-    {
-        return self::getConexSG();
+        return self::$instanciaSG ??= self::crearConexion(_DB_HOST_SG_, _DB_NAME_SG_, _DB_USER_SG_, _DB_PASS_SG_);
     }
 
     protected function getConexion(string $db = 'general')
