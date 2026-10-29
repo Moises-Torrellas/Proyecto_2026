@@ -1,5 +1,9 @@
 let timerBusqueda;
 
+// Datos auxiliares para el registro por lote
+let estadosFisicos = [];
+const MAX_ARTICULOS_LOTE = 50;
+
 $(document).ready(function () {
     cargarCombos();
     if (typeof inicializarPaginador === 'function') inicializarPaginador();
@@ -17,6 +21,18 @@ $(document).ready(function () {
             allowClear: true,
             dropdownParent: $('.contenedor_modal')
         });
+
+        $('#lote_catalogo').select2({
+            placeholder: "Seleccione un artículo...",
+            width: '100%',
+            dropdownParent: $('.contenedor_modal')
+        });
+
+        $('#lote_estado').select2({
+            placeholder: "Estado...",
+            width: '100%',
+            dropdownParent: $('.contenedor_modal')
+        });
     }
 
     // Búsqueda con retraso (debounce)
@@ -32,9 +48,9 @@ $(document).ready(function () {
     $("#btn_nuevo").on("click", function () {
         limpia();
         $("#codigo_articulo").val('');
-        $("#titulo_modal").text("Registrar Nuevo Artículo");
-        $("#btn_guardar").text("Guardar").attr("data-accion", "incluir");
-        $('#id_catalogo').closest('.colum').show();
+        $("#titulo_modal").text("Registrar Artículos en Inventario");
+        $("#btn_guardar").text("Registrar").attr("data-accion", "incluir");
+        mostrarModo('incluir');
         abrirModal(); 
     });
 
@@ -44,26 +60,54 @@ $(document).ready(function () {
         limpia();
         $("#titulo_modal").text("Generar Reporte de Inventario");
         $("#btn_guardar").text("Generar Reporte").attr("data-accion", "generar");
+        mostrarModo('generar');
         abrirModal(); 
+    });
+
+    // --- Registro por lote ---
+    $('#btn_agregar_lote').on('click', agregarArticulosLote);
+
+    $('#btn_vaciar_lote').on('click', function () {
+        vaciarLote();
+    });
+
+    // Quitar un artículo de la lista
+    $('#cuerpo_lote').on('click', '.btn_quitar_lote', function () {
+        $(this).closest('.item_lote').remove();
+        actualizarListaLote();
     });
 
     // Botón central de proceso dentro del modal
     $('#btn_guardar').on('click', function () {
         let accion = $(this).attr('data-accion');
 
-        // Validación exclusiva para incluir o modificar
-        if (accion === "incluir" || accion === "modificar") {
-            if ($('#id_catalogo').val() === null || $('#id_estado').val() === null) {
-                muestraMensaje("error", 2000, "Validación", "Seleccione el artículo y su estado físico.");
+        if (accion === "incluir") {
+            let articulos = obtenerArticulosLote();
+            if (articulos === null) return false;
+
+            let total = articulos.length;
+            let texto = total === 1
+                ? '¿Registrar este artículo en el inventario?'
+                : `¿Registrar ${total} artículos en el inventario?`;
+
+            confirmar(texto, function (confirma) {
+                if (confirma) {
+                    let datos = new FormData();
+                    datos.append('accion', 'incluir');
+                    datos.append('articulos', JSON.stringify(articulos));
+                    enviaAjax(datos);
+                }
+            });
+            return;
+        }
+
+        // Validación exclusiva para modificar (solo el estado físico es editable)
+        if (accion === "modificar") {
+            if (!$('#id_estado').val()) {
+                muestraMensaje("error", 2000, "Validación", "Seleccione el estado físico del artículo.");
                 return false;
             }
         }
-
-        // Definir el texto de confirmación según la acción
-        let textoConfirmacion = '';
-        if (accion === "incluir") textoConfirmacion = '¿Registrar este artículo en el inventario?';
-        else if (accion === "modificar") textoConfirmacion = '¿Guardar los cambios?';
-        else if (accion === "generar") textoConfirmacion = '¿Desea generar el reporte con los filtros seleccionados?';
 
         if (accion === "generar") {
             opcionesReporte(function(formato) {
@@ -76,10 +120,12 @@ $(document).ready(function () {
                 enviaAjax(datos);
             });
         } else {
-            confirmar(textoConfirmacion, function(confirma) {
+            confirmar('¿Guardar los cambios?', function(confirma) {
                 if (confirma) {
-                    let datos = new FormData($('#f')[0]);
+                    let datos = new FormData();
                     datos.append('accion', accion);
+                    datos.append('codigo_articulo', $('#codigo_articulo').val());
+                    datos.append('id_estado', $('#id_estado').val());
                     enviaAjax(datos);
                 }
             });
@@ -94,7 +140,7 @@ $(document).ready(function () {
             },
             {
                 element: '#btn_nuevo',
-                popover: { title: 'Registrar', description: 'Añade un nuevo artículo físico al inventario.', position: 'bottom' }
+                popover: { title: 'Registrar', description: 'Añade uno o varios artículos físicos al inventario en un solo registro, eligiendo el estado físico de cada uno.', position: 'bottom' }
             },
             {
                 element: '#generar',
@@ -142,6 +188,155 @@ $(document).ready(function () {
     });
 });
 
+/**
+ * Muestra u oculta las secciones del modal según la acción:
+ *  - incluir:   lista de artículos por lote
+ *  - modificar: solo el estado físico
+ *  - generar:   filtros de catálogo y estado
+ */
+function mostrarModo(modo) {
+    if (modo === 'incluir') {
+        $('#seccion_lote').show();
+        $('#seccion_individual').hide();
+        vaciarLote();
+        $('#lote_cantidad').val(1);
+        if (estadosFisicos.length > 0) {
+            $('#lote_estado').val(estadosFisicos[0].id_estado).trigger('change');
+        }
+    } else {
+        $('#seccion_lote').hide();
+        $('#seccion_individual').show();
+        $('#col_catalogo').toggle(modo === 'generar');
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function escaparHtml(texto) {
+    return String(texto ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function opcionesEstados(seleccionado) {
+    return estadosFisicos.map(e =>
+        `<option value="${e.id_estado}" ${String(e.id_estado) === String(seleccionado) ? 'selected' : ''}>${escaparHtml(e.nombre)}</option>`
+    ).join('');
+}
+
+function agregarArticulosLote() {
+    let idCatalogo = $('#lote_catalogo').val();
+    let idEstado = $('#lote_estado').val();
+    let cantidad = parseInt($('#lote_cantidad').val(), 10);
+
+    if (!idCatalogo) {
+        muestraMensaje("error", 2000, "Validación", "Seleccione el artículo del catálogo que desea agregar.");
+        return;
+    }
+    if (!idEstado) {
+        muestraMensaje("error", 2000, "Validación", "Seleccione el estado físico inicial.");
+        return;
+    }
+    if (isNaN(cantidad) || cantidad < 1) {
+        muestraMensaje("error", 2000, "Validación", "La cantidad debe ser un número mayor a cero.");
+        return;
+    }
+
+    let actuales = $('#cuerpo_lote .item_lote').length;
+    if (actuales + cantidad > MAX_ARTICULOS_LOTE) {
+        muestraMensaje("error", 3000, "Validación", `Solo puede registrar hasta ${MAX_ARTICULOS_LOTE} artículos por registro.`);
+        return;
+    }
+
+    let nombre = $('#lote_catalogo option:selected').text();
+    let html = '';
+    for (let i = 0; i < cantidad; i++) {
+        html += `
+            <div class="item_lote" data-catalogo="${escaparHtml(idCatalogo)}">
+                <div class="item_lote_icono"><i data-lucide="package"></i></div>
+                <div class="item_lote_info">
+                    <span class="item_lote_titulo" title="${escaparHtml(nombre)}">${escaparHtml(nombre)}</span>
+                    <span class="item_lote_subtitulo"></span>
+                </div>
+                <div class="item_lote_estado">
+                    <select class="formulario select_estado_lote" aria-label="Estado físico">
+                        ${opcionesEstados(idEstado)}
+                    </select>
+                </div>
+                <button type="button" class="btn_t cbt_r btn_quitar_lote" title="Quitar de la lista">
+                    <i class="fi fi-sr-trash"></i>
+                </button>
+            </div>`;
+    }
+
+    $('#cuerpo_lote .lista_lote_vacio').remove();
+    $('#cuerpo_lote').append(html);
+    $('#lote_cantidad').val(1);
+    actualizarListaLote();
+
+    // Desplazar hasta el último artículo agregado
+    let cuerpo = document.getElementById('cuerpo_lote');
+    if (cuerpo) cuerpo.scrollTop = cuerpo.scrollHeight;
+}
+
+function vaciarLote() {
+    $('#cuerpo_lote').empty();
+    actualizarListaLote();
+}
+
+function actualizarListaLote() {
+    let items = $('#cuerpo_lote .item_lote');
+    $('#contador_lote').text(items.length);
+    $('#btn_vaciar_lote').prop('disabled', items.length === 0);
+
+    if (items.length === 0) {
+        $('#cuerpo_lote').html(`
+            <div class="lista_lote_vacio">
+                <i data-lucide="package-open"></i>
+                Aún no hay artículos en la lista. Seleccione un artículo, la cantidad y presione «+».
+            </div>`);
+    } else {
+        // Numerar las unidades de cada artículo del catálogo
+        let conteo = {};
+        items.each(function () {
+            let cat = $(this).data('catalogo');
+            conteo[cat] = (conteo[cat] || 0) + 1;
+            $(this).find('.item_lote_subtitulo').text(`Unidad nueva #${conteo[cat]} · Código automático`);
+        });
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+/**
+ * Devuelve el arreglo [{id_catalogo, id_estado}] de la lista, o null si no es válido.
+ */
+function obtenerArticulosLote() {
+    let items = $('#cuerpo_lote .item_lote');
+    if (items.length === 0) {
+        muestraMensaje("error", 2500, "Validación", "Agregue al menos un artículo a la lista antes de registrar.");
+        return null;
+    }
+
+    let articulos = [];
+    let valido = true;
+    items.each(function () {
+        let estado = $(this).find('.select_estado_lote').val();
+        if (!estado) {
+            valido = false;
+            return false;
+        }
+        articulos.push({ id_catalogo: String($(this).data('catalogo')), id_estado: String(estado) });
+    });
+
+    if (!valido) {
+        muestraMensaje("error", 2500, "Validación", "Todos los artículos deben tener un estado físico seleccionado.");
+        return null;
+    }
+    return articulos;
+}
+
 function consultar() {
     let datos = new FormData();
     datos.append('accion', 'consultar');
@@ -157,7 +352,7 @@ function cargarCombos() {
 
 function editar(id, catalogo, estado) {
     limpia();
-    $("#titulo_modal").text("Modificar Artículo");
+    $("#titulo_modal").text("Modificar Estado Físico");
     $("#btn_guardar").text("Modificar").attr("data-accion", "modificar");
     
     $("#codigo_articulo").val(id);
@@ -167,7 +362,7 @@ function editar(id, catalogo, estado) {
         $("#id_estado").val(estado).trigger('change');
     }
     
-    $('#id_catalogo').closest('.colum').hide();
+    mostrarModo('modificar');
     
     abrirModal();
 }
@@ -197,17 +392,27 @@ function reincorporar(id) {
 function poblarCombos(catalogos, estados) {
     let comboCat = $("#id_catalogo");
     let comboEst = $("#id_estado");
+    let comboLoteCat = $("#lote_catalogo");
+    let comboLoteEst = $("#lote_estado");
     
     comboCat.find('option:not(:first)').remove();
     comboEst.find('option:not(:first)').remove();
+    comboLoteCat.find('option:not(:first)').remove();
+    comboLoteEst.find('option:not(:first)').remove();
 
-    catalogos.forEach(c => {
+    estadosFisicos = estados || [];
+
+    (catalogos || []).forEach(c => {
         let txt = c.talla ? `${c.nombre} (Talla: ${c.talla})` : c.nombre;
-        comboCat.append(`<option value="${c.id_catalogo}">${txt}</option>`);
+        let opcion = `<option value="${c.id_catalogo}">${escaparHtml(txt)}</option>`;
+        comboCat.append(opcion);
+        comboLoteCat.append(opcion);
     });
 
-    estados.forEach(e => {
-        comboEst.append(`<option value="${e.id_estado}">${e.nombre}</option>`);
+    estadosFisicos.forEach(e => {
+        let opcion = `<option value="${e.id_estado}">${escaparHtml(e.nombre)}</option>`;
+        comboEst.append(opcion);
+        comboLoteEst.append(opcion);
     });
 }
 
@@ -256,6 +461,7 @@ function enviaAjax(datos) {
                 // Añadimos "reincorporar" a la lista de acciones que refrescan la tabla y muestran éxito
                 else if (lee.accion == "exito" || lee.accion == "eliminar" || lee.accion == "modificar" || lee.accion == "incluir" || lee.accion == "reincorporar") {
                     if (typeof cerrarModal === 'function') cerrarModal(); 
+                    vaciarLote();
                     consultar();
                     muestraMensaje("success", 3000, "Éxito", lee.mensaje);
                 } 

@@ -1,8 +1,8 @@
-<?php 
+<?php
 $formatearFecha = function($fecha) {
     if (empty($fecha)) return '';
     $meses = ['01'=>'enero', '02'=>'febrero', '03'=>'marzo', '04'=>'abril', '05'=>'mayo', '06'=>'junio', '07'=>'julio', '08'=>'agosto', '09'=>'septiembre', '10'=>'octubre', '11'=>'noviembre', '12'=>'diciembre'];
-    
+
     if (strpos($fecha, '-') !== false) {
         $partes = explode('-', explode(' ', $fecha)[0]);
         if (count($partes) === 3) {
@@ -86,7 +86,7 @@ if (isset($solo_lista) && $solo_lista === true) : ?>
                                 if ($asignacion['estatus'] == 3) {
                                     $textoEstatus = 'Anulado';
                                     $claseEstatus = 'estatus_r';
-                                    $claseFila = ''; 
+                                    $claseFila = '';
                                 } else if($asignacion['estatus'] == 2){
                                     $textoEstatus = 'Devuelto';
                                     $claseEstatus = 'estatus_v';
@@ -197,7 +197,7 @@ if (isset($solo_lista) && $solo_lista === true) : ?>
     </section>
 
     <section class="contenedor_modal" id="contenedor_modal">
-        <div class="modal modal_mediano ocultar" id="modal">
+        <div class="modal modal_mediano modal_lote ocultar" id="modal">
             <div class="cabecera_modal">
                 <h2 class="titulo_modal" id="titulo_modal">Registrar Asignación</h2>
                 <a type="button" class="cerrar_modal" id="cerrar_modal">&times;</a>
@@ -206,28 +206,17 @@ if (isset($solo_lista) && $solo_lista === true) : ?>
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id_asignacion" name="id_asignacion">
 
-                    <div class="row" id="row_atleta">
-                        <div class="colum">
+                    <div class="row" id="row_atleta_fecha">
+                        <div class="colum" id="col_atleta">
                             <div class="caja_formulario">
-                                <select class="formulario select2" id="codigo_atleta" name="codigo_atleta" required>
+                                <select class="formulario select2" id="codigo_atleta" name="codigo_atleta">
                                     <option value="" selected disabled>Seleccione un atleta...</option>
                                 </select>
                                 <label for="codigo_atleta" class="titulo_formulario">Atleta</label>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="colum" id="col_articulo">
-                            <div class="caja_formulario">
-                                <select class="formulario select2" id="codigo_articulo" name="codigo_articulo" required>
-                                    <option value="" selected disabled>Seleccione un artículo...</option>
-                                </select>
-                                <label for="codigo_articulo" class="titulo_formulario">Artículo del Inventario</label>
-                            </div>
-                        </div>
-
-                        <div class="colum">
+                        <div class="colum" id="col_fecha_asignacion">
                             <div class="caja_formulario">
                                 <input type="date" class="formulario" id="fecha_asignacion" name="fecha_asignacion" required>
                                 <label for="fecha_asignacion" id="lbl_fecha" class="titulo_formulario">Fecha de Asignación</label>
@@ -240,6 +229,49 @@ if (isset($solo_lista) && $solo_lista === true) : ?>
                                 <input type="date" class="formulario" id="fecha_f" name="fecha_f">
                                 <label for="fecha_f" class="titulo_formulario">Fecha Fin</label>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Fila para modificar un artículo individual (Solo para Modificar) -->
+                    <div class="row" id="row_articulo_modificar" style="display: none;">
+                        <div class="colum" id="col_articulo">
+                            <div class="caja_formulario caja_lote">
+                                <select class="formulario select2" id="codigo_articulo" name="codigo_articulo">
+                                    <option value="" selected disabled>Seleccione un artículo...</option>
+                                </select>
+                                <label for="codigo_articulo" class="titulo_formulario">Artículo del Inventario</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de selección por lote de artículos (Solo para Incluir) -->
+                    <div id="seccion_lote_asig">
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario caja_lote caja_con_accion">
+                                    <div class="caja_select_accion">
+                                        <select class="formulario select2" id="lote_articulo">
+                                            <option value="" selected disabled>Seleccione un artículo disponible...</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn_accion_campo" id="btn_agregar_lote_asig" data-tippy-content="Agregar a la lista">
+                                        <i data-lucide="plus"></i>
+                                    </button>
+                                    <label for="lote_articulo" class="titulo_formulario">Artículo a Asignar</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lista_lote">
+                            <div class="lista_lote_cabecera">
+                                <span class="lista_lote_titulo">
+                                    <i data-lucide="boxes"></i>
+                                    Artículos a Asignar
+                                    <span class="lista_lote_contador" id="contador_lote_asig">0</span>
+                                </span>
+                                <button type="button" class="lista_lote_vaciar" id="btn_vaciar_lote_asig" disabled>Vaciar lista</button>
+                            </div>
+                            <div class="lista_lote_cuerpo" id="cuerpo_lote_asig"></div>
                         </div>
                     </div>
 
@@ -259,7 +291,6 @@ if (isset($solo_lista) && $solo_lista === true) : ?>
                     <div class="row row_final">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="btn_guardar" data-accion="incluir">Confirmar Préstamo</button>
-
                         </div>
                     </div>
                 </form>

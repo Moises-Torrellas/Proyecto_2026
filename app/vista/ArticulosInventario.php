@@ -138,7 +138,7 @@
     </section>
 
     <section class="contenedor_modal" id="contenedor_modal">
-        <div class="modal modal_mediano ocultar" id="modal">
+        <div class="modal modal_mediano modal_lote ocultar" id="modal">
             <div class="cabecera_modal">
                 <h2 class="titulo_modal" id="titulo_modal">Registrar Artículo</h2>
                 <a type="button" class="cerrar_modal" id="cerrar_modal">&times;</a>
@@ -146,11 +146,57 @@
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="codigo_articulo" name="codigo_articulo">
-                    
-                    <div class="row">
-                        <div class="colum">
+
+                    <!-- Registro por lote: solo visible al incluir -->
+                    <div id="seccion_lote">
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario">
+                                    <select class="formulario select2" id="lote_catalogo">
+                                        <option value="" selected disabled>Seleccione un artículo...</option>
+                                    </select>
+                                    <label for="lote_catalogo" class="titulo_formulario">Artículo del Catálogo</label>
+                                </div>
+                            </div>
+                            <div class="colum">
+                                <div class="caja_formulario cf_1">
+                                    <input type="number" class="formulario" id="lote_cantidad" min="1" max="50" value="1">
+                                    <label for="lote_cantidad" class="titulo_formulario">Cantidad</label>
+                                </div>
+                            </div>
+                            <div class="colum">
+                                <div class="caja_formulario cf_2 caja_con_accion">
+                                    <div class="caja_select_accion">
+                                        <select class="formulario select2" id="lote_estado">
+                                            <option value="" selected disabled>Estado...</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn_accion_campo" id="btn_agregar_lote" data-tippy-content="Agregar a la lista">
+                                        <i data-lucide="plus"></i>
+                                    </button>
+                                    <label for="lote_estado" class="titulo_formulario">Estado Inicial</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lista_lote">
+                            <div class="lista_lote_cabecera">
+                                <span class="lista_lote_titulo">
+                                    <i data-lucide="package-plus"></i>
+                                    Artículos a registrar
+                                    <span class="lista_lote_contador" id="contador_lote">0</span>
+                                </span>
+                                <button type="button" class="lista_lote_vaciar" id="btn_vaciar_lote" disabled>Vaciar lista</button>
+                            </div>
+                            <div class="lista_lote_cuerpo" id="cuerpo_lote"></div>
+                        </div>
+                    </div>
+
+                    <!-- Campos individuales: modificar (solo estado físico) y filtros del reporte -->
+                    <div class="row" id="seccion_individual">
+                        <div class="colum" id="col_catalogo">
                             <div class="caja_formulario">
-                                <select class="formulario select2" id="id_catalogo" name="id_catalogo" required>
+                                <select class="formulario select2" id="id_catalogo" name="id_catalogo">
                                     <option value="" selected disabled>Seleccione un artículo...</option>
                                 </select>
                                 <label for="id_catalogo" class="titulo_formulario">Artículo del Catálogo</label>
@@ -158,14 +204,14 @@
                         </div>
                         <div class="colum">
                             <div class="caja_formulario">
-                                <select class="formulario select2" id="id_estado" name="id_estado" required>
+                                <select class="formulario select2" id="id_estado" name="id_estado">
                                     <option value="" selected disabled>Seleccione un estado...</option>
                                 </select>
                                 <label for="id_estado" class="titulo_formulario">Condición / Estado Físico</label>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row row_final">
                         <div class="colum">
                             <button type="button" class="btn btn_azul" id="btn_guardar" data-accion="incluir">Guardar</button>

@@ -10,17 +10,18 @@ class ModeloAsignaciones extends Conexion
     private $id_asignacion;
     private $codigo_atleta;
     private $codigo_articulo;
+    private $articulos;
     private $fecha_asignacion;
     private $estatus;
-    
+
     private $filtro;
     private $fecha_inicio;
     private $fecha_fin;
     private $mostrar_inactivos;
-    private $accion_actual; 
+    private $accion_actual;
 
     private $objArticulos;
-    
+
     use VerificarExistencia;
 
     public function __construct()
@@ -60,17 +61,18 @@ class ModeloAsignaciones extends Conexion
         $this->id_asignacion    = $datos['id_asignacion'] ?? null;
         $this->codigo_atleta    = $datos['codigo_atleta'] ?? null;
         $this->codigo_articulo  = $datos['codigo_articulo'] ?? null;
+        $this->articulos        = $datos['articulos'] ?? null;
         $this->fecha_asignacion = $datos['fecha_asignacion'] ?? null;
         $this->estatus          = $datos['estatus'] ?? null;
 
         $this->filtro            = $datos['filtro'] ?? '';
-        $this->fecha_inicio      = $datos['fecha_asignacion'] ?? ''; 
+        $this->fecha_inicio      = $datos['fecha_asignacion'] ?? '';
         $this->fecha_fin         = $datos['fecha_f'] ?? '';
         $this->mostrar_inactivos = $datos['anulados'] ?? 0;
 
         return match ($accion) {
             'consultar' => $this->ConsultarAsignaciones(),
-            'generar'   => $this->ConsultarAsignaciones(), 
+            'generar'   => $this->ConsultarAsignaciones(),
             'buscar'    => $this->Buscar(), // <-- NUEVO METODO AÑADIDO
             'incluir'   => $this->IncluirAsignacion(),
             'modificar' => $this->ModificarAsignacion(),
@@ -209,55 +211,90 @@ class ModeloAsignaciones extends Conexion
         }
     }
 
+    /**
+     * Registra la asignación de uno o varios artículos a un mismo atleta en una sola transacción.
+     * Si cualquiera de los artículos no es válido, no se registra ninguno.
+     */
     private function IncluirAsignacion(): array
     {
         $conex = null;
+
+        // Lista de artículos a asignar (lote) o, por compatibilidad, un único artículo
+        $lista = !empty($this->articulos)
+            ? array_values(array_unique(array_map('strval', $this->articulos)))
+            : [(string)$this->codigo_articulo];
+
         $datos_nuevos = [
             'codigo_atleta' => $this->codigo_atleta,
-            'codigo_articulo' => $this->codigo_articulo,
             'fecha_asignacion' => $this->fecha_asignacion,
             'estatus' => 1
         ];
+        if (count($lista) === 1) {
+            $datos_nuevos['codigo_articulo'] = $lista[0];
+        } else {
+            $datos_nuevos['articulos'] = $lista;
+        }
 
         try {
             $conex = $this->conex();
             $conex->beginTransaction();
 
+            // Cancela toda la transacción e informa el artículo que causó el error
+            $fallar = function (string $codigo, $articulo_error = null) use (&$conex, $datos_nuevos) {
+                if ($conex && $conex->inTransaction()) $conex->rollBack();
+                $respuesta = ['accion' => 'error', 'codigo' => $codigo, 'datos_nuevos' => json_encode($datos_nuevos)];
+                if ($articulo_error !== null) $respuesta['articulo_error'] = $articulo_error;
+                return $respuesta;
+            };
+
             if (!$this->verificarExistencia('codigo_atleta', $this->codigo_atleta, 'atletas', null)) {
-                return ['accion' => 'error', 'codigo' => 'ERR_ATLETA_NO_EXISTE', 'datos_nuevos' => json_encode($datos_nuevos)];
+                return $fallar('ERR_ATLETA_NO_EXISTE');
             }
 
             $stmtCheck = $conex->prepare("
-                SELECT ai.estatus, c.codigo_posicion 
-                FROM articulos_inventario ai 
+                SELECT ai.estatus, ai.codigo_club, c.codigo_posicion
+                FROM articulos_inventario ai
                 INNER JOIN catalogo c ON ai.id_catalogo = c.id_catalogo
                 WHERE ai.codigo_articulo = ? FOR UPDATE
             ");
-            $stmtCheck->execute([$this->codigo_articulo]);
-            $articulo = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+            $stmtInsert = $conex->prepare("INSERT INTO asignaciones (codigo_atleta, codigo_articulo, fecha_asignacion, estatus) VALUES (?, ?, ?, 1)");
 
-            if (!$articulo) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_EXISTE', 'datos_nuevos' => json_encode($datos_nuevos)];
-            if ($articulo['estatus'] != 1) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_OCUPADO', 'datos_nuevos' => json_encode($datos_nuevos)];
+            $posicion_atleta = null;
+            $posicion_consultada = false;
 
-            if (!empty($articulo['codigo_posicion'])) {
-                $stmtAtleta = $conex->prepare("SELECT codigo_posicion FROM inscripciones WHERE codigo_atleta = ? AND estatus = 1 LIMIT 1");
-                $stmtAtleta->execute([$this->codigo_atleta]);
-                $posicion_atleta = $stmtAtleta->fetchColumn();
-                
-                if ($posicion_atleta != $articulo['codigo_posicion']) {
-                    return ['accion' => 'error', 'codigo' => 'ERR_POSICION_NO_COINCIDE', 'datos_nuevos' => json_encode($datos_nuevos)];
+            foreach ($lista as $codigo_articulo) {
+                $stmtCheck->execute([$codigo_articulo]);
+                $articulo = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+                if (!$articulo) return $fallar('ERR_EQUIPO_NO_EXISTE', $codigo_articulo);
+                if ($articulo['estatus'] != 1) return $fallar('ERR_EQUIPO_OCUPADO', $articulo['codigo_club'] ?? $codigo_articulo);
+
+                if (!empty($articulo['codigo_posicion'])) {
+                    // La posición del atleta se consulta una sola vez
+                    if (!$posicion_consultada) {
+                        $stmtAtleta = $conex->prepare("SELECT codigo_posicion FROM inscripciones WHERE codigo_atleta = ? AND estatus = 1 LIMIT 1");
+                        $stmtAtleta->execute([$this->codigo_atleta]);
+                        $posicion_atleta = $stmtAtleta->fetchColumn();
+                        $posicion_consultada = true;
+                    }
+
+                    if ($posicion_atleta != $articulo['codigo_posicion']) {
+                        return $fallar('ERR_POSICION_NO_COINCIDE', $articulo['codigo_club'] ?? $codigo_articulo);
+                    }
                 }
+
+                $stmtInsert->execute([$this->codigo_atleta, $codigo_articulo, $this->fecha_asignacion]);
+                $this->objArticulos->CambiarEstatus($codigo_articulo, 2, $conex);
             }
-
-            $sqlInsert = "INSERT INTO asignaciones (codigo_atleta, codigo_articulo, fecha_asignacion, estatus) VALUES (?, ?, ?, 1)";
-            $stmtInsert = $conex->prepare($sqlInsert);
-            $stmtInsert->execute([$this->codigo_atleta, $this->codigo_articulo, $this->fecha_asignacion]);
-
-            $this->objArticulos->CambiarEstatus($this->codigo_articulo, 2, $conex);
 
             $conex->commit();
             // NUEVO: Devolvemos los datos nuevos para la bitácora
-            return ['accion' => 'exito', 'mensaje' => 'Asignación procesada.', 'datos_nuevos' => json_encode($datos_nuevos)];
+            return [
+                'accion' => 'exito',
+                'mensaje' => 'Asignación procesada.',
+                'total' => count($lista),
+                'datos_nuevos' => json_encode($datos_nuevos)
+            ];
         } catch (Exception $e) {
             if ($conex && $conex->inTransaction()) $conex->rollBack();
             logs('Asignaciones', $e->getMessage(), 'Modelo_Incluir');
@@ -298,14 +335,14 @@ class ModeloAsignaciones extends Conexion
 
             if ($viejoEquipo != $this->codigo_articulo) {
                 $stmtCheck = $conex->prepare("
-                    SELECT ai.estatus, c.codigo_posicion 
-                    FROM articulos_inventario ai 
+                    SELECT ai.estatus, c.codigo_posicion
+                    FROM articulos_inventario ai
                     INNER JOIN catalogo c ON ai.id_catalogo = c.id_catalogo
                     WHERE ai.codigo_articulo = ? FOR UPDATE
                 ");
                 $stmtCheck->execute([$this->codigo_articulo]);
                 $articulo = $stmtCheck->fetch(PDO::FETCH_ASSOC);
-                
+
                 if (!$articulo) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_EXISTE', 'datos_nuevos' => json_encode($datos_nuevos)];
                 if ($articulo['estatus'] != 1) return ['accion' => 'error', 'codigo' => 'ERR_EQUIPO_NO_DISPONIBLE', 'datos_nuevos' => json_encode($datos_nuevos)];
 
@@ -313,7 +350,7 @@ class ModeloAsignaciones extends Conexion
                     $stmtAtleta = $conex->prepare("SELECT codigo_posicion FROM atletas WHERE codigo_atleta = ? LIMIT 1");
                     $stmtAtleta->execute([$this->codigo_atleta]);
                     $posicion_atleta = $stmtAtleta->fetchColumn();
-                    
+
                     if ($posicion_atleta != $articulo['codigo_posicion']) {
                         return ['accion' => 'error', 'codigo' => 'ERR_POSICION_NO_COINCIDE', 'datos_nuevos' => json_encode($datos_nuevos)];
                     }
@@ -324,19 +361,19 @@ class ModeloAsignaciones extends Conexion
             } else {
                 // Verificar si se cambia de atleta manteniendo el equipo, debemos validar la posición igual
                 $stmtCheck = $conex->prepare("
-                    SELECT c.codigo_posicion 
-                    FROM articulos_inventario ai 
+                    SELECT c.codigo_posicion
+                    FROM articulos_inventario ai
                     INNER JOIN catalogo c ON ai.id_catalogo = c.id_catalogo
                     WHERE ai.codigo_articulo = ?
                 ");
                 $stmtCheck->execute([$this->codigo_articulo]);
                 $codigo_posicion = $stmtCheck->fetchColumn();
-                
+
                 if (!empty($codigo_posicion)) {
                     $stmtAtleta = $conex->prepare("SELECT codigo_posicion FROM atletas WHERE codigo_atleta = ? LIMIT 1");
                     $stmtAtleta->execute([$this->codigo_atleta]);
                     $posicion_atleta = $stmtAtleta->fetchColumn();
-                    
+
                     if ($posicion_atleta != $codigo_posicion) {
                         return ['accion' => 'error', 'codigo' => 'ERR_POSICION_NO_COINCIDE', 'datos_nuevos' => json_encode($datos_nuevos)];
                     }
@@ -420,10 +457,20 @@ class ModeloAsignaciones extends Conexion
         if (!empty($datos['codigo_atleta']) && !preg_match($regexId, $datos['codigo_atleta'])) {
             throw new Exception('Atleta inválido.');
         }
-        if (!empty($datos['codigo_articulo']) && !preg_match($regexId, $datos['codigo_articulo'])) {
+        if (!empty($datos['codigo_articulo']) && !preg_match($regexId, (string)$datos['codigo_articulo'])) {
             throw new Exception('Artículo inválido.');
         }
-        
+        if (isset($datos['articulos'])) {
+            if (!is_array($datos['articulos']) || empty($datos['articulos'])) {
+                throw new Exception('La lista de artículos es inválida.');
+            }
+            foreach ($datos['articulos'] as $articulo) {
+                if (!preg_match($regexId, (string)$articulo)) {
+                    throw new Exception('Uno de los artículos seleccionados es inválido.');
+                }
+            }
+        }
+
         if (!empty($datos['fecha_asignacion']) && !preg_match($regexFecha, $datos['fecha_asignacion'])) {
             throw new Exception('Formato de fecha de asignación inválido. Use AAAA-MM-DD.');
         }
