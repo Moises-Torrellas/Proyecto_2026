@@ -100,6 +100,32 @@ class ModeloAsignaciones extends Conexion
         }
     }
 
+    public function ConsultarAsignacionesDevolucion(): array
+    {
+        $conex = null;
+        try {
+            $conex = $this->conex();
+            $sql = "SELECT a.id_asignacion, a.estatus as estatus_asignacion,
+                           CONCAT(at.p_nombre, ' ', at.p_apellidos) as atleta,
+                           c.nombre as articulo
+                    FROM asignaciones a
+                    INNER JOIN atletas at ON a.codigo_atleta = at.codigo_atleta
+                    INNER JOIN articulos_inventario e ON a.codigo_articulo = e.codigo_articulo
+                    INNER JOIN catalogo c ON e.id_catalogo = c.id_catalogo
+                    ORDER BY a.fecha_asignacion DESC";
+            $stmt = $conex->prepare($sql);
+            $stmt->execute();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return ['accion' => 'consultar', 'datos' => $datos];
+        } catch (Exception $e) {
+            logs('Asignaciones', $e->getMessage(), 'Modelo_ConsultarAsignacionesDevolucion');
+            return ['accion' => 'error', 'codigo' => 'ERR_BD', 'mensaje' => $e->getMessage()];
+        } finally {
+            $conex = null;
+        }
+    }
+
    public function ConsultarAsignaciones(): array
     {
         $conex = null;
