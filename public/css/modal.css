@@ -1493,3 +1493,226 @@ form{
         width: 95%;
     }
 }
+
+
+/* ======================================================== */
+/* REGISTRO POR LOTE (Inventario de Artículos / Asignaciones) */
+/* Lista de artículos seleccionados antes de registrar       */
+/* ======================================================== */
+.modal_lote {
+    height: min(760px, 94vh);
+}
+
+/* Selector principal más ancho (artículo a agregar) */
+.caja_lote {
+    width: 420px;
+    max-width: 100%;
+}
+
+.lista_lote {
+    width: 100%;
+    margin: 0 auto 10px auto;
+    border: 2px solid var(--borde-form);
+    border-radius: 10px;
+    background: var(--fondo-form);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.lista_lote_cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 2px solid var(--borde-form);
+    color: var(--texto-principal);
+    font-size: .85rem;
+    font-weight: 700;
+    user-select: none;
+}
+
+.lista_lote_titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lista_lote_titulo svg {
+    width: 18px;
+    height: 18px;
+    color: var(--color-primario);
+}
+
+.lista_lote_contador {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 12px;
+    background: var(--color-primario);
+    color: var(--boton-texto, #fff);
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.lista_lote_vaciar {
+    border: none;
+    background: none;
+    color: var(--color-peligro);
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s ease-in;
+}
+
+.lista_lote_vaciar:hover {
+    text-decoration: underline;
+}
+
+.lista_lote_vaciar:disabled {
+    color: var(--color-claro);
+    cursor: not-allowed;
+    text-decoration: none;
+    opacity: .6;
+}
+
+.lista_lote_cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 250px;
+    padding: 10px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.lista_lote_vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 28px 15px;
+    color: var(--color-claro);
+    font-size: .82rem;
+    font-weight: 600;
+    text-align: center;
+    user-select: none;
+}
+
+.lista_lote_vacio svg {
+    width: 32px;
+    height: 32px;
+    opacity: .6;
+}
+
+/* Fila de cada artículo seleccionado */
+.item_lote {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--borde-form);
+    border-radius: 8px;
+    background: var(--fondo-principal);
+    animation: item_lote_entrada .25s ease;
+    transition: border-color .2s ease-in;
+}
+
+.item_lote:hover {
+    border-color: var(--color-primario);
+}
+
+.item_lote_icono {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--fondo-translucido);
+    color: var(--color-primario);
+}
+
+.item_lote_icono svg {
+    width: 18px;
+    height: 18px;
+}
+
+.item_lote_info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.item_lote_titulo {
+    color: var(--texto-principal);
+    font-size: .85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.item_lote_subtitulo {
+    color: var(--color-claro);
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+/* Select de estado físico propio de cada artículo */
+.item_lote_estado {
+    width: 170px;
+}
+
+.item_lote_estado .formulario {
+    height: 38px;
+    padding: 0 10px;
+    font-size: .8rem;
+    cursor: pointer;
+}
+
+/* Etiqueta informativa (ej. condición en asignaciones) */
+.item_lote_etiqueta {
+    color: var(--texto-principal);
+    font-size: .75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.item_lote .btn_t {
+    width: 32px;
+    height: 32px;
+    font-size: .95rem;
+}
+
+@keyframes item_lote_entrada {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .caja_lote {
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .item_lote {
+        grid-template-columns: 36px minmax(0, 1fr) auto;
+    }
+
+    .item_lote_estado,
+    .item_lote_etiqueta {
+        grid-column: 2 / 3;
+        width: 100%;
+    }
+}
