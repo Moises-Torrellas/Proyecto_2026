@@ -266,6 +266,19 @@ endif;
 <head>
     <?php include('complementos/head.php'); ?>
     <title>Atletas</title>
+    <style>
+        #f .ocultar_campo,
+        #f .asistente_paso.ocultar_campo,
+        #f .asistente_paso .row.ocultar_campo,
+        #f .asistente_paso .colum.ocultar_campo {
+            display: none !important;
+        }
+        #f.asistente_inactivo .asistente_paso + .asistente_paso {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+    </style>
 </head>
 
 <body data-tema="<?= _TEMA_ === 'oscuro' ? 'oscuro' : 'claro' ?>">
@@ -628,7 +641,7 @@ endif;
                                     <h4 class="titulo_des titulo_seccion">Datos Personales</h4>
                                     <p class="asistente_paso_descripcion">Información básica e identificación del atleta.</p>
                                 </div>
-                                <div class="row">
+                                <div class="row" id="row_nacimiento">
                                     <div class="colum">
                                         <div class="caja_formulario">
                                             <input type="date" class="formulario" id="fecha_nac" name="fecha_nac">
@@ -638,9 +651,25 @@ endif;
                                     </div>
                                     <div class="colum">
                                         <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="lugar_nacimiento" name="lugar_nacimiento" required>
+                                            <label for="lugar_nacimiento" class="titulo_formulario">Lugar de Nacimiento</label>
+                                            <span class="mensaje" id="lugar_nacimiento_spam"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="colum">
+                                        <div class="caja_formulario">
                                             <input type="text" class="formulario" id="doc_i" name="doc_i">
                                             <label for="doc_i" class="titulo_formulario">Documento de Identidad</label>
                                             <span class="mensaje" id="doc_i_spam"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum">
+                                        <div class="caja_formulario">
+                                            <input type="text" class="formulario" id="edad" name="edad" readonly>
+                                            <label for="edad" class="titulo_formulario">Edad (Año Calendario)</label>
+                                            <span class="mensaje" id="edad_spam"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -663,22 +692,6 @@ endif;
                                 <div class="row">
                                     <div class="colum">
                                         <div class="caja_formulario">
-                                            <input type="text" class="formulario" id="lugar_nacimiento" name="lugar_nacimiento">
-                                            <label for="lugar_nacimiento" class="titulo_formulario">Lugar de Nacimiento</label>
-                                            <span class="mensaje" id="lugar_nacimiento_spam"></span>
-                                        </div>
-                                    </div>
-                                    <div class="colum">
-                                        <div class="caja_formulario">
-                                            <input type="text" class="formulario" id="edad" name="edad" readonly>
-                                            <label for="edad" class="titulo_formulario">Edad (Año Calendario)</label>
-                                            <span class="mensaje" id="edad_spam"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="colum">
-                                        <div class="caja_formulario">
                                             <select name="genero" id="genero" class="formulario select">
                                                 <option id="todos" value="T" selected>Todos</option>
                                                 <option value="H">Hombre</option>
@@ -686,6 +699,17 @@ endif;
                                             </select>
                                             <label for="genero" class="titulo_formulario">Genero</label>
                                             <span class="mensaje" id="genero_span"></span>
+                                        </div>
+                                    </div>
+                                    <div class="colum ocultar_campo" id="col_estatus">
+                                        <div class="caja_formulario">
+                                            <select name="estatus" id="estatus" class="formulario select" disabled>
+                                                <option value="T" selected>Todos</option>
+                                                <option value="1">Activos</option>
+                                                <option value="2">Retirados</option>
+                                            </select>
+                                            <label for="estatus" class="titulo_formulario">Estatus</label>
+                                            <span class="mensaje" id="estatus_span"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -717,23 +741,12 @@ endif;
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row">
+                                <div class="row" id="row_dorsal">
                                     <div class="colum">
                                         <div class="caja_formulario">
                                             <input type="number" class="formulario" id="dorsal" name="dorsal">
                                             <label for="dorsal" class="titulo_formulario">Dorsal</label>
                                             <span class="mensaje" id="dorsal_spam"></span>
-                                        </div>
-                                    </div>
-                                    <div class="colum">
-                                        <div class="caja_formulario">
-                                            <select name="estatus" id="estatus" class="formulario select" disabled>
-                                                <option value="T" selected>Todos</option>
-                                                <option value="1">Activos</option>
-                                                <option value="2">Retirados</option>
-                                            </select>
-                                            <label for="estatus" class="titulo_formulario">Estatus</label>
-                                            <span class="mensaje" id="estatus_span"></span>
                                         </div>
                                     </div>
                                 </div>

@@ -120,6 +120,10 @@ class ModeloAtletas extends Conexion
         // 5. Ejecución de la acción vía Match
         $accion = $datos['accion'] ?? null;
 
+        if (($accion === 'incluir' || $accion === 'modificar') && empty($this->lugar_nacimiento)) {
+            throw new Exception('El lugar de nacimiento es obligatorio.');
+        }
+
         return match ($accion) {
             'incluir'   => $this->Incluir(),
             'modificar' => $this->Modificar(),
@@ -877,7 +881,7 @@ class ModeloAtletas extends Conexion
             throw new Exception('Estatura inválida.');
         }
 
-        if (!empty($datos['lugar_nacimiento']) && !preg_match('/^.{3,100}$/', $datos['lugar_nacimiento'])) {
+        if (!empty($datos['lugar_nacimiento']) && !preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚüÜñÑ\s,.\-]{3,100}$/u', trim($datos['lugar_nacimiento']))) {
             throw new Exception('Lugar de nacimiento inválido.');
         }
         if (!empty($datos['correo']) && !preg_match('/^(?=.{3,60}$)[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|mil|info|io|co|es|mx|ar|cl|pe|br)$/i', $datos['correo'])) {
@@ -925,6 +929,9 @@ class ModeloAtletas extends Conexion
                         throw new Exception('Necesita ingresar el documento de identidad del atleta.');
                     }
                 }
+            }
+            if (($accion === 'incluir' || $accion === 'modificar') && array_key_exists('lugar_nacimiento', $datos) && trim((string)$datos['lugar_nacimiento']) === '') {
+                throw new Exception('El lugar de nacimiento es obligatorio.');
             }
         }
     }

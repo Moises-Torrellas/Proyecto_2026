@@ -45,7 +45,7 @@ $(document).ready(function () {
     });
 
     Validacion("fecha_nac", /^[0-9\b-]*$/, /^\d{4}-\d{2}-\d{2}$/, "Seleccione una fecha válida", "proceso");
-    Validacion("lugar_nacimiento", /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, /^.{3,100}$/, "Mínimo 3 caracteres", "proceso");
+    Validacion("lugar_nacimiento", /^[a-zA-Z0-9áéíóúÁÉÍÓÚüÜñÑ\s\b,.-]*$/, /^[a-zA-Z0-9áéíóúÁÉÍÓÚüÜñÑ\s,.-]{3,100}$/, "Mínimo 3 caracteres", "proceso");
     Validacion("nombre", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras, mínimo 3 caracteres", "proceso");
     Validacion("apellido", /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\b]*$/, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,60}$/, "Solo letras, mínimo 3 caracteres", "proceso");
     Validacion("doc_i", /^[0-9\b]*$/, /^[0-9]{7,8}$/, "Mínimo 7 máximo 8 dígitos, solo números", "proceso");
@@ -115,7 +115,7 @@ $(document).ready(function () {
         }
         else if (accion == "generar") {
             opcionesReporte(function(formato) {
-                abrirAlertaEspara('Se esta generando el reporte', 'Espere un momento');
+                abrirAlertaEspara('Se está generando el reporte', 'Espere un momento');
                 var datos = new FormData($('#f')[0]);
                 datos.append('accion', 'generar');
                 datos.append('formato', formato);
@@ -150,17 +150,32 @@ $(document).ready(function () {
     });
 
     $("#generar").on("click", function () {
+        window.datosModificarActual = null;
         limpia();
+        $('#fecha_nac').val('');
+        if ($('#fecha_nac')[0] && $('#fecha_nac')[0]._flatpickr) {
+            $('#fecha_nac')[0]._flatpickr.clear();
+        }
         MultiConsulta();
         $("#proceso").data("accion", "generar");
-        $("#proceso").text("Generar Reporte");
+        $("#proceso").text("Generar Reporte").prop("disabled", false).removeClass("btn_bloqueado");
         $("#titulo_modal").text("Generar Reporte");
-        $('.titulo_des').hide();
-        $('#fecha_nac, #lugar_nacimiento, #representante, #telefono, #direccion, #municipio, #correo, #instagram, #dorsal, #peso, #estatura, #talla_pantalon, #talla_franela, #talla_calzado, #tipo_sangre, #es_alergico, #alergias_detalle, #foto').closest('.colum').hide();
-        $('#estatus').closest('.colum').show().prop('disabled', false);
+
+        $('.titulo_des, .asistente_paso_cabecera').addClass('ocultar_campo');
+        $('#fecha_nac, #lugar_nacimiento, #representante, #telefono, #direccion, #municipio, #correo, #instagram, #dorsal, #peso, #estatura, #talla_pantalon, #talla_franela, #talla_calzado, #tipo_sangre, #es_alergico, #alergias_detalle, #foto').closest('.colum').addClass('ocultar_campo');
+        $('#row_nacimiento, #row_dorsal').addClass('ocultar_campo');
+        $('#f .asistente_paso[data-paso="contacto"], #f .asistente_paso[data-paso="salud"], #f .asistente_paso[data-paso="foto"]').addClass('ocultar_campo');
+
+        $('#f .asistente_paso[data-paso="personales"], #f .asistente_paso[data-paso="deportivos"]').removeClass('ocultar_campo');
+        $('#doc_i, #nombre, #apellido, #edad, #genero, #categoria, #posicion, #estatus').closest('.colum').removeClass('ocultar_campo');
+        $('#doc_i').prop('disabled', false).attr('placeholder', '').parent().removeClass('campo_deshabilitado');
+        $('#estatus').prop('disabled', false).val('T');
         $('#edad').prop('readonly', false);
-        $("#todos").prop('disabled', false);
-        // El reporte usa el formulario como filtros: se muestran todas las secciones juntas, sin pasos
+        $('label[for="edad"]').text('Edad');
+        $("#todos").prop('disabled', false).show();
+        $("#genero").val('T');
+        $('#categoria, #posicion').val('').trigger('change');
+
         desactivarAsistente();
         abrirModal();
     });
@@ -230,6 +245,7 @@ $(document).ready(function () {
 
     // --- Lógica de validación de edad y activación de campos ---
     $("#fecha_nac").on("change", function () {
+        if ($("#proceso").data("accion") === "generar") return;
         validarEdadAtleta($(this).val());
         cargarEdad($(this).val());
     });
@@ -319,7 +335,7 @@ $(document).ready(function () {
 });
 
 function validarEdadAtleta(fechaValor) {
-    if (!fechaValor) return;
+    if (!fechaValor || $("#proceso").data("accion") === "generar") return;
 
     const hoy = new Date();
     const nacimiento = new Date(fechaValor);
@@ -407,6 +423,24 @@ function validarPasoPersonales() {
         return false;
     }
 
+    const lugarNac = $('#lugar_nacimiento').val() ? $('#lugar_nacimiento').val().trim() : '';
+    if (lugarNac === '') {
+        $('#lugar_nacimiento_spam').text("El lugar de nacimiento es obligatorio");
+        $('#lugar_nacimiento').addClass("denegado");
+        muestraMensaje("error", 2000, "Error", "El lugar de nacimiento es obligatorio");
+        return false;
+    }
+    if (lugarNac.length < 3) {
+        $('#lugar_nacimiento_spam').text("Mínimo 3 caracteres");
+        $('#lugar_nacimiento').addClass("denegado");
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un lugar de nacimiento válido");
+        return false;
+    }
+    if (validarkeyup(/^[a-zA-Z0-9áéíóúÁÉÍÓÚüÜñÑ\s,.-]{3,100}$/, $('#lugar_nacimiento'), $("#lugar_nacimiento_spam"), "Mínimo 3 caracteres", true)) {
+        muestraMensaje("error", 2000, "Error", "Debe ingresar un lugar de nacimiento válido");
+        return false;
+    }
+
     if (!$("#doc_i").prop("disabled")) {
         if (validarkeyup(/^[0-9]{7,8}$/, $('#doc_i'), $("#doc_i_spam"), "Mínimo 7 máximo 8 dígitos", true)) {
             muestraMensaje("error", 2000, "Error", "Debe ingresar una cédula válida");
@@ -422,13 +456,6 @@ function validarPasoPersonales() {
     if (validarkeyup(/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,30}$/, $('#apellido'), $("#apellido_spam"), "Solo letras entre 3 y 30 caracteres", true)) {
         muestraMensaje("error", 2000, "Error", "Debe ingresar un apellido válido");
         return false;
-    }
-
-    if ($('#lugar_nacimiento').val() != "" && $('#lugar_nacimiento').val() != null) {
-        if (validarkeyup(/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\b,.-]*$/, $('#lugar_nacimiento'), $("#lugar_nacimiento_spam"), "Mínimo 3 caracteres", true) || validarkeyup(/^.{3,100}$/, $('#lugar_nacimiento'), $("#lugar_nacimiento_spam"), "Mínimo 3 caracteres", true)) {
-            muestraMensaje("error", 2000, "Error", "Debe ingresar un lugar de nacimiento válido");
-            return false;
-        }
     }
 
     const genero = $('#genero').val();
@@ -735,6 +762,7 @@ function enviarPeticionDocumento(id, tipoDocumento, anio) {
     //abrirAlertaEspara('Generando Documento', 'Espere un momento');
 }
 function modificar(datos) {
+    window.datosModificarActual = datos[0];
     limpia();
     if (window.esReinscripcion) {
         $("#proceso").data("accion", "reinscribir");
@@ -746,11 +774,14 @@ function modificar(datos) {
         $("#proceso").text("Modificar Atleta");
         $("#titulo_modal").text("Modificar Atleta");
     }
-    $('.titulo_des').show();
-    $('#fecha_nac, #lugar_nacimiento, #representante, #telefono, #direccion, #municipio, #correo, #instagram, #dorsal, #peso, #estatura, #talla_pantalon, #talla_franela, #talla_calzado, #tipo_sangre, #es_alergico, #alergias_detalle, #foto').closest('.colum').show();
-    $('#estatus').closest('.colum').hide().prop('disabled', true);
+    $('#f .ocultar_campo').removeClass('ocultar_campo');
+    $('#estatus').prop('disabled', true);
+    $('#estatus').closest('.colum').addClass('ocultar_campo');
+    $('#doc_i').prop('disabled', false).parent().removeClass('campo_deshabilitado');
+    $('#proceso').prop('disabled', false).removeClass('btn_bloqueado');
     $('#edad').prop('readonly', true);
-    $("#todos").prop('disabled', true);
+    $('label[for="edad"]').text('Edad (Año Calendario)');
+    $("#todos").prop('disabled', true).hide();
 
     $('#fecha_nac').val(datos[0].fecha_nac);
     if ($('#fecha_nac')[0]._flatpickr) {
@@ -818,7 +849,7 @@ function crearConsulta(htmlRecibido) {
 function construirSelect(idSelect, datos, campoId, campo1, campo2 = null, campo3 = null) {
     var select = $('#' + idSelect);
     select.empty();
-    select.append('<option value="" selected disabled>Seleccione una opción</option>');
+    select.append('<option value=""></option>');
 
     datos.forEach(dato => {
         let textoMostrar = "";
@@ -857,6 +888,7 @@ function escapeHTML(texto) {
 }
 
 function validarCategoria() {
+    if ($("#proceso").data("accion") === "generar") return true;
     const fechaNac = $('#fecha_nac').val();
     const categoria = $('#categoria option:selected');
 
@@ -908,6 +940,14 @@ function enviaAjax(datos) {
                     construirSelect('representante', lee.representantes, 'codigo_representante', 'nombre', 'apellido', 'cedula');
                     construirSelect('posicion', lee.posiciones, 'codigo_posicion', 'nombre', 'abreviatura');
                     construirSelect('categoria', lee.categorias, 'codigo_categoria', 'nombre', 'edad_min', 'edad_max');
+                    const accionModal = $("#proceso").data("accion");
+                    if ((accionModal === "modificar" || accionModal === "reinscribir") && window.datosModificarActual) {
+                        $('#representante').val(window.datosModificarActual.id_representante).trigger('change');
+                        $('#posicion').val(window.datosModificarActual.id_posicion).trigger('change');
+                        $('#categoria').val(window.datosModificarActual.id_categoria).trigger('change');
+                    } else {
+                        $('#representante, #posicion, #categoria').val('').trigger('change');
+                    }
                 } else if (lee.accion == "incluir") {
                     consultar();
                     // Deja el formulario listo para otro registro, de vuelta en la primera sección
@@ -999,17 +1039,24 @@ function asistenteActivo() {
 
 // Prepara el formulario para un registro nuevo (usado al abrir y tras un registro exitoso)
 function prepararRegistro() {
+    window.datosModificarActual = null;
     limpia();
+    $('#fecha_nac').val('');
+    if ($('#fecha_nac')[0] && $('#fecha_nac')[0]._flatpickr) {
+        $('#fecha_nac')[0]._flatpickr.clear();
+    }
     MultiConsulta();
     $("#proceso").data("accion", "incluir");
-    $("#proceso").text("Registrar Atleta");
+    $("#proceso").text("Registrar Atleta").prop("disabled", false).removeClass("btn_bloqueado");
     $("#titulo_modal").text("Registrar Atleta");
-    $('.titulo_des').show();
-    $('#fecha_nac, #lugar_nacimiento, #representante, #telefono, #direccion, #municipio, #correo, #instagram, #dorsal, #peso, #estatura, #talla_pantalon, #talla_franela, #talla_calzado, #tipo_sangre, #es_alergico, #alergias_detalle, #foto').closest('.colum').show();
-    $('#estatus').closest('.colum').hide().prop('disabled', true);
-    $("#todos").prop('disabled', true);
+    $('#f .ocultar_campo').removeClass('ocultar_campo');
+    $('#estatus').prop('disabled', true);
+    $('#estatus').closest('.colum').addClass('ocultar_campo');
+    $('#doc_i').prop('disabled', false).attr('placeholder', '').parent().removeClass('campo_deshabilitado');
+    $("#todos").prop('disabled', true).hide();
     $("#genero").val("H").trigger('change');
     $('#edad').prop('readonly', true);
+    $('label[for="edad"]').text('Edad (Año Calendario)');
 
     $('#representante').val(null).trigger('change');
     $('#posicion').val(null).trigger('change');
@@ -1034,6 +1081,7 @@ function activarAsistente() {
 
 function desactivarAsistente() {
     $('#f').addClass('asistente_inactivo');
+    $('#f').find('div, ol, li, span, p, form, section').css('display', '');
     $('#asistente_progreso, #asistente_navegacion').css('display', '');
     $('#asistente_pista').css('transform', '');
     $('#btn_anterior, #btn_siguiente').addClass('asistente_oculto');
@@ -1258,4 +1306,3 @@ function recargarRepresentantes(cedulaSeleccionar) {
         }
     });
 }
-

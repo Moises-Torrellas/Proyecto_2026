@@ -180,7 +180,7 @@ function buscar($obj): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['fecha_nac', 'nombre', 'apellido', 'posicion', 'categoria', 'genero', 'peso', 'estatura', 'talla_pantalon', 'talla_franela', 'talla_calzado', 'tipo_sangre', 'correo']);
+        validar_requeridos(['fecha_nac', 'nombre', 'apellido', 'lugar_nacimiento', 'posicion', 'categoria', 'genero', 'peso', 'estatura', 'talla_pantalon', 'talla_franela', 'talla_calzado', 'tipo_sangre', 'correo']);
         
         if (!empty($_POST['es_alergico']) && empty(trim($_POST['alergias_detalle']))) {
             throw new Exception('Debe especificar las alergias.');
@@ -280,7 +280,7 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
 function modificar($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['id', 'fecha_nac', 'nombre', 'apellido', 'posicion', 'categoria', 'genero', 'foto_actual', 'peso', 'estatura', 'talla_pantalon', 'talla_franela', 'talla_calzado', 'tipo_sangre', 'correo']);
+        validar_requeridos(['id', 'fecha_nac', 'nombre', 'apellido', 'lugar_nacimiento', 'posicion', 'categoria', 'genero', 'foto_actual', 'peso', 'estatura', 'talla_pantalon', 'talla_franela', 'talla_calzado', 'tipo_sangre', 'correo']);
 
         if (!empty($_POST['es_alergico']) && empty(trim($_POST['alergias_detalle']))) {
             throw new Exception('Debe especificar las alergias.');

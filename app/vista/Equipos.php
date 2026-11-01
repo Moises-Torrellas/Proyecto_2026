@@ -208,30 +208,32 @@
         </div>
     </section>
 
-    <section class="contenedor_modal modal_contenedor" id="contenedor_modal">
-        <div class="modal modal_grande ocultar" id="modal">
+    <section class="contenedor_modal" id="contenedor_modal">
+        <div class="modal modal_mediano modal_lote ocultar" id="modal">
             <div class="cabecera_modal">
-                <h2 class="titulo_modal" id="titulo_modal"></h2>
+                <h2 class="titulo_modal" id="titulo_modal">Registrar Equipo</h2>
                 <a type="button" class="cerrar_modal" id="cerrar_modal">&times;</a>
             </div>
             <div class="contenido_modal">
                 <form id="f" autocomplete="off">
                     <input type="hidden" id="id" name="id">
 
-                    <div class="row">
+                    <!-- Nombre del equipo (Incluir / Modificar) -->
+                    <div class="row" id="row_nombre">
                         <div class="colum">
-                            <div class="caja_formulario">
+                            <div class="caja_formulario caja_lote">
                                 <input type="text" class="formulario" id="nombre" name="nombre">
                                 <label for="nombre" class="titulo_formulario">Nombre de Equipo</label>
                                 <span class="mensaje" id="nombre_spam"></span>
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- Selector de equipo (Solo para el reporte) -->
                     <div class="row" id="row_equipo_reporte" style="display:none;">
                         <div class="colum">
-                            <div class="caja_formulario">
-                                <select class="formulario select2" id="id_equipo" name="id_equipo" style="width: 100%;">
+                            <div class="caja_formulario caja_lote">
+                                <select class="formulario select2" id="id_equipo" name="id_equipo">
                                     <option value="" selected disabled>Seleccione un equipo</option>
                                     <?php if (!empty($registro)) : ?>
                                         <?php foreach ($registro as $dato) : ?>
@@ -243,38 +245,41 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="row" id="row_asignar">
-                        <div class="colum" id="colum_asignar">
-                            <button type="button" class="btn btn_azul" id="asignar">Seleccionar Atletas</button>
-                        </div>
-                    </div>
-                    
-                    <div class="row" id="row_tabla_atletas">
-                        <div class="colum colum_tabla_completa">
-                            <label for="" class="titulo_formulario titulo_formulario_tabla" id="label_tabla">Atletas Seleccionados</label>
-                            <div class="caja_formulario caja_tabla ct_t">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Cédula</th>
-                                            <th>Atleta</th>
-                                            <th>Categoría</th>
-                                            <th>Posición</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tabla_Atletas_Seleccionados">
-                                    </tbody>
-                                </table>
+
+                    <!-- Sección de selección por lote de atletas (Incluir / Modificar) -->
+                    <div id="seccion_lote_equipo">
+                        <div class="row">
+                            <div class="colum">
+                                <div class="caja_formulario caja_lote caja_con_accion">
+                                    <div class="caja_select_accion">
+                                        <select class="formulario select2" id="lote_atleta">
+                                            <option value="" selected disabled>Seleccione un atleta...</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn_accion_campo" id="btn_agregar_lote_equipo" data-tippy-content="Agregar al equipo">
+                                        <i data-lucide="plus"></i>
+                                    </button>
+                                    <label for="lote_atleta" class="titulo_formulario">Atleta a Agregar</label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="colum">
-                            <button type="button" class="btn btn_azul" id="proceso"></button>
 
+                        <div class="lista_lote">
+                            <div class="lista_lote_cabecera">
+                                <span class="lista_lote_titulo">
+                                    <i data-lucide="users"></i>
+                                    Atletas del Equipo
+                                    <span class="lista_lote_contador" id="contador_lote_equipo">0</span>
+                                </span>
+                                <button type="button" class="lista_lote_vaciar" id="btn_vaciar_lote_equipo" disabled>Vaciar lista</button>
+                            </div>
+                            <div class="lista_lote_cuerpo" id="cuerpo_lote_equipo"></div>
+                        </div>
+                    </div>
+
+                    <div class="row row_final">
+                        <div class="colum">
+                            <button type="button" class="btn btn_azul" id="proceso" data-accion="incluir">Registrar Equipo</button>
                         </div>
                     </div>
                 </form>
@@ -282,66 +287,8 @@
         </div>
     </section>
 
-    <section class="contenedor_modal" id="secundario_modal_contenedor">
-        <div class="modal modal_grande ocultar" id="secundario_modal">
-            <div class="cabecera_modal">
-                <h2 class="titulo_modal">Asignar Atletas</h2>
-                <a type="button" class="cerrar_modal" id="cerrar_modal_Secundario">&times;</a>
-            </div>
-            <div class="contenido_modal">
-                <form autocomplete="off">
-                    <div class="row" style="margin-bottom: 15px;">
-                        <div class="colum">
-                            <div class="caja_formulario">
-                                <input type="text" class="formulario" id="buscar_atleta_modal" placeholder="Buscar por nombre o cédula...">
-                                <label for="buscar_atleta_modal" class="titulo_formulario">Buscar Atleta</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="colum colum_tabla_completa">
-                            <label for="" class="titulo_formulario titulo_formulario_tabla">Listado de Atletas</label>
-                            <div class="caja_formulario caja_tabla ct_t">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 80px; text-align: center;">Selección</th>
-                                            <th>Cédula</th>
-                                            <th>Atleta</th>
-                                            <th>Categoría</th>
-                                            <th>Posición</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tabla_Atletas">
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row" style="margin-top: 10px;">
-                        <div class="colum" style="flex-direction: row; align-items: center; gap: 8px;">
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="check_todos_atletas" class="checkbox">
-                                <span class="custom-checkbox"></span>
-                            </label>
-                            <label for="check_todos_atletas" style="cursor:pointer; color: var(--color-texto);">Seleccionar todos los atletas</label>
-                        </div>
-                    </div>
-                    
-                    <div class="row" style="margin-top: 20px;">
-                        <div class="colum">
-                            <button type="button" class="btn btn_azul" id="listo">Listo</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <script src="js/main.js?v=2"></script>
-    <script src="js/equipos.js?v=2"></script>
+    <script src="js/main.js?v=3"></script>
+    <script src="js/equipos.js?v=3"></script>
     <?php include('complementos/mensajeError.php'); ?>
 </body>
 </html>
