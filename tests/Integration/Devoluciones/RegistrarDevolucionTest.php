@@ -134,7 +134,7 @@ class RegistrarDevolucionTest extends TestCase
         $this->cargarDatosBaseParaPrueba();
 
         // Se devuelve con estado físico 3 (Dañado, nivel_estado = 3)
-        $datosDanado = [
+$datosDanado = [
             'accion'           => 'incluir',
             'id_asignacion'    => 1,
             'id_estado'        => 3,
