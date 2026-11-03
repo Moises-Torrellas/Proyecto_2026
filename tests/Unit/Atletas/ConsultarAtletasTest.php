@@ -46,7 +46,7 @@ class ConsultarAtletasTest extends TestCase
             ['id_atleta' => '2', 'nombres' => 'Maria', 'apellidos' => 'Gomez', 'estatus' => 2]
         ];
 
-        $sqlEjecutado = null;
+        $sqlEjecutado = '';
         $paramsEjecutados = null;
 
         $stmtMock = $this->createMock(PDOStatement::class);
@@ -77,8 +77,8 @@ class ConsultarAtletasTest extends TestCase
     // Caso 2: Consulta con filtro dinámico general (keyup)
     public function testConsultarConFiltroGeneral(): void
     {
-        $sqlEjecutado = null;
-        $paramsEjecutados = null;
+        $sqlEjecutado = '';
+        $paramsEjecutados = [];
 
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->method('execute')->willReturnCallback(function ($params) use (&$paramsEjecutados) {
@@ -114,8 +114,8 @@ class ConsultarAtletasTest extends TestCase
     // Caso 3: Consulta con filtros específicos vía ProcesarDatos ('generar')
     public function testConsultarConFiltrosEspecificosViaProcesarDatos(): void
     {
-        $sqlEjecutado = null;
-        $paramsEjecutados = null;
+        $sqlEjecutado = '';
+        $paramsEjecutados = [];
 
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->method('execute')->willReturnCallback(function ($params) use (&$paramsEjecutados) {
