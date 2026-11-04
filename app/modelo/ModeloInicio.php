@@ -48,7 +48,7 @@ class ModeloInicio extends Conexion
 
             // Validar si el usuario está bloqueado (bloqueo == 1 corta el acceso)
             if ((int)$resultado['bloqueo'] !== 1) {
-                return ['accion' => 'denegado', 'resultado' => 0, 'mensaje' => 'Usted tiene bloqueado el acceso.'];
+                return ['accion' => 'denegado', 'resultado' => 0, 'mensaje' => 'Usted tiene bloqueado el acceso, Comunícate con el administrador para que lo desbloquee.'];
             }
 
             // 2. Validar la contraseña primero antes de buscar permisos

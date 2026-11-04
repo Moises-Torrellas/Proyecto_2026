@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 #[Group("integ")]
-class RestriccionDorsalPorCategoriaTest extends TestCase
+class AtletaDorsalDuplicadoTest extends TestCase
 {
     private ?PDO $pdo = null;
     private ModeloAtletas $modelo;

@@ -75,7 +75,7 @@ class VerificarDorsalCategoriaTest extends TestCase
     // Caso 3: Dorsal disponible sin id_atleta (caso registro nuevo)
     public function testDorsalDisponibleSinIdAtletaRetornaTrue(): void
     {
-        $sqlEjecutado = null;
+        $sqlEjecutado = '';
         $paramsEjecutados = null;
 
         $stmtMock = $this->createMock(PDOStatement::class);
@@ -120,7 +120,7 @@ class VerificarDorsalCategoriaTest extends TestCase
     // Caso 5: Dorsal disponible con id_atleta (excluye al atleta actual)
     public function testDorsalDisponibleConIdAtletaRetornaTrue(): void
     {
-        $sqlEjecutado = null;
+        $sqlEjecutado = '';
         $paramsEjecutados = null;
 
         $stmtMock = $this->createMock(PDOStatement::class);
