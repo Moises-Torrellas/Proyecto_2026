@@ -133,7 +133,27 @@ final class ArticulosInventarioCest
     // =========================================================================
 
     /**
-     * CP-AI-02: Búsqueda sin coincidencias (filtro AJAX con debounce)
+     * CP-AI-02: Búsqueda con Coincidencias en Tiempo Real
+     */
+    public function probarBusquedaConCoincidencias(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $hayGrupos = $I->executeJS("return $('.listado_contenedor_grupal').length > 0;");
+        if ($hayGrupos) {
+            $nombreArticulo = $I->executeJS("return $('.listado_contenedor_grupal:first .listado_titulo').text().trim().split(' ')[0];");
+            if (!empty($nombreArticulo)) {
+                $I->fillField(self::BUSQUEDA, $nombreArticulo);
+                $I->waitForText($nombreArticulo, 10, self::RESULTADOS);
+                $I->seeElement(self::CONTENEDOR_GRUPAL);
+            }
+        }
+
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-AI-03: Búsqueda sin coincidencias (filtro AJAX con debounce)
      */
     public function probarBusquedaSinResultados(AcceptanceTester $I): void
     {
@@ -250,6 +270,31 @@ final class ArticulosInventarioCest
 
         // SweetAlert2 de validación
         $I->waitForText('Agregue al menos un artículo a la lista antes de registrar.', 10, self::SWAL_POPUP);
+        $I->click('Entendido');
+        $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
+
+        $I->click(self::MODAL_CERRAR);
+        $I->waitForElementNotVisible(self::MODAL, 5);
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-AI-08: Validación de Cantidad Errónea en Lote (<= 0 o vacía)
+     */
+    public function probarValidacionCantidadErroneaEnLote(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $I->click(self::BTN_NUEVO);
+        $I->waitForElementVisible(self::MODAL, 5);
+
+        // Seleccionar catálogo y estado pero cantidad inválida (0 o negativa)
+        $this->configurarLote($I, 1, 1, 0);
+        $I->fillField(self::INPUT_LOTE_CANT, '0');
+        $I->click(self::BTN_AGREGAR_LOTE);
+
+        // SweetAlert2 de validación
+        $I->waitForText('Ingrese una cantidad válida mayor a 0.', 10, self::SWAL_POPUP);
         $I->click('Entendido');
         $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
 

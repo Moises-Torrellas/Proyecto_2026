@@ -123,7 +123,27 @@ final class EquiposCest
     // =========================================================================
 
     /**
-     * CP-EQ-02: Búsqueda sin coincidencias (filtro AJAX)
+     * CP-EQ-02: Búsqueda con Coincidencias en Tiempo Real
+     */
+    public function probarBusquedaConCoincidencias(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $hayRegistros = $I->executeJS("return $('.listado_item').length > 0;");
+        if ($hayRegistros) {
+            $nombreEquipo = $I->executeJS("return $('.listado_item:first .listado_titulo').text().trim().split(' ')[0];");
+            if (!empty($nombreEquipo)) {
+                $I->fillField(self::BUSQUEDA, $nombreEquipo);
+                $I->waitForText($nombreEquipo, 10, self::RESULTADOS);
+                $I->seeElement(self::RESULTADOS . ' .listado_item');
+            }
+        }
+
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-EQ-03: Búsqueda sin coincidencias (filtro AJAX)
      */
     public function probarBusquedaSinResultados(AcceptanceTester $I): void
     {
@@ -138,7 +158,7 @@ final class EquiposCest
     }
 
     /**
-     * CP-EQ-03: Restablecer búsqueda al vaciar el input
+     * CP-EQ-04: Restablecer búsqueda al vaciar el input
      */
     public function probarRestablecerBusqueda(AcceptanceTester $I): void
     {
@@ -157,7 +177,7 @@ final class EquiposCest
     // =========================================================================
 
     /**
-     * CP-EQ-04: Apertura y Cierre del Modal de Registro
+     * CP-EQ-05: Apertura y Cierre del Modal de Registro
      */
     public function probarAperturaYCierreModal(AcceptanceTester $I): void
     {
@@ -179,7 +199,7 @@ final class EquiposCest
     }
 
     /**
-     * CP-EQ-05: Validación de Nombre Vacío al Intentar Registrar
+     * CP-EQ-06: Validación de Nombre Vacío al Intentar Registrar
      */
     public function probarValidacionNombreVacio(AcceptanceTester $I): void
     {
@@ -200,7 +220,29 @@ final class EquiposCest
     }
 
     /**
-     * CP-EQ-06: Validación de Selección de Atleta Vacío en el Lote
+     * CP-EQ-07: Validación con Datos Erróneos en Input Nombre (Símbolos o Longitud < 2)
+     */
+    public function probarValidacionFormatoNombreErroneo(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $I->click(self::BTN_NUEVO);
+        $I->waitForElementVisible(self::MODAL, 5);
+
+        // Ingresar caracteres erróneos o símbolo no permitido
+        $I->fillField(self::INPUT_NOMBRE, '@#$');
+        $I->click(self::BTN_PROCESO);
+
+        // SweetAlert2 de error de validación
+        $I->waitForText('Tiene que ingresar un nombre válido.', 10, self::SWAL_POPUP);
+        $I->click('Entendido');
+        $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
+        $I->click(self::MODAL_CERRAR);
+        $I->waitForElementNotVisible(self::MODAL, 5);
+    }
+
+    /**
+     * CP-EQ-08: Validación de Selección de Atleta Vacío en el Lote
      */
     public function probarValidacionAtletaVacioEnLote(AcceptanceTester $I): void
     {

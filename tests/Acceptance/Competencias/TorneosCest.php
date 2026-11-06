@@ -119,7 +119,27 @@ final class TorneosCest
     // =========================================================================
 
     /**
-     * CP-TR-02: Búsqueda sin coincidencias (filtro AJAX)
+     * CP-TR-02: Búsqueda con Coincidencias en Tiempo Real
+     */
+    public function probarBusquedaConCoincidencias(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $hayRegistros = $I->executeJS("return $('.listado_item').length > 0;");
+        if ($hayRegistros) {
+            $nombreTorneo = $I->executeJS("return $('.listado_item:first .listado_titulo').text().trim().split(' ')[0];");
+            if (!empty($nombreTorneo)) {
+                $I->fillField(self::BUSQUEDA, $nombreTorneo);
+                $I->waitForText($nombreTorneo, 10, self::RESULTADOS);
+                $I->seeElement(self::RESULTADOS . ' .listado_item');
+            }
+        }
+
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-TR-03: Búsqueda sin coincidencias (filtro AJAX)
      */
     public function probarBusquedaSinResultados(AcceptanceTester $I): void
     {
@@ -134,7 +154,7 @@ final class TorneosCest
     }
 
     /**
-     * CP-TR-03: Restablecer búsqueda al vaciar el input
+     * CP-TR-04: Restablecer búsqueda al vaciar el input
      */
     public function probarRestablecerBusqueda(AcceptanceTester $I): void
     {
@@ -153,7 +173,7 @@ final class TorneosCest
     // =========================================================================
 
     /**
-     * CP-TR-04: Apertura y Cierre del Modal de Registro
+     * CP-TR-05: Apertura y Cierre del Modal de Registro
      */
     public function probarAperturaYCierreModal(AcceptanceTester $I): void
     {
@@ -175,7 +195,7 @@ final class TorneosCest
     }
 
     /**
-     * CP-TR-05: Validación de Estatus Vacío al Intentar Registrar
+     * CP-TR-06: Validación de Estatus Vacío al Intentar Registrar
      */
     public function probarValidacionEstatusVacio(AcceptanceTester $I): void
     {
@@ -197,7 +217,7 @@ final class TorneosCest
     }
 
     /**
-     * CP-TR-06: Validación de Nombre Vacío o Inválido
+     * CP-TR-07: Validación de Nombre Vacío o Inválido
      */
     public function probarValidacionNombreInvalido(AcceptanceTester $I): void
     {
@@ -220,7 +240,36 @@ final class TorneosCest
     }
 
     /**
-     * CP-TR-07: Validación de Incoherencia Cronológica de Fechas
+     * CP-TR-08: Validación con Datos Erróneos en Ubicación (< 5 caracteres o inválida)
+     */
+    public function probarValidacionUbicacionErronea(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $I->click(self::BTN_NUEVO);
+        $I->waitForElementVisible(self::MODAL, 5);
+
+        $I->selectOption(self::SELECT_ESTATUS, '1');
+        $I->fillField(self::INPUT_NOMBRE, 'Torneo Ubicación Inválida');
+        $this->establecerFechas($I, date('Y-m-d'), date('Y-m-d', strtotime('+7 days')));
+
+        // Ingresar ubicación con datos erróneos (< 5 caracteres)
+        $I->fillField(self::INPUT_UBICACION, 'Gym');
+        $I->click(self::BTN_PROCESO);
+
+        // SweetAlert de error de validación de ubicación
+        $I->waitForElementVisible(self::SWAL_POPUP, 5);
+        $I->see('Debe ingresar una ubicación válida', self::SWAL_POPUP);
+
+        $I->click('Entendido');
+        $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
+        $I->click(self::MODAL_CERRAR);
+        $I->waitForElementNotVisible(self::MODAL, 5);
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-TR-09: Validación de Incoherencia Cronológica de Fechas
      */
     public function probarValidacionIncoherenciaFechas(AcceptanceTester $I): void
     {

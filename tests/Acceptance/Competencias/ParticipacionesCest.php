@@ -120,7 +120,27 @@ final class ParticipacionesCest
     // =========================================================================
 
     /**
-     * CP-PA-02: Búsqueda sin coincidencias (filtro AJAX con debounce)
+     * CP-PA-02: Búsqueda con Coincidencias en Tiempo Real
+     */
+    public function probarBusquedaConCoincidencias(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $hayGrupos = $I->executeJS("return $('.listado_contenedor_grupal').length > 0;");
+        if ($hayGrupos) {
+            $nombreTorneo = $I->executeJS("return $('.listado_contenedor_grupal:first .listado_titulo').text().trim().split(' ')[0];");
+            if (!empty($nombreTorneo)) {
+                $I->fillField(self::BUSQUEDA, $nombreTorneo);
+                $I->waitForText($nombreTorneo, 10, self::RESULTADOS);
+                $I->seeElement(self::CONTENEDOR_GRUPAL);
+            }
+        }
+
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-PA-03: Búsqueda sin coincidencias (filtro AJAX con debounce)
      */
     public function probarBusquedaSinResultados(AcceptanceTester $I): void
     {
@@ -135,7 +155,7 @@ final class ParticipacionesCest
     }
 
     /**
-     * CP-PA-03: Restablecer búsqueda al vaciar el input
+     * CP-PA-04: Restablecer búsqueda al vaciar el input
      */
     public function probarRestablecerBusqueda(AcceptanceTester $I): void
     {

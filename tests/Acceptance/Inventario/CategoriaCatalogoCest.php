@@ -124,7 +124,27 @@ final class CategoriaCatalogoCest
     // =========================================================================
 
     /**
-     * CP-CC-02: Búsqueda sin coincidencias (filtro AJAX con debounce)
+     * CP-CC-02: Búsqueda con Coincidencias en Tiempo Real
+     */
+    public function probarBusquedaConCoincidencias(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $hayItems = $I->executeJS("return $('.listado_item').length > 0;");
+        if ($hayItems) {
+            $nombreCat = $I->executeJS("return $('.listado_titulo:first').text().trim().split(' ')[0];");
+            if (!empty($nombreCat)) {
+                $I->fillField(self::BUSQUEDA, $nombreCat);
+                $I->waitForText($nombreCat, 10, self::RESULTADOS);
+                $I->seeElement(self::LISTADO_ITEM);
+            }
+        }
+
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-CC-03: Búsqueda sin coincidencias (filtro AJAX con debounce)
      */
     public function probarBusquedaSinResultados(AcceptanceTester $I): void
     {
@@ -231,7 +251,31 @@ final class CategoriaCatalogoCest
     }
 
     /**
-     * CP-CC-07: Validación de Formato de Descripción
+     * CP-CC-07: Validación de Formato con Caracteres Erróneos en Nombre
+     */
+    public function probarValidacionFormatoNombreErroneo(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $I->click(self::BTN_NUEVO);
+        $I->waitForElementVisible(self::MODAL, 5);
+
+        // Ingresar números y caracteres especiales no permitidos en el nombre
+        $I->fillField(self::INPUT_NOMBRE, '12345 @#!');
+        $I->click(self::BTN_PROCESO);
+
+        // SweetAlert2 de error de validación
+        $I->waitForText('Debe ingresar un nombre de categoría válido', 10, self::SWAL_POPUP);
+        $I->click('Entendido');
+        $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
+
+        $I->click(self::MODAL_CERRAR);
+        $I->waitForElementNotVisible(self::MODAL, 5);
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-CC-08: Validación de Formato de Descripción
      */
     public function probarValidacionFormatoDescripcion(AcceptanceTester $I): void
     {

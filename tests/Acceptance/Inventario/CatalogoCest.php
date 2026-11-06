@@ -127,7 +127,27 @@ final class CatalogoCest
     // =========================================================================
 
     /**
-     * CP-CA-02: Búsqueda sin coincidencias (filtro AJAX con debounce)
+     * CP-CA-02: Búsqueda con Coincidencias en Tiempo Real
+     */
+    public function probarBusquedaConCoincidencias(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $hayGrupos = $I->executeJS("return $('.listado_contenedor_grupal, .listado_item').length > 0;");
+        if ($hayGrupos) {
+            $nombreArticulo = $I->executeJS("return $('.listado_titulo:first').text().trim().split(' ')[0];");
+            if (!empty($nombreArticulo)) {
+                $I->fillField(self::BUSQUEDA, $nombreArticulo);
+                $I->waitForText($nombreArticulo, 10, self::RESULTADOS);
+                $I->seeElement(self::RESULTADOS . ' ' . self::CONTENEDOR_GRUPAL . ', ' . self::RESULTADOS . ' .listado_item');
+            }
+        }
+
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-CA-03: Búsqueda sin coincidencias (filtro AJAX con debounce)
      */
     public function probarBusquedaSinResultados(AcceptanceTester $I): void
     {
@@ -238,7 +258,33 @@ final class CatalogoCest
     }
 
     /**
-     * CP-CA-07: Validación de Cantidad Válida para Stock Mínimo
+     * CP-CA-07: Validación de Formato con Caracteres Erróneos en Nombre
+     */
+    public function probarValidacionNombreConCaracteresErroneos(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $I->click(self::BTN_NUEVO);
+        $I->waitForElementVisible(self::MODAL, 5);
+
+        // Seleccionar categoría y colocar caracteres no permitidos en el input de nombre
+        $this->seleccionarCategoria($I, 1);
+        $I->fillField(self::INPUT_NOMBRE, '@#$!%&*');
+        $I->fillField(self::INPUT_STOCK_MINIMO, self::STOCK_MINIMO);
+        $I->click(self::BTN_PROCESO);
+
+        // SweetAlert2 de error de validación de nombre
+        $I->waitForText('Tiene que ingresar un nombre válido.', 10, self::SWAL_POPUP);
+        $I->click('Entendido');
+        $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
+
+        $I->click(self::MODAL_CERRAR);
+        $I->waitForElementNotVisible(self::MODAL, 5);
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-CA-08: Validación de Cantidad Válida para Stock Mínimo
      */
     public function probarValidacionStockMinimo(AcceptanceTester $I): void
     {

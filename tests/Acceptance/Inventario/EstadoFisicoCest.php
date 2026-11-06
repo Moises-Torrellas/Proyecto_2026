@@ -115,7 +115,27 @@ final class EstadoFisicoCest
     // =========================================================================
 
     /**
-     * CP-EF-02: Búsqueda sin coincidencias (filtro AJAX)
+     * CP-EF-02: Búsqueda con coincidencias en tiempo real
+     */
+    public function probarBusquedaConCoincidencias(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $hayRegistros = $I->executeJS("return $('.listado_item').length > 0;");
+        if ($hayRegistros) {
+            $nombreEstado = $I->executeJS("return $('.listado_item:first span').text().trim().split(' ')[0];");
+            if (!empty($nombreEstado)) {
+                $I->fillField(self::BUSQUEDA, $nombreEstado);
+                $I->waitForText($nombreEstado, 10, self::RESULTADOS);
+                $I->seeElement(self::RESULTADOS . ' .listado_item');
+            }
+        }
+
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-EF-03: Búsqueda sin coincidencias (filtro AJAX)
      */
     public function probarBusquedaSinResultados(AcceptanceTester $I): void
     {
@@ -130,7 +150,7 @@ final class EstadoFisicoCest
     }
 
     /**
-     * CP-EF-03: Restablecer búsqueda al vaciar el input
+     * CP-EF-04: Restablecer búsqueda al vaciar el input
      */
     public function probarRestablecerBusqueda(AcceptanceTester $I): void
     {
@@ -149,7 +169,7 @@ final class EstadoFisicoCest
     // =========================================================================
 
     /**
-     * CP-EF-04: Apertura y Cierre del Modal de Registro
+     * CP-EF-05: Apertura y Cierre del Modal de Registro
      */
     public function probarAperturaYCierreModal(AcceptanceTester $I): void
     {
@@ -171,7 +191,7 @@ final class EstadoFisicoCest
     }
 
     /**
-     * CP-EF-05: Validación por Campos Vacíos al Intentar Registrar
+     * CP-EF-06: Validación por Campos Vacíos al Intentar Registrar
      */
     public function probarValidacionCamposVacios(AcceptanceTester $I): void
     {
@@ -194,7 +214,33 @@ final class EstadoFisicoCest
     }
 
     /**
-     * CP-EF-06: Validación de Nivel de Condición Faltante
+     * CP-EF-07: Validación con Datos Erróneos en Input Nombre (Números y Símbolos)
+     */
+    public function probarValidacionFormatoNombreErroneo(AcceptanceTester $I): void
+    {
+        $this->irAlModulo($I);
+
+        $I->click(self::BTN_NUEVO);
+        $I->waitForElementVisible(self::MODAL, 5);
+
+        // Ingresar datos erróneos que violan el formato (números y caracteres especiales)
+        $I->fillField(self::INPUT_NOMBRE, 'Estado 123 #$%');
+        $I->selectOption(self::SELECT_NIVEL, '1');
+        $I->click(self::BTN_PROCESO);
+
+        // Esperar SweetAlert de error de validación
+        $I->waitForElementVisible(self::SWAL_POPUP, 5);
+        $I->see('Debe ingresar un nombre válido para el estado físico.', self::SWAL_POPUP);
+
+        $I->click('Entendido');
+        $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
+        $I->click(self::MODAL_CERRAR);
+        $I->waitForElementNotVisible(self::MODAL, 5);
+        $this->verificarSinErroresPhp($I);
+    }
+
+    /**
+     * CP-EF-08: Validación de Nivel de Condición Faltante
      */
     public function probarValidacionNivelCondicionFaltante(AcceptanceTester $I): void
     {
