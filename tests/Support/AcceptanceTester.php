@@ -104,6 +104,7 @@ class AcceptanceTester extends \Codeception\Actor
     {
         $this->executeJS("if (typeof Swal !== 'undefined' && Swal.isVisible()) { Swal.close(); }");
         $this->executeJS("$('.swal2-container').remove(); $('body').removeClass('swal2-shown swal2-toast-shown');");
+        $this->executeJS("if (typeof flatpickr !== 'undefined') { document.querySelectorAll('.flatpickr-calendar.open').forEach(el => el.classList.remove('open')); }");
     }
 
     /**
