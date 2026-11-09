@@ -5,20 +5,20 @@ $(document).ready(function () {
 
     $('#busqueda').off('keyup').on('keyup', busqueda);
 
-    // Botón para generar un nuevo respaldo
-    $("#btn_generar, #btn_generar_seguridad").on("click", function () {
-        let tipo = $(this).data("tipo");
-        let baseDatosTexto = tipo === 'seguridad' ? 'de SEGURIDAD (bds2)' : 'PRINCIPAL';
-        
-        confirmar(`¿Desea crear un nuevo respaldo de la base de datos ${baseDatosTexto} en este momento?`, function (confirmado) {
-            if (confirmado) {
-                abrirAlertaEspara('Creando Respaldo', 'Conectando con la base de datos, por favor espere...');
+    // Botón para generar un nuevo respaldo (se elige la BD con el mismo SweetAlert de Palmarés)
+    $("#btn_generar").on("click", function () {
+        mostrarAlertaTipoRespaldo(
+            '¿De qué base de datos desea crear el punto de restauración?',
+            'Seleccione una opción para continuar',
+            function (tipo) {
+                let nombreBD = (tipo === 2) ? 'Seguridad' : 'Sistema';
+                abrirAlertaEspara('Creando Respaldo', `Respaldando la base de datos de ${nombreBD}, por favor espere...`);
                 let datos = new FormData();
                 datos.append('accion', 'generar');
-                datos.append('tipo', tipo); // Enviamos el tipo de respaldo al controlador
+                datos.append('tipo', tipo); // 1 = Sistema, 2 = Seguridad
                 enviaAjaxRespaldo(datos);
             }
-        });
+        );
     });
 
     $('#ayuda').on('click', function () {
@@ -33,7 +33,7 @@ $(document).ready(function () {
             },
             {
                 element: '#btn_generar',
-                popover: { title: 'Crear Punto de Restauración', description: 'Este botón te permite crear un nuevo respaldo del sistema.', position: 'left' }
+                popover: { title: 'Crear Punto de Restauración', description: 'Este botón te permite crear un nuevo respaldo. Podrás elegir entre la base de datos del Sistema o la de Seguridad.', position: 'left' }
             },
             {
                 element: '#resultadoconsulta .listado_contenedor_grupal:first-child',
@@ -65,6 +65,37 @@ $(document).ready(function () {
         driver.start();
     });
 });
+
+/**
+ * Mismo SweetAlert que se usa en Palmarés (mostrarAlertaTipoPalmares de main.js),
+ * adaptado para elegir la base de datos a respaldar.
+ * callback recibe: 1 = Sistema, 2 = Seguridad
+ */
+function mostrarAlertaTipoRespaldo(titulo, texto, callback) {
+    Swal.fire({
+        title: titulo,
+        text: texto,
+        icon: 'question',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fi fi-sr-database"></i> Sistema',
+        confirmButtonColor: '#3085d6',
+        denyButtonText: '<i class="fi fi-sr-shield-check"></i> Seguridad',
+        denyButtonColor: '#28a745',
+        cancelButtonText: 'Cancelar',
+        customClass: {
+            popup: 'mi-popup',
+            title: 'mi-titulo',
+            content: 'mi-contenido'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            callback(1);
+        } else if (result.isDenied) {
+            callback(2);
+        }
+    });
+}
 
 function busqueda() {
     clearTimeout(timerBusqueda);
@@ -129,7 +160,7 @@ function enviaAjaxRespaldo(datos) {
         beforeSend: function (request) {
             request.setRequestHeader("X-CSRF-TOKEN", token);
         },
-        timeout: 30000,
+        timeout: 600000, // Respaldar/restaurar puede tardar en el VPS
         success: function (respuesta) {
             if (typeof respuesta === 'string' && respuesta.trim().startsWith('<')) {
                 crearConsulta(respuesta);

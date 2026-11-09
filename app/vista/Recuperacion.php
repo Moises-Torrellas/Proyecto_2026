@@ -91,7 +91,7 @@
                     </form>
                 </div>
             </div>
-            <button type="button" class="btn btn_azul" onclick="window.location.href='/Proyecto_2026/public/Inicio'">Volver Al Inicio de Sesión</button>
+            <button type="button" class="btn btn_azul" onclick="window.location.href='Inicio'">Volver Al Inicio de Sesión</button>
         </div>
         <div class="contenedor_imagen">
             <img src="img/login.png" class="imagen_login" alt="Login">

@@ -85,15 +85,19 @@ function consultarBackups($obj, $permisos): void {
 
 function generarBackup($obj, $id_modulo, $bitacoraObj): void {
     try {
-        // Capturamos el tipo que viene desde el JS, por defecto 'principal'
-        $tipo = $_POST['tipo'] ?? 'principal';
+        // Tipo de BD a respaldar: 1 = Sistema, 2 = Seguridad
+        $tipo = filter_var($_POST['tipo'] ?? 1, FILTER_VALIDATE_INT);
+        if (!in_array($tipo, [1, 2], true)) {
+            throw new Exception('Debe seleccionar una base de datos válida.');
+        }
+        $nombreTipo = ($tipo === 2) ? 'Seguridad' : 'Sistema';
         
         // Pasamos el tipo al modelo
         $resultado = $obj->ProcesarDatos(['accion' => 'generar', 'tipo' => $tipo]);
         
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Generó el respaldo: " . $resultado['nombre']);
-            $resultado = ['accion' => 'generar', 'mensaje' => 'Respaldo creado de forma segura en el servidor.'];
+            registrarBitacora($bitacoraObj, $id_modulo, "Generó el respaldo ({$nombreTipo}): " . $resultado['nombre']);
+            $resultado = ['accion' => 'generar', 'mensaje' => "Punto de restauración de la BD de {$nombreTipo} creado con éxito."];
         } else {
             $resultado['mensaje'] = $resultado['codigo'] ?? 'Ocurrió un error al generar el respaldo.';
         }
@@ -107,7 +111,7 @@ function restaurarBackup($obj, $id_modulo, $bitacoraObj): void {
     try {
         $datos = [
             'accion' => 'restaurar',
-            'archivo' => $_POST['archivo']
+            'archivo' => $_POST['archivo'] ?? ''
         ];
         $resultado = $obj->ProcesarDatos($datos);
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {

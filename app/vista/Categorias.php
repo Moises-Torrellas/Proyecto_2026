@@ -166,7 +166,7 @@
         </div>
     </section>
     <script src="js/main.js"></script>
-    <script src="js/categorias.js"></script>
+    <script src="js/Categorias.js"></script>
     <?php include('complementos/mensajeError.php'); ?>
 </body>
 
