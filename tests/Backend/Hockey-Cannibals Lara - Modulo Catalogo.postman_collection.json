@@ -1,0 +1,2177 @@
+{
+    "info": {
+        "_postman_id": "cannibals-cat-7be1ca4093821",
+        "name": "Hockey-Cannibals Lara - Modulo Catalogo",
+        "description": "Colección de pruebas para el módulo de Catálogo con escenarios funcionales y aserciones automatizadas en los scripts After-response (Tests), estructurada según los estándares del proyecto Cannibals Lara.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "if (pm.request.method !== \"GET\") {",
+                    "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
+                    "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "item": [
+        {
+            "name": "Catalogo",
+            "item": [
+                {
+                    "name": "Registrar Catálogo",
+                    "item": [
+                        {
+                            "name": "Registro-Catalogo-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Catalogo-Exitoso-Completo",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"incluir\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Artículo registrado exitosamente en el catálogo.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Casco Profesional Bauer",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "talla",
+                                                    "value": "L",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "codigo_posicion",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Catalogo-Exitoso-Sin-Opcionales",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"incluir\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Artículo registrado exitosamente en el catálogo.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Puck Oficial Entrenamiento",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "20",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "talla",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "codigo_posicion",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Catalogo-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Catalogo-Nombre-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Catalogo-Categoria-Vacia",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo id_categoria es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Patines Bauer",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Catalogo-Stock-Minimo-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo stock_minimo es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Patines Bauer",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Catalogo-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Catalogo-Nombre-Invalido-Corto",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "AB",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Catalogo-Nombre-Invalido-Caracteres-Especiales",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Casco @#$%",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Catalogo-Categoria-No-Numerica",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Categoría inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Guantes Easton",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "uno",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Catalogo-Stock-No-Numerico",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Stock mínimo debe ser un número entero.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Guantes Easton",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "cinco",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Catalogo-Talla-Invalida",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Talla inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Guantes Easton",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "talla",
+                                                    "value": "Talla Extremadamente Larga Que Supera Veinte Caracteres",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Catalogo-Posicion-No-Numerica",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Posición inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Guantes Easton",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "codigo_posicion",
+                                                    "value": "delantero",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Catalogo-Categoria-Inexistente",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Catalogo-Categoria-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"La categoría seleccionada no existe.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Palo Titan",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Modificar Catálogo",
+                    "item": [
+                        {
+                            "name": "Modificar-Catalogo-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Catalogo-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"modificar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Catálogo modificado exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Casco Bauer Modificado",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "8",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "talla",
+                                                    "value": "XL",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "codigo_posicion",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Catalogo-Mismos-Datos",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"modificar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Catálogo modificado exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Casco Bauer Modificado",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "8",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "talla",
+                                                    "value": "XL",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "codigo_posicion",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Catalogo-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Catalogo-Id-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo id_catalogo es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Casco",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Catalogo-Nombre-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Catalogo-Categoria-Vacia",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo id_categoria es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Casco",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Catalogo-Stock-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo stock_minimo es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Casco",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Catalogo-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Catalogo-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Casco",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Catalogo-Nombre-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "A",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Catalogo-Stock-No-Numerico",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Stock mínimo debe ser un número entero.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Casco",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "diez",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Catalogo-Id-Inexistente",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Catalogo-Id-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"ID inválido o inexistente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Inexistente",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "stock_minimo",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Eliminar Catálogo",
+                    "item": [
+                        {
+                            "name": "Eliminar-Catalogo-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Catalogo-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"eliminar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Artículo eliminado exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "3",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminar-Catalogo-Con-Articulos-Asociados",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Catalogo-Con-Articulos-Asociados",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"No se puede eliminar el catálogo porque tiene artículos en el inventario físico asociados.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminar-Catalogo-Campos-Vacios-E-Id-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Catalogo-Id-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo id_catalogo es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Eliminar-Catalogo-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Consultar y Buscar Catálogo",
+                    "item": [
+                        {
+                            "name": "Buscar-Catalogo-Por-Id",
+                            "item": [
+                                {
+                                    "name": "POST Buscar-Catalogo-Por-Id-Existente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "pm.test(\"Retorna datos del catálogo buscado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"buscar\");",
+                                                    "    pm.expect(res.datos).to.be.an(\"array\");",
+                                                    "    pm.expect(res.datos.length).to.be.above(0);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Catalogo-Por-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "xyz",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Catalogo-Por-Id-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo id_catalogo es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_catalogo",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "MultiConsulta-Combos",
+                            "item": [
+                                {
+                                    "name": "POST MultiConsulta-Catalogo-Combos",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "pm.test(\"Retorna categorias y posiciones para combos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"MultiConsulta\");",
+                                                    "    pm.expect(res.categorias).to.be.an(\"array\");",
+                                                    "    pm.expect(res.posiciones).to.be.an(\"array\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "MultiConsulta",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Consultar-Catalogo-Filtro",
+                            "item": [
+                                {
+                                    "name": "POST Consultar-Catalogo-General",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Catalogo-Filtro-Texto",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Casco",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Generar Reportes de Catálogo",
+                    "item": [
+                        {
+                            "name": "Generar-Reporte-Catalogo",
+                            "item": [
+                                {
+                                    "name": "POST Generar-Reporte-Catalogo-General-PDF",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "generar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "formato",
+                                                    "value": "pdf",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Generar-Reporte-Catalogo-Filtrado-Categoria",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "generar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "formato",
+                                                    "value": "pdf",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Generar-Reporte-Catalogo-Sin-Registros",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"No se encontraron catálogos registrados para generar el reporte.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "generar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "formato",
+                                                    "value": "pdf",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_categoria",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Catalogo",
+                                            "host": [
+                                                "{{url_base}}Catalogo"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "GET Cargar-Vista-Inicio",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "const html = pm.response.text();",
+                            "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i);",
+                            "if (match && match[1]) {",
+                            "    pm.environment.set(\"csrf_token\", match[1]);",
+                            "    console.log(\"CSRF Token actualizado automáticamente:\", match[1]);",
+                            "}"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": []
+                },
+                "url": {
+                    "raw": "{{url_base}}",
+                    "host": [
+                        "{{url_base}}"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "GET Cargar-Vista-Catalogo",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "const html = pm.response.text();",
+                            "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i);",
+                            "if (match && match[1]) {",
+                            "    pm.environment.set(\"csrf_token\", match[1]);",
+                            "    console.log(\"CSRF Token actualizado automáticamente:\", match[1]);",
+                            "}"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": []
+                },
+                "url": {
+                    "raw": "{{url_base}}Catalogo",
+                    "host": [
+                        "{{url_base}}Catalogo"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "POST Iniciar-Sesion-Exitoso",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "accion",
+                            "value": "inicio",
+                            "type": "text"
+                        },
+                        {
+                            "key": "cedula",
+                            "value": "{{cedula}}",
+                            "type": "text"
+                        },
+                        {
+                            "key": "contraseña",
+                            "value": "{{contraseña}}",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{url_base}}",
+                    "host": [
+                        "{{url_base}}"
+                    ]
+                }
+            },
+            "response": []
+        }
+    ]
+}

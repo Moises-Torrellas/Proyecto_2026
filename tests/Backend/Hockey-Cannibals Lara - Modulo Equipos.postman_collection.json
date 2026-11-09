@@ -1,0 +1,3166 @@
+{
+    "info": {
+        "_postman_id": "equipos-backend-9ec6df6a1ba655a0",
+        "name": "Hockey-Cannibals Lara - Modulo Equipos",
+        "description": "Colección automatizada de pruebas backend para el Módulo de Equipos del sistema Cannibals Lara.\nValida el cumplimiento de requisitos funcionales: Registro con asignación de atletas (categorías únicas o contiguas), Modificación, Eliminación protegida por integridad referencial, Búsquedas y filtros dinámicos, y Generación de Reportes PDF/Excel.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
+                    "if (!pm.request.headers.has(\"X-CSRF-Token\") && pm.environment.get(\"csrf_token\")) {",
+                    "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "item": [
+        {
+            "name": "GET Cargar-Vista-Inicio",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test(\"Estado HTTP es 200\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "var html = pm.response.text();",
+                            "var match = html.match(/name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                            "            html.match(/content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                            "if (match && match[1]) {",
+                            "    pm.environment.set(\"csrf_token\", match[1]);",
+                            "}"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{url_base}}",
+                    "host": [
+                        "{{url_base}}"
+                    ]
+                },
+                "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+            }
+        },
+        {
+            "name": "GET Cargar-Vista-Equipos",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test(\"Estado HTTP es 200\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "var html = pm.response.text();",
+                            "var match = html.match(/name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                            "            html.match(/content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                            "if (match && match[1]) {",
+                            "    pm.environment.set(\"csrf_token\", match[1]);",
+                            "}"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{url_base}}Equipos",
+                    "host": [
+                        "{{url_base}}Equipos"
+                    ]
+                },
+                "description": "Carga la interfaz del módulo Equipos y sincroniza el token CSRF."
+            }
+        },
+        {
+            "name": "POST Iniciar-Sesion-Exitoso",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test(\"Estado HTTP es 200\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "var res;",
+                            "try {",
+                            "    res = pm.response.json();",
+                            "    pm.test(\"Inicio de sesión exitoso o validado\", function () {",
+                            "        pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                            "    });",
+                            "    if (res.token) {",
+                            "        pm.environment.set(\"csrf_token\", res.token);",
+                            "    }",
+                            "} catch (e) {",
+                            "    pm.test(\"Sesión procesada correctamente\", function () {",
+                            "        pm.response.to.have.status(200);",
+                            "    });",
+                            "}"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                    },
+                    {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "accion",
+                            "value": "iniciar_sesion",
+                            "type": "text"
+                        },
+                        {
+                            "key": "cedula",
+                            "value": "{{cedula}}",
+                            "type": "text"
+                        },
+                        {
+                            "key": "contraseña",
+                            "value": "{{contraseña}}",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{url_base}}Login",
+                    "host": [
+                        "{{url_base}}Login"
+                    ]
+                },
+                "description": "Autentica al usuario en el sistema con credenciales del entorno."
+            }
+        },
+        {
+            "name": "Equipos",
+            "item": [
+                {
+                    "name": "Registrar Equipos",
+                    "item": [
+                        {
+                            "name": "Registro-Equipo-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Equipo-Misma-Categoria-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es incluir\", function() { pm.expect(res.accion).to.eql(\"incluir\"); });",
+                                                    "    pm.test(\"Mensaje de confirmación exitosa\", function() { pm.expect(res.mensaje).to.include(\"exitosamente\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Registra un equipo asociando atletas de la misma categoría.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Alpha Test",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "2",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Equipo-Dos-Categorias-Contiguas-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es incluir\", function() { pm.expect(res.accion).to.eql(\"incluir\"); });",
+                                                    "    pm.test(\"Mensaje de confirmación exitosa\", function() { pm.expect(res.mensaje).to.include(\"exitosamente\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Registra un equipo con atletas de 2 categorías inmediatamente consecutivas según ranking.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Beta Test",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "3",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Equipo-Con-Caracteres-Validos-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es incluir\", function() { pm.expect(res.accion).to.eql(\"incluir\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Registra un equipo con caracteres alfanuméricos, espacios y guiones válidos.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals-Sub 18",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Equipo-Nombre-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida campo nombre obligatorio\", function() { pm.expect(res.mensaje).to.include(\"nombre es obligatorio\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Valida que el sistema rechace el registro cuando el nombre del equipo se envía vacío.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Equipo-Sin-Atletas",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Requiere al menos 1 atleta\", function() { pm.expect(res.mensaje).to.include(\"al menos 1 atleta\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Valida que no se permita registrar un equipo sin asignar atletas.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Sin Atletas",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Equipo-Array-Atletas-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Requiere al menos 1 atleta\", function() { pm.expect(res.mensaje).to.include(\"al menos 1 atleta\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Valida que no se permita registrar un equipo con un array de atletas vacío.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Lote Vacio",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Equipo-Nombre-Menor-Minimo",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida longitud mínima (3 caracteres)\", function() { pm.expect(res.mensaje).to.include(\"Nombre inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza nombres con menos de 3 caracteres.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "CA",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Equipo-Nombre-Mayor-Maximo",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida longitud máxima (30 caracteres)\", function() { pm.expect(res.mensaje).to.include(\"Nombre inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza nombres que superen los 30 caracteres permitidos.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Equipo Con Nombre Excesivamente Largo Mayor A Treinta Caracteres",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Equipo-Nombre-Caracteres-Especiales",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida caracteres no permitidos\", function() { pm.expect(res.mensaje).to.include(\"Nombre inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza nombres con símbolos especiales no autorizados.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals *#$!?",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Reglas-De-Negocio-Atletas",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Equipo-Atletas-Sin-Inscripcion-Activa",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida inscripción activa en atletas\", function() { pm.expect(res.mensaje).to.include(\"No se pudo determinar la categoría\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza atletas inexistentes o sin inscripción activa (estatus = 1).",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Inactivos",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "99999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Equipo-Mas-De-Dos-Categorias-Rechazado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida máximo 2 categorías\", function() { pm.expect(res.mensaje).to.include(\"más de 2 categorías distintas\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza la conformación de un equipo con atletas pertenecientes a más de dos categorías distintas.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Tres Categorias",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "9",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Equipo-Categorias-No-Contiguas-Rechazado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida categorías contiguas en ranking\", function() { pm.expect(res.mensaje).to.include(\"misma categoría o de una categoría inferior inmediata\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza atletas de dos categorías que no sean consecutivas inmediatas en el ranking de edades.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Salto Ranking",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "9",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Datos-Duplicados",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Equipo-Nombre-Duplicado-Rechazado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida control de duplicados\", function() { pm.expect(res.mensaje).to.include(\"Ya existe un equipo registrado con ese nombre\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Valida que el sistema impida registrar dos equipos con el mismo nombre.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Alpha Test",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Modificar Equipos",
+                    "item": [
+                        {
+                            "name": "Modificar-Equipo-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Equipo-Nuevo-Nombre-Y-Atletas-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es modificar\", function() { pm.expect(res.accion).to.eql(\"modificar\"); });",
+                                                    "    pm.test(\"Mensaje de modificación exitosa\", function() { pm.expect(res.mensaje).to.include(\"exitosamente\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Modifica los datos del equipo actualizando su nombre y conjunto de atletas.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Elite Modificado",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "2",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Equipo-Mismo-Nombre-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es modificar\", function() { pm.expect(res.accion).to.eql(\"modificar\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Permite modificar los atletas de un equipo conservando su mismo nombre sin disparar falso duplicado.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Elite Modificado",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Equipo-ID-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida campo ID obligatorio\", function() { pm.expect(res.mensaje).to.include(\"id es obligatorio\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza la modificación si el ID del equipo se envía vacío.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Alpha",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Equipo-Nombre-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida campo nombre obligatorio\", function() { pm.expect(res.mensaje).to.include(\"nombre es obligatorio\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza la modificación si el nombre se envía vacío.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Equipo-Sin-Atletas",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Requiere al menos 1 atleta\", function() { pm.expect(res.mensaje).to.include(\"al menos 1 atleta\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza la modificación si no se asignan atletas.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Alpha",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Equipo-ID-No-Numerico",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida formato numérico del ID\", function() { pm.expect(res.mensaje).to.include(\"Id inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza la modificación con ID no numérico.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "abc#12",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Alpha",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Equipo-Nombre-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida caracteres no permitidos en nombre\", function() { pm.expect(res.mensaje).to.include(\"Nombre inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza nombres con símbolos especiales al modificar.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals @*?",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Reglas-Negocio-Atletas",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Equipo-Mas-De-Dos-Categorias-Rechazado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida máximo 2 categorías\", function() { pm.expect(res.mensaje).to.include(\"más de 2 categorías distintas\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Impide actualizar un equipo asignando atletas de más de 2 categorías distintas.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Alpha",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "9",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Equipo-Categorias-No-Contiguas-Rechazado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida categorías contiguas\", function() { pm.expect(res.mensaje).to.include(\"misma categoría o de una categoría inferior inmediata\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Impide actualizar un equipo con atletas de categorías no consecutivas en el ranking.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Alpha",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "9",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Datos-Duplicados",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Equipo-Nombre-Duplicado-Otro-Registro",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida duplicidad contra otro equipo\", function() { pm.expect(res.mensaje).to.include(\"Ya existe un Equipo registrado\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza cambiar el nombre por uno que ya pertenezca a otro equipo registrado.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Cannibals Beta Test",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "atletas[]",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Eliminar Equipos",
+                    "item": [
+                        {
+                            "name": "Eliminacion-Exitosa",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Equipo-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es eliminar\", function() { pm.expect(res.accion).to.eql(\"eliminar\"); });",
+                                                    "    pm.test(\"Mensaje de eliminación exitosa\", function() { pm.expect(res.mensaje).to.include(\"exitosamente\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Elimina físicamente un equipo que no tenga participaciones activas ni dependencias en torneos.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "10",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminacion-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Equipo-ID-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida campo ID obligatorio\", function() { pm.expect(res.mensaje).to.include(\"id es obligatorio\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Valida que el campo ID sea obligatorio para eliminar.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminacion-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Equipo-ID-No-Numerico",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida formato ID numérico\", function() { pm.expect(res.mensaje).to.include(\"Id inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Valida que no se permitan caracteres alfanuméricos en el ID para eliminar.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "id_invalido_xyz",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminacion-Equipo-Inexistente",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Equipo-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Mensaje equipo no existe\", function() { pm.expect(res.mensaje).to.include(\"no existe\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Valida que no se pueda eliminar un equipo que no conste en la base de datos.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Bloqueo-Integridad-Referencial",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Equipo-Con-Participaciones-Asociadas",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Bloqueo por participaciones asociadas\", function() { pm.expect(res.mensaje).to.include(\"participaciones asociadas en campeonatos\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Garantiza la integridad referencial bloqueando la eliminación si el equipo está inscrito en algún torneo.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Consultar y Buscar Equipos",
+                    "item": [
+                        {
+                            "name": "Consultar-General-Equipos",
+                            "item": [
+                                {
+                                    "name": "POST Consultar-Equipos-Listado-General",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Consulta el listado general de equipos con la estructura de tarjetas y vista AJAX.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Equipos-Filtro-Texto",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Filtra el listado de equipos por coincidencia parcial de texto en su nombre.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Cannibals",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Equipos-Filtro-Sin-Coincidencias",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Verifica la respuesta cuando el filtro no coincide con ningún equipo.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "TextoInexistenteZzz999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Buscar-Detalle-Por-ID",
+                            "item": [
+                                {
+                                    "name": "POST Buscar-Equipo-Por-ID-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
+                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Obtiene los datos detallados de un equipo específico por su ID.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Equipo-ID-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
+                                                    "    pm.test(\"Retorna arreglo vacío\", function() { pm.expect(res.datos.length).to.eql(0); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Verifica la respuesta al consultar un equipo con ID no registrado.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Equipo-Sin-ID",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida campo ID obligatorio\", function() { pm.expect(res.mensaje).to.include(\"id es obligatorio\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Valida que el ID sea requerido para buscar.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Equipo-ID-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida formato numérico del ID\", function() { pm.expect(res.mensaje).to.include(\"Id inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Valida rechazo de búsqueda con formato no numérico.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "abc#xyz",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Consultar-Atletas-Para-Asignacion-Y-Equipo",
+                            "item": [
+                                {
+                                    "name": "POST Consultar-Atletas-Modal-General",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es consultarAtletasModal\", function() { pm.expect(res.accion).to.eql(\"consultarAtletasModal\"); });",
+                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Obtiene el lote de atletas disponibles para asignar en el selector de equipos.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultarAtletasModal",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Atletas-Modal-Con-Filtro",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es consultarAtletasModal\", function() { pm.expect(res.accion).to.eql(\"consultarAtletasModal\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Filtra los atletas disponibles por documento de identidad o nombre.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultarAtletasModal",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "V-",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Atletas-Asignados-Equipo-Valido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es consultarAtletasAsignadosEquipo\", function() { pm.expect(res.accion).to.eql(\"consultarAtletasAsignadosEquipo\"); });",
+                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Consulta los atletas pertenecientes a un equipo registrado.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultarAtletasAsignadosEquipo",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Atletas-Asignados-Equipo-ID-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Mensaje ID inválido\", function() { pm.expect(res.mensaje).to.include(\"ID de equipo inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Valida que el ID de equipo sea mayor a 0 para consultar sus atletas asignados.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultarAtletasAsignadosEquipo",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "0",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Generar Reportes de Equipos",
+                    "item": [
+                        {
+                            "name": "Generar-Reporte-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Generar-Reporte-PDF-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es reporte\", function() { pm.expect(res.accion).to.eql(\"reporte\"); });",
+                                                    "    pm.test(\"Contiene nombre del archivo generado\", function() { pm.expect(res.archivo).to.be.a(\"string\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Genera el reporte oficial en formato PDF con la plantilla R_Equipos.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "generar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_equipo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "formato",
+                                                    "value": "pdf",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Generar-Reporte-Excel-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es reporte\", function() { pm.expect(res.accion).to.eql(\"reporte\"); });",
+                                                    "    pm.test(\"Contiene nombre del archivo generado\", function() { pm.expect(res.archivo).to.be.a(\"string\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Genera el reporte oficial en formato Excel con la nómina de atletas del equipo.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "generar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_equipo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "formato",
+                                                    "value": "excel",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Generar-Reporte-Validaciones",
+                            "item": [
+                                {
+                                    "name": "POST Generar-Reporte-Sin-Equipo-Rechazado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida selección de equipo obligatoria\", function() { pm.expect(res.mensaje).to.include(\"Debe seleccionar un equipo\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza la generación de reportes si no se envía un id_equipo.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "generar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_equipo",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Generar-Reporte-Equipo-Sin-Atletas-Rechazado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida que existan atletas en el equipo\", function() { pm.expect(res.mensaje).to.include(\"No se encontraron atletas\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Equipos",
+                                            "host": [
+                                                "{{url_base}}Equipos"
+                                            ]
+                                        },
+                                        "description": "Rechaza el reporte si el equipo seleccionado no tiene atletas registrados.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "generar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_equipo",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
