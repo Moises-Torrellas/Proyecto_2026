@@ -246,7 +246,7 @@ class RegistrarRepresentanteIntegrationTest extends TestCase
         // 1. Registramos en BD un atleta que tiene 14 años
         $anioNacMenor = (int)date('Y') - 14;
         $this->pdo->exec("INSERT INTO atletas (codigo_atleta, p_nombre, p_apellidos, genero, fecha_nac, lugar_nacimiento, foto) 
-                          VALUES (1, 'Junior', 'Perez', 'H', '{$anioNacMenor}-06-15', 'Barquisimeto', 'default.png')");
+                        VALUES (1, 'Junior', 'Perez', 'H', '{$anioNacMenor}-06-15', 'Barquisimeto', 'default.png')");
         $this->pdo->exec("INSERT INTO identidad_atleta (codigo_atleta, tipo_doc, numero_doc) VALUES (1, 'V', '31222333')");
 
         // 2. Intentamos registrar a un representante con la misma cédula del atleta menor
