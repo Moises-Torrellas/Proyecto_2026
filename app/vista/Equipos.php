@@ -287,8 +287,8 @@
         </div>
     </section>
 
-    <script src="js/main.js?v=3"></script>
-    <script src="js/equipos.js?v=3"></script>
+    <script src="js/main.js"></script>
+    <script src="js/Equipos.js"></script>
     <?php include('complementos/mensajeError.php'); ?>
 </body>
 </html>
