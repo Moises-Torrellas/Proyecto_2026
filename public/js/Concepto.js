@@ -43,7 +43,7 @@ $(document).ready(function () {
     
     // Validaciones
     Validacion("nombre", /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, /^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/, "Solo letras entre 3 y 30 caracteres", "proceso");
-    Validacion("monto", /^[0-9.\b]*$/, /^\d+(\.\d{1,2})?$/, "Monto inválido", "proceso");
+    Validacion("monto", /^.*$/, /^[^\d]*\d+(\.\d{1,2})?[^\d]*$/, "Monto inválido", "proceso");
     Validacion("dias", /^[0-9]*$/, /^[0-9]{1,3}$/, "Solo números hasta tres digitos", "proceso");
 
     $('#proceso').on('click', function () {

@@ -32,7 +32,7 @@ class ModeloArticulosInventario extends Conexion
         $accion = $datos['accion'] ?? null;
 
         return match ($accion) {
-            'consultar'     => $this->ConsultarAgrupado(), 
+            'consultar'     => $this->ConsultarAgrupado(),
             'cargar_combos' => $this->CargarCombos(),
             'buscar'        => $this->Buscar($datos['codigo_articulo'] ?? null), // <-- Añadimos el buscar
             'incluir'       => $this->IncluirArticulo($datos),
@@ -62,11 +62,16 @@ class ModeloArticulosInventario extends Conexion
 
     private function GenerarCodigoClub(): string
     {
-        $conex = $this->conex();
-        $sql = "SELECT MAX(CAST(SUBSTRING(codigo_club, 4) AS UNSIGNED)) as max_num 
-                FROM articulos_inventario 
+        return $this->FormatearCodigoClub($this->ObtenerSiguienteNumeroClub($this->conex()));
+    }
+
+    // Devuelve el siguiente número correlativo de código club (CL-XXXX)
+    private function ObtenerSiguienteNumeroClub($conex): int
+    {
+        $sql = "SELECT MAX(CAST(SUBSTRING(codigo_club, 4) AS UNSIGNED)) as max_num
+                FROM articulos_inventario
                 WHERE codigo_club LIKE 'CL-%'";
-        
+
         $stmt = $conex->query($sql);
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -75,18 +80,23 @@ class ModeloArticulosInventario extends Conexion
             $siguiente = (int)$resultado['max_num'] + 1;
         }
 
-        return 'CL-' . str_pad((string)$siguiente, 4, '0', STR_PAD_LEFT);
+        return $siguiente;
+    }
+
+    private function FormatearCodigoClub(int $numero): string
+    {
+        return 'CL-' . str_pad((string)$numero, 4, '0', STR_PAD_LEFT);
     }
 
    private function ConsultarAgrupado(): array
     {
         try {
-            $sql = "SELECT e.codigo_articulo, 
+            $sql = "SELECT e.codigo_articulo,
                            c.id_catalogo,
-                           c.nombre as articulo, 
-                           c.talla, 
-                           ce.nombre as categoria, 
-                           es.nombre as estado, 
+                           c.nombre as articulo,
+                           c.talla,
+                           ce.nombre as categoria,
+                           es.nombre as estado,
                            es.nivel_estado,
                            EsAptoParaUso(e.id_estado) AS apto_para_uso,
                            e.id_estado,
@@ -97,7 +107,7 @@ class ModeloArticulosInventario extends Conexion
                     INNER JOIN categoria_catalogo ce ON c.id_categoria = ce.id_categoria
                     INNER JOIN estado_fisico es ON e.id_estado = es.id_estado
                     WHERE 1=1";
-                    
+
             if (!empty($this->filtro)) {
                 $sql .= " AND (c.nombre LIKE :filtro1 OR es.nombre LIKE :filtro2)";
             }
@@ -107,9 +117,9 @@ class ModeloArticulosInventario extends Conexion
             if (!empty($this->filtro_estado)) {
                 $sql .= " AND e.id_estado = :id_estado";
             }
-            
+
             $sql .= " ORDER BY c.nombre ASC, e.codigo_articulo DESC";
-            
+
             $stmt = $this->conex()->prepare($sql);
             if (!empty($this->filtro)) {
                 $p = '%' . $this->filtro . '%';
@@ -170,38 +180,70 @@ class ModeloArticulosInventario extends Conexion
         }
     }
 
+    /**
+     * Registra uno o varios artículos físicos en una sola transacción.
+     * Acepta $datos['articulos'] = [['id_catalogo' => x, 'id_estado' => y], ...]
+     * o, por compatibilidad, un único id_catalogo / id_estado.
+     */
     private function IncluirArticulo(array $datos): array
     {
+        $articulos = $datos['articulos'] ?? [[
+            'id_catalogo' => $datos['id_catalogo'] ?? null,
+            'id_estado'   => $datos['id_estado'] ?? null
+        ]];
+
+        if (empty($articulos)) {
+            return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
+        }
+
         $conex = $this->conex();
-        
-        // Generamos el código club antes para poder adjuntarlo al JSON
-        $codigo_club = $this->GenerarCodigoClub();
-        $datos_nuevos = [
-            'id_catalogo' => $datos['id_catalogo'],
-            'id_estado'   => $datos['id_estado'],
-            'codigo_club' => $codigo_club,
-            'estatus'     => 1
-        ];
+        $datos_nuevos = [];
 
         try {
             $conex->beginTransaction();
+
+            // Los códigos club se generan de forma correlativa dentro de la misma transacción
+            $siguiente = $this->ObtenerSiguienteNumeroClub($conex);
             $sql = "INSERT INTO articulos_inventario (id_catalogo, id_estado, codigo_club, estatus) VALUES (?, ?, ?, 1)";
             $stmt = $conex->prepare($sql);
-            $stmt->execute([$datos['id_catalogo'], $datos['id_estado'], $codigo_club]);
+
+            foreach ($articulos as $articulo) {
+                $codigo_club = $this->FormatearCodigoClub($siguiente++);
+                $stmt->execute([$articulo['id_catalogo'], $articulo['id_estado'], $codigo_club]);
+
+                $datos_nuevos[] = [
+                    'id_catalogo' => $articulo['id_catalogo'],
+                    'id_estado'   => $articulo['id_estado'],
+                    'codigo_club' => $codigo_club,
+                    'estatus'     => 1
+                ];
+            }
+
             $conex->commit();
 
-            return ['accion' => 'exito', 'mensaje' => "Artículo registrado con el código $codigo_club.", 'datos_nuevos' => json_encode($datos_nuevos)];
+            $codigos = array_column($datos_nuevos, 'codigo_club');
+            $total = count($codigos);
+            $mensaje = $total === 1
+                ? "Artículo registrado con el código {$codigos[0]}."
+                : "Se registraron $total artículos (" . $codigos[0] . " al " . $codigos[$total - 1] . ").";
+
+            return [
+                'accion'       => 'exito',
+                'mensaje'      => $mensaje,
+                'codigos'      => $codigos,
+                'datos_nuevos' => json_encode($total === 1 ? $datos_nuevos[0] : $datos_nuevos)
+            ];
         } catch (Exception $e) {
             if ($conex->inTransaction()) $conex->rollBack();
             logs('Articulos Inventario', $e->getMessage(), 'Modelo_Incluir');
-            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD', 'datos_nuevos' => json_encode($datos_nuevos)];
+            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD', 'datos_nuevos' => json_encode($articulos)];
         }
     }
 
     private function ModificarArticulo(array $datos): array
     {
         $conex = $this->conex();
-        
+
         $datos_nuevos = [
             'codigo_articulo' => $datos['codigo_articulo'],
             'id_catalogo'     => $datos['id_catalogo'],
@@ -230,12 +272,12 @@ class ModeloArticulosInventario extends Conexion
         $conex = null;
         try {
             $conex = $this->conex();
-            
+
             // 1. Llamamos al proceso almacenado
             $sql = "CALL RetirarArticuloSeguro(?, @resultado)";
             $stmt = $conex->prepare($sql);
             $stmt->execute([$id]);
-            
+
             // 2. Leemos la respuesta de MariaDB
             $resQuery = $conex->query("SELECT @resultado AS res");
             $resultado_sp = $resQuery->fetchColumn();
@@ -274,22 +316,26 @@ class ModeloArticulosInventario extends Conexion
         }
     }
 
-public function ConsultarArticulosLibres(): array { 
+public function ConsultarArticulosLibres(): array {
         $conex = null;
         try {
             $conex = $this->conex();
-            
+
             // Excluimos artículos cuyo catálogo ya alcanzó el stock mínimo.
             // Si asignar un artículo haría que el stock baje al mínimo o por debajo, no aparece.
             $sql = "SELECT e.codigo_articulo, 
                            e.codigo_club, 
                            c.id_catalogo,
                            c.nombre as articulo,
-                           c.talla
+                           c.talla,
+                           es.nombre as estado,
+                           es.nivel_estado
                     FROM articulos_inventario e 
                     INNER JOIN catalogo c ON c.id_catalogo = e.id_catalogo
-                    WHERE e.estatus = 1";
-                    
+                    LEFT JOIN estado_fisico es ON es.id_estado = e.id_estado
+                    WHERE e.estatus = 1
+                    ORDER BY c.nombre ASC, e.codigo_club ASC";
+
             $articulos = $conex->query($sql)->fetchAll(PDO::FETCH_ASSOC);
             return ['accion' => 'exito', 'datos' => $articulos];
         } catch (Exception $e) {

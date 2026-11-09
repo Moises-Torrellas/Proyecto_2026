@@ -4,6 +4,7 @@ use App\modelo\ModeloDevoluciones;
 use App\modelo\ModeloAsignaciones;
 use App\modelo\ModeloArticulosInventario; 
 use App\modelo\ModeloEstadoFisico; 
+use App\modelo\ModeloAtletas;
 
 require_once __DIR__ . '/Base.php';
 
@@ -93,38 +94,25 @@ function consultar($obj, $permisos): void {
     }
 }
 
-function MultiConsulta(): void {
+function MultiConsulta(): void
+{
     try {
         $modeloAsignaciones = new ModeloAsignaciones();
-        $modeloEstado = new ModeloEstadoFisico(); 
+        $modeloAtletas = new ModeloAtletas();
+        $modeloEstado = new ModeloEstadoFisico();
 
-        $conex = $modeloAsignaciones->conex();
-        $sql = "SELECT a.id_asignacion, a.estatus as estatus_asignacion,
-                       CONCAT(at.p_nombre, ' ', at.p_apellidos) as atleta,
-                       c.nombre as articulo
-                FROM asignaciones a
-                INNER JOIN atletas at ON a.codigo_atleta = at.codigo_atleta
-                INNER JOIN articulos_inventario e ON a.codigo_articulo = e.codigo_articulo
-                INNER JOIN catalogo c ON e.id_catalogo = c.id_catalogo
-                ORDER BY a.fecha_asignacion DESC";
-        
-        $stmt = $conex->prepare($sql);
-        $stmt->execute();
-        $asignaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $modeloAtletas = new \App\modelo\ModeloAtletas();
+        $respAsignaciones = $modeloAsignaciones->ConsultarAsignacionesDevolucion();
         $respAtletas = $modeloAtletas->ConsultarAtletas();
-        $atletas = $respAtletas['datos'] ?? [];
-
-        $respEstado = $modeloEstado->Consultar(); 
+        $respEstado = $modeloEstado->Consultar();
 
         echo json_encode([
             'accion'       => 'MultiConsulta',
-            'asignaciones' => $asignaciones,
-            'atletas'      => $atletas,
+            'asignaciones' => $respAsignaciones['datos'] ?? [],
+            'atletas'      => $respAtletas['datos'] ?? [],
             'estados'      => $respEstado['datos'] ?? []
         ]);
     } catch (Exception $e) {
+        logs('Devoluciones', $e->getMessage(), 'Controlador_MultiConsulta');
         echo json_encode(['accion' => 'error', 'codigo' => DB_CONNECTION, 'mensaje' => $e->getMessage()]);
     }
 }

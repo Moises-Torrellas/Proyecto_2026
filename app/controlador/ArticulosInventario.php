@@ -53,19 +53,23 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
             
             case 'incluir':
                 if (empty($permisos['registrar_articulo'])) throw new Exception('Sin permisos.');
-                if (!is_numeric($_POST['id_catalogo']) || !is_numeric($_POST['id_estado'])) throw new Exception('Datos inválidos.');
+                // Registro por lote: se recibe un JSON con [{id_catalogo, id_estado}, ...]
+                $articulos = obtenerArticulosLote();
                 
                 $resultado = $obj->ProcesarDatos([
-                    'accion' => 'incluir', 
-                    'id_catalogo' => $_POST['id_catalogo'], 
-                    'id_estado' => $_POST['id_estado']
+                    'accion'    => 'incluir',
+                    'articulos' => $articulos
                 ]);
                 
                 $datos_previos = '';
                 $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
                 if ($resultado['accion'] === 'exito') {
-                    registrarBitacora($bitacoraObj, $id_modulo, "Registró un nuevo artículo en inventario físico.", $datos_previos, $datos_nuevos);
+                    $codigos = implode(', ', $resultado['codigos'] ?? []);
+                    $descripcion = count($articulos) === 1
+                        ? "Registró un nuevo artículo en inventario físico ($codigos)."
+                        : "Registró " . count($articulos) . " artículos en inventario físico ($codigos).";
+                    registrarBitacora($bitacoraObj, $id_modulo, $descripcion, $datos_previos, $datos_nuevos);
                 } else {
                     $resultado['mensaje'] = traducirErrores($resultado['codigo'] ?? '');
                     registrarBitacora($bitacoraObj, $id_modulo, "Falló al registrar artículo: " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
@@ -75,16 +79,20 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
             
             case 'modificar':
                 if (empty($permisos['modificar_articulo'])) throw new Exception('Sin permisos.');
-                if (!is_numeric($_POST['codigo_articulo'])) throw new Exception('ID Inválido.');
+                if (!is_numeric($_POST['codigo_articulo'] ?? null)) throw new Exception('ID Inválido.');
+                if (!is_numeric($_POST['id_estado'] ?? null)) throw new Exception('Seleccione un estado físico válido.');
                 
                 // BITÁCORA: Traer los datos previos antes de modificar
                 $consultar_datos_previos = $obj->Buscar($_POST['codigo_articulo']);
-                $datos_previos = json_encode($consultar_datos_previos['datos'][0] ?? []);
+                $articulo_actual = $consultar_datos_previos['datos'][0] ?? null;
+                if (empty($articulo_actual)) throw new Exception('El artículo que intenta modificar no existe.');
+                $datos_previos = json_encode($articulo_actual);
 
+                // Solo el estado físico es modificable: el catálogo se conserva desde la BD
                 $resultado = $obj->ProcesarDatos([
                     'accion' => 'modificar', 
                     'codigo_articulo' => $_POST['codigo_articulo'], 
-                    'id_catalogo' => $_POST['id_catalogo'], 
+                    'id_catalogo' => $articulo_actual['id_catalogo'], 
                     'id_estado' => $_POST['id_estado']
                 ]);
                 $datos_nuevos = $resultado['datos_nuevos'] ?? '';
@@ -188,6 +196,34 @@ function generar($obj, $id_modulo, $bitacoraObj): void
     } catch (Exception $e) {
         echo json_encode(['accion' => 'error', 'mensaje' => $e->getMessage()]);
     }
+}
+
+/**
+ * Lee y valida la lista de artículos enviada por el registro por lote.
+ * Devuelve un arreglo de ['id_catalogo' => int, 'id_estado' => int].
+ */
+function obtenerArticulosLote(): array
+{
+    $maximo = 50;
+    $lista = json_decode($_POST['articulos'] ?? '', true);
+
+    if (!is_array($lista) || empty($lista)) {
+        throw new Exception('Debe agregar al menos un artículo a la lista.');
+    }
+    if (count($lista) > $maximo) {
+        throw new Exception("Solo puede registrar hasta $maximo artículos por registro.");
+    }
+
+    $articulos = [];
+    foreach ($lista as $item) {
+        $catalogo = (string)($item['id_catalogo'] ?? '');
+        $estado   = (string)($item['id_estado'] ?? '');
+        if (!ctype_digit($catalogo) || !ctype_digit($estado)) {
+            throw new Exception('Datos inválidos: cada artículo debe tener un catálogo y un estado físico válidos.');
+        }
+        $articulos[] = ['id_catalogo' => (int)$catalogo, 'id_estado' => (int)$estado];
+    }
+    return $articulos;
 }
 
 function traducirErrores($codigo) {

@@ -108,12 +108,30 @@ function MultiConsulta(): void
 function incluir($obj, $id_modulo, $bitacoraObj): void
 {
     try {
-        validar_requeridos(['codigo_atleta', 'codigo_articulo', 'fecha_asignacion']);
+        validar_requeridos(['codigo_atleta', 'fecha_asignacion']);
+
+        $articulos = [];
+        if (!empty($_POST['articulos'])) {
+            $articulos = is_array($_POST['articulos']) ? $_POST['articulos'] : json_decode($_POST['articulos'], true);
+        } elseif (!empty($_POST['codigo_articulo'])) {
+            $articulos = [$_POST['codigo_articulo']];
+        }
+
+        if (empty($articulos) || !is_array($articulos)) {
+            throw new Exception('Debe seleccionar al menos un artículo para la asignación.');
+        }
+
+        foreach ($articulos as $item) {
+            if (!is_numeric($item)) {
+                throw new Exception('Uno o más artículos seleccionados son inválidos.');
+            }
+        }
 
         $datos = [
             'accion'           => 'incluir',
             'codigo_atleta'    => $_POST['codigo_atleta'],
-            'codigo_articulo'  => $_POST['codigo_articulo'],
+            'articulos'        => $articulos,
+            'codigo_articulo'  => $articulos[0] ?? null,
             'fecha_asignacion' => $_POST['fecha_asignacion']
         ];
 
@@ -125,13 +143,21 @@ function incluir($obj, $id_modulo, $bitacoraObj): void
         $datos_nuevos = $resultado['datos_nuevos'] ?? '';
 
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
-            registrarBitacora($bitacoraObj, $id_modulo, "Registró asignación del artículo ID: " . $datos['codigo_articulo'] . " al atleta ID: " . $datos['codigo_atleta'], $datos_previos, $datos_nuevos);
-            $resultado = array('accion' => 'exito', 'mensaje' => 'Asignación procesada exitosamente.');
+            $total = count($articulos);
+            $desc = $total === 1
+                ? "Registró asignación del artículo ID: " . $articulos[0] . " al atleta ID: " . $datos['codigo_atleta']
+                : "Registró asignación de $total artículos al atleta ID: " . $datos['codigo_atleta'];
+            registrarBitacora($bitacoraObj, $id_modulo, $desc, $datos_previos, $datos_nuevos);
+            $msg = $total === 1
+                ? 'Asignación procesada exitosamente.'
+                : "Se han registrado $total asignaciones exitosamente.";
+            $resultado = array('accion' => 'exito', 'mensaje' => $msg);
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
+            $detalle = !empty($resultado['articulo_error']) ? " ({$resultado['articulo_error']})" : '';
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                'ERR_EQUIPO_NO_EXISTE' => 'El artículo seleccionado no existe.',
-                'ERR_EQUIPO_OCUPADO'   => 'El artículo seleccionado ya no está disponible.',
-                'ERR_POSICION_NO_COINCIDE' => 'El atleta no juega en la posición requerida para este equipamiento.',
+                'ERR_EQUIPO_NO_EXISTE' => 'El artículo seleccionado no existe' . $detalle . '.',
+                'ERR_EQUIPO_OCUPADO'   => 'El artículo ya no está disponible' . $detalle . '.',
+                'ERR_POSICION_NO_COINCIDE' => 'El atleta no juega en la posición requerida para este equipamiento' . $detalle . '.',
                 'ERR_ATLETA_NO_EXISTE' => 'El atleta seleccionado no existe.',
                 DB_CONNECTION => 'Ocurrió un error al conectarse con la base de datos.',
                 default       => 'Ocurrió un error inesperado al procesar la asignación.'

@@ -25,7 +25,7 @@
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Monto</small>
-                            <span><?= $dato['monto'] ?></span>
+                            <span><?= $dato['monto'] ?> <?= $dato['simbolo_base'] ?? '$'?></span>
                         </div>
                         <div class="listado_dato_grupo">
                             <small>Frecuencia</small>
