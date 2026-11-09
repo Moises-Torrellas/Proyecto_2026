@@ -56,7 +56,7 @@
                     <div class="row row_i">
                         <div class="colum column_inicio">
                             <button type="button" class="btn btn_azul btn_inicio" id="ingreso">Iniciar Sesión</button>
-                            <a href="/Proyecto_2026/public/Recuperacion" style="user-select: none;">¿Has olvidado tu contraseña?</a>
+                            <a href="Recuperacion" style="user-select: none;">¿Has olvidado tu contraseña?</a>
                         </div>
                     </div>
                 </form>

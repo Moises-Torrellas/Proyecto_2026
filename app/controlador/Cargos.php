@@ -114,7 +114,7 @@ function consultar($obj, $permisos): void
     $registro = $respuesta['datos'] ?? []; 
     $solo_lista = true;
 
-    include (__DIR__.'/../vista/CuentasCobrar.php');
+    include (__DIR__.'/../vista/Cargos.php');
 }
 
 function consultarA(): void

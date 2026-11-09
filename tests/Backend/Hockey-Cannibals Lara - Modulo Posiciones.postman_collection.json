@@ -1,0 +1,1782 @@
+{
+    "info": {
+        "_postman_id": "cannibals-pos-6af1d903c4161",
+        "name": "Hockey-Cannibals Lara - Modulo Posiciones",
+        "description": "Colección de pruebas para el módulo de Posiciones con escenarios funcionales y aserciones automatizadas en los scripts After-response (Tests).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "if (pm.request.method !== \"GET\") {",
+                    "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
+                    "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "item": [
+        {
+            "name": "Posiciones",
+            "item": [
+                {
+                    "name": "Registrar Posiciones",
+                    "item": [
+                        {
+                            "name": "Registro-Posiciones-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Posiciones-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"incluir\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Posicion registrada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Delantero Centro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DC",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Jugador de ataque principal en la linea ofensiva",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Posiciones-Exitoso-Sin-Descripcion",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"incluir\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Posicion registrada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Portero Principal",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "POR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Posiciones-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Posiciones-Nombre-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DC",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Posicion de ataque",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Posiciones-Abreviatura-Vacia",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo abreviatura es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Delantero Centro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Posicion de ataque",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Posiciones-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Posiciones-Nombre-Invalido-Corto",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "De",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DC",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Posicion de ataque",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Posiciones-Nombre-Invalido-Numeros",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Delantero 123",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DC",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Posicion de ataque",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Posiciones-Abreviatura-Invalida-Corta",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Abreviatura inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Delantero Centro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "D",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Posicion de ataque",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Posiciones-Abreviatura-Invalida-Larga",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Abreviatura inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Delantero Centro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DELAN",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Posicion de ataque",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Posiciones-Abreviatura-Invalida-Numeros",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Abreviatura inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Delantero Centro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "D1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Posicion de ataque",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Posiciones-Descripcion-Invalida",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Descripcion inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Delantero Centro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DC",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "OK",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Posiciones-Datos-Duplicados",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Posiciones-Nombre-Duplicado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe una posición registrada con este nombre.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Delantero Centro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "ATQ",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Posicion ofensiva",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Posiciones-Abreviatura-Duplicada",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe una posición registrada con esta abreviatura.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Extremo Derecho",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DC",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Posicion ofensiva",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Modificar Posiciones",
+                    "item": [
+                        {
+                            "name": "Modificar-Posiciones-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Posiciones-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"modificar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Posicion modificada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Defensa Central",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DEF",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Jugador de linea defensiva central",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Posiciones-Mismos-Datos",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"modificar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Posicion modificada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Defensa Central",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DEF",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Jugador de linea defensiva central",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Posiciones-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Posiciones-Id-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Defensa Central",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DEF",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Descripcion valida",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Posiciones-Nombre-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DEF",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Descripcion valida",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Posiciones-Abreviatura-Vacia",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo abreviatura es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Defensa Central",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Descripcion valida",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Posiciones-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Posiciones-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Defensa Central",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DEF",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Descripcion valida",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Posiciones-Nombre-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "DF",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DEF",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Descripcion valida",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Posiciones-Abreviatura-Invalida",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Abreviatura inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Defensa Central",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "D",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Descripcion valida",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Posiciones-Datos-Duplicados",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Posiciones-Nombre-Duplicado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe una posición registrada con este nombre.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Portero Principal",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "DEF",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Descripcion modificada",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Posiciones-Abreviatura-Duplicada",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe una posición registrada con esta abreviatura.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Defensa Central",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "POR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "descripcion",
+                                                    "value": "Descripcion modificada",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Eliminar Posiciones",
+                    "item": [
+                        {
+                            "name": "Eliminar-Posiciones-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Posiciones-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"eliminar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Posición eliminada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "3",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminar-Posiciones-Con-Atletas-Asociados",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Posiciones-Con-Atletas-Asociados",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"La posicion tiene atletas asociados.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminar-Posiciones-Id-Inexistente",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Posiciones-Id-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"La posicion no existe.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Eliminar-Posiciones-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Consultar y Buscar Posiciones",
+                    "item": [
+                        {
+                            "name": "Buscar-Posicion-Por-Id",
+                            "item": [
+                                {
+                                    "name": "POST Buscar-Posicion-Por-Id-Existente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "pm.test(\"Retorna datos de la posición buscada\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"buscar\");",
+                                                    "    pm.expect(res.datos).to.be.an(\"array\");",
+                                                    "    pm.expect(res.datos.length).to.be.above(0);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Posicion-Por-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "xyz",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Consultar-Posiciones-Filtro",
+                            "item": [
+                                {
+                                    "name": "POST Consultar-Posiciones-General",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Posiciones-Filtro-Texto",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Defensa",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Posiciones",
+                                            "host": [
+                                                "{{url_base}}Posiciones"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
