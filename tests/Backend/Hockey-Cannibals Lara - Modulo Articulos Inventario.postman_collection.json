@@ -21,6 +21,162 @@
     ],
     "item": [
         {
+            "name": "InicioModulo",
+            "item": [
+                {
+                    "name": "GET Cargar-Vista-Inicio",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token inicial extraído exitosamente:\", match[1]);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Iniciar-Sesion-Exitoso",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var res;",
+                                    "try {",
+                                    "    res = pm.response.json();",
+                                    "    pm.test(\"Inicio de sesión exitoso o validado\", function () {",
+                                    "        pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                                    "    });",
+                                    "    if (res.token) {",
+                                    "        pm.environment.set(\"csrf_token\", res.token);",
+                                    "    }",
+                                    "} catch (e) {",
+                                    "    pm.test(\"Sesión procesada correctamente\", function () {",
+                                    "        pm.response.to.have.status(200);",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json, text/javascript, */*; q=0.01",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-Requested-With",
+                                "value": "XMLHttpRequest",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "accion",
+                                    "value": "inicio",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "cedula",
+                                    "value": "{{cedula}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "contraseña",
+                                    "value": "{{contraseña}}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Autentica al usuario en el sistema con credenciales del entorno."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET Cargar-Vista-ArticulosInventario",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token del módulo ArticulosInventario actualizado:\", match[1]);",
+                                    "}",
+                                    "const matches = [...html.matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                    "if (matches.length > 0) {",
+                                    "    const primerId = matches[0][1];",
+                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                    "    pm.environment.set(\"codigo_articulo\", ultimoId);",
+                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                    "    console.log(\"ID inicial de codigo_articulo disponible en la BD:\", ultimoId);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}ArticulosInventario",
+                            "host": [
+                                "{{url_base}}ArticulosInventario"
+                            ]
+                        },
+                        "description": "Carga la interfaz del módulo Artículos Inventario y sincroniza el token CSRF."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
             "name": "Articulos Inventario",
             "item": [
                 {
@@ -425,6 +581,197 @@
                     ]
                 },
                 {
+                    "name": "Consultar y Cargar Combos de Inventario",
+                    "item": [
+                        {
+                            "name": "Cargar-Combos-Inventario",
+                            "item": [
+                                {
+                                    "name": "POST Cargar-Combos-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "pm.test(\"Retorna catalogos y estados fisicos correctamente\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"cargar_combos\");",
+                                                    "    pm.expect(res.catalogos).to.be.an(\"array\");",
+                                                    "    pm.expect(res.estados).to.be.an(\"array\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "cargar_combos",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}ArticulosInventario",
+                                            "host": [
+                                                "{{url_base}}ArticulosInventario"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Consultar-Articulos-Filtro",
+                            "item": [
+                                {
+                                    "name": "POST Consultar-Articulos-General",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "const html = pm.response.text();",
+                                                    "const matches = [...html.matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "if (matches.length > 0) {",
+                                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                                    "    const primerId = matches[0][1];",
+                                                    "    pm.environment.set(\"codigo_articulo\", ultimoId);",
+                                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                                    "    pm.environment.set(\"id_para_eliminar\", ultimoId);",
+                                                    "    pm.environment.set(\"id_primer_registro\", primerId);",
+                                                    "    console.log(\"ID capturado dinámicamente para codigo_articulo:\", ultimoId);",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}ArticulosInventario",
+                                            "host": [
+                                                "{{url_base}}ArticulosInventario"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Articulos-Filtro-Texto",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Casco",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}ArticulosInventario",
+                                            "host": [
+                                                "{{url_base}}ArticulosInventario"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Articulos-Filtro-Estado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Excelente",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}ArticulosInventario",
+                                            "host": [
+                                                "{{url_base}}ArticulosInventario"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
                     "name": "Modificar Artículos de Inventario",
                     "item": [
                         {
@@ -449,6 +796,38 @@
                                                     "});"
                                                 ]
                                             }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"codigo_articulo\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"ArticulosInventario\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"codigo_articulo\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
                                         }
                                     ],
                                     "request": {
@@ -464,7 +843,7 @@
                                                 },
                                                 {
                                                     "key": "codigo_articulo",
-                                                    "value": "1",
+                                                    "value": "{{codigo_articulo}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -501,6 +880,38 @@
                                                     "});"
                                                 ]
                                             }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"codigo_articulo\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"ArticulosInventario\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"codigo_articulo\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
                                         }
                                     ],
                                     "request": {
@@ -516,7 +927,7 @@
                                                 },
                                                 {
                                                     "key": "codigo_articulo",
-                                                    "value": "1",
+                                                    "value": "{{codigo_articulo}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -838,6 +1249,38 @@
                                                     "});"
                                                 ]
                                             }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"codigo_articulo\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"ArticulosInventario\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"codigo_articulo\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
                                         }
                                     ],
                                     "request": {
@@ -853,7 +1296,7 @@
                                                 },
                                                 {
                                                     "key": "codigo_articulo",
-                                                    "value": "10",
+                                                    "value": "{{codigo_articulo}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -942,6 +1385,38 @@
                                                     "});"
                                                 ]
                                             }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"codigo_articulo\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"ArticulosInventario\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"codigo_articulo\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
                                         }
                                     ],
                                     "request": {
@@ -957,187 +1432,7 @@
                                                 },
                                                 {
                                                     "key": "codigo_articulo",
-                                                    "value": "10",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        },
-                                        "url": {
-                                            "raw": "{{url_base}}ArticulosInventario",
-                                            "host": [
-                                                "{{url_base}}ArticulosInventario"
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Consultar y Cargar Combos de Inventario",
-                    "item": [
-                        {
-                            "name": "Cargar-Combos-Inventario",
-                            "item": [
-                                {
-                                    "name": "POST Cargar-Combos-Exitoso",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Status code es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "pm.test(\"Retorna catalogos y estados fisicos correctamente\", function () {",
-                                                    "    const res = pm.response.json();",
-                                                    "    pm.expect(res.accion).to.eql(\"cargar_combos\");",
-                                                    "    pm.expect(res.catalogos).to.be.an(\"array\");",
-                                                    "    pm.expect(res.estados).to.be.an(\"array\");",
-                                                    "});"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [],
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "cargar_combos",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        },
-                                        "url": {
-                                            "raw": "{{url_base}}ArticulosInventario",
-                                            "host": [
-                                                "{{url_base}}ArticulosInventario"
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "Consultar-Articulos-Filtro",
-                            "item": [
-                                {
-                                    "name": "POST Consultar-Articulos-General",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Status code es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [],
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        },
-                                        "url": {
-                                            "raw": "{{url_base}}ArticulosInventario",
-                                            "host": [
-                                                "{{url_base}}ArticulosInventario"
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Articulos-Filtro-Texto",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Status code es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [],
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "Casco",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        },
-                                        "url": {
-                                            "raw": "{{url_base}}ArticulosInventario",
-                                            "host": [
-                                                "{{url_base}}ArticulosInventario"
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Articulos-Filtro-Estado",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Status code es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [],
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "Excelente",
+                                                    "value": "{{codigo_articulo}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1350,108 +1645,6 @@
                     ]
                 }
             ]
-        },
-        {
-            "name": "GET Cargar-Vista-Inicio",
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "const html = pm.response.text();",
-                            "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i);",
-                            "if (match && match[1]) {",
-                            "    pm.environment.set(\"csrf_token\", match[1]);",
-                            "    console.log(\"CSRF Token actualizado automáticamente:\", match[1]);",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "GET",
-                "header": [],
-                "body": {
-                    "mode": "urlencoded",
-                    "urlencoded": []
-                },
-                "url": {
-                    "raw": "{{url_base}}",
-                    "host": [
-                        "{{url_base}}"
-                    ]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "GET Cargar-Vista-ArticulosInventario",
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "const html = pm.response.text();",
-                            "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i);",
-                            "if (match && match[1]) {",
-                            "    pm.environment.set(\"csrf_token\", match[1]);",
-                            "    console.log(\"CSRF Token actualizado automáticamente:\", match[1]);",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "GET",
-                "header": [],
-                "body": {
-                    "mode": "urlencoded",
-                    "urlencoded": []
-                },
-                "url": {
-                    "raw": "{{url_base}}ArticulosInventario",
-                    "host": [
-                        "{{url_base}}ArticulosInventario"
-                    ]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "POST Iniciar-Sesion-Exitoso",
-            "request": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                    "mode": "urlencoded",
-                    "urlencoded": [
-                        {
-                            "key": "accion",
-                            "value": "inicio",
-                            "type": "text"
-                        },
-                        {
-                            "key": "cedula",
-                            "value": "{{cedula}}",
-                            "type": "text"
-                        },
-                        {
-                            "key": "contraseña",
-                            "value": "{{contraseña}}",
-                            "type": "text"
-                        }
-                    ]
-                },
-                "url": {
-                    "raw": "{{url_base}}",
-                    "host": [
-                        "{{url_base}}"
-                    ]
-                }
-            },
-            "response": []
         }
     ]
 }

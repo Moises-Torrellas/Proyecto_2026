@@ -11,8 +11,8 @@
             "script": {
                 "type": "text/javascript",
                 "exec": [
-                    "pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
-                    "if (!pm.request.headers.has(\"X-CSRF-Token\") && pm.environment.get(\"csrf_token\")) {",
+                    "if (pm.request.method !== \"GET\") {",
+                    "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
                     "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
                     "}"
                 ]
@@ -21,142 +21,160 @@
     ],
     "item": [
         {
-            "name": "GET Cargar-Vista-Inicio",
-            "event": [
+            "name": "InicioModulo",
+            "item": [
                 {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test(\"Estado HTTP es 200\", function () {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "var html = pm.response.text();",
-                            "var match = html.match(/name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
-                            "            html.match(/content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
-                            "if (match && match[1]) {",
-                            "    pm.environment.set(\"csrf_token\", match[1]);",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{url_base}}",
-                    "host": [
-                        "{{url_base}}"
-                    ]
-                },
-                "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
-            }
-        },
-        {
-            "name": "GET Cargar-Vista-Devoluciones",
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test(\"Estado HTTP es 200\", function () {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "var html = pm.response.text();",
-                            "var match = html.match(/name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
-                            "            html.match(/content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
-                            "if (match && match[1]) {",
-                            "    pm.environment.set(\"csrf_token\", match[1]);",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{url_base}}Devoluciones",
-                    "host": [
-                        "{{url_base}}Devoluciones"
-                    ]
-                },
-                "description": "Carga la interfaz del módulo Devoluciones y sincroniza el token CSRF."
-            }
-        },
-        {
-            "name": "POST Iniciar-Sesion-Exitoso",
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test(\"Estado HTTP es 200\", function () {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "var res;",
-                            "try {",
-                            "    res = pm.response.json();",
-                            "    pm.test(\"Inicio de sesión exitoso o validado\", function () {",
-                            "        pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
-                            "    });",
-                            "    if (res.token) {",
-                            "        pm.environment.set(\"csrf_token\", res.token);",
-                            "    }",
-                            "} catch (e) {",
-                            "    pm.test(\"Sesión procesada correctamente\", function () {",
-                            "        pm.response.to.have.status(200);",
-                            "    });",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json, text/javascript, */*; q=0.01",
-                        "type": "text"
-                    },
-                    {
-                        "key": "X-Requested-With",
-                        "value": "XMLHttpRequest",
-                        "type": "text"
-                    }
-                ],
-                "body": {
-                    "mode": "urlencoded",
-                    "urlencoded": [
+                    "name": "GET Cargar-Vista-Inicio",
+                    "event": [
                         {
-                            "key": "accion",
-                            "value": "iniciar_sesion",
-                            "type": "text"
-                        },
-                        {
-                            "key": "cedula",
-                            "value": "{{cedula}}",
-                            "type": "text"
-                        },
-                        {
-                            "key": "contraseña",
-                            "value": "{{contraseña}}",
-                            "type": "text"
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token inicial extraído exitosamente:\", match[1]);",
+                                    "}"
+                                ]
+                            }
                         }
-                    ]
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+                    },
+                    "response": []
                 },
-                "url": {
-                    "raw": "{{url_base}}Login",
-                    "host": [
-                        "{{url_base}}Login"
-                    ]
+                {
+                    "name": "POST Iniciar-Sesion-Exitoso",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var res;",
+                                    "try {",
+                                    "    res = pm.response.json();",
+                                    "    pm.test(\"Inicio de sesión exitoso o validado\", function () {",
+                                    "        pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                                    "    });",
+                                    "    if (res.token) {",
+                                    "        pm.environment.set(\"csrf_token\", res.token);",
+                                    "    }",
+                                    "} catch (e) {",
+                                    "    pm.test(\"Sesión procesada correctamente\", function () {",
+                                    "        pm.response.to.have.status(200);",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json, text/javascript, */*; q=0.01",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-Requested-With",
+                                "value": "XMLHttpRequest",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "accion",
+                                    "value": "inicio",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "cedula",
+                                    "value": "{{cedula}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "contraseña",
+                                    "value": "{{contraseña}}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Autentica al usuario en el sistema con credenciales del entorno."
+                    },
+                    "response": []
                 },
-                "description": "Autentica al usuario en el sistema con credenciales del entorno."
-            }
+                {
+                    "name": "GET Cargar-Vista-Devoluciones",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token del módulo Devoluciones actualizado:\", match[1]);",
+                                    "}",
+                                    "const matches = [...html.matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                    "if (matches.length > 0) {",
+                                    "    const primerId = matches[0][1];",
+                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                    "    pm.environment.set(\"id_devolucion\", ultimoId);",
+                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                    "    console.log(\"ID inicial de Devoluciones disponible en la BD:\", ultimoId);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}Devoluciones",
+                            "host": [
+                                "{{url_base}}Devoluciones"
+                            ]
+                        },
+                        "description": "Carga la interfaz del módulo Devoluciones y sincroniza el token CSRF y los IDs preexistentes."
+                    },
+                    "response": []
+                }
+            ]
         },
         {
             "name": "Devoluciones",
@@ -851,6 +869,519 @@
                     ]
                 },
                 {
+                    "name": "Consultar y Buscar Devoluciones",
+                    "item": [
+                        {
+                            "name": "Consultar-General-Y-Filtros",
+                            "item": [
+                                {
+                                    "name": "POST Consultar-Listado-General",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "const html = pm.response.text();",
+                                                    "const matches = [...html.matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                                    "if (matches.length > 0) {",
+                                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                                    "    const primerId = matches[0][1];",
+                                                    "    pm.environment.set(\"id_devolucion\", ultimoId);",
+                                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                                    "    pm.environment.set(\"id_para_anular\", ultimoId);",
+                                                    "    pm.environment.set(\"id_primer_registro\", primerId);",
+                                                    "    console.log(\"ID capturado dinámicamente para id_devolucion:\", ultimoId);",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Devoluciones",
+                                            "host": [
+                                                "{{url_base}}Devoluciones"
+                                            ]
+                                        },
+                                        "description": "Consulta el listado general de devoluciones agrupadas por atleta con resumen de cantidades.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Filtro-Nombre-Atleta",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Devoluciones",
+                                            "host": [
+                                                "{{url_base}}Devoluciones"
+                                            ]
+                                        },
+                                        "description": "Filtra las devoluciones buscando por nombre o apellido del atleta.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Carlos",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Filtro-Cedula",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Devoluciones",
+                                            "host": [
+                                                "{{url_base}}Devoluciones"
+                                            ]
+                                        },
+                                        "description": "Filtra devoluciones por documento de identidad del atleta.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "V-",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Filtro-Nombre-Articulo",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Devoluciones",
+                                            "host": [
+                                                "{{url_base}}Devoluciones"
+                                            ]
+                                        },
+                                        "description": "Filtra devoluciones por nombre del artículo devuelto.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Casco",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Sin-Coincidencias",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Devoluciones",
+                                            "host": [
+                                                "{{url_base}}Devoluciones"
+                                            ]
+                                        },
+                                        "description": "Verifica la respuesta cuando el filtro no coincide con ninguna devolución.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "InexistenteXYZ999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "MultiConsulta-Catalogos",
+                            "item": [
+                                {
+                                    "name": "POST MultiConsulta-Asignaciones-Atletas-Estados",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es MultiConsulta\", function() { pm.expect(res.accion).to.eql(\"MultiConsulta\"); });",
+                                                    "    pm.test(\"Contiene lista de asignaciones activas\", function() { pm.expect(Array.isArray(res.asignaciones)).to.be.true; });",
+                                                    "    pm.test(\"Contiene lista de atletas\", function() { pm.expect(Array.isArray(res.atletas)).to.be.true; });",
+                                                    "    pm.test(\"Contiene lista de estados físicos\", function() { pm.expect(Array.isArray(res.estados)).to.be.true; });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Devoluciones",
+                                            "host": [
+                                                "{{url_base}}Devoluciones"
+                                            ]
+                                        },
+                                        "description": "Carga simultáneamente las asignaciones pendientes de devolución, atletas y estados físicos para alimentar el formulario modal.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "MultiConsulta",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Buscar-Detalle-Por-ID",
+                            "item": [
+                                {
+                                    "name": "POST Buscar-Devolucion-Por-ID-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
+                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id_devolucion\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Devoluciones\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\",",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id_devolucion\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Devoluciones",
+                                            "host": [
+                                                "{{url_base}}Devoluciones"
+                                            ]
+                                        },
+                                        "description": "Obtiene el detalle de una devolución específica por su ID.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id_devolucion}}",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Devolucion-ID-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
+                                                    "    pm.test(\"Retorna arreglo vacío\", function() { pm.expect(res.datos.length).to.eql(0); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Devoluciones",
+                                            "host": [
+                                                "{{url_base}}Devoluciones"
+                                            ]
+                                        },
+                                        "description": "Verifica la respuesta al consultar una devolución con ID inexistente.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
                     "name": "Modificar Devoluciones",
                     "item": [
                         {
@@ -875,6 +1406,38 @@
                                                     "} catch (e) {",
                                                     "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
                                                     "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id_devolucion\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Devoluciones\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\",",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id_devolucion\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
                                                     "    });",
                                                     "}"
                                                 ]
@@ -912,7 +1475,7 @@
                                                 },
                                                 {
                                                     "key": "id_devolucion",
-                                                    "value": "1",
+                                                    "value": "{{id_devolucion}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -1375,6 +1938,38 @@
                                                     "}"
                                                 ]
                                             }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id_devolucion\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Devoluciones\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\",",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id_devolucion\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
                                         }
                                     ],
                                     "request": {
@@ -1408,7 +2003,7 @@
                                                 },
                                                 {
                                                     "key": "id_devolucion",
-                                                    "value": "1",
+                                                    "value": "{{id_devolucion}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -1613,477 +2208,6 @@
                                                 {
                                                     "key": "id_devolucion",
                                                     "value": "5",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Consultar y Buscar Devoluciones",
-                    "item": [
-                        {
-                            "name": "Consultar-General-Y-Filtros",
-                            "item": [
-                                {
-                                    "name": "POST Consultar-Listado-General",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Devoluciones",
-                                            "host": [
-                                                "{{url_base}}Devoluciones"
-                                            ]
-                                        },
-                                        "description": "Consulta el listado general de devoluciones agrupadas por atleta con resumen de cantidades.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Filtro-Nombre-Atleta",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Devoluciones",
-                                            "host": [
-                                                "{{url_base}}Devoluciones"
-                                            ]
-                                        },
-                                        "description": "Filtra las devoluciones buscando por nombre o apellido del atleta.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "Carlos",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Filtro-Cedula",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Devoluciones",
-                                            "host": [
-                                                "{{url_base}}Devoluciones"
-                                            ]
-                                        },
-                                        "description": "Filtra devoluciones por documento de identidad del atleta.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "V-",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Filtro-Nombre-Articulo",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Devoluciones",
-                                            "host": [
-                                                "{{url_base}}Devoluciones"
-                                            ]
-                                        },
-                                        "description": "Filtra devoluciones por nombre del artículo devuelto.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "Casco",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Sin-Coincidencias",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Devoluciones",
-                                            "host": [
-                                                "{{url_base}}Devoluciones"
-                                            ]
-                                        },
-                                        "description": "Verifica la respuesta cuando el filtro no coincide con ninguna devolución.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "InexistenteXYZ999",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "MultiConsulta-Catalogos",
-                            "item": [
-                                {
-                                    "name": "POST MultiConsulta-Asignaciones-Atletas-Estados",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es MultiConsulta\", function() { pm.expect(res.accion).to.eql(\"MultiConsulta\"); });",
-                                                    "    pm.test(\"Contiene lista de asignaciones activas\", function() { pm.expect(Array.isArray(res.asignaciones)).to.be.true; });",
-                                                    "    pm.test(\"Contiene lista de atletas\", function() { pm.expect(Array.isArray(res.atletas)).to.be.true; });",
-                                                    "    pm.test(\"Contiene lista de estados físicos\", function() { pm.expect(Array.isArray(res.estados)).to.be.true; });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Devoluciones",
-                                            "host": [
-                                                "{{url_base}}Devoluciones"
-                                            ]
-                                        },
-                                        "description": "Carga simultáneamente las asignaciones pendientes de devolución, atletas y estados físicos para alimentar el formulario modal.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "MultiConsulta",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "Buscar-Detalle-Por-ID",
-                            "item": [
-                                {
-                                    "name": "POST Buscar-Devolucion-Por-ID-Exitoso",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
-                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Devoluciones",
-                                            "host": [
-                                                "{{url_base}}Devoluciones"
-                                            ]
-                                        },
-                                        "description": "Obtiene el detalle de una devolución específica por su ID.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "id",
-                                                    "value": "1",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Buscar-Devolucion-ID-Inexistente",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
-                                                    "    pm.test(\"Retorna arreglo vacío\", function() { pm.expect(res.datos.length).to.eql(0); });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Devoluciones",
-                                            "host": [
-                                                "{{url_base}}Devoluciones"
-                                            ]
-                                        },
-                                        "description": "Verifica la respuesta al consultar una devolución con ID inexistente.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "id",
-                                                    "value": "999999",
                                                     "type": "text"
                                                 }
                                             ]
