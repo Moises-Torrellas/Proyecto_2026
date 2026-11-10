@@ -15,6 +15,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                         <span style="font-weight: bold; color: var(--texto-principal);"><?= $dato['nombre'] ?></span>
                     </div>
                     <div class="listado_dato_grupo">
+                        <small>Tipo</small>
+                        <span><?= $dato['tipo_nombre'] ?? 'Sistema' ?></span>
+                    </div>
+                    <div class="listado_dato_grupo">
                         <small>Fecha de Creación</small>
                         <span><?= $dato['fecha'] ?></span>
                     </div>
@@ -70,8 +74,7 @@ if (isset($solo_lista) && $solo_lista === true) :
                             <i class="fi fi-br-search icon_input"></i>
                         </div>
                         <div class="botones" style="display: flex; gap: 10px;">
-                            <button class="btn btn_azul" id="btn_generar" data-tipo="principal">Crear Punto de Restauración</button>
-                            <button class="btn btn_azul" id="btn_generar_seguridad" data-tipo="seguridad" style="background-color: var(--color-secundario, #4CAF50);">Crear Punto de Restauración Seguridad</button>
+                            <button class="btn btn_azul" id="btn_generar">Crear Punto de Restauración</button>
                         </div>
                     </div>
                     
@@ -90,6 +93,10 @@ if (isset($solo_lista) && $solo_lista === true) :
                                             <div class="listado_dato_grupo" style="width: 40%;">
                                                 <small>Archivo</small>
                                                 <span style="font-weight: bold; color: var(--texto-principal);"><?= $dato['nombre'] ?></span>
+                                            </div>
+                                            <div class="listado_dato_grupo">
+                                                <small>Tipo</small>
+                                                <span><?= $dato['tipo_nombre'] ?? 'Sistema' ?></span>
                                             </div>
                                             <div class="listado_dato_grupo">
                                                 <small>Fecha de Creación</small>
