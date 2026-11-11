@@ -19,12 +19,12 @@
 <script src="libraries/js/flatpickr.js"></script>
 
 <script src="libraries/driver.js-stable/dist/driver.min.js"></script>
-<link href="css/main.css?v=4" rel="stylesheet">
-<link href="css/navbar.css" rel="stylesheet">
+<link href="css/main.css?v=9" rel="stylesheet">
+<link href="css/navbar.css?v=3" rel="stylesheet">
 <link href="css/modal.css?v=8" rel="stylesheet">
 <link href="css/error.css" rel="stylesheet">
-<link href="css/inicio.css" rel="stylesheet">
-<link href="css/responsive.css?v=2" rel="stylesheet">
+<link href="css/inicio.css?v=5" rel="stylesheet">
+<link href="css/responsive.css?v=12" rel="stylesheet">
 <link href="libraries/driver.js-stable/dist/driver.min.css" rel="stylesheet">
 <link href="libraries/css/select2.min.css" rel="stylesheet" />
 <link href="libraries/css/tippy.css" rel="stylesheet" />

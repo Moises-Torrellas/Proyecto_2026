@@ -242,6 +242,48 @@ ul {
 .icon_boton_usuario {
     width: 25px;
     height: 25px;
+    flex-shrink: 0;
+}
+
+/* Indicador de notificaciones: punto rojo sobre la campana (sin número) */
+.badge_conteo {
+    position: absolute;
+    top: 7px;
+    right: 8px;
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border-radius: 50%;
+    background-color: #ef4444;
+    border: 2px solid var(--fondo-principal);
+    box-sizing: content-box;
+    font-size: 0;
+    line-height: 0;
+    color: transparent;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Contador de notificaciones dentro del panel */
+.contador_noti_panel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    margin-left: 8px;
+    border-radius: 11px;
+    background-color: #ef4444;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    box-sizing: border-box;
+}
+
+.contador_noti_panel.ocultar_contador {
+    display: none;
 }
 
 .boton_usuario:hover {

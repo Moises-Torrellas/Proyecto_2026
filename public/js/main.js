@@ -89,7 +89,19 @@ $(document).ready(function () {
         dateFormat: "Y-m-d", // Formato interno (para BD)
         altInput: true,
         altFormat: "d/m/Y", // Formato visual
-        allowInput: false    // Permite escribir la fecha manualmente
+        allowInput: false,   // Permite escribir la fecha manualmente
+        disableMobile: true, // Forzar uso del calendario estilizado de Flatpickr en móviles y responsive
+        locale: {
+            firstDayOfWeek: 1,
+            weekdays: {
+                shorthand: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
+                longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+            },
+            months: {
+                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+            },
+        }
     });
 
 
@@ -712,11 +724,36 @@ function iniciarTourConPasos(pasos) {
         closeBtnText: 'Cerrar',
         nextBtnText: 'Siguiente',
         prevBtnText: 'Anterior',
+        onHighlighted: (elemento) => ajustarPopoverTourMovil(elemento),
     });
 
     driver.defineSteps(pasos);
 
     return driver;
+}
+
+/**
+ * En dispositivos móviles el popover de driver.js se muestra como una "hoja" fija
+ * (ver responsive.css). Aquí decidimos si va arriba o abajo de la pantalla para
+ * no tapar el elemento resaltado.
+ */
+function ajustarPopoverTourMovil(elemento) {
+    const popover = document.getElementById('driver-popover-item');
+    if (!popover) return;
+
+    popover.classList.remove('driver_movil_arriba');
+    if (window.innerWidth > 768) return;
+
+    const nodo = elemento && typeof elemento.getNode === 'function' ? elemento.getNode() : null;
+    if (!nodo) return;
+
+    const rect = nodo.getBoundingClientRect();
+    const centroElemento = rect.top + (rect.height / 2);
+
+    // Si el elemento está en la mitad inferior, el popover se coloca arriba
+    if (centroElemento > window.innerHeight * 0.5) {
+        popover.classList.add('driver_movil_arriba');
+    }
 }
 
 function toggleDetalles(elemento) {
@@ -746,6 +783,20 @@ document.addEventListener("DOMContentLoaded", function () {
     // Mostrar notificaciones automáticas al iniciar
     if (btnNoti) {
         mostrarNotificacionesAutomaticas();
+    }
+
+    // El badge de la campana ahora es solo un punto rojo; el número se muestra
+    // dentro del panel de notificaciones. Sincronizamos ambos automáticamente.
+    const badgeCampana = document.getElementById("campana-notificaciones-badge");
+    if (badgeCampana) {
+        sincronizarContadorPanel();
+        new MutationObserver(sincronizarContadorPanel).observe(badgeCampana, {
+            childList: true,
+            characterData: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["class"]
+        });
     }
 
     // El toggle manual (clic en la campana y fuera de ella)
@@ -954,6 +1005,19 @@ function actualizarContadorBadge() {
         badge.textContent = actual + 1;
         badge.classList.remove("ocultar");
     }
+}
+
+// Refleja la cantidad de notificaciones sin leer en el contador del panel
+function sincronizarContadorPanel() {
+    const badge = document.getElementById("campana-notificaciones-badge");
+    const contador = document.getElementById("contador_notificaciones_panel");
+    if (!badge || !contador) return;
+
+    const cantidad = parseInt(badge.textContent) || 0;
+    const visible = cantidad > 0 && !badge.classList.contains("ocultar");
+
+    contador.textContent = cantidad > 99 ? "99+" : cantidad;
+    contador.classList.toggle("ocultar_contador", !visible);
 }
 
 // Tu función original intacta adaptada para inicializar Lucide
