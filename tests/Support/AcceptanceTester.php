@@ -103,7 +103,7 @@ class AcceptanceTester extends \Codeception\Actor
     public function despejarOverlays(): void
     {
         $this->executeJS("if (typeof Swal !== 'undefined' && Swal.isVisible()) { Swal.close(); }");
-        $this->executeJS("$('.swal2-container').remove(); $('body').removeClass('swal2-shown swal2-toast-shown');");
+        $this->executeJS("document.querySelectorAll('.swal2-container').forEach(function(el){ el.remove(); }); if (document.body) { document.body.classList.remove('swal2-shown', 'swal2-toast-shown'); }");
         $this->executeJS("if (typeof flatpickr !== 'undefined') { document.querySelectorAll('.flatpickr-calendar.open').forEach(el => el.classList.remove('open')); }");
     }
 

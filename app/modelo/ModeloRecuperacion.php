@@ -5,7 +5,6 @@ namespace App\Modelo;
 use PHPMailer\PHPMailer\PHPMailer;
 use Exception;
 
-use function Safe\error_log;
 
 class ModeloRecuperacion extends Conexion
 {
@@ -67,7 +66,7 @@ class ModeloRecuperacion extends Conexion
             if ($this->conexion && $this->conexion->inTransaction()) {
                 $this->conexion->rollBack();
             }
-            error_log('Error en ComprobarCedula: ' . $e->getMessage());
+            logs('Recuperacion', $e->getMessage(), 'Modelo_ComprobarCedula');
             return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         } finally {
             $this->conexion = null;
@@ -79,7 +78,7 @@ class ModeloRecuperacion extends Conexion
         try {
             return $this->enviarCorreo('Se le envio otro código al correo.');
         } catch (Exception $e) {
-            error_log($e->getMessage());
+            logs('Recuperacion', $e->getMessage(), 'Modelo_Reenviar');
             return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         }
     }
@@ -110,7 +109,7 @@ class ModeloRecuperacion extends Conexion
                 return ['accion' => 'error', 'mensaje' => 'El código no es correcto.'];
             }
         } catch (Exception $e) {
-            error_log($e->getMessage());
+            logs('Recuperacion', $e->getMessage(), 'Modelo_ComprobarCodigo');
             return ['accion' => 'error', 'mensaje' => $e->getMessage()];
         }
     }
@@ -119,7 +118,7 @@ class ModeloRecuperacion extends Conexion
     {
         try {
 
-            if (!$_SESSION['verificacion']) {
+            if (empty($_SESSION['verificacion'])) {
                 return ['accion' => 'error', 'mensaje' => 'No esta verificado.'];
             }
             $cedula_r = $_SESSION['cedula_r'];
@@ -147,13 +146,13 @@ class ModeloRecuperacion extends Conexion
             if ($this->conexion && $this->conexion->inTransaction()) {
                 $this->conexion->rollBack();
             }
-            error_log($e->getMessage());
+            logs('Recuperacion', $e->getMessage(), 'Modelo_CambiarContraseña');
             $resultado = ['accion' => 'error', 'mensaje' => $e->getMessage()];
         }
         return $resultado;
     }
 
-    private function enviarCorreo($mensaje): array
+    protected function enviarCorreo($mensaje): array
     {
         $mail = new PHPMailer(true);
 
@@ -228,7 +227,7 @@ class ModeloRecuperacion extends Conexion
 
             return ['accion' => 'comprobar', 'mensaje' => $mensaje];
         } catch (Exception $e) {
-            error_log("Error en PHPMailer: " . $e->getMessage());
+            logs('Recuperacion', "Error en PHPMailer: " . $e->getMessage(), 'Modelo_EnviarCorreo');
             return ['accion' => 'error', 'mensaje' => "No se pudo enviar el correo. Error: {$mail->ErrorInfo}"];
         }
     }
