@@ -46,147 +46,37 @@ class RegistrarVueltoTest extends TestCase
         return $modeloFake;
     }
 
-    // Caso 1: Monto de vuelto con formato inválido
-    public function testMontoVueltoInvalido(): void
+    // Caso 1: Validación de campos de vuelto con formato o valor inválido
+    public function testValidarCamposInvalidosLanzaExcepcion(): void
     {
-        // Arrange
         $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'monto_vuelto' => 'monto_invalido'
+        $casos = [
+            'monto invalido'      => [['accion' => 'registrar_vuelto', 'monto_vuelto' => 'monto_invalido'], 'Monto inválido.'],
+            'codigo pago'         => [['accion' => 'registrar_vuelto', 'codigo_pago' => 'invalido'], 'Pago inválido.'],
+            'codigo metodo'       => [['accion' => 'registrar_vuelto', 'codigo_metodo' => 'metodo_invalido'], 'Método de pago inválido.'],
+            'codigo moneda'       => [['accion' => 'registrar_vuelto', 'codigo_moneda' => 'moneda_invalida'], 'Moneda inválida.'],
+            'fecha futura'        => [['accion' => 'registrar_vuelto', 'fecha_vuelto' => '2099-12-31'], 'La fecha ingresada no puede ser futura.'],
+            'fecha atrasada'      => [['accion' => 'registrar_vuelto', 'fecha_vuelto' => '2020-01-01'], 'La fecha ingresada no puede tener más de 2 meses de atraso.'],
+            'fecha formato'       => [['accion' => 'registrar_vuelto', 'fecha_vuelto' => '31/12/2026'], 'Formato de fecha inválido. Use AAAA-MM-DD.'],
+            'referencia invalida' => [['accion' => 'registrar_vuelto', 'referencia_vuelto' => '12'], 'La referencia del vuelto debe tener entre 4 y 12 dígitos numéricos.']
         ];
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Monto inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
+        foreach ($casos as $nombre => [$datos, $mensajeEsperado]) {
+            try {
+                $modelo->ProcesarDatos($datos);
+                $this->fail("Se esperaba excepción en caso [$nombre] y no se lanzó.");
+            } catch (Exception $e) {
+                $this->assertEquals($mensajeEsperado, $e->getMessage(), "Mensaje incorrecto en [$nombre]");
+            }
+        }
     }
 
-    // Caso 2: Código de pago con formato inválido
-    public function testCodigoPagoInvalido(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'codigo_pago' => 'invalido'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Pago inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 3: Código de método con formato inválido
-    public function testCodigoMetodoInvalido(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'codigo_metodo' => 'metodo_invalido'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Método de pago inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 4: Código de moneda con formato inválido
-    public function testCodigoMonedaInvalido(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'codigo_moneda' => 'moneda_invalida'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Moneda inválida.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 5: Fecha de vuelto futura
-    public function testFechaVueltoFutura(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'fecha_vuelto' => '2099-12-31'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('La fecha ingresada no puede ser futura.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 6: Fecha de vuelto con más de 2 meses de atraso
-    public function testFechaVueltoAtrasada(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'fecha_vuelto' => '2020-01-01'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('La fecha ingresada no puede tener más de 2 meses de atraso.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 7: Fecha de vuelto con formato inválido
-    public function testFechaVueltoInvalida(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'fecha_vuelto' => '31/12/2026'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Formato de fecha inválido. Use AAAA-MM-DD.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 8: Referencia de vuelto con formato inválido
-    public function testReferenciaVueltoInvalida(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'referencia_vuelto' => '12'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('La referencia del vuelto debe tener entre 4 y 12 dígitos numéricos.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 9: Monto de vuelto menor o igual a cero
+    // Caso 2: Monto de vuelto menor o igual a cero
     public function testMontoVueltoMenorOIgualACero(): void
     {
         // Arrange
-        $modelo = new ModeloPagos();
+        $pdoMock = $this->createMock(PDO::class);
+        $modelo = $this->crearModeloConPdoMock($pdoMock);
         $datos = [
             'accion' => 'registrar_vuelto',
             'monto_vuelto' => '0'

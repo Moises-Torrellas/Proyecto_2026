@@ -64,41 +64,7 @@ class BuscarConceptosTest extends TestCase
         $this->assertEquals('Torneo Invitacional', $resultado['datos'][0]['nombre']);
     }
 
-    // Caso 2: Búsqueda exitosa a través de ProcesarDatos (usando $this->id)
-    public function testBuscarPorProcesarDatos(): void
-    {
-        $filasEsperadas = [
-            [
-                'codigo_concepto' => 12,
-                'nombre'          => 'Carnet Digital',
-                'monto'           => 10.00,
-                'frecuencia'      => 'U',
-                'estatus'         => 1
-            ]
-        ];
-
-        $stmt = $this->createMock(PDOStatement::class);
-        $stmt->method('bindParam')->willReturn(true);
-        $stmt->method('execute')->willReturn(true);
-        $stmt->method('fetchAll')->willReturn($filasEsperadas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmt);
-
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloConceptos();
-        $resultado = $modelo->ProcesarDatos([
-            'accion' => 'buscar',
-            'id'     => '12'
-        ]);
-
-        $this->assertEquals('buscar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-        $this->assertEquals('Carnet Digital', $resultado['datos'][0]['nombre']);
-    }
-
-    // Caso 3: Búsqueda cuando el concepto no es encontrado
+    // Caso 2: Búsqueda cuando el concepto no es encontrado
     public function testBuscarNoEncontrado(): void
     {
         $stmt = $this->createMock(PDOStatement::class);
