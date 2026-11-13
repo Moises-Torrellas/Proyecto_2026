@@ -11,8 +11,8 @@
             "script": {
                 "type": "text/javascript",
                 "exec": [
-                    "pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
-                    "if (!pm.request.headers.has(\"X-CSRF-Token\") && pm.environment.get(\"csrf_token\")) {",
+                    "if (pm.request.method !== \"GET\") {",
+                    "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
                     "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
                     "}"
                 ]
@@ -21,142 +21,160 @@
     ],
     "item": [
         {
-            "name": "GET Cargar-Vista-Inicio",
-            "event": [
+            "name": "InicioModulo",
+            "item": [
                 {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test(\"Estado HTTP es 200\", function () {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "var html = pm.response.text();",
-                            "var match = html.match(/name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
-                            "            html.match(/content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
-                            "if (match && match[1]) {",
-                            "    pm.environment.set(\"csrf_token\", match[1]);",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{url_base}}",
-                    "host": [
-                        "{{url_base}}"
-                    ]
-                },
-                "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
-            }
-        },
-        {
-            "name": "GET Cargar-Vista-Asignaciones",
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test(\"Estado HTTP es 200\", function () {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "var html = pm.response.text();",
-                            "var match = html.match(/name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
-                            "            html.match(/content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
-                            "if (match && match[1]) {",
-                            "    pm.environment.set(\"csrf_token\", match[1]);",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{url_base}}Asignaciones",
-                    "host": [
-                        "{{url_base}}Asignaciones"
-                    ]
-                },
-                "description": "Carga la interfaz del módulo Asignaciones y sincroniza el token CSRF."
-            }
-        },
-        {
-            "name": "POST Iniciar-Sesion-Exitoso",
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test(\"Estado HTTP es 200\", function () {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "var res;",
-                            "try {",
-                            "    res = pm.response.json();",
-                            "    pm.test(\"Inicio de sesión exitoso o validado\", function () {",
-                            "        pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
-                            "    });",
-                            "    if (res.token) {",
-                            "        pm.environment.set(\"csrf_token\", res.token);",
-                            "    }",
-                            "} catch (e) {",
-                            "    pm.test(\"Sesión procesada correctamente\", function () {",
-                            "        pm.response.to.have.status(200);",
-                            "    });",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json, text/javascript, */*; q=0.01",
-                        "type": "text"
-                    },
-                    {
-                        "key": "X-Requested-With",
-                        "value": "XMLHttpRequest",
-                        "type": "text"
-                    }
-                ],
-                "body": {
-                    "mode": "urlencoded",
-                    "urlencoded": [
+                    "name": "GET Cargar-Vista-Inicio",
+                    "event": [
                         {
-                            "key": "accion",
-                            "value": "iniciar_sesion",
-                            "type": "text"
-                        },
-                        {
-                            "key": "cedula",
-                            "value": "{{cedula}}",
-                            "type": "text"
-                        },
-                        {
-                            "key": "contraseña",
-                            "value": "{{contraseña}}",
-                            "type": "text"
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token inicial extraído exitosamente:\", match[1]);",
+                                    "}"
+                                ]
+                            }
                         }
-                    ]
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+                    },
+                    "response": []
                 },
-                "url": {
-                    "raw": "{{url_base}}Login",
-                    "host": [
-                        "{{url_base}}Login"
-                    ]
+                {
+                    "name": "POST Iniciar-Sesion-Exitoso",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var res;",
+                                    "try {",
+                                    "    res = pm.response.json();",
+                                    "    pm.test(\"Inicio de sesión exitoso o validado\", function () {",
+                                    "        pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                                    "    });",
+                                    "    if (res.token) {",
+                                    "        pm.environment.set(\"csrf_token\", res.token);",
+                                    "    }",
+                                    "} catch (e) {",
+                                    "    pm.test(\"Sesión procesada correctamente\", function () {",
+                                    "        pm.response.to.have.status(200);",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json, text/javascript, */*; q=0.01",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-Requested-With",
+                                "value": "XMLHttpRequest",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "accion",
+                                    "value": "inicio",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "cedula",
+                                    "value": "{{cedula}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "contraseña",
+                                    "value": "{{contraseña}}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Autentica al usuario en el sistema con credenciales del entorno."
+                    },
+                    "response": []
                 },
-                "description": "Autentica al usuario en el sistema con credenciales del entorno."
-            }
+                {
+                    "name": "GET Cargar-Vista-Asignaciones",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token del módulo Asignaciones actualizado:\", match[1]);",
+                                    "}",
+                                    "const matches = [...html.matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                    "if (matches.length > 0) {",
+                                    "    const primerId = matches[0][1];",
+                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                    "    pm.environment.set(\"id_asignacion\", ultimoId);",
+                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                    "    console.log(\"ID inicial de Asignaciones disponible en la BD:\", ultimoId);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}Asignaciones",
+                            "host": [
+                                "{{url_base}}Asignaciones"
+                            ]
+                        },
+                        "description": "Carga la interfaz del módulo Asignaciones y sincroniza el token CSRF y los IDs preexistentes."
+                    },
+                    "response": []
+                }
+            ]
         },
         {
             "name": "Asignaciones",
@@ -1287,6 +1305,581 @@
                     ]
                 },
                 {
+                    "name": "Consultar y Buscar Asignaciones",
+                    "item": [
+                        {
+                            "name": "Consultar-General-Y-Filtros",
+                            "item": [
+                                {
+                                    "name": "POST Consultar-Listado-General",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "const html = pm.response.text();",
+                                                    "const matches = [...html.matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                                    "if (matches.length > 0) {",
+                                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                                    "    const primerId = matches[0][1];",
+                                                    "    pm.environment.set(\"id_asignacion\", ultimoId);",
+                                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                                    "    pm.environment.set(\"id_para_anular\", ultimoId);",
+                                                    "    pm.environment.set(\"id_primer_registro\", primerId);",
+                                                    "    console.log(\"ID capturado dinámicamente para id_asignacion:\", ultimoId);",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Asignaciones",
+                                            "host": [
+                                                "{{url_base}}Asignaciones"
+                                            ]
+                                        },
+                                        "description": "Consulta el listado general de asignaciones agrupadas por atleta con la estructura de tarjetas.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Filtro-Nombre-Atleta",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Asignaciones",
+                                            "host": [
+                                                "{{url_base}}Asignaciones"
+                                            ]
+                                        },
+                                        "description": "Filtra las asignaciones por coincidencia en el nombre o apellido del atleta.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Carlos",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Filtro-Cedula",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Asignaciones",
+                                            "host": [
+                                                "{{url_base}}Asignaciones"
+                                            ]
+                                        },
+                                        "description": "Filtra asignaciones buscando por número de documento de identidad.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "V-",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Filtro-Nombre-Articulo",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Asignaciones",
+                                            "host": [
+                                                "{{url_base}}Asignaciones"
+                                            ]
+                                        },
+                                        "description": "Filtra asignaciones por denominación del artículo asignado.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Stick",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Sin-Coincidencias",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Asignaciones",
+                                            "host": [
+                                                "{{url_base}}Asignaciones"
+                                            ]
+                                        },
+                                        "description": "Verifica el comportamiento cuando la búsqueda no coincide con ninguna asignación.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "TextoInexistenteZzz999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "MultiConsulta-Catalogos",
+                            "item": [
+                                {
+                                    "name": "POST MultiConsulta-Atletas-Y-Articulos-Libres",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es MultiConsulta\", function() { pm.expect(res.accion).to.eql(\"MultiConsulta\"); });",
+                                                    "    pm.test(\"Contiene lista de atletas\", function() { pm.expect(Array.isArray(res.atletas)).to.be.true; });",
+                                                    "    pm.test(\"Contiene lista de equipos disponibles\", function() { pm.expect(Array.isArray(res.equipos)).to.be.true; });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Asignaciones",
+                                            "host": [
+                                                "{{url_base}}Asignaciones"
+                                            ]
+                                        },
+                                        "description": "Obtiene en un solo request los atletas activos y los artículos libres (estatus = 1) para poblar los selectores Select2.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "MultiConsulta",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Buscar-Detalle-Por-ID",
+                            "item": [
+                                {
+                                    "name": "POST Buscar-Asignacion-Por-ID-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
+                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id_asignacion\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Asignaciones\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\",",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id_asignacion\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Asignaciones",
+                                            "host": [
+                                                "{{url_base}}Asignaciones"
+                                            ]
+                                        },
+                                        "description": "Obtiene los datos detallados de una asignación específica por su ID.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_asignacion",
+                                                    "value": "{{id_asignacion}}",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Asignacion-ID-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
+                                                    "    pm.test(\"Retorna arreglo vacío\", function() { pm.expect(res.datos.length).to.eql(0); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Asignaciones",
+                                            "host": [
+                                                "{{url_base}}Asignaciones"
+                                            ]
+                                        },
+                                        "description": "Verifica la respuesta al consultar una asignación con ID inexistente.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_asignacion",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-ID-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida formato numérico\", function() { pm.expect(res.mensaje).to.include(\"ID de asignación inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Asignaciones",
+                                            "host": [
+                                                "{{url_base}}Asignaciones"
+                                            ]
+                                        },
+                                        "description": "Valida rechazo de búsqueda con ID de formato alfanumérico.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id_asignacion",
+                                                    "value": "abc#xyz",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
                     "name": "Modificar Asignaciones",
                     "item": [
                         {
@@ -1311,6 +1904,38 @@
                                                     "} catch (e) {",
                                                     "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
                                                     "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id_asignacion\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Asignaciones\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\",",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id_asignacion\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
                                                     "    });",
                                                     "}"
                                                 ]
@@ -1348,7 +1973,7 @@
                                                 },
                                                 {
                                                     "key": "id_asignacion",
-                                                    "value": "1",
+                                                    "value": "{{id_asignacion}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -1392,6 +2017,38 @@
                                                     "}"
                                                 ]
                                             }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id_asignacion\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Asignaciones\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\",",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id_asignacion\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
                                         }
                                     ],
                                     "request": {
@@ -1425,7 +2082,7 @@
                                                 },
                                                 {
                                                     "key": "id_asignacion",
-                                                    "value": "1",
+                                                    "value": "{{id_asignacion}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -2353,6 +3010,38 @@
                                                     "}"
                                                 ]
                                             }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id_asignacion\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Asignaciones\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\",",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id_asignacion\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
                                         }
                                     ],
                                     "request": {
@@ -2386,7 +3075,7 @@
                                                 },
                                                 {
                                                     "key": "id_asignacion",
-                                                    "value": "1",
+                                                    "value": "{{id_asignacion}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -2747,539 +3436,6 @@
                                                 {
                                                     "key": "codigo_articulo",
                                                     "value": "1",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Consultar y Buscar Asignaciones",
-                    "item": [
-                        {
-                            "name": "Consultar-General-Y-Filtros",
-                            "item": [
-                                {
-                                    "name": "POST Consultar-Listado-General",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Consulta el listado general de asignaciones agrupadas por atleta con la estructura de tarjetas.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Filtro-Nombre-Atleta",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Filtra las asignaciones por coincidencia en el nombre o apellido del atleta.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "Carlos",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Filtro-Cedula",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Filtra asignaciones buscando por número de documento de identidad.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "V-",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Filtro-Nombre-Articulo",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Filtra asignaciones por denominación del artículo asignado.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "Stick",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Sin-Coincidencias",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Verifica el comportamiento cuando la búsqueda no coincide con ninguna asignación.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "TextoInexistenteZzz999",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "MultiConsulta-Catalogos",
-                            "item": [
-                                {
-                                    "name": "POST MultiConsulta-Atletas-Y-Articulos-Libres",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es MultiConsulta\", function() { pm.expect(res.accion).to.eql(\"MultiConsulta\"); });",
-                                                    "    pm.test(\"Contiene lista de atletas\", function() { pm.expect(Array.isArray(res.atletas)).to.be.true; });",
-                                                    "    pm.test(\"Contiene lista de equipos disponibles\", function() { pm.expect(Array.isArray(res.equipos)).to.be.true; });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Obtiene en un solo request los atletas activos y los artículos libres (estatus = 1) para poblar los selectores Select2.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "MultiConsulta",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "Buscar-Detalle-Por-ID",
-                            "item": [
-                                {
-                                    "name": "POST Buscar-Asignacion-Por-ID-Exitoso",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
-                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Obtiene los datos detallados de una asignación específica por su ID.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "id_asignacion",
-                                                    "value": "1",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Buscar-Asignacion-ID-Inexistente",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
-                                                    "    pm.test(\"Retorna arreglo vacío\", function() { pm.expect(res.datos.length).to.eql(0); });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Verifica la respuesta al consultar una asignación con ID inexistente.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "id_asignacion",
-                                                    "value": "999999",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Buscar-ID-Invalido",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
-                                                    "    pm.test(\"Valida formato numérico\", function() { pm.expect(res.mensaje).to.include(\"ID de asignación inválido\"); });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Valida rechazo de búsqueda con ID de formato alfanumérico.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "id_asignacion",
-                                                    "value": "abc#xyz",
                                                     "type": "text"
                                                 }
                                             ]

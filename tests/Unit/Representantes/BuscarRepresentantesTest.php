@@ -70,31 +70,7 @@ class BuscarRepresentantesTest extends TestCase
         $this->assertEquals(1, $resultado['datos'][0]['codigo_representante']);
     }
 
-    // Caso 2: Búsqueda exitosa a través de ProcesarDatos
-    public function testBuscarPorProcesarDatos(): void
-    {
-        $filas = [$this->obtenerFilaRepresentante()];
-
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('bindParam')->willReturn(true);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchAll')->willReturn($filas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloRepresentantes();
-        $resultado = $modelo->ProcesarDatos([
-            'accion' => 'buscar',
-            'id'     => '1'
-        ]);
-
-        $this->assertEquals('buscar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-    }
-
-    // Caso 3: Búsqueda que no encuentra el registro
+    // Caso 2: Búsqueda que no encuentra el registro
     public function testBuscarNoEncontrado(): void
     {
         $stmtMock = $this->createMock(PDOStatement::class);

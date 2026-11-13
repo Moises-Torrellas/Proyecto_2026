@@ -1,0 +1,2785 @@
+{
+    "info": {
+        "_postman_id": "cannibals-mon-6af37bcf68f67",
+        "name": "Hockey-Cannibals Lara - Modulo Monedas",
+        "description": "Colección de pruebas para el módulo de Monedas con escenarios funcionales y aserciones automatizadas en los scripts After-response (Tests).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "if (pm.request.method !== \"GET\") {",
+                    "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
+                    "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "item": [
+        {
+            "name": "InicioModulo",
+            "item": [
+                {
+                    "name": "GET Cargar-Vista-Inicio",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token inicial extraído exitosamente:\", match[1]);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Iniciar-Sesion-Exitoso",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var res;",
+                                    "try {",
+                                    "    res = pm.response.json();",
+                                    "    pm.test(\"Inicio de sesión exitoso o validado\", function () {",
+                                    "        pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                                    "    });",
+                                    "    if (res.token) {",
+                                    "        pm.environment.set(\"csrf_token\", res.token);",
+                                    "    }",
+                                    "} catch (e) {",
+                                    "    pm.test(\"Sesión procesada correctamente\", function () {",
+                                    "        pm.response.to.have.status(200);",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json, text/javascript, */*; q=0.01",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-Requested-With",
+                                "value": "XMLHttpRequest",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "accion",
+                                    "value": "inicio",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "cedula",
+                                    "value": "{{cedula}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "contraseña",
+                                    "value": "{{contraseña}}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Autentica al usuario en el sistema con credenciales del entorno."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET Cargar-Vista-Monedas",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token del módulo Monedas actualizado:\", match[1]);",
+                                    "}",
+                                    "const matches = [...html.matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                    "if (matches.length > 0) {",
+                                    "    const primerId = matches[0][1];",
+                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                    "    pm.environment.set(\"id\", ultimoId);",
+                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                    "    console.log(\"ID inicial de id disponible en la BD:\", ultimoId);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}Monedas",
+                            "host": [
+                                "{{url_base}}Monedas"
+                            ]
+                        },
+                        "description": "Carga la interfaz del módulo Monedas y sincroniza el token CSRF."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Monedas",
+            "item": [
+                {
+                    "name": "Registrar Monedas",
+                    "item": [
+                        {
+                            "name": "Registro-Monedas-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Monedas-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"incluir\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Moneda registrada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Monedas-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Monedas-Nombre-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Monedas-Abreviatura-Vacia",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo abreviatura es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Monedas-Simbolo-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo simbolo es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Monedas-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Monedas-Nombre-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Pesos",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Monedas-Abreviatura-Invalida",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Abreviatura (ISO) inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "COP",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Monedas-Simbolo-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Símbolo inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "¥",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-Monedas-Datos-Duplicados",
+                            "item": [
+                                {
+                                    "name": "POST Registro-Monedas-Nombre-Duplicado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe una moneda registrada con este nombre.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Dólar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Monedas-Abreviatura-Duplicada",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe una moneda registrada con esta abreviatura.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "USD",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-Monedas-Simbolo-Duplicado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe una moneda registrada con este símbolo.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "$",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Consultar y Buscar Monedas",
+                    "item": [
+                        {
+                            "name": "Buscar-Moneda-Por-Id",
+                            "item": [
+                                {
+                                    "name": "POST Buscar-Moneda-Por-Id-Existente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "pm.test(\"Retorna datos de la moneda buscada\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"buscar\");",
+                                                    "    pm.expect(res.datos).to.be.an(\"array\");",
+                                                    "    pm.expect(res.datos.length).to.be.above(0);",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Monedas\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id}}",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Moneda-Por-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Consultar-Monedas-Filtro",
+                            "item": [
+                                {
+                                    "name": "POST Consultar-Monedas-General",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "const html = pm.response.text();",
+                                                    "const matches = [...html.matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "if (matches.length > 0) {",
+                                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                                    "    const primerId = matches[0][1];",
+                                                    "    pm.environment.set(\"id\", ultimoId);",
+                                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                                    "    pm.environment.set(\"id_para_eliminar\", ultimoId);",
+                                                    "    pm.environment.set(\"id_primer_registro\", primerId);",
+                                                    "    console.log(\"ID capturado dinámicamente para id:\", ultimoId);",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Monedas-Filtro-Texto",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Dólar",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Modificar Monedas",
+                    "item": [
+                        {
+                            "name": "Modificar-Monedas-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Monedas-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"modificar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Moneda modificada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Monedas\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id}}",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Monedas-Mismos-Datos",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"modificar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Moneda modificada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Monedas\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id}}",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Monedas-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Monedas-Id-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Monedas-Nombre-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "3",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Monedas-Abreviatura-Vacia",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo abreviatura es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "3",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Monedas-Simbolo-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo simbolo es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "3",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Monedas-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Monedas-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Monedas-Nombre-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "3",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Pesos",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Monedas-Abreviatura-Invalida",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Abreviatura (ISO) inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "3",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "COP",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Monedas-Datos-Duplicados",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Monedas-Nombre-Duplicado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe una moneda registrada con este nombre.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "3",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Dólar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-Monedas-Abreviatura-Duplicada",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe una moneda registrada con esta abreviatura.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "3",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "USD",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-Monedas-Id-Inexistente",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-Monedas-Id-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"la Moneda que intenta modificar ya no existe.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Euro",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "abreviatura",
+                                                    "value": "EUR",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "simbolo",
+                                                    "value": "€",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Eliminar Monedas",
+                    "item": [
+                        {
+                            "name": "Eliminar-Monedas-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Moneda-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"eliminar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Moneda eliminada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Monedas\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id}}",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminar-Monedas-Restricciones",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Moneda-Base-Restriccion",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"No se puede eliminar la moneda base del sistema.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "2",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Eliminar-Moneda-Con-Pagos-Asociados",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"No se puede eliminar la moneda porque esta asociado a pagos.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Eliminar-Moneda-Minimo-Total-Restriccion",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"No se puede eliminar. Deben existir al menos dos monedas en el sistema.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminar-Monedas-Id-Inexistente",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-Moneda-Id-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"La moneda no existe.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Eliminar-Moneda-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "xyz",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Bloquear y Desbloquear Monedas",
+                    "item": [
+                        {
+                            "name": "Bloquear-Monedas-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Bloquear-Moneda-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"bloquear\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Moneda bloqueada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Monedas\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "bloquear",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id}}",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "bloqueo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Desbloquear-Moneda-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"bloquear\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Moneda desbloqueada exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Monedas\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "bloquear",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id}}",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "bloqueo",
+                                                    "value": "2",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Bloquear-Monedas-Restricciones",
+                            "item": [
+                                {
+                                    "name": "POST Bloquear-Moneda-Base-Restriccion",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"No se puede bloquear la moneda base del sistema.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "bloquear",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "2",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "bloqueo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Bloquear-Moneda-Minimo-Activas-Restriccion",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"No se puede bloquear. Deben mantenerse al menos dos monedas activas en el sistema.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "bloquear",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "bloqueo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Bloquear-Monedas-Id-Inexistente",
+                            "item": [
+                                {
+                                    "name": "POST Bloquear-Moneda-Id-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"La moneda no existe.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "bloquear",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "bloqueo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Bloquear-Moneda-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "bloquear",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "bloqueo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Seleccionar Moneda Base",
+                    "item": [
+                        {
+                            "name": "Seleccionar-Moneda-Base-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Seleccionar-Moneda-Base-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"select\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Cambio de moneda exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "select",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Restaurar-Moneda-Base-Dolar",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"select\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Cambio de moneda exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "select",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "2",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Seleccionar-Moneda-Base-Id-Inexistente",
+                            "item": [
+                                {
+                                    "name": "POST Seleccionar-Moneda-Base-Id-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"La moneda no existe.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "select",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Seleccionar-Moneda-Base-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "select",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "xyz",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}Monedas",
+                                            "host": [
+                                                "{{url_base}}Monedas"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

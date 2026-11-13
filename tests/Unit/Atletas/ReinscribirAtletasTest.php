@@ -84,67 +84,40 @@ class ReinscribirAtletasTest extends TestCase
      * SECCIÓN 1: VALIDACIÓN DE ENTIDADES RELACIONADAS
      * ========================================================================= */
 
-    // Caso 1: Categoría no existe
-    public function testCategoriaNoExiste(): void
+    // Caso 1: Validación de entidades relacionadas inexistentes (categoría, posición, representante)
+    public function testEntidadesRelacionadasInexistentes(): void
     {
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchColumn')->willReturn(0);
+        $casos = [
+            'categoria'     => [['categoria' => '99'], INVALID_ID],
+            'posicion'      => [['posicion' => '99'], INVALID_ID . '0'],
+            'representante' => [['representante' => '99'], INVALID_ID . '1']
+        ];
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $this->crearModeloConPDOMock($pdoMock);
+        foreach ($casos as $tipo => [$sobrescribir, $codigoEsperado]) {
+            $stmtMock = $this->createMock(PDOStatement::class);
+            $stmtMock->method('execute')->willReturn(true);
+            if ($tipo === 'categoria') {
+                $stmtMock->method('fetchColumn')->willReturn(0);
+            } elseif ($tipo === 'posicion') {
+                $stmtMock->method('fetchColumn')->willReturnOnConsecutiveCalls(1, 0);
+            } else {
+                $stmtMock->method('fetchColumn')->willReturnOnConsecutiveCalls(1, 1, 0);
+            }
 
-        $datos = $this->obtenerDatosAtletaValidos(['categoria' => '99']);
+            $pdoMock = $this->createMock(PDO::class);
+            $pdoMock->method('prepare')->willReturn($stmtMock);
+            $this->crearModeloConPDOMock($pdoMock);
 
-        $modelo = new ModeloAtletas();
-        $resultado = $modelo->ProcesarDatos($datos);
+            $datos = $this->obtenerDatosAtletaValidos($sobrescribir);
+            $modelo = new ModeloAtletas();
+            $resultado = $modelo->ProcesarDatos($datos);
 
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(INVALID_ID, $resultado['codigo']);
+            $this->assertEquals('error', $resultado['accion']);
+            $this->assertEquals($codigoEsperado, $resultado['codigo'], "Fallo en verificación de $tipo");
+        }
     }
 
-    // Caso 2: Posición no existe
-    public function testPosicionNoExiste(): void
-    {
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchColumn')->willReturnOnConsecutiveCalls(1, 0);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $this->crearModeloConPDOMock($pdoMock);
-
-        $datos = $this->obtenerDatosAtletaValidos(['posicion' => '99']);
-
-        $modelo = new ModeloAtletas();
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(INVALID_ID . '0', $resultado['codigo']);
-    }
-
-    // Caso 3: Representante no existe
-    public function testRepresentanteNoExiste(): void
-    {
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchColumn')->willReturnOnConsecutiveCalls(1, 1, 0);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $this->crearModeloConPDOMock($pdoMock);
-
-        $datos = $this->obtenerDatosAtletaValidos(['representante' => '99']);
-
-        $modelo = new ModeloAtletas();
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(INVALID_ID . '1', $resultado['codigo']);
-    }
-
-    // Caso 4: Atleta mayor de edad sin representante omite verificación de representante
+    // Caso 2: Atleta mayor de edad sin representante omite verificación de representante
     public function testMayorDeEdadSinRepresentante(): void
     {
         $pdoMock = $this->createMock(PDO::class);

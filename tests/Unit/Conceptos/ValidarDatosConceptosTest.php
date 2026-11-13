@@ -22,7 +22,6 @@ class ValidarDatosConceptosTest extends TestCase
         parent::tearDown();
     }
 
-    // Caso 1: Arreglo de datos vacío lanza excepción
     public function testDatosVacios(): void
     {
         $this->expectException(Exception::class);
@@ -32,7 +31,6 @@ class ValidarDatosConceptosTest extends TestCase
         $modelo->ProcesarDatos([]);
     }
 
-    // Caso 2: Acción inválida o no reconocida lanza excepción
     public function testAccionInvalida(): void
     {
         $this->expectException(Exception::class);
@@ -42,72 +40,27 @@ class ValidarDatosConceptosTest extends TestCase
         $modelo->ProcesarDatos(['accion' => 'accion_invalida']);
     }
 
-    // Caso 3: Identificador inválido lanza excepción
-    public function testIdInvalido(): void
+    public function testValidarCamposInvalidosLanzaExcepcion(): void
     {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Id inválido.');
-
         $modelo = new ModeloConceptos();
-        $modelo->ProcesarDatos([
-            'id'     => 'abc',
-            'accion' => 'buscar'
-        ]);
+        $casos = [
+            'id invalido'         => [['id' => 'abc', 'accion' => 'buscar'], 'Id inválido.'],
+            'nombre invalido'     => [['nombre' => 'No#123', 'accion' => 'incluir'], 'Nombre inválido.'],
+            'monto invalido'      => [['monto' => '10.999', 'accion' => 'incluir'], 'Monto inválido.'],
+            'frecuencia invalida' => [['frecuencia' => 'Z', 'accion' => 'incluir'], 'Frecuencia inválido.'],
+            'dias invalido'       => [['dias' => '1000', 'accion' => 'incluir'], 'dias de cargo inválido.']
+        ];
+
+        foreach ($casos as $nombre => [$datos, $mensajeEsperado]) {
+            try {
+                $modelo->ProcesarDatos($datos);
+                $this->fail("Se esperaba excepción en caso [$nombre] y no se lanzó.");
+            } catch (Exception $e) {
+                $this->assertEquals($mensajeEsperado, $e->getMessage(), "Mensaje incorrecto en [$nombre]");
+            }
+        }
     }
 
-    // Caso 4: Nombre con caracteres inválidos o longitud incorrecta lanza excepción
-    public function testNombreInvalido(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Nombre inválido.');
-
-        $modelo = new ModeloConceptos();
-        $modelo->ProcesarDatos([
-            'nombre' => 'No#123',
-            'accion' => 'incluir'
-        ]);
-    }
-
-    // Caso 5: Monto con formato no numérico lanza excepción
-    public function testMontoInvalido(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Monto inválido.');
-
-        $modelo = new ModeloConceptos();
-        $modelo->ProcesarDatos([
-            'monto'  => '10.999',
-            'accion' => 'incluir'
-        ]);
-    }
-
-    // Caso 6: Frecuencia con valor no admitido lanza excepción
-    public function testFrecuenciaInvalida(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Frecuencia inválido.');
-
-        $modelo = new ModeloConceptos();
-        $modelo->ProcesarDatos([
-            'frecuencia' => 'Z',
-            'accion'     => 'incluir'
-        ]);
-    }
-
-    // Caso 7: Días de gracia con formato inválido lanza excepción
-    public function testDiasInvalido(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('dias de cargo inválido.');
-
-        $modelo = new ModeloConceptos();
-        $modelo->ProcesarDatos([
-            'dias'   => '1000',
-            'accion' => 'incluir'
-        ]);
-    }
-
-    // Caso 8: Asignación y transformación correcta de valores válidos
     public function testAsignacionValoresValidos(): void
     {
         $modelo = new ModeloConceptos();
@@ -123,24 +76,15 @@ class ValidarDatosConceptosTest extends TestCase
                 'accion'     => 'invalida'
             ]);
         } catch (Exception $e) {
-            // Se ignora acción inválida para comprobar propiedades
         }
 
         $reflector = new ReflectionClass($modelo);
 
-        $propId = $reflector->getProperty('id');
-        $propNombre = $reflector->getProperty('nombre');
-        $propMonto = $reflector->getProperty('monto');
-        $propEstatus = $reflector->getProperty('estatus');
-        $propFrecuencia = $reflector->getProperty('frecuencia');
-        $propDias = $reflector->getProperty('dias');
-
-        $this->assertEquals('10', $propId->getValue($modelo));
-        $this->assertEquals('Mensualidad Marzo', $propNombre->getValue($modelo));
-        $this->assertEquals(50.0, $propMonto->getValue($modelo));
-        $this->assertEquals(1, $propEstatus->getValue($modelo));
-        $this->assertEquals('M', $propFrecuencia->getValue($modelo));
-        $this->assertEquals('5', $propDias->getValue($modelo));
+        $this->assertEquals('10', $reflector->getProperty('id')->getValue($modelo));
+        $this->assertEquals('Mensualidad Marzo', $reflector->getProperty('nombre')->getValue($modelo));
+        $this->assertEquals(50.0, $reflector->getProperty('monto')->getValue($modelo));
+        $this->assertEquals(1, $reflector->getProperty('estatus')->getValue($modelo));
+        $this->assertEquals('M', $reflector->getProperty('frecuencia')->getValue($modelo));
+        $this->assertEquals('5', $reflector->getProperty('dias')->getValue($modelo));
     }
 }
-

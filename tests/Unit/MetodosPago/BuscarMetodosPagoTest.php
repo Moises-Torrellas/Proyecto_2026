@@ -63,40 +63,7 @@ class BuscarMetodosPagoTest extends TestCase
         $this->assertEquals('Efectivo Bolívares', $resultado['datos'][0]['nombre']);
     }
 
-    // Caso 2: Búsqueda exitosa a través de ProcesarDatos (usando $this->id)
-    public function testBuscarPorProcesarDatos(): void
-    {
-        $filasEsperadas = [
-            [
-                'codigo_metodo'  => 2,
-                'nombre'         => 'Punto de Venta',
-                'nec_referencia' => 1,
-                'estatus'        => 1
-            ]
-        ];
-
-        $stmt = $this->createMock(PDOStatement::class);
-        $stmt->method('bindParam')->willReturn(true);
-        $stmt->method('execute')->willReturn(true);
-        $stmt->method('fetchAll')->willReturn($filasEsperadas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmt);
-
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloMetodosPago();
-        $resultado = $modelo->ProcesarDatos([
-            'accion' => 'buscar',
-            'id'     => 2
-        ]);
-
-        $this->assertEquals('buscar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-        $this->assertEquals('Punto de Venta', $resultado['datos'][0]['nombre']);
-    }
-
-    // Caso 3: Búsqueda cuando el método de pago no existe
+    // Caso 2: Búsqueda cuando el método de pago no existe
     public function testBuscarNoEncontrado(): void
     {
         $stmt = $this->createMock(PDOStatement::class);

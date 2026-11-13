@@ -1,0 +1,1925 @@
+{
+    "info": {
+        "_postman_id": "cannibals-mp-6af375ce956ad",
+        "name": "Hockey-Cannibals Lara - Modulo MetodosPago",
+        "description": "Colección de pruebas para el módulo de Métodos de Pago con escenarios funcionales y aserciones automatizadas en los scripts After-response (Tests).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "if (pm.request.method !== \"GET\") {",
+                    "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
+                    "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "item": [
+        {
+            "name": "InicioModulo",
+            "item": [
+                {
+                    "name": "GET Cargar-Vista-Inicio",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token inicial extraído exitosamente:\", match[1]);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Iniciar-Sesion-Exitoso",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var res;",
+                                    "try {",
+                                    "    res = pm.response.json();",
+                                    "    pm.test(\"Inicio de sesión exitoso o validado\", function () {",
+                                    "        pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                                    "    });",
+                                    "    if (res.token) {",
+                                    "        pm.environment.set(\"csrf_token\", res.token);",
+                                    "    }",
+                                    "} catch (e) {",
+                                    "    pm.test(\"Sesión procesada correctamente\", function () {",
+                                    "        pm.response.to.have.status(200);",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json, text/javascript, */*; q=0.01",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-Requested-With",
+                                "value": "XMLHttpRequest",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "accion",
+                                    "value": "inicio",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "cedula",
+                                    "value": "{{cedula}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "contraseña",
+                                    "value": "{{contraseña}}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Autentica al usuario en el sistema con credenciales del entorno."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET Cargar-Vista-MetodosPago",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token del módulo MetodosPago actualizado:\", match[1]);",
+                                    "}",
+                                    "const matches = [...html.matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                    "if (matches.length > 0) {",
+                                    "    const primerId = matches[0][1];",
+                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                    "    pm.environment.set(\"id\", ultimoId);",
+                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                    "    console.log(\"ID inicial de id disponible en la BD:\", ultimoId);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}MetodosPago",
+                            "host": [
+                                "{{url_base}}MetodosPago"
+                            ]
+                        },
+                        "description": "Carga la interfaz del módulo Métodos de Pago y sincroniza el token CSRF."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "MetodosPago",
+            "item": [
+                {
+                    "name": "Registrar Métodos de Pago",
+                    "item": [
+                        {
+                            "name": "Registro-MetodosPago-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Registro-MetodosPago-Exitoso-Con-Referencia",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"incluir\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Método de pago registrado exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Zelle",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-MetodosPago-Exitoso-Sin-Referencia",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"incluir\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Método de pago registrado exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Efectivo Divisas",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "2",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-MetodosPago-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Registro-MetodosPago-Nombre-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-MetodosPago-Referencia-Vacia",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo nec_referencia es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Pago Movil",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-MetodosPago-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Registro-MetodosPago-Nombre-Invalido-Corto",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "PM",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-MetodosPago-Nombre-Invalido-Caracteres-Especiales",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Zelle@2026$",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Registro-MetodosPago-Referencia-Invalida",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Referencia inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Transferencia Bancaria",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "5",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Registro-MetodosPago-Datos-Duplicados",
+                            "item": [
+                                {
+                                    "name": "POST Registro-MetodosPago-Nombre-Duplicado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe un metodo de pago registrado con este nombre.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "incluir",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Zelle",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Consultar y Buscar Métodos de Pago",
+                    "item": [
+                        {
+                            "name": "Buscar-MetodoPago-Por-Id",
+                            "item": [
+                                {
+                                    "name": "POST Buscar-MetodoPago-Por-Id-Existente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "pm.test(\"Retorna datos del método de pago buscado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"buscar\");",
+                                                    "    pm.expect(res.datos).to.be.an(\"array\");",
+                                                    "    pm.expect(res.datos.length).to.be.above(0);",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"MetodosPago\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id}}",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-MetodoPago-Por-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Consultar-MetodosPago-Filtro",
+                            "item": [
+                                {
+                                    "name": "POST Consultar-MetodosPago-General",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "const html = pm.response.text();",
+                                                    "const matches = [...html.matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "if (matches.length > 0) {",
+                                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                                    "    const primerId = matches[0][1];",
+                                                    "    pm.environment.set(\"id\", ultimoId);",
+                                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                                    "    pm.environment.set(\"id_para_eliminar\", ultimoId);",
+                                                    "    pm.environment.set(\"id_primer_registro\", primerId);",
+                                                    "    console.log(\"ID capturado dinámicamente para id:\", ultimoId);",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-MetodosPago-Filtro-Texto",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Zelle",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Modificar Métodos de Pago",
+                    "item": [
+                        {
+                            "name": "Modificar-MetodosPago-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-MetodosPago-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"modificar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Método de pago modificado exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"MetodosPago\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id}}",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Zelle Personal",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-MetodosPago-Mismos-Datos",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"modificar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Método de pago modificado exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"MetodosPago\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id}}",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Zelle Personal",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-MetodosPago-Campos-Obligatorios-Vacios",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-MetodosPago-Id-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Zelle Personal",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-MetodosPago-Nombre-Vacio",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-MetodosPago-Referencia-Vacia",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El campo nec_referencia es obligatorio.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Zelle Personal",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-MetodosPago-Formato-Invalido",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-MetodosPago-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Zelle Personal",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-MetodosPago-Nombre-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "ZP",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Modificar-MetodosPago-Referencia-Invalida",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Referencia inválida.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Zelle Personal",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "9",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Modificar-MetodosPago-Datos-Duplicados",
+                            "item": [
+                                {
+                                    "name": "POST Modificar-MetodosPago-Nombre-Duplicado",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Ya existe un metodo de pago registrado con este nombre.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "modificar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nombre",
+                                                    "value": "Efectivo Divisas",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "nec_referencia",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Eliminar Métodos de Pago",
+                    "item": [
+                        {
+                            "name": "Eliminar-MetodosPago-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-MetodoPago-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"eliminar\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Método de pago eliminado exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"id\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"MetodosPago\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"id\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "{{id}}",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminar-MetodosPago-Con-Pagos-Asociados",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-MetodoPago-Con-Pagos-Asociados",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El metodo de pago tiene pagos asociados.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Eliminar-MetodosPago-Id-Inexistente",
+                            "item": [
+                                {
+                                    "name": "POST Eliminar-MetodoPago-Id-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El metodo de pago no existe.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Eliminar-MetodoPago-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "eliminar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "xyz",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Bloquear y Desbloquear Métodos de Pago",
+                    "item": [
+                        {
+                            "name": "Bloquear-MetodosPago-Exitoso",
+                            "item": [
+                                {
+                                    "name": "POST Bloquear-MetodoPago",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"bloquear\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Metodo bloqueado exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "bloquear",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "bloqueo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Desbloquear-MetodoPago",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"bloquear\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Metodo desbloqueado exitosamente.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "bloquear",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "bloqueo",
+                                                    "value": "2",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Bloquear-MetodosPago-Id-Inexistente",
+                            "item": [
+                                {
+                                    "name": "POST Bloquear-MetodoPago-Id-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"El metodo que intenta bloquear ya no existe.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "bloquear",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "999999",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "bloqueo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Bloquear-MetodoPago-Id-Invalido",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "pm.test(\"Rechazo con acción error y mensaje esperado\", function () {",
+                                                    "    const res = pm.response.json();",
+                                                    "    pm.expect(res.accion).to.eql(\"error\");",
+                                                    "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                                                    "});"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "bloquear",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "id",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "bloqueo",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{url_base}}MetodosPago",
+                                            "host": [
+                                                "{{url_base}}MetodosPago"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
