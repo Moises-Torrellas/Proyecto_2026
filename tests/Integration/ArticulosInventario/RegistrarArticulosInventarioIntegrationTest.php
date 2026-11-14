@@ -194,7 +194,7 @@ class RegistrarArticulosInventarioIntegrationTest extends TestCase
         $resultado = $this->modelo->ProcesarDatos($datos);
 
         $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals('ERR_VACIO', $resultado['codigo']);
+        $this->assertEquals(EMPTY_SELECTION, $resultado['codigo']);
 
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM articulos_inventario");
         $this->assertEquals(0, (int)$stmt->fetchColumn(), 'No debió insertarse ningún artículo.');

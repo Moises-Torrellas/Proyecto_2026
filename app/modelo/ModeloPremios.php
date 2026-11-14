@@ -162,7 +162,7 @@ class ModeloPremios extends Conexion
         }
     }
 
-    public function Buscar(int $id = null): array
+    public function Buscar(?int $id = null): array
     {
         try {
             $idBuscar = $id ?? $this->codigo_premio;

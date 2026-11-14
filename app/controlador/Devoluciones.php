@@ -9,7 +9,7 @@ use App\modelo\ModeloAtletas;
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_DEVOLUCIONES_; 
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_devoluciones');
 
 $nombreClaseModelo = 'App\modelo\ModeloDevoluciones';
 if (!class_exists($nombreClaseModelo)) {

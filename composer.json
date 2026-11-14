@@ -34,5 +34,13 @@
         "codeception/module-webdriver": "^4.0",
         "codeception/module-phpbrowser": "*",
         "codeception/module-asserts": "*"
+    },
+    "scripts": {
+        "chrome": "@php bin/test.php chrome",
+        "test:unit": "@php bin/test.php unit",
+        "test:integ": "@php bin/test.php integ",
+        "test:humo": "@php bin/test.php humo",
+        "test:interfaz": "@php bin/test.php interfaz",
+        "test": "@php bin/test.php"
     }
 }

@@ -584,9 +584,10 @@ class ModeloUsuarios extends Conexion
     private function EditarPerfil(?string $tipo): array
     {
         try {
-            if (empty($this->id)) {
-                throw new Exception("ID de usuario no proporcionado.");
-            }
+        $conex = null;   // ← agregar esta línea
+        if (empty($this->id)) {
+            throw new Exception("ID de usuario no proporcionado.");
+        }
 
             $conex = $this->conexSG();
             $conex->beginTransaction();
@@ -678,6 +679,7 @@ class ModeloUsuarios extends Conexion
             return ['accion' => 'exito', 'mensaje' => 'Perfil actualizado correctamente'];
 
         } catch (Exception $e) {
+            
             if ($conex && $conex->inTransaction()) {
                 $conex->rollBack();
             }

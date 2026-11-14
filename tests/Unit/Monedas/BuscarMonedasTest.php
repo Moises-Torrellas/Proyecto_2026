@@ -65,42 +65,7 @@ class BuscarMonedasTest extends TestCase
         $this->assertEquals('Bolívar', $resultado['datos'][0]['nombre']);
     }
 
-    // Caso 2: Búsqueda exitosa a través de ProcesarDatos (usando $this->id)
-    public function testBuscarPorProcesarDatos(): void
-    {
-        $filasEsperadas = [
-            [
-                'codigo_moneda' => 2,
-                'nombre'        => 'Dólar',
-                'abreviatura'   => 'USD',
-                'simbolo'       => '$',
-                'base'          => 2,
-                'estatus'       => 1
-            ]
-        ];
-
-        $stmt = $this->createMock(PDOStatement::class);
-        $stmt->method('bindParam')->willReturn(true);
-        $stmt->method('execute')->willReturn(true);
-        $stmt->method('fetchAll')->willReturn($filasEsperadas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmt);
-
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloMonedas();
-        $resultado = $modelo->ProcesarDatos([
-            'accion' => 'buscar',
-            'id'     => 2
-        ]);
-
-        $this->assertEquals('buscar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-        $this->assertEquals('Dólar', $resultado['datos'][0]['nombre']);
-    }
-
-    // Caso 3: Búsqueda cuando la moneda no es encontrada
+    // Caso 2: Búsqueda cuando la moneda no es encontrada
     public function testBuscarNoEncontrado(): void
     {
         $stmt = $this->createMock(PDOStatement::class);

@@ -29,112 +29,45 @@ class ValidarDatosCategoriaCatalogoTest extends TestCase
         parent::tearDown();
     }
 
-    // Caso 1: Arreglo de datos vacío lanza excepción
-    #[Group('RF-01')]
-    #[Group('ESC-01')]
-    #[Group('CP-01')]
     public function testDatosVaciosLanzaExcepcion(): void
     {
-        // Arrange
         $modelo = new ModeloCategoriaCatalogo();
-        $datos = [];
-
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('No se proporcionaron datos para procesar.');
 
-        // Act
-        $modelo->ProcesarDatos($datos);
+        $modelo->ProcesarDatos([]);
     }
 
-    // Caso 2: Acción desconocida o inválida lanza excepción
-    #[Group('RF-01')]
-    #[Group('ESC-01')]
-    #[Group('CP-02')]
     public function testAccionInvalidaLanzaExcepcion(): void
     {
-        // Arrange
         $modelo = new ModeloCategoriaCatalogo();
-        $datos = [
-            'accion' => 'accion_no_valida',
-            'nombre' => 'Cascos'
-        ];
-
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('La accion no es valida');
 
-        // Act
-        $modelo->ProcesarDatos($datos);
+        $modelo->ProcesarDatos(['accion' => 'accion_no_valida', 'nombre' => 'Cascos']);
     }
 
-    // Caso 3: Id de categoría inválido con caracteres alfabéticos lanza excepción
-    #[Group('RF-01')]
-    #[Group('ESC-01')]
-    #[Group('CP-03')]
-    public function testIdCategoriaInvalidoLanzaExcepcion(): void
+    public function testValidarCamposInvalidosLanzaExcepcion(): void
     {
-        // Arrange
         $modelo = new ModeloCategoriaCatalogo();
-        $datos = [
-            'accion'       => 'buscar',
-            'id_categoria' => '12abc',
-            'nombre'       => 'Cascos'
+        $casos = [
+            'id categoria invalido' => [['accion' => 'buscar', 'id_categoria' => '12abc', 'nombre' => 'Cascos'], 'Id inválido.'],
+            'nombre menor a 2 car'  => [['accion' => 'incluir', 'nombre' => 'C'], 'Nombre de categoría inválido.'],
+            'descripcion invalida'  => [['accion' => 'incluir', 'nombre' => 'Cascos', 'descripcion' => 'Descripción #1 con @ símbolos'], 'Descripción inválida.']
         ];
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Id inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
+        foreach ($casos as $nombre => [$datos, $mensajeEsperado]) {
+            try {
+                $modelo->ProcesarDatos($datos);
+                $this->fail("Se esperaba excepción en caso [$nombre] y no se lanzó.");
+            } catch (Exception $e) {
+                $this->assertEquals($mensajeEsperado, $e->getMessage(), "Mensaje incorrecto en [$nombre]");
+            }
+        }
     }
 
-    // Caso 4: Nombre de categoría no cumple formato de expresión regular lanza excepción
-    #[Group('RF-01')]
-    #[Group('ESC-01')]
-    #[Group('CP-04')]
-    public function testNombreInvalidoLanzaExcepcion(): void
-    {
-        // Arrange
-        $modelo = new ModeloCategoriaCatalogo();
-        $datos = [
-            'accion' => 'incluir',
-            'nombre' => 'C' // Longitud menor a 2 caracteres
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Nombre de categoría inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 5: Descripción inválida con caracteres no permitidos lanza excepción
-    #[Group('RF-01')]
-    #[Group('ESC-01')]
-    #[Group('CP-05')]
-    public function testDescripcionInvalidaLanzaExcepcion(): void
-    {
-        // Arrange
-        $modelo = new ModeloCategoriaCatalogo();
-        $datos = [
-            'accion'      => 'incluir',
-            'nombre'      => 'Cascos',
-            'descripcion' => 'Descripción #1 con @ símbolos'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Descripción inválida.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 6: Normalización de nombre a Title Case y remoción de espacios
-    #[Group('RF-01')]
-    #[Group('ESC-01')]
-    #[Group('CP-06')]
     public function testConversionNombreTitleCaseYTrim(): void
     {
-        // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->method('execute')->willReturn(true);
         $stmtMock->method('fetchAll')->willReturn([]);
@@ -147,22 +80,14 @@ class ValidarDatosCategoriaCatalogoTest extends TestCase
         $propiedad->setValue(null, $pdoMock);
 
         $modelo = new ModeloCategoriaCatalogo();
-        $datos = [
+        $modelo->ProcesarDatos([
             'accion'       => 'buscar',
             'id_categoria' => '1',
             'nombre'       => '   cascos de portero   ',
             'tipo_talla'   => 'Letras'
-        ];
+        ]);
 
-        // Act
-        $modelo->ProcesarDatos($datos);
-
-        // Assert
         $reflector = new ReflectionClass(ModeloCategoriaCatalogo::class);
-        $propNombre = $reflector->getProperty('nombre');
-        $valorNombre = $propNombre->getValue($modelo);
-
-        $this->assertEquals('Cascos De Portero', $valorNombre);
+        $this->assertEquals('Cascos De Portero', $reflector->getProperty('nombre')->getValue($modelo));
     }
 }
-

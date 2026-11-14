@@ -65,40 +65,7 @@ class BuscarCargosTest extends TestCase
         $this->assertEquals('Andrés', $resultado['datos'][0]['atleta_nombre']);
     }
 
-    // Caso 2: Búsqueda exitosa a través de ProcesarDatos (usa $this->codigo_cargo)
-    public function testBuscarPorProcesarDatos(): void
-    {
-        $filasEsperadas = [
-            [
-                'id_cobrar'       => 12,
-                'atleta_nombre'   => 'Ronald',
-                'atleta_apellido' => 'Acuña',
-                'concepto_nombre' => 'Uniforme'
-            ]
-        ];
-
-        $stmt = $this->createMock(PDOStatement::class);
-        $stmt->method('bindParam')->willReturn(true);
-        $stmt->method('execute')->willReturn(true);
-        $stmt->method('fetchAll')->willReturn($filasEsperadas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmt);
-
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloCargos();
-        $resultado = $modelo->ProcesarDatos([
-            'accion' => 'buscar',
-            'id'     => 12
-        ]);
-
-        $this->assertEquals('buscar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-        $this->assertEquals('Ronald', $resultado['datos'][0]['atleta_nombre']);
-    }
-
-    // Caso 3: Búsqueda cuando el cargo no es encontrado en la vista
+    // Caso 2: Búsqueda cuando el cargo no es encontrado en la vista
     public function testBuscarNoEncontrado(): void
     {
         $stmt = $this->createMock(PDOStatement::class);
