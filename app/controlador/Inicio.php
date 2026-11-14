@@ -99,7 +99,7 @@ function ejecutarLogin($obj, $id_modulo, $bitacoraObj): void
         }
     }
 
-    $rateLimit = new RateLimit(10, 60);
+    $rateLimit = new RateLimit(3, 60);
     $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
     if ($rateLimit->estaLimitado($ip)) {

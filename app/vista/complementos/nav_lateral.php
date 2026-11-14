@@ -149,7 +149,7 @@
                 </li>
             <?php endif; ?>
 
-            <?php if ($puedeVer(_MD_REPORTES_, 'ingresar_estadistica')) : ?>
+            <?php if ($puedeVer(_MD_REPORTES_, 'ingresar_reportes')) : ?>
                 <li class="nav_identificador">
                     <span class="identificador_texto"><i data-lucide="bar-chart-2" class="opciones_i"></i> Reportes</span>
                     <i data-lucide="chevron-down" class="icono_flecha_detalle"></i>

@@ -255,12 +255,6 @@ $(document).ready(function () {
         }
     });
 
-    $('#contenedor_modal').on('click', function (e) {
-        if ($(e.target).is('#contenedor_modal')) {
-            cerrarModal();
-        }
-    });
-
     $("#salir").on("click", function () {
         confirmar('¿Esta seguro de que quieres salir?', function (confirmado) {
             if (confirmado) {
