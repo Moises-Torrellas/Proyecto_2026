@@ -142,8 +142,7 @@ class RegistrarArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(EMPTY_SELECTION, $resultado['codigo']);
     }
 
     // Caso 9: Error de base de datos durante la inserción con rollback transaccional
@@ -180,8 +179,7 @@ class RegistrarArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(DB_CONNECTION, $resultado['codigo']);
     }
 }
 

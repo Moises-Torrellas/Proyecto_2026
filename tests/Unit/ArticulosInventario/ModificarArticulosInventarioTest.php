@@ -136,8 +136,7 @@ class ModificarArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(DB_CONNECTION, $resultado['codigo']);
     }
 
     // Caso 13: Cambio de estatus individual mediante CambiarEstatus()

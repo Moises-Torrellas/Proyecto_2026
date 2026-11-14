@@ -54,8 +54,7 @@ class ValidarDatosArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(EMPTY_SELECTION, $resultado['codigo']);
     }
 
     // Caso 2: Acción desconocida o inválida retorna código de error de acción
@@ -75,8 +74,7 @@ class ValidarDatosArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_ACCION_') ? _ERR_ACCION_ : 'ERR_ACCION';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(VALIDATION, $resultado['codigo']);
     }
 
     // Caso 3: Carga exitosa de combos para selección de catálogos y estados físicos
@@ -137,8 +135,7 @@ class ValidarDatosArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(DB_CONNECTION, $resultado['codigo']);
     }
 
     // Caso 5: Generación y formateo correlativo de código club (CL-XXXX)
