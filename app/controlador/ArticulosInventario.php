@@ -119,9 +119,9 @@ function manejarSolicitudArticulo($obj, $id_modulo, $bitacoraObj, array $permiso
                 if ($resultado['accion'] === 'exito') {
                     registrarBitacora($bitacoraObj, $id_modulo, "Retiró (Eliminó) artículo Código: " . $_POST['codigo_articulo'], $datos_previos, $datos_nuevos);
                 } else {
-                    $resultado['mensaje'] = traducirErrores($resultado['codigo'] ?? '');
+                    $resultado['mensaje'] = !empty($resultado['mensaje']) ? $resultado['mensaje'] : traducirErrores($resultado['codigo'] ?? '');
                     if (isset($resultado['mensaje']) && $resultado['mensaje'] === 'Ocurrió un error inesperado.') {
-                        $resultado['mensaje'] = $resultado['mensaje'] ?? 'No se pudo retirar.'; 
+                        $resultado['mensaje'] = 'No se pudo retirar.'; 
                     }
                     registrarBitacora($bitacoraObj, $id_modulo, "Falló al retirar artículo Código: " . $_POST['codigo_articulo'] . " - " . $resultado['mensaje'], $datos_previos, $datos_nuevos);
                 }
@@ -228,8 +228,10 @@ function obtenerArticulosLote(): array
 
 function traducirErrores($codigo) {
     return match($codigo) {
-        defined('_ERR_USO_') ? _ERR_USO_ : 'ERR_USO' => 'No se puede eliminar: El artículo tiene historial activo en asignaciones/devoluciones.',
-        defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD' => 'Error de comunicación con la base de datos.',
+        ASSOCIATES, 'ERR_USO' => 'No se puede eliminar: El artículo tiene historial activo en asignaciones/devoluciones.',
+        DB_CONNECTION, 'ERR_BD' => 'Error de comunicación con la base de datos.',
+        EMPTY_SELECTION, 'ERR_VACIO' => 'Debe proporcionar los datos requeridos.',
+        VALIDATION, 'ERR_ACCION' => 'Acción no permitida o datos inválidos.',
         default => 'Ocurrió un error inesperado.'
     };
 }

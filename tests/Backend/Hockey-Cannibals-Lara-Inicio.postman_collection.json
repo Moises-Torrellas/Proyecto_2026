@@ -1,0 +1,253 @@
+{
+    "info": {
+        "_postman_id": "caab77cf-3e27-4e8d-8437-aa34fcee8251",
+        "name": "Hockey-Cannibals-Lara-Inicio",
+        "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "58796630",
+        "_collection_link": "https://go.postman.co/collection/58796630-caab77cf-3e27-4e8d-8437-aa34fcee8251?source=collection_link"
+    },
+    "item": [
+        {
+            "name": "InicioModulo",
+            "item": [
+                {
+                    "name": "GET Cargar-Vista-Inicio",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token inicial extraído exitosamente:\", match[1]);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Inicio",
+            "item": [
+                {
+                    "name": "Inicio-Con-Formato-Invalida",
+                    "item": [
+                        {
+                            "name": "Inicio-Cedula-Invalida",
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {
+                                            "key": "accion",
+                                            "value": "inicio"
+                                        },
+                                        {
+                                            "key": "cedula",
+                                            "value": "{{cedula}}A"
+                                        },
+                                        {
+                                            "key": "contraseña",
+                                            "value": "{{contraseña}}"
+                                        }
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{url_base}}",
+                                    "host": [
+                                        "{{url_base}}"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Inicio-Contraseña-Invalida",
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {
+                                            "key": "accion",
+                                            "value": "inicio"
+                                        },
+                                        {
+                                            "key": "cedula",
+                                            "value": "{{cedula}}"
+                                        },
+                                        {
+                                            "key": "contraseña",
+                                            "value": "admin123$"
+                                        }
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{url_base}}",
+                                    "host": [
+                                        "{{url_base}}"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Inicio-Con-Datos-Inexistente",
+                    "item": [
+                        {
+                            "name": "Inicio-Cedula-Inexistente",
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {
+                                            "key": "accion",
+                                            "value": "inicio"
+                                        },
+                                        {
+                                            "key": "cedula",
+                                            "value": "78945612"
+                                        },
+                                        {
+                                            "key": "contraseña",
+                                            "value": "{{contraseña}}"
+                                        }
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{url_base}}",
+                                    "host": [
+                                        "{{url_base}}"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Inicio-Contraseña-Incorrecta",
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {
+                                            "key": "accion",
+                                            "value": "inicio"
+                                        },
+                                        {
+                                            "key": "cedula",
+                                            "value": "{{cedula}}"
+                                        },
+                                        {
+                                            "key": "contraseña",
+                                            "value": "{{contraseña}}4"
+                                        }
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{url_base}}",
+                                    "host": [
+                                        "{{url_base}}"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Inicio de Sesion Exitoso",
+                    "item": [
+                        {
+                            "name": "Iniciar-Sesion-Exitoso",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            ""
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {
+                                            "key": "accion",
+                                            "value": "inicio"
+                                        },
+                                        {
+                                            "key": "cedula",
+                                            "value": "{{cedula}}"
+                                        },
+                                        {
+                                            "key": "contraseña",
+                                            "value": "{{contraseña}}"
+                                        }
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{url_base}}",
+                                    "host": [
+                                        "{{url_base}}"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "exec": [
+                    "// Los controladores exigen petición AJAX y token CSRF en la cabecera\r",
+                    "if (pm.request.method !== \"GET\") {\r",
+                    "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });\r",
+                    "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });\r",
+                    "}"
+                ],
+                "type": "text/javascript"
+            }
+        }
+    ]
+}

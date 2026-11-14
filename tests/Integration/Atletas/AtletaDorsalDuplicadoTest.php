@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 #[Group("integ")]
+#[Group("atletas")]
 class AtletaDorsalDuplicadoTest extends TestCase
 {
     private ?PDO $pdo = null;
@@ -55,10 +56,8 @@ class AtletaDorsalDuplicadoTest extends TestCase
 
     /**
      * Caso Manual 7: Restricción de dorsal único por categoría (Registro)
-     * Verifica que al intentar registrar a un segundo atleta con el dorsal 10 en U-17,
-     * el sistema lo rechace retornando DUPLICATE_DORSAL.
      */
-    public function testRechazarInclusionDeAtletaConDorsalDuplicadoEnMismaCategoria(): void
+    public function testRegistroDorsalDuplicado(): void
     {
         // 1. Configuración previa: Posición (Portero), Categoría U-17 (id 7) y Representante
         $this->pdo->exec("INSERT INTO posiciones (codigo_posicion, nombre, abreviatura, descripcion) VALUES (3, 'Portero', 'PR', '')");
@@ -75,22 +74,23 @@ class AtletaDorsalDuplicadoTest extends TestCase
 
         // 3. Pasos 2 y 3: Intentar registrar a otro atleta asignándole la misma categoría U-17 (7) y el mismo dorsal 10
         $datos = [
-            'accion'        => 'incluir',
-            'doc_identidad' => '30222333',
-            'nombre'        => 'Luis David',
-            'apellido'      => 'Torres Mora',
-            'fecha_nac'     => '2010-08-20',
-            'genero'        => 'H',
-            'categoria'     => '7',
-            'posicion'      => '3',
-            'representante' => '1',
-            'dorsal'        => '10',
-            'telefono'      => '0414-2223344',
-            'peso'          => '65',
-            'estatura'      => '168',
-            'talla_pantalon'=> 'M',
-            'talla_franela' => 'M',
-            'talla_calzado' => '39'
+            'accion'           => 'incluir',
+            'doc_identidad'    => '30222333',
+            'nombre'           => 'Luis David',
+            'apellido'         => 'Torres Mora',
+            'fecha_nac'        => '2010-08-20',
+            'lugar_nacimiento' => 'Barquisimeto',
+            'genero'           => 'H',
+            'categoria'        => '7',
+            'posicion'         => '3',
+            'representante'    => '1',
+            'dorsal'           => '10',
+            'telefono'         => '0414-2223344',
+            'peso'             => '65',
+            'estatura'         => '168',
+            'talla_pantalon'   => 'M',
+            'talla_franela'    => 'M',
+            'talla_calzado'    => '39'
         ];
 
         $resultado = $this->modelo->ProcesarDatos($datos);
@@ -105,11 +105,9 @@ class AtletaDorsalDuplicadoTest extends TestCase
     }
 
     /**
-     * Caso Manual 7: Restricción de dorsal único por categoría (Modificación)
-     * Verifica que al editar un atleta existente en U-17 e intentar asignarle
-     * el dorsal 10 ya ocupado por otro compañero, se rechace la transacción.
+     * Restricción de dorsal único por categoría (Modificación)
      */
-    public function testRechazarModificacionDeAtletaConDorsalDuplicadoEnMismaCategoria(): void
+    public function testModificarDorsalDuplicado(): void
     {
         // 1. Configuración previa: Posición, Categoría U-17 y Representante
         $this->pdo->exec("INSERT INTO posiciones (codigo_posicion, nombre, abreviatura, descripcion) VALUES (3, 'Portero', 'PR', '')");
@@ -135,23 +133,24 @@ class AtletaDorsalDuplicadoTest extends TestCase
 
         // Intentar modificar Atleta B para arrebatarle el dorsal 10 al Atleta A
         $datosModificar = [
-            'accion'        => 'modificar',
-            'id'            => '2',
-            'doc_identidad' => '30444555',
-            'nombre'        => 'Andres Felipe',
-            'apellido'      => 'Morales Ruiz',
-            'fecha_nac'     => '2010-09-10',
-            'genero'        => 'H',
-            'categoria'     => '7',
-            'posicion'      => '3',
-            'representante' => '1',
-            'dorsal'        => '10', // Conflicto
-            'telefono'      => '0414-5556677',
-            'peso'          => '65',
-            'estatura'      => '168',
-            'talla_pantalon'=> 'M',
-            'talla_franela' => 'M',
-            'talla_calzado' => '39'
+            'accion'           => 'modificar',
+            'id'               => '2',
+            'doc_identidad'    => '30444555',
+            'nombre'           => 'Andres Felipe',
+            'apellido'         => 'Morales Ruiz',
+            'fecha_nac'        => '2010-09-10',
+            'lugar_nacimiento' => 'Barquisimeto',
+            'genero'           => 'H',
+            'categoria'        => '7',
+            'posicion'         => '3',
+            'representante'    => '1',
+            'dorsal'           => '10', // Conflicto
+            'telefono'         => '0414-5556677',
+            'peso'             => '65',
+            'estatura'         => '168',
+            'talla_pantalon'   => 'M',
+            'talla_franela'    => 'M',
+            'talla_calzado'    => '39'
         ];
 
         $resultado = $this->modelo->ProcesarDatos($datosModificar);
@@ -161,9 +160,9 @@ class AtletaDorsalDuplicadoTest extends TestCase
     }
 
     /**
-     * Caso de Control: Permite el mismo dorsal si pertenecen a categorías diferentes.
+     * Mismo dorsal permitido en categorías diferentes.
      */
-    public function testPermitirMismoDorsalEnCategoriasDiferentes(): void
+    public function testMismoDorsalEnDistintaCategoria(): void
     {
         // 1. Configuración previa: U-17 (id 7) y U-15 (id 6)
         $this->pdo->exec("INSERT INTO posiciones (codigo_posicion, nombre, abreviatura, descripcion) VALUES (3, 'Portero', 'PR', '')");
@@ -181,22 +180,23 @@ class AtletaDorsalDuplicadoTest extends TestCase
 
         // Atleta C se registra con dorsal 10 pero en U-14 (id 6)
         $datos = [
-            'accion'        => 'incluir',
-            'doc_identidad' => '30333444',
-            'nombre'        => 'Pedro Jose',
-            'apellido'      => 'Ramirez Gil',
-            'fecha_nac'     => '2012-04-12',
-            'genero'        => 'H',
-            'categoria'     => '6',
-            'posicion'      => '3',
-            'representante' => '1',
-            'dorsal'        => '10',
-            'telefono'      => '0414-3334455',
-            'peso'          => '55',
-            'estatura'      => '158',
-            'talla_pantalon'=> 'S',
-            'talla_franela' => 'S',
-            'talla_calzado' => '37'
+            'accion'           => 'incluir',
+            'doc_identidad'    => '30333444',
+            'nombre'           => 'Pedro Jose',
+            'apellido'         => 'Ramirez Gil',
+            'fecha_nac'        => '2012-04-12',
+            'lugar_nacimiento' => 'Barquisimeto',
+            'genero'           => 'H',
+            'categoria'        => '6',
+            'posicion'         => '3',
+            'representante'    => '1',
+            'dorsal'           => '10',
+            'telefono'         => '0414-3334455',
+            'peso'             => '55',
+            'estatura'         => '158',
+            'talla_pantalon'   => 'S',
+            'talla_franela'    => 'S',
+            'talla_calzado'    => '37'
         ];
 
         $resultado = $this->modelo->ProcesarDatos($datos);
