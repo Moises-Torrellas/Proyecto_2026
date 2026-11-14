@@ -60,153 +60,33 @@ class RegistrarPagosTest extends TestCase
         $modelo->ProcesarDatos($datosVacios);
     }
 
-    // Caso 2: Monto con formato inválido
-    public function testMontoInvalido(): void
+    // Caso 2: Validación de campos con formato o valor inválido
+    public function testValidarCamposInvalidosLanzaExcepcion(): void
     {
-        // Arrange
         $modelo = new ModeloPagos();
-        $datosInvalidos = [
-            'monto' => 'monto_invalido'
+        $casos = [
+            'monto invalido'      => [['monto' => 'monto_invalido'], 'Monto del pago inválido.'],
+            'referencia invalida' => [['referencia' => '12'], 'La referencia del pago debe tener entre 4 y 12 dígitos numéricos.'],
+            'fecha futura'        => [['accion' => 'incluir', 'fecha' => '2099-12-31'], 'La fecha ingresada no puede ser futura.'],
+            'fecha atrasada'      => [['accion' => 'incluir', 'fecha' => '2020-01-01'], 'La fecha ingresada no puede tener más de 2 meses de atraso.'],
+            'fecha formato'       => [['fecha' => '31/12/2026'], 'Formato de fecha inválido. Use AAAA-MM-DD.'],
+            'tasa invalida'       => [['tasa' => 'tasa_invalida'], 'Tasa de cambio inválida.'],
+            'metodo invalido'     => [['metodo' => 'metodo_invalido'], 'Método de pago inválido.'],
+            'moneda invalida'     => [['moneda' => 'moneda_invalida'], 'Moneda inválida.'],
+            'cuenta invalida'     => [['cuenta' => ['cuenta_invalida']], 'Cuenta por cobrar inválida.']
         ];
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Monto del pago inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datosInvalidos);
+        foreach ($casos as $nombre => [$datos, $mensajeEsperado]) {
+            try {
+                $modelo->ProcesarDatos($datos);
+                $this->fail("Se esperaba excepción en caso [$nombre] y no se lanzó.");
+            } catch (Exception $e) {
+                $this->assertEquals($mensajeEsperado, $e->getMessage(), "Mensaje incorrecto en [$nombre]");
+            }
+        }
     }
 
-    // Caso 3: Referencia con formato inválido
-    public function testReferenciaInvalida(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datosInvalidos = [
-            'referencia' => '12'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('La referencia del pago debe tener entre 4 y 12 dígitos numéricos.');
-
-        // Act
-        $modelo->ProcesarDatos($datosInvalidos);
-    }
-
-    // Caso 4: Fecha futura
-    public function testFechaFutura(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datosInvalidos = [
-            'accion' => 'incluir',
-            'fecha' => '2099-12-31'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('La fecha ingresada no puede ser futura.');
-
-        // Act
-        $modelo->ProcesarDatos($datosInvalidos);
-    }
-
-    // Caso 5: Fecha con más de 2 meses de atraso
-    public function testFechaAtrasada(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datosInvalidos = [
-            'accion' => 'incluir',
-            'fecha' => '2020-01-01'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('La fecha ingresada no puede tener más de 2 meses de atraso.');
-
-        // Act
-        $modelo->ProcesarDatos($datosInvalidos);
-    }
-
-    // Caso 6: Fecha con formato inválido
-    public function testFechaInvalida(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datosInvalidos = [
-            'fecha' => '31/12/2026'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Formato de fecha inválido. Use AAAA-MM-DD.');
-
-        // Act
-        $modelo->ProcesarDatos($datosInvalidos);
-    }
-
-    // Caso 7: Tasa de cambio con formato inválido
-    public function testTasaInvalida(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datosInvalidos = [
-            'tasa' => 'tasa_invalida'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Tasa de cambio inválida.');
-
-        // Act
-        $modelo->ProcesarDatos($datosInvalidos);
-    }
-
-    // Caso 8: Método de pago con formato inválido
-    public function testMetodoInvalido(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datosInvalidos = [
-            'metodo' => 'metodo_invalido'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Método de pago inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datosInvalidos);
-    }
-
-    // Caso 9: Moneda con formato inválido
-    public function testMonedaInvalida(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datosInvalidos = [
-            'moneda' => 'moneda_invalida'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Moneda inválida.');
-
-        // Act
-        $modelo->ProcesarDatos($datosInvalidos);
-    }
-
-    // Caso 10: Cuenta por cobrar con formato inválido
-    public function testCuentaInvalida(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datosInvalidos = [
-            'cuenta' => ['cuenta_invalida']
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Cuenta por cobrar inválida.');
-
-        // Act
-        $modelo->ProcesarDatos($datosInvalidos);
-    }
-
-    // Caso 11: Acción no válida
+    // Caso 3: Acción no válida
     public function testAccionInvalida(): void
     {
         // Arrange

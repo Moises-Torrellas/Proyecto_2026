@@ -27,11 +27,11 @@ class ModeloModulos extends Conexion
         if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
             throw new Exception('Id inválido.');
         }
-        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,50}$/', $datos['nombre'])) {
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,50}$/u', $datos['nombre'])) {
             throw new Exception('Nombre inválido.');
         }
-        if (!empty($datos['descripcion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,100}$/', $datos['descripcion'])) {
-            throw new Exception('Dirección inválida.');
+        if (!empty($datos['descripcion']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,100}$/u', $datos['descripcion'])) {
+            throw new Exception('Descripción inválida.');
         }
     }
 

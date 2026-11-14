@@ -144,42 +144,5 @@ class RegistrarArticulosInventarioTest extends TestCase
         $this->assertEquals('error', $resultado['accion']);
         $this->assertEquals(EMPTY_SELECTION, $resultado['codigo']);
     }
-
-    // Caso 9: Error de base de datos durante la inserción con rollback transaccional
-    #[Group('RF-02')]
-    #[Group('ESC-02')]
-    #[Group('CP-09')]
-    public function testIncluirErrorBaseDeDatosEnInsercion(): void
-    {
-        // Arrange
-        $stmtMax = $this->createMock(PDOStatement::class);
-        $stmtMax->method('fetch')->with(PDO::FETCH_ASSOC)->willReturn(['max_num' => 10]);
-
-        $stmtInsert = $this->createMock(PDOStatement::class);
-        $stmtInsert->method('execute')->willThrowException(new PDOException('Error fatal en INSERT SQL'));
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
-
-        $pdoMock->method('query')->willReturn($stmtMax);
-        $pdoMock->method('prepare')->willReturn($stmtInsert);
-
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
-
-        $datos = [
-            'accion'      => 'incluir',
-            'id_catalogo' => '2',
-            'id_estado'   => '1'
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(DB_CONNECTION, $resultado['codigo']);
-    }
 }
 

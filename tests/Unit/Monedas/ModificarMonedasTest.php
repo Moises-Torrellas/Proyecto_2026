@@ -168,172 +168,60 @@ class ModificarMonedasTest extends TestCase
         $this->assertEquals(INVALID_ID, $resultado['codigo']);
     }
 
-    // Caso 4: Nombre duplicado perteneciente a otra moneda
-    public function testNombreDuplicadoEnOtraMoneda(): void
+    // Caso 4: Campos únicos duplicados pertenecientes a otra moneda (Nombre, Abreviatura, Símbolo)
+    public function testCamposUnicosDuplicadosEnOtraMoneda(): void
     {
-        $stmtExistenciaId = $this->createMock(PDOStatement::class);
-        $stmtExistenciaId->method('bindValue')->willReturn(true);
-        $stmtExistenciaId->method('execute')->willReturn(true);
-        $stmtExistenciaId->method('fetchColumn')->willReturn(1);
+        $campos = [
+            ['campo' => 'nombre', 'valor' => 'Bolívar Digital', 'codigo' => DUPLICATE_NAME],
+            ['campo' => 'abreviatura', 'valor' => 'VES', 'codigo' => VALIDATION . '1'],
+            ['campo' => 'simbolo', 'valor' => 'Bs.', 'codigo' => VALIDATION . '2']
+        ];
 
-        $stmtExistenciaPropiaNombre = $this->createMock(PDOStatement::class);
-        $stmtExistenciaPropiaNombre->method('bindValue')->willReturn(true);
-        $stmtExistenciaPropiaNombre->method('execute')->willReturn(true);
-        $stmtExistenciaPropiaNombre->method('fetchColumn')->willReturn(0);
+        foreach ($campos as $caso) {
+            $stmtExistenciaId = $this->createMock(PDOStatement::class);
+            $stmtExistenciaId->method('bindValue')->willReturn(true);
+            $stmtExistenciaId->method('execute')->willReturn(true);
+            $stmtExistenciaId->method('fetchColumn')->willReturn(1);
 
-        $stmtExistenciaGeneralNombre = $this->createMock(PDOStatement::class);
-        $stmtExistenciaGeneralNombre->method('bindValue')->willReturn(true);
-        $stmtExistenciaGeneralNombre->method('execute')->willReturn(true);
-        $stmtExistenciaGeneralNombre->method('fetchColumn')->willReturn(1);
+            $stmtExistenciaPropia = $this->createMock(PDOStatement::class);
+            $stmtExistenciaPropia->method('bindValue')->willReturn(true);
+            $stmtExistenciaPropia->method('execute')->willReturn(true);
+            $stmtExistenciaPropia->method('fetchColumn')->willReturn(0);
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-        $pdoMock->method('rollBack')->willReturn(true);
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
-            $stmtExistenciaId,
-            $stmtExistenciaPropiaNombre,
-            $stmtExistenciaGeneralNombre
-        ) {
-            if (str_contains($sql, 'codigo_moneda = :id') && str_contains($sql, 'nombre = :valor')) {
-                return $stmtExistenciaPropiaNombre;
-            }
-            if (str_contains($sql, 'codigo_moneda = :valor')) {
-                return $stmtExistenciaId;
-            }
-            return $stmtExistenciaGeneralNombre;
-        });
+            $stmtExistenciaGeneral = $this->createMock(PDOStatement::class);
+            $stmtExistenciaGeneral->method('bindValue')->willReturn(true);
+            $stmtExistenciaGeneral->method('execute')->willReturn(true);
+            $stmtExistenciaGeneral->method('fetchColumn')->willReturn(1);
 
-        $this->inyectarPdoMock($pdoMock);
+            $pdoMock = $this->createMock(PDO::class);
+            $pdoMock->method('beginTransaction')->willReturn(true);
+            $pdoMock->method('inTransaction')->willReturn(true);
+            $pdoMock->method('rollBack')->willReturn(true);
+            $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+                $caso,
+                $stmtExistenciaId,
+                $stmtExistenciaPropia,
+                $stmtExistenciaGeneral
+            ) {
+                if (str_contains($sql, 'codigo_moneda = :id') && str_contains($sql, "{$caso['campo']} = :valor")) {
+                    return $stmtExistenciaPropia;
+                }
+                if (str_contains($sql, 'codigo_moneda = :valor')) {
+                    return $stmtExistenciaId;
+                }
+                return $stmtExistenciaGeneral;
+            });
 
-        $modelo = new ModeloMonedas();
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos([
-            'nombre' => 'Bolívar Digital'
-        ]));
+            $this->inyectarPdoMock($pdoMock);
 
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(DUPLICATE_NAME, $resultado['codigo']);
-    }
+            $modelo = new ModeloMonedas();
+            $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos([
+                $caso['campo'] => $caso['valor']
+            ]));
 
-    // Caso 5: Abreviatura duplicada perteneciente a otra moneda
-    public function testAbreviaturaDuplicadaEnOtraMoneda(): void
-    {
-        $stmtExistenciaId = $this->createMock(PDOStatement::class);
-        $stmtExistenciaId->method('bindValue')->willReturn(true);
-        $stmtExistenciaId->method('execute')->willReturn(true);
-        $stmtExistenciaId->method('fetchColumn')->willReturn(1);
-
-        $stmtExistenciaPropiaNombre = $this->createMock(PDOStatement::class);
-        $stmtExistenciaPropiaNombre->method('bindValue')->willReturn(true);
-        $stmtExistenciaPropiaNombre->method('execute')->willReturn(true);
-        $stmtExistenciaPropiaNombre->method('fetchColumn')->willReturn(1);
-
-        $stmtExistenciaPropiaAbreviatura = $this->createMock(PDOStatement::class);
-        $stmtExistenciaPropiaAbreviatura->method('bindValue')->willReturn(true);
-        $stmtExistenciaPropiaAbreviatura->method('execute')->willReturn(true);
-        $stmtExistenciaPropiaAbreviatura->method('fetchColumn')->willReturn(0);
-
-        $stmtExistenciaGeneralAbreviatura = $this->createMock(PDOStatement::class);
-        $stmtExistenciaGeneralAbreviatura->method('bindValue')->willReturn(true);
-        $stmtExistenciaGeneralAbreviatura->method('execute')->willReturn(true);
-        $stmtExistenciaGeneralAbreviatura->method('fetchColumn')->willReturn(1);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-        $pdoMock->method('rollBack')->willReturn(true);
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
-            $stmtExistenciaId,
-            $stmtExistenciaPropiaNombre,
-            $stmtExistenciaPropiaAbreviatura,
-            $stmtExistenciaGeneralAbreviatura
-        ) {
-            if (str_contains($sql, 'codigo_moneda = :id') && str_contains($sql, 'nombre = :valor')) {
-                return $stmtExistenciaPropiaNombre;
-            }
-            if (str_contains($sql, 'codigo_moneda = :valor')) {
-                return $stmtExistenciaId;
-            }
-            if (str_contains($sql, 'codigo_moneda = :id') && str_contains($sql, 'abreviatura = :valor')) {
-                return $stmtExistenciaPropiaAbreviatura;
-            }
-            return $stmtExistenciaGeneralAbreviatura;
-        });
-
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloMonedas();
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos([
-            'abreviatura' => 'VES'
-        ]));
-
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(VALIDATION . '1', $resultado['codigo']);
-    }
-
-    // Caso 6: Símbolo duplicado perteneciente a otra moneda
-    public function testSimboloDuplicadoEnOtraMoneda(): void
-    {
-        $stmtExistenciaId = $this->createMock(PDOStatement::class);
-        $stmtExistenciaId->method('bindValue')->willReturn(true);
-        $stmtExistenciaId->method('execute')->willReturn(true);
-        $stmtExistenciaId->method('fetchColumn')->willReturn(1);
-
-        $stmtExistenciaPropiaNombre = $this->createMock(PDOStatement::class);
-        $stmtExistenciaPropiaNombre->method('bindValue')->willReturn(true);
-        $stmtExistenciaPropiaNombre->method('execute')->willReturn(true);
-        $stmtExistenciaPropiaNombre->method('fetchColumn')->willReturn(1);
-
-        $stmtExistenciaPropiaAbreviatura = $this->createMock(PDOStatement::class);
-        $stmtExistenciaPropiaAbreviatura->method('bindValue')->willReturn(true);
-        $stmtExistenciaPropiaAbreviatura->method('execute')->willReturn(true);
-        $stmtExistenciaPropiaAbreviatura->method('fetchColumn')->willReturn(1);
-
-        $stmtExistenciaPropiaSimbolo = $this->createMock(PDOStatement::class);
-        $stmtExistenciaPropiaSimbolo->method('bindValue')->willReturn(true);
-        $stmtExistenciaPropiaSimbolo->method('execute')->willReturn(true);
-        $stmtExistenciaPropiaSimbolo->method('fetchColumn')->willReturn(0);
-
-        $stmtExistenciaGeneralSimbolo = $this->createMock(PDOStatement::class);
-        $stmtExistenciaGeneralSimbolo->method('bindValue')->willReturn(true);
-        $stmtExistenciaGeneralSimbolo->method('execute')->willReturn(true);
-        $stmtExistenciaGeneralSimbolo->method('fetchColumn')->willReturn(1);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-        $pdoMock->method('rollBack')->willReturn(true);
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
-            $stmtExistenciaId,
-            $stmtExistenciaPropiaNombre,
-            $stmtExistenciaPropiaAbreviatura,
-            $stmtExistenciaPropiaSimbolo,
-            $stmtExistenciaGeneralSimbolo
-        ) {
-            if (str_contains($sql, 'codigo_moneda = :id') && str_contains($sql, 'nombre = :valor')) {
-                return $stmtExistenciaPropiaNombre;
-            }
-            if (str_contains($sql, 'codigo_moneda = :id') && str_contains($sql, 'abreviatura = :valor')) {
-                return $stmtExistenciaPropiaAbreviatura;
-            }
-            if (str_contains($sql, 'codigo_moneda = :valor')) {
-                return $stmtExistenciaId;
-            }
-            if (str_contains($sql, 'codigo_moneda = :id') && str_contains($sql, 'simbolo = :valor')) {
-                return $stmtExistenciaPropiaSimbolo;
-            }
-            return $stmtExistenciaGeneralSimbolo;
-        });
-
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloMonedas();
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos([
-            'simbolo' => 'Bs.'
-        ]));
-
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(VALIDATION . '2', $resultado['codigo']);
+            $this->assertEquals('error', $resultado['accion']);
+            $this->assertEquals($caso['codigo'], $resultado['codigo']);
+        }
     }
 
     // Caso 7: Error de base de datos durante la actualización

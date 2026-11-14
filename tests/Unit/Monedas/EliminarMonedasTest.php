@@ -102,84 +102,42 @@ class EliminarMonedasTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
-    // Caso 2: La moneda tiene pagos asociados
-    public function testMonedaConPagosAsociados(): void
+    // Caso 2: La moneda tiene registros asociados (pagos, vueltos, tasas)
+    public function testMonedaConRegistrosAsociadosNoSePuedeEliminar(): void
     {
-        $stmtAsociados = $this->createMock(PDOStatement::class);
-        $stmtAsociados->method('bindValue')->willReturn(true);
-        $stmtAsociados->method('execute')->willReturn(true);
-        $stmtAsociados->method('fetchColumn')->willReturn(1);
+        $casos = [
+            ['tabla' => 'pagos', 'codigo' => ASSOCIATES],
+            ['tabla' => 'vueltos', 'codigo' => ASSOCIATES . '2'],
+            ['tabla' => 'tasa_cambios', 'codigo' => ASSOCIATES . '3']
+        ];
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtAsociados);
+        foreach ($casos as $caso) {
+            $stmtAsociados = $this->createMock(PDOStatement::class);
+            $stmtAsociados->method('bindValue')->willReturn(true);
+            $stmtAsociados->method('execute')->willReturn(true);
+            $stmtAsociados->method('fetchColumn')->willReturn(1);
 
-        $this->inyectarPdoMock($pdoMock);
+            $stmtSinAsociados = $this->createMock(PDOStatement::class);
+            $stmtSinAsociados->method('bindValue')->willReturn(true);
+            $stmtSinAsociados->method('execute')->willReturn(true);
+            $stmtSinAsociados->method('fetchColumn')->willReturn(0);
 
-        $modelo = new ModeloMonedas();
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos());
+            $pdoMock = $this->createMock(PDO::class);
+            $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($caso, $stmtAsociados, $stmtSinAsociados) {
+                if (str_contains($sql, "`{$caso['tabla']}`")) {
+                    return $stmtAsociados;
+                }
+                return $stmtSinAsociados;
+            });
 
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(ASSOCIATES, $resultado['codigo']);
-    }
+            $this->inyectarPdoMock($pdoMock);
 
-    // Caso 3: La moneda tiene vueltos asociados
-    public function testMonedaConVueltosAsociados(): void
-    {
-        $stmtPagos = $this->createMock(PDOStatement::class);
-        $stmtPagos->method('bindValue')->willReturn(true);
-        $stmtPagos->method('execute')->willReturn(true);
-        $stmtPagos->method('fetchColumn')->willReturn(0);
+            $modelo = new ModeloMonedas();
+            $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos());
 
-        $stmtVueltos = $this->createMock(PDOStatement::class);
-        $stmtVueltos->method('bindValue')->willReturn(true);
-        $stmtVueltos->method('execute')->willReturn(true);
-        $stmtVueltos->method('fetchColumn')->willReturn(1);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtPagos, $stmtVueltos) {
-            if (str_contains($sql, 'FROM `pagos`')) {
-                return $stmtPagos;
-            }
-            return $stmtVueltos;
-        });
-
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloMonedas();
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos());
-
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(ASSOCIATES . '2', $resultado['codigo']);
-    }
-
-    // Caso 4: La moneda tiene tasas de cambio asociadas
-    public function testMonedaConTasasAsociadas(): void
-    {
-        $stmtSinAsociados = $this->createMock(PDOStatement::class);
-        $stmtSinAsociados->method('bindValue')->willReturn(true);
-        $stmtSinAsociados->method('execute')->willReturn(true);
-        $stmtSinAsociados->method('fetchColumn')->willReturn(0);
-
-        $stmtTasas = $this->createMock(PDOStatement::class);
-        $stmtTasas->method('bindValue')->willReturn(true);
-        $stmtTasas->method('execute')->willReturn(true);
-        $stmtTasas->method('fetchColumn')->willReturn(1);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtSinAsociados, $stmtTasas) {
-            if (str_contains($sql, 'FROM `tasa_cambios`')) {
-                return $stmtTasas;
-            }
-            return $stmtSinAsociados;
-        });
-
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloMonedas();
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos());
-
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(ASSOCIATES . '3', $resultado['codigo']);
+            $this->assertEquals('error', $resultado['accion']);
+            $this->assertEquals($caso['codigo'], $resultado['codigo']);
+        }
     }
 
     // Caso 5: La moneda a eliminar no existe en la base de datos
