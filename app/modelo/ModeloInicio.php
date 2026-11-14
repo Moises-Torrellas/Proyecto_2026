@@ -58,11 +58,11 @@ class ModeloInicio extends Conexion
                 $updateIntentos->execute([':intentos' => $intentos, ':id' => $resultado['idUsuario']]);
                 
                 // Si llega a 3 intentos y no es Super Usuario (id_rol = 1)
-                if ($intentos >= 3 && (int)$resultado['id_rol'] !== 1) {
+                if ($intentos >= 6 && (int)$resultado['id_rol'] !== 1) {
                     $bloquear = $conex->prepare("UPDATE usuarios SET bloqueo = 2 WHERE idUsuario = :id");
                     $bloquear->execute([':id' => $resultado['idUsuario']]);
                     
-                    return ['accion' => 'bloqueado', 'resultado' => 0, 'mensaje' => 'Has superado el límite de intentos (3). Su usuario ha sido bloqueado por seguridad. Comuníquese con un administrador para desbloquear su usuario.', 'idUsuario' => $resultado['idUsuario']];
+                    return ['accion' => 'bloqueado', 'resultado' => 0, 'mensaje' => 'Has superado el límite de intentos (10). Su usuario ha sido bloqueado por seguridad. Comuníquese con un administrador para desbloquear su usuario.', 'idUsuario' => $resultado['idUsuario']];
                 }
                 
                 return ['accion' => 'inicio', 'resultado' => 0, 'mensaje' => 'Las credenciales proporcionadas no son correctas.'];

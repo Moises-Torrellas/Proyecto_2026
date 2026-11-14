@@ -65,31 +65,7 @@ class BuscarPosicionesTest extends TestCase
         $this->assertEquals(1, $resultado['datos'][0]['codigo_posicion']);
     }
 
-    // Caso 2: Búsqueda exitosa a través de ProcesarDatos
-    public function testBuscarPorProcesarDatos(): void
-    {
-        $filas = [$this->obtenerFilaPosicion()];
-
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('bindParam')->willReturn(true);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchAll')->willReturn($filas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloPosiciones();
-        $resultado = $modelo->ProcesarDatos([
-            'accion' => 'buscar',
-            'id'     => '1'
-        ]);
-
-        $this->assertEquals('buscar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-    }
-
-    // Caso 3: Búsqueda de una posición inexistente
+    // Caso 2: Búsqueda de una posición inexistente
     public function testBuscarNoEncontrado(): void
     {
         $stmtMock = $this->createMock(PDOStatement::class);

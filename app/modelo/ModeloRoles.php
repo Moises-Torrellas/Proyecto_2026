@@ -63,11 +63,17 @@ class ModeloRoles extends Conexion
             // 1. Base de la consulta: Excluimos el nivel 1 (Super Usuario) por seguridad
             $sentencia = "SELECT * FROM roles WHERE nivel_rol != 1 AND nivel_rol != 2";
 
-            // 2. Aplicamos el buscador general si existe
+             // 2. Aplicamos el buscador general si existe
             if (!empty($filtro['filtro'])) {
                 $p = "%" . $filtro['filtro'] . "%";
                 $sentencia .= " AND (nombre_rol LIKE :f1)";
                 $params[':f1'] = $p;
+            }
+
+            // 3. Filtro por nombre del reporte
+            if (!empty($filtro['nombre'])) {
+                $sentencia .= " AND nombre_rol LIKE :nombre";
+                $params[':nombre'] = "%" . trim($filtro['nombre']) . "%";
             }
 
             // 3. Ordenamos por el ID del rol
@@ -110,7 +116,10 @@ class ModeloRoles extends Conexion
     {
         try {
             $permisos = $this->objPermiso->permisosRoles($id);
-            $datos = $permisos['datos'];
+            if (($permisos['accion'] ?? '') === 'error') {
+            throw new Exception($permisos['mensaje'] ?? 'Error al cargar los permisos.');
+            }
+            $datos = $permisos['datos'] ?? [];
             $resultado = array('accion' => 'CargarPermisos', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Roles', $e->getMessage(), 'Modelo_CargarPermisos');
@@ -256,11 +265,11 @@ class ModeloRoles extends Conexion
 
             $conex = $this->conexSG();
             $conex->beginTransaction();
-            if ($this->verificarExistencia('id', $this->id, 'usuarios', 1, bloquear: true)) {
-                throw new Exception(ASSOCIATES);
+            if ($this->verificarExistencia('id', $this->id, 'usuarios', 1, 'sg', bloquear: true)) {
+            throw new Exception(ASSOCIATES);
             }
-            if ($this->verificarExistencia('id', $this->id, 'roles', NULL, bloquear: true)) {
-                throw new Exception(INVALID_ID . '0');
+            if (!$this->verificarExistencia('id', $this->id, 'roles', NULL, 'sg', bloquear: true)) {
+            throw new Exception(INVALID_ID . '0');
             }
 
             $sentencia = 'DELETE FROM roles WHERE id_rol = :id';
@@ -286,7 +295,7 @@ class ModeloRoles extends Conexion
         if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
             throw new Exception('Id inválido.');
         }
-        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/', $datos['nombre'])) {
+        if (!empty($datos['nombre']) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{1,30}$/u', $datos['nombre'])) {
             throw new Exception('Nombre inválido.');
         }
         // Validacion de permisos dinámicos eliminada porque se parsean como enteros

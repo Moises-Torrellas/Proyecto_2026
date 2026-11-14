@@ -21,142 +21,160 @@
     ],
     "item": [
         {
-            "name": "GET Cargar-Vista-Inicio",
-            "event": [
+            "name": "InicioModulo",
+            "item": [
                 {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test(\"Estado HTTP es 200\", function () {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "var html = pm.response.text();",
-                            "var match = html.match(/name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
-                            "            html.match(/content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
-                            "if (match && match[1]) {",
-                            "    pm.environment.set(\"csrf_token\", match[1]);",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{url_base}}",
-                    "host": [
-                        "{{url_base}}"
-                    ]
-                },
-                "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
-            }
-        },
-        {
-            "name": "GET Cargar-Vista-Participaciones",
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test(\"Estado HTTP es 200\", function () {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "var html = pm.response.text();",
-                            "var match = html.match(/name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
-                            "            html.match(/content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
-                            "if (match && match[1]) {",
-                            "    pm.environment.set(\"csrf_token\", match[1]);",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{url_base}}Participaciones",
-                    "host": [
-                        "{{url_base}}Participaciones"
-                    ]
-                },
-                "description": "Carga la interfaz del módulo Participaciones y sincroniza el token CSRF."
-            }
-        },
-        {
-            "name": "POST Iniciar-Sesion-Exitoso",
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test(\"Estado HTTP es 200\", function () {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "var res;",
-                            "try {",
-                            "    res = pm.response.json();",
-                            "    pm.test(\"Inicio de sesión exitoso o validado\", function () {",
-                            "        pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
-                            "    });",
-                            "    if (res.token) {",
-                            "        pm.environment.set(\"csrf_token\", res.token);",
-                            "    }",
-                            "} catch (e) {",
-                            "    pm.test(\"Sesión procesada correctamente\", function () {",
-                            "        pm.response.to.have.status(200);",
-                            "    });",
-                            "}"
-                        ]
-                    }
-                }
-            ],
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json, text/javascript, */*; q=0.01",
-                        "type": "text"
-                    },
-                    {
-                        "key": "X-Requested-With",
-                        "value": "XMLHttpRequest",
-                        "type": "text"
-                    }
-                ],
-                "body": {
-                    "mode": "urlencoded",
-                    "urlencoded": [
+                    "name": "GET Cargar-Vista-Inicio",
+                    "event": [
                         {
-                            "key": "accion",
-                            "value": "iniciar_sesion",
-                            "type": "text"
-                        },
-                        {
-                            "key": "cedula",
-                            "value": "{{cedula}}",
-                            "type": "text"
-                        },
-                        {
-                            "key": "contraseña",
-                            "value": "{{contraseña}}",
-                            "type": "text"
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token inicial extraído exitosamente:\", match[1]);",
+                                    "}"
+                                ]
+                            }
                         }
-                    ]
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+                    },
+                    "response": []
                 },
-                "url": {
-                    "raw": "{{url_base}}Login",
-                    "host": [
-                        "{{url_base}}Login"
-                    ]
+                {
+                    "name": "POST Iniciar-Sesion-Exitoso",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var res;",
+                                    "try {",
+                                    "    res = pm.response.json();",
+                                    "    pm.test(\"Inicio de sesión exitoso o validado\", function () {",
+                                    "        pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                                    "    });",
+                                    "    if (res.token) {",
+                                    "        pm.environment.set(\"csrf_token\", res.token);",
+                                    "    }",
+                                    "} catch (e) {",
+                                    "    pm.test(\"Sesión procesada correctamente\", function () {",
+                                    "        pm.response.to.have.status(200);",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json, text/javascript, */*; q=0.01",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-Requested-With",
+                                "value": "XMLHttpRequest",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "accion",
+                                    "value": "inicio",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "cedula",
+                                    "value": "{{cedula}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "contraseña",
+                                    "value": "{{contraseña}}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{url_base}}",
+                            "host": [
+                                "{{url_base}}"
+                            ]
+                        },
+                        "description": "Autentica al usuario en el sistema con credenciales del entorno."
+                    },
+                    "response": []
                 },
-                "description": "Autentica al usuario en el sistema con credenciales del entorno."
-            }
+                {
+                    "name": "GET Cargar-Vista-Participaciones",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "const html = pm.response.text();",
+                                    "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                                    "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                                    "if (match && match[1]) {",
+                                    "    pm.environment.set(\"csrf_token\", match[1]);",
+                                    "    console.log(\"CSRF Token del módulo Participaciones actualizado:\", match[1]);",
+                                    "}",
+                                    "const matches = [...html.matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                    "if (matches.length > 0) {",
+                                    "    const primerId = matches[0][1];",
+                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                    "    pm.environment.set(\"codigo_participacion\", ultimoId);",
+                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                    "    console.log(\"ID inicial de codigo_participacion disponible en la BD:\", ultimoId);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{url_base}}Participaciones",
+                            "host": [
+                                "{{url_base}}Participaciones"
+                            ]
+                        },
+                        "description": "Carga la interfaz del módulo Participaciones y sincroniza el token CSRF."
+                    },
+                    "response": []
+                }
+            ]
         },
         {
             "name": "Participaciones",
@@ -736,6 +754,644 @@
                     ]
                 },
                 {
+                    "name": "Consultar y Buscar Participaciones",
+                    "item": [
+                        {
+                            "name": "Consultar-General-Y-Filtros",
+                            "item": [
+                                {
+                                    "name": "POST Consultar-Listado-General",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Status code es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "const html = pm.response.text();",
+                                                    "const matches = [...html.matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "if (matches.length > 0) {",
+                                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                                    "    const primerId = matches[0][1];",
+                                                    "    pm.environment.set(\"codigo_participacion\", ultimoId);",
+                                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                                    "    pm.environment.set(\"id_para_eliminar\", ultimoId);",
+                                                    "    pm.environment.set(\"id_primer_registro\", primerId);",
+                                                    "    console.log(\"ID capturado dinámicamente para codigo_participacion:\", ultimoId);",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Participaciones",
+                                            "host": [
+                                                "{{url_base}}Participaciones"
+                                            ]
+                                        },
+                                        "description": "Consulta el listado general de participaciones registradas con datos de torneo y equipo.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Filtro-Nombre-Torneo",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Participaciones",
+                                            "host": [
+                                                "{{url_base}}Participaciones"
+                                            ]
+                                        },
+                                        "description": "Filtra las participaciones por coincidencia en el nombre del torneo.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Copa",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Filtro-Nombre-Equipo",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Participaciones",
+                                            "host": [
+                                                "{{url_base}}Participaciones"
+                                            ]
+                                        },
+                                        "description": "Filtra las participaciones por coincidencia en el nombre del equipo.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "Cannibals",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Filtro-Estatus-Torneo",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Participaciones",
+                                            "host": [
+                                                "{{url_base}}Participaciones"
+                                            ]
+                                        },
+                                        "description": "Filtra las participaciones cuyos torneos se encuentren en estatus \"Por Disputarse\".",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "por disputarse",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Consultar-Sin-Coincidencias",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    ""
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Participaciones",
+                                            "host": [
+                                                "{{url_base}}Participaciones"
+                                            ]
+                                        },
+                                        "description": "Verifica el comportamiento cuando la búsqueda no coincide con ninguna participación.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "consultar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "filtro",
+                                                    "value": "InexistenteXYZ999",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "MultiConsulta-Listas-Desplegables",
+                            "item": [
+                                {
+                                    "name": "POST MultiConsulta-Torneos-Y-Equipos",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es MultiConsulta\", function() { pm.expect(res.accion).to.eql(\"MultiConsulta\"); });",
+                                                    "    pm.test(\"Contiene lista de torneos\", function() { pm.expect(Array.isArray(res.torneo)).to.be.true; });",
+                                                    "    pm.test(\"Contiene lista de equipos\", function() { pm.expect(Array.isArray(res.equipo)).to.be.true; });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Participaciones",
+                                            "host": [
+                                                "{{url_base}}Participaciones"
+                                            ]
+                                        },
+                                        "description": "Carga simultáneamente los catálogos de torneos y equipos para alimentar los selectores Select2 del formulario modal.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "MultiConsulta",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Buscar-Detalle-Por-ID",
+                            "item": [
+                                {
+                                    "name": "POST Buscar-Participacion-Por-ID-Exitoso",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
+                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Participaciones",
+                                            "host": [
+                                                "{{url_base}}Participaciones"
+                                            ]
+                                        },
+                                        "description": "Obtiene el detalle de una participación específica para cargar en el modal de edición.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "codigo_participacion",
+                                                    "value": "1",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Participacion-Inexistente",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Mensaje de registro no encontrado\", function() { pm.expect(res.mensaje).to.include(\"no encontrado\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"codigo_participacion\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Participaciones\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"codigo_participacion\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Participaciones",
+                                            "host": [
+                                                "{{url_base}}Participaciones"
+                                            ]
+                                        },
+                                        "description": "Valida el resultado cuando la participación consultada no existe.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "codigo_participacion",
+                                                    "value": "{{codigo_participacion}}",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Sin-Codigo-Participacion",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida código de participación requerido\", function() { pm.expect(res.mensaje).to.include(\"Código inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Participaciones",
+                                            "host": [
+                                                "{{url_base}}Participaciones"
+                                            ]
+                                        },
+                                        "description": "Valida que el código sea obligatorio al buscar.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "codigo_participacion",
+                                                    "value": "",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "POST Buscar-Codigo-Participacion-No-Numerico",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.test(\"Estado HTTP es 200\", function () {",
+                                                    "    pm.response.to.have.status(200);",
+                                                    "});",
+                                                    "",
+                                                    "try {",
+                                                    "    var res = pm.response.json();",
+                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
+                                                    "    pm.test(\"Valida formato numérico al buscar\", function() { pm.expect(res.mensaje).to.include(\"Código inválido\"); });",
+                                                    "} catch (e) {",
+                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
+                                                    "        pm.response.to.have.status(200);",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json, text/javascript, */*; q=0.01",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "key": "X-Requested-With",
+                                                "value": "XMLHttpRequest",
+                                                "type": "text"
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{url_base}}Participaciones",
+                                            "host": [
+                                                "{{url_base}}Participaciones"
+                                            ]
+                                        },
+                                        "description": "Valida rechazo de búsqueda con código no numérico.",
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "accion",
+                                                    "value": "buscar",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "codigo_participacion",
+                                                    "value": "abc",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
                     "name": "Modificar Participaciones",
                     "item": [
                         {
@@ -836,6 +1492,38 @@
                                                     "}"
                                                 ]
                                             }
+                                        },
+                                        {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
+                                                    "if (!pm.environment.get(\"codigo_participacion\") && !pm.environment.get(\"id_registro\")) {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Participaciones\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
+                                                    "        }",
+                                                    "    }, function (err, res) {",
+                                                    "        if (!err) {",
+                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
+                                                    "            if (matches.length > 0) {",
+                                                    "                const idCapturado = matches[matches.length - 1][1];",
+                                                    "                pm.environment.set(\"codigo_participacion\", idCapturado);",
+                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
+                                                    "            }",
+                                                    "        }",
+                                                    "    });",
+                                                    "}"
+                                                ]
+                                            }
                                         }
                                     ],
                                     "request": {
@@ -869,7 +1557,7 @@
                                                 },
                                                 {
                                                     "key": "codigo_participacion",
-                                                    "value": "1",
+                                                    "value": "{{codigo_participacion}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -1907,602 +2595,6 @@
                                                 {
                                                     "key": "codigo_participacion",
                                                     "value": "999999",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Consultar y Buscar Participaciones",
-                    "item": [
-                        {
-                            "name": "Consultar-General-Y-Filtros",
-                            "item": [
-                                {
-                                    "name": "POST Consultar-Listado-General",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Participaciones",
-                                            "host": [
-                                                "{{url_base}}Participaciones"
-                                            ]
-                                        },
-                                        "description": "Consulta el listado general de participaciones registradas con datos de torneo y equipo.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Filtro-Nombre-Torneo",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Participaciones",
-                                            "host": [
-                                                "{{url_base}}Participaciones"
-                                            ]
-                                        },
-                                        "description": "Filtra las participaciones por coincidencia en el nombre del torneo.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "Copa",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Filtro-Nombre-Equipo",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Participaciones",
-                                            "host": [
-                                                "{{url_base}}Participaciones"
-                                            ]
-                                        },
-                                        "description": "Filtra las participaciones por coincidencia en el nombre del equipo.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "Cannibals",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Filtro-Estatus-Torneo",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Participaciones",
-                                            "host": [
-                                                "{{url_base}}Participaciones"
-                                            ]
-                                        },
-                                        "description": "Filtra las participaciones cuyos torneos se encuentren en estatus \"Por Disputarse\".",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "por disputarse",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Consultar-Sin-Coincidencias",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    ""
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Participaciones",
-                                            "host": [
-                                                "{{url_base}}Participaciones"
-                                            ]
-                                        },
-                                        "description": "Verifica el comportamiento cuando la búsqueda no coincide con ninguna participación.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "consultar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "filtro",
-                                                    "value": "InexistenteXYZ999",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "MultiConsulta-Listas-Desplegables",
-                            "item": [
-                                {
-                                    "name": "POST MultiConsulta-Torneos-Y-Equipos",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es MultiConsulta\", function() { pm.expect(res.accion).to.eql(\"MultiConsulta\"); });",
-                                                    "    pm.test(\"Contiene lista de torneos\", function() { pm.expect(Array.isArray(res.torneo)).to.be.true; });",
-                                                    "    pm.test(\"Contiene lista de equipos\", function() { pm.expect(Array.isArray(res.equipo)).to.be.true; });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Participaciones",
-                                            "host": [
-                                                "{{url_base}}Participaciones"
-                                            ]
-                                        },
-                                        "description": "Carga simultáneamente los catálogos de torneos y equipos para alimentar los selectores Select2 del formulario modal.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "MultiConsulta",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "Buscar-Detalle-Por-ID",
-                            "item": [
-                                {
-                                    "name": "POST Buscar-Participacion-Por-ID-Exitoso",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
-                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Participaciones",
-                                            "host": [
-                                                "{{url_base}}Participaciones"
-                                            ]
-                                        },
-                                        "description": "Obtiene el detalle de una participación específica para cargar en el modal de edición.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "codigo_participacion",
-                                                    "value": "1",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Buscar-Participacion-Inexistente",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
-                                                    "    pm.test(\"Mensaje de registro no encontrado\", function() { pm.expect(res.mensaje).to.include(\"no encontrado\"); });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Participaciones",
-                                            "host": [
-                                                "{{url_base}}Participaciones"
-                                            ]
-                                        },
-                                        "description": "Valida el resultado cuando la participación consultada no existe.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "codigo_participacion",
-                                                    "value": "999999",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Buscar-Sin-Codigo-Participacion",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
-                                                    "    pm.test(\"Valida código de participación requerido\", function() { pm.expect(res.mensaje).to.include(\"Código inválido\"); });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Participaciones",
-                                            "host": [
-                                                "{{url_base}}Participaciones"
-                                            ]
-                                        },
-                                        "description": "Valida que el código sea obligatorio al buscar.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "codigo_participacion",
-                                                    "value": "",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Buscar-Codigo-Participacion-No-Numerico",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
-                                                    "    pm.test(\"Valida formato numérico al buscar\", function() { pm.expect(res.mensaje).to.include(\"Código inválido\"); });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Participaciones",
-                                            "host": [
-                                                "{{url_base}}Participaciones"
-                                            ]
-                                        },
-                                        "description": "Valida rechazo de búsqueda con código no numérico.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "codigo_participacion",
-                                                    "value": "abc",
                                                     "type": "text"
                                                 }
                                             ]

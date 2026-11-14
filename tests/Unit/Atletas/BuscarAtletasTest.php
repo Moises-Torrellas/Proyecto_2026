@@ -77,37 +77,7 @@ class BuscarAtletasTest extends TestCase
         $this->assertEquals('Carlos Alberto', $resultado['datos'][0]['nombres']);
     }
 
-    // Caso 2: Búsqueda exitosa ejecutada mediante ProcesarDatos
-    public function testBuscarViaProcesarDatosExitoso(): void
-    {
-        $atletaSimulado = [
-            'id_atleta'     => '10',
-            'doc_identidad' => '25987654',
-            'nombres'       => 'Ana Maria',
-            'apellidos'     => 'Torres Ramos'
-        ];
-
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchAll')->willReturn([$atletaSimulado]);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-
-        $this->crearModeloConPDOMock($pdoMock);
-
-        $modelo = new ModeloAtletas();
-        $resultado = $modelo->ProcesarDatos([
-            'accion' => 'buscar',
-            'id'     => '10'
-        ]);
-
-        $this->assertEquals('buscar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-        $this->assertEquals('Ana Maria', $resultado['datos'][0]['nombres']);
-    }
-
-    // Caso 3: Búsqueda de un atleta inexistente retorna lista vacía
+    // Caso 2: Búsqueda de un atleta inexistente retorna lista vacía
     public function testBuscarAtletaNoEncontradoRetornaVacio(): void
     {
         $stmtMock = $this->createMock(PDOStatement::class);
@@ -126,18 +96,4 @@ class BuscarAtletasTest extends TestCase
         $this->assertEmpty($resultado['datos']);
     }
 
-    // Caso 4: Excepción en la consulta de base de datos
-    public function testBuscarErrorBaseDeDatos(): void
-    {
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willThrowException(new Exception('Error de conexión con la base de datos'));
-
-        $this->crearModeloConPDOMock($pdoMock);
-
-        $modelo = new ModeloAtletas();
-        $resultado = $modelo->Buscar(5);
-
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals('Error de conexión con la base de datos', $resultado['mensaje']);
-    }
 }

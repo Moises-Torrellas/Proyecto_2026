@@ -65,104 +65,29 @@ class ValidarDatosAsignacionesTest extends TestCase
         $this->assertEquals('ERR_ACCION', $resultado['codigo']);
     }
 
-    // Caso 3: Formato de ID de asignación no numérico
+    // Caso 3: Validación de campos con formato o valor inválido
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-03')]
-    public function testIdAsignacionInvalido(): void
+    public function testValidarCamposInvalidosLanzaExcepcion(): void
     {
-        // Arrange
         $modelo = new ModeloAsignaciones();
-        $datos = [
-            'accion'        => 'buscar',
-            'id_asignacion' => 'ABC'
+        $casos = [
+            'id asignacion'        => [['accion' => 'buscar', 'id_asignacion' => 'ABC'], 'ID de asignación inválido.'],
+            'codigo atleta'        => [['accion' => 'incluir', 'codigo_atleta' => 'XYZ'], 'Atleta inválido.'],
+            'codigo articulo'      => [['accion' => 'incluir', 'codigo_articulo' => 'ART-1'], 'Artículo inválido.'],
+            'articulos no array'   => [['accion' => 'incluir', 'articulos' => 'no_es_arreglo'], 'La lista de artículos es inválida.'],
+            'item lista invalido'  => [['accion' => 'incluir', 'articulos' => ['10', 'invalido']], 'Uno de los artículos seleccionados es inválido.']
         ];
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('ID de asignación inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 4: Código de atleta no numérico
-    #[Group('RF-01')]
-    #[Group('ESC-01')]
-    #[Group('CP-04')]
-    public function testCodigoAtletaInvalido(): void
-    {
-        // Arrange
-        $modelo = new ModeloAsignaciones();
-        $datos = [
-            'accion'        => 'incluir',
-            'codigo_atleta' => 'XYZ'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Atleta inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 5: Código de artículo individual no numérico
-    #[Group('RF-01')]
-    #[Group('ESC-01')]
-    #[Group('CP-05')]
-    public function testCodigoArticuloInvalido(): void
-    {
-        // Arrange
-        $modelo = new ModeloAsignaciones();
-        $datos = [
-            'accion'          => 'incluir',
-            'codigo_articulo' => 'ART-1'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Artículo inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 6: Lista de artículos no es un arreglo o está vacía
-    #[Group('RF-01')]
-    #[Group('ESC-01')]
-    #[Group('CP-06')]
-    public function testListaArticulosInvalidaNoArray(): void
-    {
-        // Arrange
-        $modelo = new ModeloAsignaciones();
-        $datos = [
-            'accion'    => 'incluir',
-            'articulos' => 'no_es_arreglo'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('La lista de artículos es inválida.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 7: Elemento no numérico dentro de la lista de artículos
-    #[Group('RF-01')]
-    #[Group('ESC-01')]
-    #[Group('CP-07')]
-    public function testItemArticuloInvalidoEnLista(): void
-    {
-        // Arrange
-        $modelo = new ModeloAsignaciones();
-        $datos = [
-            'accion'    => 'incluir',
-            'articulos' => ['10', 'invalido']
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Uno de los artículos seleccionados es inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
+        foreach ($casos as $nombre => [$datos, $mensajeEsperado]) {
+            try {
+                $modelo->ProcesarDatos($datos);
+                $this->fail("Se esperaba excepción en caso [$nombre] y no se lanzó.");
+            } catch (Exception $e) {
+                $this->assertEquals($mensajeEsperado, $e->getMessage(), "Mensaje incorrecto en [$nombre]");
+            }
+        }
     }
 
     // Caso 8: Formato de fecha de asignación inválido
