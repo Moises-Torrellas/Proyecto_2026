@@ -29,4 +29,72 @@ final class LoginCest
         // 4. Como es AJAX, espera hasta 5 segundos a que aparezca el mensaje
         $I->waitForText('Inicio Validado', 5); 
     }
+
+    public function probarLoginCedulaIncorrecta(AcceptanceTester $I): void
+    {
+        // 1. Va a la página de login (Ajusta la ruta si es necesario)
+        $I->amOnPage('/'); 
+        
+        // 2. Espera a que el formulario HTML aparezca en pantalla
+        $I->waitForElement('input[name="cedula"]', 5);
+
+        // 3. Llena los datos y hace clic
+        $I->fillField('cedula', '73585417'); 
+        $I->fillField('contraseña', 'Admin456$'); 
+        $I->click('Iniciar Sesión'); 
+        
+        // 4. Como es AJAX, espera hasta 5 segundos a que aparezca el mensaje
+        $I->waitForText('Las credenciales proporcionadas no son correctas.', 5); 
+    }
+
+    public function probarLoginClaveIncorrecta(AcceptanceTester $I): void
+    {
+        // 1. Va a la página de login (Ajusta la ruta si es necesario)
+        $I->amOnPage('/'); 
+        
+        // 2. Espera a que el formulario HTML aparezca en pantalla
+        $I->waitForElement('input[name="cedula"]', 5);
+
+        // 3. Llena los datos y hace clic
+        $I->fillField('cedula', '12345678'); 
+        $I->fillField('contraseña', 'Admin446$'); 
+        $I->click('Iniciar Sesión'); 
+        
+        // 4. Como es AJAX, espera hasta 5 segundos a que aparezca el mensaje
+        $I->waitForText('Las credenciales proporcionadas no son correctas.', 5); 
+    }
+
+    public function probarLoginCedulaFormatoErroneo(AcceptanceTester $I): void
+    {
+        // 1. Va a la página de login (Ajusta la ruta si es necesario)
+        $I->amOnPage('/'); 
+        
+        // 2. Espera a que el formulario HTML aparezca en pantalla
+        $I->waitForElement('input[name="cedula"]', 5);
+
+        // 3. Llena los datos y hace clic
+        $I->fillField('cedula', '123'); 
+        $I->fillField('contraseña', 'Admin456$'); 
+        $I->click('Iniciar Sesión'); 
+        
+        // 4. Como es AJAX, espera hasta 5 segundos a que aparezca el mensaje
+        $I->waitForText('Tiene que ingresar una cedula valida', 5); 
+    }
+
+    public function probarLoginClaveFormatoErroneo(AcceptanceTester $I): void
+    {
+        // 1. Va a la página de login (Ajusta la ruta si es necesario)
+        $I->amOnPage('/'); 
+        
+        // 2. Espera a que el formulario HTML aparezca en pantalla
+        $I->waitForElement('input[name="cedula"]', 5);
+
+        // 3. Llena los datos y hace clic
+        $I->fillField('cedula', '12345678'); 
+        $I->fillField('contraseña', 'admin456$'); 
+        $I->click('Iniciar Sesión'); 
+        
+        // 4. Como es AJAX, espera hasta 5 segundos a que aparezca el mensaje
+        $I->waitForText('Tiene que ingresar una contraseña valido', 5); 
+    }
 }
