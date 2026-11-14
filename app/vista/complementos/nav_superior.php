@@ -36,6 +36,7 @@ if (!$tienePermisoIA && isset($_SESSION['permisos'])) {
                         <div class="encabezado_titulo_noti">
                             <h1>Notificaciones</h1>
                             <i data-lucide="bell" class="icon_noti_titulo"></i>
+                            <span id="contador_notificaciones_panel" class="contador_noti_panel ocultar_contador">0</span>
                         </div>
                         <button class="btn_t cbt_v" id="marcar_todas_vistas" data-tippy-content="Marcar todas como leídas">
                             <i class="fi fi-sr-check-double"></i>

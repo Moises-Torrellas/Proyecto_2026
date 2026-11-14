@@ -1,11 +1,17 @@
+body {
+    background-color: var(--fondo-principal);
+    overflow-x: hidden;
+}
+
 .fondo_inicio {
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
+    min-height: 100dvh;
     background: var(--fondo-principal);
     display: flex;
     justify-content: center;
     align-items: center;
-
+    overflow-x: hidden;
 }
 
 .contenedor_inicio {
@@ -18,6 +24,8 @@
     justify-content: center;
     align-items: center;
     gap: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .contenedor_imagen{
@@ -95,6 +103,7 @@
     align-items: center;
     width: 100%;
     min-height: 280px;
+    overflow: hidden;
 }
 
 .row_i {
@@ -133,14 +142,19 @@
 
 .s {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%; /* Ocupa el ancho del padre para poder centrar el contenido dentro */
+    height: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centra el formulario y el botón horizontalmente */
+    align-items: center;
+    justify-content: flex-start;
     transition: transform 0.5s ease, opacity 0.5s ease;
     opacity: 0;
     z-index: 0;
     pointer-events: none;
+    box-sizing: border-box;
 }
 
 .visible {
@@ -156,6 +170,26 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
+}
+
+.s form .row_i {
+    width: 100%;
+    display: flex !important;
+    justify-content: center;
+}
+
+.s form .row_i .colum {
+    display: flex;
+    justify-content: center;
+}
+
+.s form .row_i .colum.column_inicio {
+    width: 300px;
+}
+
+.contenedor_recuperacion {
+    width: 300px;
+    min-height: 205px;
 }
 
 /* Formulario saliente a la izquierda */

@@ -481,12 +481,19 @@
         gap: 15px; /* Separación entre elementos, por ejemplo botones */
     }
 
-    /* Que todos los inputs, selects y cajas del modal midan lo mismo */
+    /* Que todos los inputs, selects y cajas del modal midan lo mismo y tengan espacio para labels y mensajes de validación */
     .caja_formulario, 
     .cf_1, .cf_2, .cf_3_auto, .cf_4, .cf_5 {
         width: 100% !important;
         max-width: 320px !important; 
-        margin: 0 auto;
+        margin: 24px auto 24px auto !important;
+    }
+
+    .mensaje {
+        font-size: 0.72rem;
+        line-height: 1.25;
+        white-space: normal;
+        max-width: calc(100% - 20px);
     }
     
     .input-group-custom {
@@ -510,6 +517,13 @@
     .boton_usuario {
         width: 35px;
         height: 35px;
+    }
+
+    .badge_conteo {
+        top: 5px;
+        right: 6px;
+        width: 9px;
+        height: 9px;
     }
 
     /* Separación de los botones limpiar y procesar en el modal */
@@ -593,23 +607,132 @@
 }
 
 /* ======================================================== */
-/* RESPONSIVE EDITAR PERFIL */
+/* RESPONSIVE EDITAR PERFIL Y REPORTES                      */
 /* ======================================================== */
 @media screen and (max-width: 900px) {
-    .perfil_grid {
-        grid-template-columns: 1fr;
+    .perfil_grid,
+    .reportes_grid {
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        max-width: 600px;
+        margin: 0 auto;
     }
+
     .perfil_col_1 {
-        grid-column: 1;
+        grid-column: 1 !important;
+    }
+
+    .canvas_reporte {
+        height: 280px;
     }
 }
 
-/* ======================================================== */
-/* RESPONSIVE REPORTES */
-/* ======================================================== */
-@media screen and (max-width: 900px) {
-    .canvas_reporte {
-        height: 280px;
+/* Centrado completo de secciones de Editar Perfil y Reportes en móvil */
+@media screen and (max-width: 768px) {
+    .perfil_grid,
+    .reportes_grid {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding-bottom: 20px;
+    }
+
+    .card_perfil {
+        padding: 20px 15px !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    .card_perfil h3 {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        text-align: left;
+    }
+
+    /* Forzar que formularios y filtros se centren completamente */
+    .card_perfil form,
+    .card_perfil .filtros_reporte {
+        width: 100% !important;
+        max-width: 340px !important;
+        margin: 0 auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    .card_perfil .row {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        margin: 0 !important;
+        gap: 0 !important;
+    }
+
+    .card_perfil .colum {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* Separación suficiente para que los labels flotantes (top: -20px) y los spans de validación (top: 50px) tengan espacio holgado */
+    .card_perfil .caja_formulario {
+        width: 100% !important;
+        max-width: 320px !important;
+        margin: 28px auto 26px auto !important;
+    }
+
+    .card_perfil .caja_formulario.subir_foto {
+        width: 100% !important;
+        max-width: 320px !important;
+        margin: 10px auto 28px auto !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Botones de acción centrados con ancho que armonice con los inputs y espacio para la validación del último input */
+    .card_perfil form .colum button.btn,
+    .card_perfil .filtros_reporte .btn-generar {
+        width: 100% !important;
+        max-width: 320px !important;
+        margin: 20px auto 10px auto !important;
+    }
+
+    .card_perfil .canvas_reporte {
+        width: 100% !important;
+    }
+
+    /* Botones para escoger el tipo de gráfico: uno debajo del otro */
+    .chart_switcher {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        max-width: 320px !important;
+        margin: 0 auto 15px auto !important;
+        gap: 10px !important;
+    }
+
+    .chart_switcher .btn-switch-grafico {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        padding: 10px 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    .chart_switcher .btn-switch-grafico svg {
+        width: 20px !important;
+        height: 20px !important;
+        flex-shrink: 0 !important;
     }
 }
 
@@ -672,6 +795,268 @@
         height: 16px;
         font-size: 0.65rem;
         padding: 0 4px;
+    }
+}
+
+/* ======================================================== */
+/* RESPONSIVE LOGIN / RECUPERACIÓN                          */
+/* ======================================================== */
+@media screen and (max-width: 992px) {
+    .fondo_inicio {
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow-x: hidden;
+        background: var(--fondo-principal);
+    }
+
+    .contenedor_inicio {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding-top: 25px !important;
+        padding-bottom: 25px !important;
+        overflow: hidden;
+        background: var(--fondo-principal);
+    }
+
+    .contenedor_formulario_inicio,
+    .contenedor_recuperacion {
+        position: relative;
+        overflow: hidden;
+        width: 100% !important;
+        max-width: 350px !important;
+        margin: 0 auto;
+        min-height: 205px;
+    }
+
+    /* En login y recuperación no hay spans de validación debajo; los inputs van más pegados
+       con el espacio justo (24px) para que el label flotante (top: -20px) no monte el input superior */
+    .contenedor_formulario_inicio .row {
+        margin: 0 !important;
+        gap: 0 !important;
+        width: 100% !important;
+    }
+
+    .contenedor_formulario_inicio .row .colum {
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .contenedor_formulario_inicio .caja_formulario {
+        margin: 24px auto 0 auto !important;
+    }
+
+    .contenedor_formulario_inicio .row .colum.column_inicio,
+    .s form .row_i .colum.column_inicio {
+        margin: 18px auto 0 auto !important;
+        width: 100% !important;
+        max-width: 350px !important;
+    }
+
+    .contenedor_formulario_inicio .btn {
+        height: 45px;
+        font-size: 1rem;
+    }
+
+    .contenedor_formulario_inicio .btn.btn_a {
+        height: 30px;
+        font-size: 0.75rem;
+    }
+
+    .contenedor_inicio > .column_inicio {
+        margin: 10px auto 0 auto !important;
+    }
+
+    .contenedor_inicio > .btn {
+        height: 45px;
+        font-size: 1rem;
+        margin: 10px auto 0 auto !important;
+    }
+}
+
+/* ======================================================== */
+/* RESPONSIVE NOTIFICACIONES                                */
+/* ======================================================== */
+@media screen and (max-width: 992px) {
+    /* Se fija al viewport para que no se salga por la izquierda de la pantalla */
+    .contenedor_notificaciones {
+        position: fixed;
+        top: 60px;
+        left: auto;
+        right: 10px;
+        width: calc(100vw - 20px);
+        max-width: 380px;
+        max-height: calc(100vh - 75px);
+        border-top: 1px solid var(--color-primario);
+        border-radius: 10px;
+        transform-origin: top right;
+        box-sizing: border-box;
+    }
+
+    .lista_noti {
+        max-height: calc(100vh - 145px);
+        padding: 0;
+        margin: 0;
+    }
+
+    .item_noti {
+        align-items: flex-start;
+    }
+
+    .noti_contenido {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .noti_icono_estado {
+        padding: 8px;
+        margin: 0;
+    }
+
+    .btn_marcar_visto {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* ======================================================== */
+/* RESPONSIVE DETALLES DESPLEGABLES DE LAS CONSULTAS        */
+/* ======================================================== */
+@media screen and (max-width: 768px) {
+    .listado_contenedor_grupal {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .listado_dato_grupo span {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .detalle_expandido_container {
+        padding: 10px !important;
+    }
+
+    .tarjeta_resumen {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .tarjeta_texto {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    /* Filas internas: apilar sus columnas en vez de forzarlas en una sola línea */
+    .sub_item_fila,
+    .sub_item_fila_estadistica {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .sub_item_fila > *,
+    .sub_item_fila_estadistica > * {
+        flex: 0 0 auto !important;
+        width: 100%;
+        min-width: 0 !important;
+        margin-right: 0 !important;
+        text-align: left;
+        align-items: flex-start !important;
+    }
+
+    .sub_item_fechas {
+        flex-wrap: wrap;
+    }
+
+    .sub_item_montos {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 4px 12px;
+    }
+
+    .sub_item_bloque_metricas_horizontal {
+        flex-wrap: wrap !important;
+        justify-content: flex-start !important;
+        gap: 8px 15px !important;
+    }
+
+    .metrica_item {
+        white-space: normal;
+    }
+
+    .sub_item_acciones,
+    .sub_item_acciones_estadistica {
+        justify-content: flex-end !important;
+        align-items: center !important;
+        flex-direction: row;
+        padding-top: 10px;
+        border-top: 1px dashed var(--borde-color);
+    }
+
+    .detalle_fila .detalle_card {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .detalle_grid_moderno {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ======================================================== */
+/* RESPONSIVE AYUDA GUIADA (driver.js)                      */
+/* ======================================================== */
+@media screen and (max-width: 768px) {
+    /* En móvil el popover se muestra como una tarjeta fija abajo (o arriba, ver main.js)
+       en lugar de posicionarse a los lados del elemento y salirse de la pantalla */
+    body div#driver-popover-item {
+        position: fixed !important;
+        left: 10px !important;
+        right: 10px !important;
+        top: auto !important;
+        bottom: 10px !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        max-height: 45vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        padding: 12px 14px;
+        border: 1px solid var(--color-primario);
+        border-radius: 10px;
+    }
+
+    body div#driver-popover-item.driver_movil_arriba {
+        top: 70px !important;
+        bottom: auto !important;
+    }
+
+    body div#driver-popover-item .driver-popover-tip {
+        display: none !important;
+    }
+
+    body div#driver-popover-item .driver-popover-title {
+        font-size: 16px;
+    }
+
+    body div#driver-popover-item .driver-popover-description {
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    body div#driver-popover-item .driver-popover-footer button {
+        padding: 7px 12px;
+        font-size: 13px;
+        border-radius: 5px;
     }
 }
 
