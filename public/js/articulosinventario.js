@@ -136,7 +136,7 @@ $(document).ready(function () {
         const pasos = [
             {
                 element: '#busqueda',
-                popover: { title: 'Búsqueda', description: 'Filtra el inventario por nombre o código.', position: 'bottom' }
+                popover: { title: 'Búsqueda', description: 'Filtra el inventario por nombre, talla, condición, estatus o código.', position: 'bottom' }
             },
             {
                 element: '#btn_nuevo',
