@@ -115,7 +115,7 @@ class ConsultarArticulosInventarioTest extends TestCase
         $this->assertCount(1, $resultado['datos'][1]['piezas']);
     }
 
-    // Caso 23: Consulta con filtro dinámico por coincidencia en nombre o estado
+    // Caso 23: Consulta con filtro dinámico por coincidencia en nombre, condición, talla, código o estatus
     #[Group('RF-05')]
     #[Group('ESC-05')]
     #[Group('CP-23')]
@@ -123,19 +123,26 @@ class ConsultarArticulosInventarioTest extends TestCase
     {
         // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->expects($this->exactly(2))
+        $parametrosEsperados = [':filtro1', ':filtro2', ':filtro3', ':filtro4', ':filtro5'];
+        $parametrosRecibidos = [];
+        $stmtMock->expects($this->exactly(5))
             ->method('bindValue')
-            ->willReturnCallback(function ($param, $value) {
-                if ($param === ':filtro1' || $param === ':filtro2') {
-                    $this->assertEquals('%Casco%', $value);
-                }
+            ->willReturnCallback(function ($param, $value) use (&$parametrosRecibidos) {
+                $parametrosRecibidos[] = $param;
+                $this->assertEquals('%Casco%', $value);
                 return true;
             });
         $stmtMock->method('execute')->willReturn(true);
         $stmtMock->method('fetchAll')->willReturn([]);
 
         $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->with($this->stringContains('AND (c.nombre LIKE :filtro1 OR es.nombre LIKE :filtro2)'))->willReturn($stmtMock);
+        $pdoMock->method('prepare')->with($this->logicalAnd(
+            $this->stringContains('c.nombre LIKE :filtro1'),
+            $this->stringContains('es.nombre LIKE :filtro2'),
+            $this->stringContains('c.talla LIKE :filtro3'),
+            $this->stringContains('e.codigo_club LIKE :filtro4'),
+            $this->stringContains('LIKE :filtro5')
+        ))->willReturn($stmtMock);
 
         $modelo = $this->crearModeloConPDOMock($pdoMock);
 
@@ -147,6 +154,7 @@ class ConsultarArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('consultar', $resultado['accion']);
+        $this->assertEquals($parametrosEsperados, $parametrosRecibidos);
     }
 
     // Caso 24: Consulta con filtro específico por id_catalogo
