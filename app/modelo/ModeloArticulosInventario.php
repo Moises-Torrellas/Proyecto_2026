@@ -30,7 +30,7 @@ class ModeloArticulosInventario extends Conexion
             return ['accion' => 'error', 'codigo' => EMPTY_SELECTION];
         }
 
-        $this->filtro = $datos['filtro'] ?? '';
+        $this->filtro = trim((string)($datos['filtro'] ?? ''));
         $this->filtro_catalogo = $datos['id_catalogo'] ?? null;
         $this->filtro_estado = $datos['id_estado'] ?? null;
         $accion = $datos['accion'] ?? null;
@@ -113,7 +113,18 @@ class ModeloArticulosInventario extends Conexion
                     WHERE 1=1";
 
             if (!empty($this->filtro)) {
-                $sql .= " AND (c.nombre LIKE :filtro1 OR es.nombre LIKE :filtro2)";
+                $sql .= " AND (
+                    c.nombre LIKE :filtro1 OR
+                    es.nombre LIKE :filtro2 OR
+                    c.talla LIKE :filtro3 OR
+                    e.codigo_club LIKE :filtro4 OR
+                    (CASE
+                        WHEN e.estatus = 1 THEN 'Disponible'
+                        WHEN e.estatus = 2 THEN 'En Uso'
+                        WHEN e.estatus = 3 THEN 'Retirado'
+                        ELSE 'Inactivo'
+                    END) LIKE :filtro5
+                )";
             }
             if (!empty($this->filtro_catalogo)) {
                 $sql .= " AND c.id_catalogo = :id_catalogo";
@@ -129,6 +140,9 @@ class ModeloArticulosInventario extends Conexion
                 $p = '%' . $this->filtro . '%';
                 $stmt->bindValue(':filtro1', $p);
                 $stmt->bindValue(':filtro2', $p);
+                $stmt->bindValue(':filtro3', $p);
+                $stmt->bindValue(':filtro4', $p);
+                $stmt->bindValue(':filtro5', $p);
             }
             if (!empty($this->filtro_catalogo)) {
                 $stmt->bindValue(':id_catalogo', $this->filtro_catalogo);
