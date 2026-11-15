@@ -142,8 +142,7 @@ class RegistrarArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(EMPTY_SELECTION, $resultado['codigo']);
     }
 }
 

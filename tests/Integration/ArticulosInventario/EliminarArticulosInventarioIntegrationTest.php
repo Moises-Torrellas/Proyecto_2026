@@ -147,7 +147,7 @@ class EliminarArticulosInventarioIntegrationTest extends TestCase
         $resultado = $this->modelo->ProcesarDatos($datos);
 
         $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals('ERR_BD', $resultado['codigo']);
+        $this->assertEquals(DB_CONNECTION, $resultado['codigo']);
     }
 
     /**
@@ -179,11 +179,11 @@ class EliminarArticulosInventarioIntegrationTest extends TestCase
     {
         $resEliminar = $this->modelo->ProcesarDatos(['accion' => 'eliminar']);
         $this->assertEquals('error', $resEliminar['accion']);
-        $this->assertEquals('ERR_VACIO', $resEliminar['codigo']);
+        $this->assertEquals(EMPTY_SELECTION, $resEliminar['codigo']);
 
         $resReincorporar = $this->modelo->ProcesarDatos(['accion' => 'reincorporar']);
         $this->assertEquals('error', $resReincorporar['accion']);
-        $this->assertEquals('ERR_VACIO', $resReincorporar['codigo']);
+        $this->assertEquals(EMPTY_SELECTION, $resReincorporar['codigo']);
     }
 }
 

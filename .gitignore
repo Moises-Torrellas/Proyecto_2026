@@ -19,6 +19,7 @@ exposicion_postman.md
 Presentacion_Postman.pptx
 analisis-seguridad-login.md
 .phpunit.result.cache
+/coverage
 
 
 /public/img/usuarios/*

@@ -18,42 +18,42 @@
                 <h2 class="">Podemos Recuperar tu Contraseña</h2>
             </div>
             <div class="separador">Recuperar Contraseña</div>
-            <div class="contenedor_formulario_inicio">
-                <div class="contenedor_formulario_inicio s" id="sec_1">
+            <div class="contenedor_formulario_inicio contenedor_recuperacion">
+                <div class="s" id="sec_1">
                     <form autocomplete="off" id="c">
-                        <div class="row">
+                        <div class="row row_i">
                             <div class="colum">
-                                <div class="caja_formulario">
+                                <div class="caja_formulario c_f_i">
                                     <input type="text" class="formulario" id="cedula" name="cedula">
-                                    <label for="cedula" class="titulo_formulario">Ingrese su cedula</label>
+                                    <label for="cedula" class="titulo_formulario">Ingrese su cédula</label>
                                     <span class="mensaje" id="spam_cedula"></span>
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row row_i">
                             <div class="colum column_inicio">
-                                <button type="button" class="btn btn_azul" id="comprobar">Enviar Código</button>
+                                <button type="button" class="btn btn_azul btn_inicio" id="comprobar">Enviar Código</button>
                             </div>
                         </div>
                     </form>
                 </div>
-                <div class="contenedor_formulario_inicio s" id="sec_2">
+                <div class="s" id="sec_2">
                     <form autocomplete="off" id="r">
-                        <div class="row">
+                        <div class="row row_i">
                             <div class="colum">
-                                <div class="caja_formulario cf_2">
+                                <div class="caja_formulario c_f_i">
                                     <input type="text" class="formulario" id="codigo" name="codigo" style="text-align: center;">
                                     <label for="codigo" class="titulo_formulario">Ingrese el Código</label>
                                     <span class="mensaje" id="spam_codigo"></span>
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row row_i">
                             <div class="colum column_inicio">
-                                <button type="button" class="btn btn_azul" id="comprobarCodigo">Comprobar Código</button>
+                                <button type="button" class="btn btn_azul btn_inicio" id="comprobarCodigo">Comprobar Código</button>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row row_i">
                             <div class="colum column_inicio">
                                 <button type="button" class="btn btn_azul btn_a" id="reenviar">Reenviar Código</button>
                                 <span id="contador">Reenviar el código en (0:30)</span>
@@ -61,11 +61,11 @@
                         </div>
                     </form>
                 </div>
-                <div class="contenedor_formulario_inicio s" id="sec_3">
+                <div class="s" id="sec_3">
                     <form autocomplete="off" id="f">
-                        <div class="row">
+                        <div class="row row_i">
                             <div class="colum">
-                                <div class="caja_formulario">
+                                <div class="caja_formulario c_f_i">
                                     <input type="password" class="formulario" id="contraseña" name="contraseña">
                                     <label for="contraseña" class="titulo_formulario">Contraseña</label>
                                     <span class="mensaje" id="spam_contraseña"></span>
@@ -73,9 +73,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row row_i">
                             <div class="colum">
-                                <div class="caja_formulario">
+                                <div class="caja_formulario c_f_i">
                                     <input type="password" class="formulario" id="contraseña_r" name="contraseña_r">
                                     <label for="contraseña_r" class="titulo_formulario">Repetir Contraseña</label>
                                     <span class="mensaje" id="spam_contraseña_r"></span>
@@ -83,15 +83,17 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row row_i">
                             <div class="colum column_inicio">
-                                <button type="button" class="btn btn_azul" id="cambiar">Cambiar Contraseña</button>
+                                <button type="button" class="btn btn_azul btn_inicio" id="cambiar">Cambiar Contraseña</button>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
-            <button type="button" class="btn btn_azul" onclick="window.location.href='Inicio'">Volver Al Inicio de Sesión</button>
+            <div class="column_inicio">
+                <button type="button" class="btn btn_azul btn_inicio" onclick="window.location.href='Inicio'">Volver Al Inicio de Sesión</button>
+            </div>
         </div>
         <div class="contenedor_imagen">
             <img src="img/login.png" class="imagen_login" alt="Login">

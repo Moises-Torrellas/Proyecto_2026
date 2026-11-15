@@ -35,7 +35,7 @@ class ModeloPermisos extends Conexion
         if (!empty($datos['id']) && !preg_match('/^[0-9]+$/', $datos['id'])) {
             throw new Exception('Id inválido.');
         }
-        if (!empty($datos['bloqueo']) && !preg_match('/^[1-2]+$/', $datos['bloqueo'])) {
+        if (!empty($datos['bloqueo']) && !preg_match('/^[12]$/', $datos['bloqueo'])) {
             throw new Exception('bloqueo inválido.');
         }
         if (!empty($datos['modulo']) && !preg_match('/^[0-9]+$/', $datos['modulo'])) {
@@ -136,16 +136,15 @@ class ModeloPermisos extends Conexion
             $conex = $this->conexSG();
             $conex->beginTransaction();
 
-            // Verificar si el módulo padre existe y está activo
             if (!$this->verificarExistencia('modulo', $this->modulo, 'modulos', 1, 'sg', bloquear: true)) {
-                throw new Exception('El módulo asociado no existe o está inactivo.');
+                throw new Exception(ASSOCIATES);                                     
             }
 
-            if ($this->verificarExistencia('clave', $this->clave, 'permisos', 1, 'sg', bloquear: true)) {
-                throw new Exception('La clave técnica del permiso ya está registrada.');
+            if ($this->verificarExistencia('clave', $this->clave, 'permisos', NULL, 'sg', bloquear: true)) {
+                throw new Exception('La clave técnica del permiso ya está registrada.'); 
             }
             if ($this->verificarExistencia('nombre', $this->nombre, 'permisos', 1, 'sg', bloquear: true)) {
-                throw new Exception('El nombre del permiso ya está registrado.');
+                throw new Exception(DUPLICATE_NAME);                                 
             }
 
             // Construcción dinámica del INSERT usando implode
@@ -203,16 +202,20 @@ class ModeloPermisos extends Conexion
                 }
             }
 
-            $sentencia = "UPDATE `permisos` 
-                          SET `nombre` = :nombre,
-                              `descripcion` = :descripcion
-                          WHERE `id_permiso` = :id";
+            $campos = ['`nombre` = :nombre'];
+            $params = [':nombre' => $this->nombre];
+
             
+            if (!empty($this->descripcion)) {
+                $campos[] = '`descripcion` = :descripcion';
+                $params[':descripcion'] = $this->descripcion;
+            }
+
+            $params[':id'] = $this->id;
+
+            $sentencia = "UPDATE `permisos` SET " . implode(', ', $campos) . " WHERE `id_permiso` = :id";
             $stmt = $conex->prepare($sentencia);
-            $stmt->bindParam(':nombre', $this->nombre);
-            $stmt->bindParam(':descripcion', $this->descripcion);
-            $stmt->bindParam(':id', $this->id);
-            $stmt->execute();
+            $stmt->execute($params);
 
             $conex->commit();
             return array('accion' => 'exito');
@@ -221,7 +224,7 @@ class ModeloPermisos extends Conexion
                 $conex->rollback();
             }
             logs('Permisos', $e->getMessage(), 'Modelo_Modificar');
-            return array('accion' => 'error', 'mensaje' => $e->getMessage());
+            return array('accion' => 'error', 'codigo' => $e->getMessage());
         } finally {
             $conex = NULL;
         }
@@ -256,7 +259,7 @@ class ModeloPermisos extends Conexion
                 $conex->rollBack();
             }
             logs('Permisos', $e->getMessage(), 'Modelo_Bloqueo');
-            return ['accion' => 'error', 'mensaje' => $e->getMessage()];
+            return ['accion' => 'error', 'codigo' => $e->getMessage()];
         } finally {
             $conex = null;
         }

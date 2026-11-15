@@ -134,8 +134,7 @@ class EliminarArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(DB_CONNECTION, $resultado['codigo']);
     }
 
     // Caso 17: Rechazo de retiro si no se proporciona el ID de artículo
@@ -156,8 +155,7 @@ class EliminarArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(EMPTY_SELECTION, $resultado['codigo']);
     }
 
     // Caso 18: Error de base de datos durante la ejecución del procedimiento almacenado
@@ -182,8 +180,7 @@ class EliminarArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(DB_CONNECTION, $resultado['codigo']);
     }
 
     // Caso 19: Reincorporación exitosa de un artículo en condición de retirado (estatus = 3 a 1)
@@ -234,8 +231,7 @@ class EliminarArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(EMPTY_SELECTION, $resultado['codigo']);
     }
 
     // Caso 21: Error de base de datos durante la reincorporación con rollback transaccional
@@ -266,8 +262,7 @@ class EliminarArticulosInventarioTest extends TestCase
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $codigoEsperado = defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD';
-        $this->assertEquals($codigoEsperado, $resultado['codigo']);
+        $this->assertEquals(DB_CONNECTION, $resultado['codigo']);
     }
 }
 

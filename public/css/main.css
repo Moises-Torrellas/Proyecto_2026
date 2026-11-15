@@ -111,6 +111,12 @@
     font-family: sans-serif;
 }
 
+body {
+    background-color: var(--fondo-principal);
+    color: var(--texto-principal);
+    overflow-x: hidden;
+}
+
 #circle-transition {
     position: absolute;
     top: 0px;
@@ -1604,6 +1610,21 @@ option {
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
+.card_perfil form {
+    width: 100%;
+}
+
+.card_perfil .caja_formulario {
+    position: relative;
+    margin-top: 25px;
+    margin-bottom: 25px;
+}
+
+.card_perfil .caja_formulario.subir_foto {
+    margin-top: 10px;
+    margin-bottom: 25px;
+}
+
 .card_perfil:hover {
     box-shadow: 0 6px 20px rgba(0,0,0,0.1);
 }
@@ -1675,11 +1696,12 @@ option {
 .reportes_grid { display: grid; grid-template-columns: 1fr; gap: 30px; width: 90%; } .canvas_reporte { position: relative; width: 100%; height: 350px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed var(--borde-color); } .filtros_reporte { margin-top: 10px; } .filtros_reporte { margin-top: 10px; }
 
 
-/* --- PersonalizaciA3n de Flatpickr --- */
+/* --- Personalización de Flatpickr --- */
 .flatpickr-calendar {
     background: var(--fondo-principal) !important;
     border: 1px solid var(--borde-color) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    z-index: 100050 !important;
 }
 
 .flatpickr-day {

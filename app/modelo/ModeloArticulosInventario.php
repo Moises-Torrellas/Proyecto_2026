@@ -5,6 +5,10 @@ namespace App\modelo;
 use Exception;
 use PDO;
 
+if (!defined('DB_CONNECTION')) {
+    require_once dirname(__DIR__, 2) . '/config/config.php';
+}
+
 class ModeloArticulosInventario extends Conexion
 {
     public function __construct()
@@ -23,7 +27,7 @@ class ModeloArticulosInventario extends Conexion
     public function ProcesarDatos(array $datos): array
     {
         if (empty($datos)) {
-            return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
+            return ['accion' => 'error', 'codigo' => EMPTY_SELECTION];
         }
 
         $this->filtro = $datos['filtro'] ?? '';
@@ -39,7 +43,7 @@ class ModeloArticulosInventario extends Conexion
             'modificar'     => $this->ModificarArticulo($datos),
             'eliminar'      => $this->EliminarArticulo($datos['codigo_articulo'] ?? null),
             'reincorporar'  => $this->ReincorporarArticulo($datos['codigo_articulo'] ?? null),
-            default         => ['accion' => 'error', 'codigo' => defined('_ERR_ACCION_') ? _ERR_ACCION_ : 'ERR_ACCION']
+            default         => ['accion' => 'error', 'codigo' => VALIDATION]
         };
     }
 
@@ -160,7 +164,7 @@ class ModeloArticulosInventario extends Conexion
             return ['accion' => 'consultar', 'datos' => array_values($agrupado)];
         } catch (Exception $e) {
             logs('Articulos Inventario', $e->getMessage(), 'Modelo_Consultar');
-            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
+            return ['accion' => 'error', 'codigo' => DB_CONNECTION];
         }
     }
 
@@ -176,7 +180,7 @@ class ModeloArticulosInventario extends Conexion
 
             return ['accion' => 'cargar_combos', 'catalogos' => $catalogos, 'estados' => $estados];
         } catch (Exception $e) {
-            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
+            return ['accion' => 'error', 'codigo' => DB_CONNECTION];
         }
     }
 
@@ -193,7 +197,7 @@ class ModeloArticulosInventario extends Conexion
         ]];
 
         if (empty($articulos)) {
-            return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
+            return ['accion' => 'error', 'codigo' => EMPTY_SELECTION];
         }
 
         $conex = $this->conex();
@@ -236,7 +240,7 @@ class ModeloArticulosInventario extends Conexion
         } catch (Exception $e) {
             if ($conex->inTransaction()) $conex->rollBack();
             logs('Articulos Inventario', $e->getMessage(), 'Modelo_Incluir');
-            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD', 'datos_nuevos' => json_encode($articulos)];
+            return ['accion' => 'error', 'codigo' => DB_CONNECTION, 'datos_nuevos' => json_encode($articulos)];
         }
     }
 
@@ -261,13 +265,13 @@ class ModeloArticulosInventario extends Conexion
         } catch (Exception $e) {
             if ($conex->inTransaction()) $conex->rollBack();
             logs('Articulos Inventario', $e->getMessage(), 'Modelo_Modificar');
-            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD', 'datos_nuevos' => json_encode($datos_nuevos)];
+            return ['accion' => 'error', 'codigo' => DB_CONNECTION, 'datos_nuevos' => json_encode($datos_nuevos)];
         }
     }
 
    private function EliminarArticulo($id): array
     {
-        if (empty($id)) return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
+        if (empty($id)) return ['accion' => 'error', 'codigo' => EMPTY_SELECTION];
 
         $conex = null;
         try {
@@ -286,20 +290,20 @@ class ModeloArticulosInventario extends Conexion
             if ($resultado_sp == 1) {
                 return ['accion' => 'exito', 'mensaje' => 'El artículo ha sido retirado del inventario.'];
             } else if ($resultado_sp == -2) {
-                return ['accion' => 'error', 'mensaje' => 'El artículo no puede ser retirado porque está en uso o ya fue dado de baja.'];
+                return ['accion' => 'error', 'codigo' => ASSOCIATES, 'mensaje' => 'El artículo no puede ser retirado porque está en uso o ya fue dado de baja.'];
             } else {
-                return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
+                return ['accion' => 'error', 'codigo' => DB_CONNECTION];
             }
         } catch (\PDOException $e) {
             logs('Articulos Inventario', $e->getMessage(), 'Modelo_Eliminar');
-            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
+            return ['accion' => 'error', 'codigo' => DB_CONNECTION];
         } finally {
             $conex = null;
         }
     }
     private function ReincorporarArticulo($id): array
     {
-        if (empty($id)) return ['accion' => 'error', 'codigo' => defined('_ERR_VACIO_') ? _ERR_VACIO_ : 'ERR_VACIO'];
+        if (empty($id)) return ['accion' => 'error', 'codigo' => EMPTY_SELECTION];
 
         $conex = $this->conex();
         try {
@@ -312,7 +316,7 @@ class ModeloArticulosInventario extends Conexion
             return ['accion' => 'exito', 'mensaje' => 'Artículo reincorporado como Disponible.'];
         } catch (\PDOException $e) {
             if ($conex->inTransaction()) $conex->rollBack();
-            return ['accion' => 'error', 'codigo' => defined('_ERR_BD_') ? _ERR_BD_ : 'ERR_BD'];
+            return ['accion' => 'error', 'codigo' => DB_CONNECTION];
         }
     }
 

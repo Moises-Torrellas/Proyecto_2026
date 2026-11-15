@@ -6,7 +6,7 @@ use App\servicios\GenerarReporteEstadistico;
 require_once __DIR__ . '/Base.php';
 
 $id_modulo = _MD_REPORTES_;
-$permisos = procesarPermisos($id_modulo, '');
+$permisos = procesarPermisos($id_modulo, 'ingresar_reportes');
 $nombreClaseModelo = 'App\modelo\ModeloReportes';
 
 if (!class_exists($nombreClaseModelo)) {
