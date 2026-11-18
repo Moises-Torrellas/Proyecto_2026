@@ -467,7 +467,7 @@ class ModeloUsuarios extends Conexion
             $datos = $str->fetchAll();
             $resultado = array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
-            error_log("Error en buscar Usuarios: $" . $e->getMessage());
+            logs('Usuarios', $e->getMessage(), 'Modelo_Buscar');
             $resultado = array('accion' => 'error', 'mensaje' => $e->getMessage());
         } finally {
             $conex = null;

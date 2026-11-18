@@ -29,7 +29,7 @@ $(document).ready(function () {
         accion = $(this).data("accion");
         if (accion == "modificar") {
             if (validarEnvio(accion)) {
-                confirmar('¿Está seguro que quiere modificar este representante?', function (confirmado) {
+                confirmar('¿Está seguro que quiere modificar este modulo?', function (confirmado) {
                     if (confirmado) {
                         var datos = new FormData($('#f')[0]);
                         datos.append('accion', 'modificar');

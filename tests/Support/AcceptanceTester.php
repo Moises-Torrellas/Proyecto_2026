@@ -78,10 +78,33 @@ class AcceptanceTester extends \Codeception\Actor
             $this->waitForElement('input[name="cedula"]', 5);
             $this->fillField('cedula', $cedula);
             $this->fillField('contraseña', $clave);
-            $this->click('Iniciar Sesión');
-            $this->waitForText('Inicio Validado', 10);
+            $this->enviarLoginRespetandoLimite();
             $this->saveSessionSnapshot('login');
         }
+    }
+
+    /**
+     * Pulsa "Iniciar Sesión" respetando el límite del login (3 intentos por minuto por IP,
+     * RateLimit(3, 60) en Inicio.php). Si el sistema responde "Acceso restringido. Por favor,
+     * espera N segundos.", espera esos segundos y reintenta.
+     */
+    public function enviarLoginRespetandoLimite(): void
+    {
+        for ($intento = 1; $intento <= 3; $intento++) {
+            $this->click('Iniciar Sesión');
+            $this->waitForJS(
+                "return document.body.innerText.includes('Inicio Validado') || document.body.innerText.includes('Acceso restringido');",
+                10
+            );
+            $texto = (string)$this->executeJS('return document.body.innerText;');
+            if (str_contains($texto, 'Inicio Validado')) {
+                return;
+            }
+            $segundos = preg_match('/espera (\d+) segundos/', $texto, $m) ? (int)$m[1] : 5;
+            $this->despejarOverlays();
+            $this->wait(min(61, $segundos + 1));
+        }
+        $this->waitForText('Inicio Validado', 10);
     }
 
     /**
