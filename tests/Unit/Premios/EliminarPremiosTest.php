@@ -1,44 +1,24 @@
 <?php
 
-declare(strict_types=1);
-
 namespace tests\Unit\Premios;
 
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloPremios;
 use App\modelo\Conexion;
 use PDO;
-use PDOStatement;
 use PDOException;
+use PDOStatement;
 use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    $configPath = dirname(__DIR__, 3) . '/config/config.php';
-    if (file_exists($configPath)) {
-        require_once $configPath;
-    }
-}
-
-if (!defined('DUPLICATE_NAME')) {
-    define('DUPLICATE_NAME', '004');
-}
-if (!defined('INVALID_ID')) {
-    define('INVALID_ID', '003');
-}
-if (!defined('ASSOCIATES')) {
-    define('ASSOCIATES', '006');
-}
-if (!defined('VALIDATION')) {
-    define('VALIDATION', '007');
-}
-if (!defined('DB_CONNECTION')) {
-    define('DB_CONNECTION', '500');
+    require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
 #[Group('unit')]
 #[Group('unitPremios')]
-#[Group('cu_premios_eliminar')]
+#[Group('RF-04')]
+#[Group('ESC-04')]
 class EliminarPremiosTest extends TestCase
 {
     protected function tearDown(): void
@@ -49,122 +29,97 @@ class EliminarPremiosTest extends TestCase
         parent::tearDown();
     }
 
-    private function inyectarPdoMock(PDO $pdoMock): void
+    private function crearModeloConPDOMock(PDO $pdoMock): ModeloPremios
     {
         $reflector = new ReflectionClass(Conexion::class);
         $propiedad = $reflector->getProperty('instancia');
         $propiedad->setValue(null, $pdoMock);
+
+        return new ModeloPremios();
     }
 
-    private function configurarPdoConTransaccion(): PDO
+    // Caso 15: Eliminación exitosa de un premio no vinculado a ningún palmarés
+    #[Group('RF-04')]
+    #[Group('ESC-04')]
+    #[Group('CP-15')]
+    public function testEliminarPremioExitoso(): void
     {
+        // Arrange
+        $stmtExiste = $this->createMock(PDOStatement::class);
+        $stmtExiste->method('bindValue')->willReturn(true);
+        $stmtExiste->method('execute')->willReturn(true);
+        $stmtExiste->method('fetchColumn')->willReturn(1); // El premio existe
+
+        $stmtPalmaresGrupal = $this->createMock(PDOStatement::class);
+        $stmtPalmaresGrupal->method('bindValue')->willReturn(true);
+        $stmtPalmaresGrupal->method('execute')->willReturn(true);
+        $stmtPalmaresGrupal->method('fetchColumn')->willReturn(0); // Sin palmarés grupal
+
+        $stmtPalmaresIndiv = $this->createMock(PDOStatement::class);
+        $stmtPalmaresIndiv->method('bindValue')->willReturn(true);
+        $stmtPalmaresIndiv->method('execute')->willReturn(true);
+        $stmtPalmaresIndiv->method('fetchColumn')->willReturn(0); // Sin palmarés individual
+
+        $stmtDelete = $this->createMock(PDOStatement::class);
+        $stmtDelete->method('bindParam')->willReturn(true);
+        $stmtDelete->method('execute')->willReturn(true);
+
         $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('commit')->willReturn(true);
-        $pdoMock->method('rollBack')->willReturn(true);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('commit')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExiste, $stmtPalmaresGrupal, $stmtPalmaresIndiv, $stmtDelete
+        ) {
+            if (str_contains($sql, 'FROM `premios`')) {
+                return $stmtExiste;
+            }
+            if (str_contains($sql, 'FROM `palmares_grupal`')) {
+                return $stmtPalmaresGrupal;
+            }
+            if (str_contains($sql, 'FROM `palmares_individual`')) {
+                return $stmtPalmaresIndiv;
+            }
+            return $stmtDelete;
+        });
+
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
+
+        // Act
+        $resultado = $modelo->ProcesarDatos([
+            'accion'        => 'eliminar',
+            'codigo_premio' => 5
+        ]);
+
+        // Assert
+        $this->assertEquals('exito', $resultado['accion']);
+    }
+
+    // Caso 16: Rechazo de eliminación cuando el código de premio no existe (INVALID_ID)
+    #[Group('RF-04')]
+    #[Group('ESC-04')]
+    #[Group('CP-16')]
+    public function testEliminarPremioInexistenteRechazado(): void
+    {
+        // Arrange
+        $stmtExiste = $this->createMock(PDOStatement::class);
+        $stmtExiste->method('bindValue')->willReturn(true);
+        $stmtExiste->method('execute')->willReturn(true);
+        $stmtExiste->method('fetchColumn')->willReturn(0); // No existe
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
         $pdoMock->method('inTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
 
-        return $pdoMock;
-    }
+        $pdoMock->method('prepare')->with($this->stringContains('FROM `premios`'))->willReturn($stmtExiste);
 
-    #[Group('escenario_exito')]
-    public function test_deberia_eliminarPremioExitosamente_cuando_existeYNoTieneAsociaciones(): void
-    {
-        // Arrange
-        $stmtCheckExiste = $this->createMock(PDOStatement::class);
-        $stmtCheckExiste->method('execute')->willReturn(true);
-        $stmtCheckExiste->method('fetchColumn')->willReturn(1);
-
-        $stmtCheckAsociacion = $this->createMock(PDOStatement::class);
-        $stmtCheckAsociacion->method('execute')->willReturn(true);
-        $stmtCheckAsociacion->method('fetchColumn')->willReturn(0);
-
-        $stmtDelete = $this->createMock(PDOStatement::class);
-        $stmtDelete->method('bindParam')->willReturn(true);
-        $stmtDelete->method('execute')->willReturn(true);
-
-        $pdoMock = $this->configurarPdoConTransaccion();
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheckExiste, $stmtCheckAsociacion, $stmtDelete) {
-            if (str_contains($sql, 'FROM `premios`')) {
-                return $stmtCheckExiste;
-            }
-            if (str_contains($sql, 'palmares_grupal') || str_contains($sql, 'palmares_individual')) {
-                return $stmtCheckAsociacion;
-            }
-            return $stmtDelete;
-        });
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloPremios();
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
 
         // Act
         $resultado = $modelo->ProcesarDatos([
             'accion'        => 'eliminar',
-            'codigo_premio' => 1
-        ]);
-
-        // Assert
-        $this->assertEquals('exito', $resultado['accion']);
-    }
-
-    #[Group('escenario_limite')]
-    public function test_deberia_manejarEliminacionConLimiteNumerico_cuando_idEsMaximo(): void
-    {
-        // Arrange
-        $stmtCheckExiste = $this->createMock(PDOStatement::class);
-        $stmtCheckExiste->method('execute')->willReturn(true);
-        $stmtCheckExiste->method('fetchColumn')->willReturn(1);
-
-        $stmtCheckAsociacion = $this->createMock(PDOStatement::class);
-        $stmtCheckAsociacion->method('execute')->willReturn(true);
-        $stmtCheckAsociacion->method('fetchColumn')->willReturn(0);
-
-        $stmtDelete = $this->createMock(PDOStatement::class);
-        $stmtDelete->method('bindParam')->willReturn(true);
-        $stmtDelete->method('execute')->willReturn(true);
-
-        $pdoMock = $this->configurarPdoConTransaccion();
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheckExiste, $stmtCheckAsociacion, $stmtDelete) {
-            if (str_contains($sql, 'FROM `premios`')) {
-                return $stmtCheckExiste;
-            }
-            if (str_contains($sql, 'palmares_grupal') || str_contains($sql, 'palmares_individual')) {
-                return $stmtCheckAsociacion;
-            }
-            return $stmtDelete;
-        });
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloPremios();
-
-        // Act
-        $resultado = $modelo->ProcesarDatos([
-            'accion'        => 'eliminar',
-            'codigo_premio' => PHP_INT_MAX
-        ]);
-
-        // Assert
-        $this->assertEquals('exito', $resultado['accion']);
-    }
-
-    #[Group('escenario_error')]
-    public function test_deberia_rechazarEliminacion_cuando_premioNoExiste(): void
-    {
-        // Arrange
-        $stmtCheckExiste = $this->createMock(PDOStatement::class);
-        $stmtCheckExiste->method('execute')->willReturn(true);
-        $stmtCheckExiste->method('fetchColumn')->willReturn(0);
-
-        $pdoMock = $this->configurarPdoConTransaccion();
-        $pdoMock->method('prepare')->willReturn($stmtCheckExiste);
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloPremios();
-
-        // Act
-        $resultado = $modelo->ProcesarDatos([
-            'accion'        => 'eliminar',
-            'codigo_premio' => 9999
+            'codigo_premio' => 999
         ]);
 
         // Assert
@@ -172,28 +127,41 @@ class EliminarPremiosTest extends TestCase
         $this->assertEquals(INVALID_ID, $resultado['codigo']);
     }
 
-    #[Group('escenario_error')]
-    public function test_deberia_rechazarEliminacion_cuando_premioEstaAsociadoEnPalmares(): void
+    // Caso 17: Rechazo de eliminación cuando el premio está vinculado a palmarés grupal (ASSOCIATES)
+    #[Group('RF-04')]
+    #[Group('ESC-04')]
+    #[Group('CP-17')]
+    public function testEliminarPremioAsociadoPalmaresGrupalRechazado(): void
     {
         // Arrange
-        $stmtCheckExiste = $this->createMock(PDOStatement::class);
-        $stmtCheckExiste->method('execute')->willReturn(true);
-        $stmtCheckExiste->method('fetchColumn')->willReturn(1);
+        $stmtExiste = $this->createMock(PDOStatement::class);
+        $stmtExiste->method('bindValue')->willReturn(true);
+        $stmtExiste->method('execute')->willReturn(true);
+        $stmtExiste->method('fetchColumn')->willReturn(1); // Existe
 
-        $stmtCheckPalmaresGrupal = $this->createMock(PDOStatement::class);
-        $stmtCheckPalmaresGrupal->method('execute')->willReturn(true);
-        $stmtCheckPalmaresGrupal->method('fetchColumn')->willReturn(1);
+        $stmtPalmaresGrupal = $this->createMock(PDOStatement::class);
+        $stmtPalmaresGrupal->method('bindValue')->willReturn(true);
+        $stmtPalmaresGrupal->method('execute')->willReturn(true);
+        $stmtPalmaresGrupal->method('fetchColumn')->willReturn(1); // Vinculado a palmarés grupal
 
-        $pdoMock = $this->configurarPdoConTransaccion();
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheckExiste, $stmtCheckPalmaresGrupal) {
-            if (str_contains($sql, 'palmares_grupal')) {
-                return $stmtCheckPalmaresGrupal;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->method('inTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExiste, $stmtPalmaresGrupal
+        ) {
+            if (str_contains($sql, 'FROM `premios`')) {
+                return $stmtExiste;
             }
-            return $stmtCheckExiste;
+            if (str_contains($sql, 'FROM `palmares_grupal`')) {
+                return $stmtPalmaresGrupal;
+            }
+            return $this->createMock(PDOStatement::class);
         });
-        $this->inyectarPdoMock($pdoMock);
 
-        $modelo = new ModeloPremios();
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
 
         // Act
         $resultado = $modelo->ProcesarDatos([
@@ -206,44 +174,117 @@ class EliminarPremiosTest extends TestCase
         $this->assertEquals(ASSOCIATES, $resultado['codigo']);
     }
 
-    #[Group('escenario_error')]
-    public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaSentenciaSQLDeBorrado(): void
+    // Caso 18: Rechazo de eliminación cuando el premio está vinculado a palmarés individual (ASSOCIATES)
+    #[Group('RF-04')]
+    #[Group('ESC-04')]
+    #[Group('CP-18')]
+    public function testEliminarPremioAsociadoPalmaresIndividualRechazado(): void
     {
         // Arrange
-        $stmtCheckExiste = $this->createMock(PDOStatement::class);
-        $stmtCheckExiste->method('execute')->willReturn(true);
-        $stmtCheckExiste->method('fetchColumn')->willReturn(1);
+        $stmtExiste = $this->createMock(PDOStatement::class);
+        $stmtExiste->method('bindValue')->willReturn(true);
+        $stmtExiste->method('execute')->willReturn(true);
+        $stmtExiste->method('fetchColumn')->willReturn(1); // Existe
 
-        $stmtCheckAsociacion = $this->createMock(PDOStatement::class);
-        $stmtCheckAsociacion->method('execute')->willReturn(true);
-        $stmtCheckAsociacion->method('fetchColumn')->willReturn(0);
+        $stmtPalmaresGrupal = $this->createMock(PDOStatement::class);
+        $stmtPalmaresGrupal->method('bindValue')->willReturn(true);
+        $stmtPalmaresGrupal->method('execute')->willReturn(true);
+        $stmtPalmaresGrupal->method('fetchColumn')->willReturn(0);
 
-        $stmtDelete = $this->createMock(PDOStatement::class);
-        $stmtDelete->method('bindParam')->willReturn(true);
-        $stmtDelete->method('execute')->willThrowException(new PDOException('Error de clave foranea al eliminar'));
+        $stmtPalmaresIndiv = $this->createMock(PDOStatement::class);
+        $stmtPalmaresIndiv->method('bindValue')->willReturn(true);
+        $stmtPalmaresIndiv->method('execute')->willReturn(true);
+        $stmtPalmaresIndiv->method('fetchColumn')->willReturn(1); // Vinculado a palmarés individual
 
-        $pdoMock = $this->configurarPdoConTransaccion();
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheckExiste, $stmtCheckAsociacion, $stmtDelete) {
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->method('inTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExiste, $stmtPalmaresGrupal, $stmtPalmaresIndiv
+        ) {
             if (str_contains($sql, 'FROM `premios`')) {
-                return $stmtCheckExiste;
+                return $stmtExiste;
             }
-            if (str_contains($sql, 'palmares_grupal') || str_contains($sql, 'palmares_individual')) {
-                return $stmtCheckAsociacion;
+            if (str_contains($sql, 'FROM `palmares_grupal`')) {
+                return $stmtPalmaresGrupal;
             }
-            return $stmtDelete;
+            if (str_contains($sql, 'FROM `palmares_individual`')) {
+                return $stmtPalmaresIndiv;
+            }
+            return $this->createMock(PDOStatement::class);
         });
-        $this->inyectarPdoMock($pdoMock);
 
-        $modelo = new ModeloPremios();
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
 
         // Act
         $resultado = $modelo->ProcesarDatos([
             'accion'        => 'eliminar',
-            'codigo_premio' => 1
+            'codigo_premio' => 3
         ]);
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals('Error de clave foranea al eliminar', $resultado['codigo']);
+        $this->assertEquals(ASSOCIATES, $resultado['codigo']);
+    }
+
+    // Caso 19: Error de base de datos durante DELETE con rollback transaccional
+    #[Group('RF-04')]
+    #[Group('ESC-04')]
+    #[Group('CP-19')]
+    public function testEliminarPremioErrorBaseDeDatosConRollback(): void
+    {
+        // Arrange
+        $stmtExiste = $this->createMock(PDOStatement::class);
+        $stmtExiste->method('bindValue')->willReturn(true);
+        $stmtExiste->method('execute')->willReturn(true);
+        $stmtExiste->method('fetchColumn')->willReturn(1);
+
+        $stmtPalmaresGrupal = $this->createMock(PDOStatement::class);
+        $stmtPalmaresGrupal->method('bindValue')->willReturn(true);
+        $stmtPalmaresGrupal->method('execute')->willReturn(true);
+        $stmtPalmaresGrupal->method('fetchColumn')->willReturn(0);
+
+        $stmtPalmaresIndiv = $this->createMock(PDOStatement::class);
+        $stmtPalmaresIndiv->method('bindValue')->willReturn(true);
+        $stmtPalmaresIndiv->method('execute')->willReturn(true);
+        $stmtPalmaresIndiv->method('fetchColumn')->willReturn(0);
+
+        $stmtDelete = $this->createMock(PDOStatement::class);
+        $stmtDelete->method('bindParam')->willReturn(true);
+        $stmtDelete->method('execute')->willThrowException(new PDOException('Error de integridad al eliminar'));
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->method('inTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExiste, $stmtPalmaresGrupal, $stmtPalmaresIndiv, $stmtDelete
+        ) {
+            if (str_contains($sql, 'FROM `premios`')) {
+                return $stmtExiste;
+            }
+            if (str_contains($sql, 'FROM `palmares_grupal`')) {
+                return $stmtPalmaresGrupal;
+            }
+            if (str_contains($sql, 'FROM `palmares_individual`')) {
+                return $stmtPalmaresIndiv;
+            }
+            return $stmtDelete;
+        });
+
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
+
+        // Act
+        $resultado = $modelo->ProcesarDatos([
+            'accion'        => 'eliminar',
+            'codigo_premio' => 2
+        ]);
+
+        // Assert
+        $this->assertEquals('error', $resultado['accion']);
+        $this->assertStringContainsString('Error de integridad al eliminar', $resultado['codigo']);
     }
 }

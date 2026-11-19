@@ -1,44 +1,24 @@
 <?php
 
-declare(strict_types=1);
-
 namespace tests\Unit\Premios;
 
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloPremios;
 use App\modelo\Conexion;
 use PDO;
-use PDOStatement;
 use PDOException;
+use PDOStatement;
 use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    $configPath = dirname(__DIR__, 3) . '/config/config.php';
-    if (file_exists($configPath)) {
-        require_once $configPath;
-    }
-}
-
-if (!defined('DUPLICATE_NAME')) {
-    define('DUPLICATE_NAME', '004');
-}
-if (!defined('INVALID_ID')) {
-    define('INVALID_ID', '003');
-}
-if (!defined('ASSOCIATES')) {
-    define('ASSOCIATES', '006');
-}
-if (!defined('VALIDATION')) {
-    define('VALIDATION', '007');
-}
-if (!defined('DB_CONNECTION')) {
-    define('DB_CONNECTION', '500');
+    require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
 #[Group('unit')]
 #[Group('unitPremios')]
-#[Group('cu_premios_modificar')]
+#[Group('RF-03')]
+#[Group('ESC-03')]
 class ModificarPremiosTest extends TestCase
 {
     protected function tearDown(): void
@@ -49,65 +29,72 @@ class ModificarPremiosTest extends TestCase
         parent::tearDown();
     }
 
-    private function inyectarPdoMock(PDO $pdoMock): void
+    private function crearModeloConPDOMock(PDO $pdoMock): ModeloPremios
     {
         $reflector = new ReflectionClass(Conexion::class);
         $propiedad = $reflector->getProperty('instancia');
         $propiedad->setValue(null, $pdoMock);
+
+        return new ModeloPremios();
     }
 
     private function obtenerDatosModificarValidos(array $sobrescribir = []): array
     {
-        $base = [
+        $datos = [
             'accion'        => 'modificar',
             'codigo_premio' => 1,
-            'nombre'        => 'Copa Oro Hockey Modificada',
+            'nombre'        => 'Campeón Absoluto',
             'tipo'          => 'G'
         ];
 
-        return array_merge($base, $sobrescribir);
+        return array_merge($datos, $sobrescribir);
     }
 
-    private function configurarPdoConTransaccion(): PDO
-    {
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('commit')->willReturn(true);
-        $pdoMock->method('rollBack')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-
-        return $pdoMock;
-    }
-
-    #[Group('escenario_exito')]
-    public function test_deberia_modificarPremioExitosamente_cuando_datosSonValidos(): void
+    // Caso 08: Modificación exitosa actualizando el nombre sin conflicto y manteniendo el tipo
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-08')]
+    public function testModificarPremioConNuevoNombreExitoso(): void
     {
         // Arrange
-        $stmtCheckPropio = $this->createMock(PDOStatement::class);
-        $stmtCheckPropio->method('execute')->willReturn(true);
-        $stmtCheckPropio->method('fetchColumn')->willReturn(1);
+        $stmtExistePropia = $this->createMock(PDOStatement::class);
+        $stmtExistePropia->method('bindValue')->willReturn(true);
+        $stmtExistePropia->method('execute')->willReturn(true);
+        $stmtExistePropia->method('fetchColumn')->willReturn(0); // El nombre cambió
+
+        $stmtExisteGlobal = $this->createMock(PDOStatement::class);
+        $stmtExisteGlobal->method('bindValue')->willReturn(true);
+        $stmtExisteGlobal->method('execute')->willReturn(true);
+        $stmtExisteGlobal->method('fetchColumn')->willReturn(0); // Ningún otro premio tiene ese nombre
 
         $stmtTipo = $this->createMock(PDOStatement::class);
         $stmtTipo->method('execute')->willReturn(true);
-        $stmtTipo->method('fetchColumn')->willReturn('G');
+        $stmtTipo->method('fetchColumn')->willReturn('G'); // Mismo tipo, no cambia
 
         $stmtUpdate = $this->createMock(PDOStatement::class);
         $stmtUpdate->method('bindParam')->willReturn(true);
         $stmtUpdate->method('execute')->willReturn(true);
 
-        $pdoMock = $this->configurarPdoConTransaccion();
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheckPropio, $stmtTipo, $stmtUpdate) {
-            if (str_contains($sql, 'COUNT(*)')) {
-                return $stmtCheckPropio;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('commit')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExistePropia, $stmtExisteGlobal, $stmtTipo, $stmtUpdate
+        ) {
+            if (str_contains($sql, 'codigo_premio = :id') && str_contains($sql, 'nombre = :valor')) {
+                return $stmtExistePropia;
+            }
+            if (str_contains($sql, 'SELECT COUNT(*)') && str_contains($sql, 'premios')) {
+                return $stmtExisteGlobal;
             }
             if (str_contains($sql, 'SELECT tipo FROM premios')) {
                 return $stmtTipo;
             }
             return $stmtUpdate;
         });
-        $this->inyectarPdoMock($pdoMock);
 
-        $modelo = new ModeloPremios();
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
 
         // Act
         $resultado = $modelo->ProcesarDatos($this->obtenerDatosModificarValidos());
@@ -116,128 +103,283 @@ class ModificarPremiosTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
-    #[Group('escenario_limite')]
-    public function test_deberia_permitirModificarTipo_cuando_premioNoTieneAsociacionesEnPalmares(): void
+    // Caso 09: Modificación exitosa conservando su propio nombre
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-09')]
+    public function testModificarPremioConservandoMismoNombreExitoso(): void
     {
         // Arrange
-        $stmtCheckPropio = $this->createMock(PDOStatement::class);
-        $stmtCheckPropio->method('execute')->willReturn(true);
-        $stmtCheckPropio->method('fetchColumn')->willReturn(1);
+        $stmtExistePropia = $this->createMock(PDOStatement::class);
+        $stmtExistePropia->method('bindValue')->willReturn(true);
+        $stmtExistePropia->method('execute')->willReturn(true);
+        $stmtExistePropia->method('fetchColumn')->willReturn(1); // Es el mismo nombre propio
 
         $stmtTipo = $this->createMock(PDOStatement::class);
         $stmtTipo->method('execute')->willReturn(true);
         $stmtTipo->method('fetchColumn')->willReturn('G');
 
-        $stmtPalmares = $this->createMock(PDOStatement::class);
-        $stmtPalmares->method('execute')->willReturn(true);
-        $stmtPalmares->method('fetchColumn')->willReturn(0);
-
         $stmtUpdate = $this->createMock(PDOStatement::class);
         $stmtUpdate->method('bindParam')->willReturn(true);
         $stmtUpdate->method('execute')->willReturn(true);
 
-        $pdoMock = $this->configurarPdoConTransaccion();
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheckPropio, $stmtTipo, $stmtPalmares, $stmtUpdate) {
-            if (str_contains($sql, 'COUNT(*)') && str_contains($sql, 'premios')) {
-                return $stmtCheckPropio;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('commit')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExistePropia, $stmtTipo, $stmtUpdate
+        ) {
+            if (str_contains($sql, 'codigo_premio = :id') && str_contains($sql, 'nombre = :valor')) {
+                return $stmtExistePropia;
             }
             if (str_contains($sql, 'SELECT tipo FROM premios')) {
                 return $stmtTipo;
             }
-            if (str_contains($sql, 'palmares_grupal') || str_contains($sql, 'palmares_individual')) {
-                return $stmtPalmares;
-            }
             return $stmtUpdate;
         });
-        $this->inyectarPdoMock($pdoMock);
 
-        $modelo = new ModeloPremios();
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
 
         // Act
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosModificarValidos(['tipo' => 'I']));
+        $resultado = $modelo->ProcesarDatos($this->obtenerDatosModificarValidos());
 
         // Assert
         $this->assertEquals('exito', $resultado['accion']);
     }
 
-    #[Group('escenario_error')]
-    public function test_deberia_rechazarModificacion_cuando_nombreColisionaConOtroPremio(): void
+    // Caso 10: Rechazo de modificación por nombre duplicado perteneciente a otro premio (DUPLICATE_NAME)
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-10')]
+    public function testModificarPremioNombreDuplicadoRechazado(): void
     {
         // Arrange
-        $stmtCheckPropio = $this->createMock(PDOStatement::class);
-        $stmtCheckPropio->method('execute')->willReturn(true);
-        $stmtCheckPropio->method('fetchColumn')->willReturn(0);
+        $stmtExistePropia = $this->createMock(PDOStatement::class);
+        $stmtExistePropia->method('bindValue')->willReturn(true);
+        $stmtExistePropia->method('execute')->willReturn(true);
+        $stmtExistePropia->method('fetchColumn')->willReturn(0); // El nombre es distinto al actual
 
-        $stmtCheckDuplicado = $this->createMock(PDOStatement::class);
-        $stmtCheckDuplicado->method('execute')->willReturn(true);
-        $stmtCheckDuplicado->method('fetchColumn')->willReturn(1);
+        $stmtExisteGlobal = $this->createMock(PDOStatement::class);
+        $stmtExisteGlobal->method('bindValue')->willReturn(true);
+        $stmtExisteGlobal->method('execute')->willReturn(true);
+        $stmtExisteGlobal->method('fetchColumn')->willReturn(1); // Ya existe en otro registro
 
-        $llamadaCount = 0;
-        $pdoMock = $this->configurarPdoConTransaccion();
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (&$llamadaCount, $stmtCheckPropio, $stmtCheckDuplicado) {
-            $llamadaCount++;
-            if ($llamadaCount === 1) {
-                return $stmtCheckPropio;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->method('inTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExistePropia, $stmtExisteGlobal
+        ) {
+            if (str_contains($sql, 'codigo_premio = :id') && str_contains($sql, 'nombre = :valor')) {
+                return $stmtExistePropia;
             }
-            return $stmtCheckDuplicado;
+            return $stmtExisteGlobal;
         });
-        $this->inyectarPdoMock($pdoMock);
 
-        $modelo = new ModeloPremios();
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
 
         // Act
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosModificarValidos(['codigo_premio' => 2]));
+        $resultado = $modelo->ProcesarDatos($this->obtenerDatosModificarValidos());
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
         $this->assertEquals(DUPLICATE_NAME, $resultado['codigo']);
     }
 
-    #[Group('escenario_error')]
-    public function test_deberia_rechazarCambioDeTipo_cuando_estaAsociadoAPalmares(): void
+    // Caso 11: Rechazo de cambio de tipo cuando el premio está asignado a palmarés grupal (TYPE_ASSOCIATED)
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-11')]
+    public function testModificarTipoPremioAsociadoPalmaresGrupalRechazado(): void
     {
         // Arrange
-        $stmtCheckPropio = $this->createMock(PDOStatement::class);
-        $stmtCheckPropio->method('execute')->willReturn(true);
-        $stmtCheckPropio->method('fetchColumn')->willReturn(1);
+        $stmtExistePropia = $this->createMock(PDOStatement::class);
+        $stmtExistePropia->method('bindValue')->willReturn(true);
+        $stmtExistePropia->method('execute')->willReturn(true);
+        $stmtExistePropia->method('fetchColumn')->willReturn(1);
 
         $stmtTipo = $this->createMock(PDOStatement::class);
         $stmtTipo->method('execute')->willReturn(true);
-        $stmtTipo->method('fetchColumn')->willReturn('G');
+        $stmtTipo->method('fetchColumn')->willReturn('G'); // Tipo actual es Grupal
 
         $stmtPalmaresGrupal = $this->createMock(PDOStatement::class);
+        $stmtPalmaresGrupal->method('bindValue')->willReturn(true);
         $stmtPalmaresGrupal->method('execute')->willReturn(true);
-        $stmtPalmaresGrupal->method('fetchColumn')->willReturn(1);
+        $stmtPalmaresGrupal->method('fetchColumn')->willReturn(1); // Asociado en palmarés grupal
 
-        $pdoMock = $this->configurarPdoConTransaccion();
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheckPropio, $stmtTipo, $stmtPalmaresGrupal) {
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->method('inTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExistePropia, $stmtTipo, $stmtPalmaresGrupal
+        ) {
+            if (str_contains($sql, 'codigo_premio = :id') && str_contains($sql, 'nombre = :valor')) {
+                return $stmtExistePropia;
+            }
             if (str_contains($sql, 'SELECT tipo FROM premios')) {
                 return $stmtTipo;
             }
-            if (str_contains($sql, 'palmares_grupal')) {
+            if (str_contains($sql, 'FROM `palmares_grupal`')) {
                 return $stmtPalmaresGrupal;
             }
-            return $stmtCheckPropio;
+            return $this->createMock(PDOStatement::class);
         });
-        $this->inyectarPdoMock($pdoMock);
 
-        $modelo = new ModeloPremios();
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
+
+        // Se intenta cambiar de 'G' a 'I'
+        $datos = $this->obtenerDatosModificarValidos(['tipo' => 'I']);
 
         // Act
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosModificarValidos(['tipo' => 'I']));
+        $resultado = $modelo->ProcesarDatos($datos);
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
         $this->assertEquals('TYPE_ASSOCIATED', $resultado['codigo']);
     }
 
-    #[Group('escenario_error')]
-    public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaActualizacionSQL(): void
+    // Caso 12: Rechazo de cambio de tipo cuando el premio está asignado a palmarés individual (TYPE_ASSOCIATED)
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-12')]
+    public function testModificarTipoPremioAsociadoPalmaresIndividualRechazado(): void
     {
         // Arrange
-        $stmtCheckPropio = $this->createMock(PDOStatement::class);
-        $stmtCheckPropio->method('execute')->willReturn(true);
-        $stmtCheckPropio->method('fetchColumn')->willReturn(1);
+        $stmtExistePropia = $this->createMock(PDOStatement::class);
+        $stmtExistePropia->method('bindValue')->willReturn(true);
+        $stmtExistePropia->method('execute')->willReturn(true);
+        $stmtExistePropia->method('fetchColumn')->willReturn(1);
+
+        $stmtTipo = $this->createMock(PDOStatement::class);
+        $stmtTipo->method('execute')->willReturn(true);
+        $stmtTipo->method('fetchColumn')->willReturn('I'); // Tipo actual es Individual
+
+        $stmtPalmaresGrupal = $this->createMock(PDOStatement::class);
+        $stmtPalmaresGrupal->method('bindValue')->willReturn(true);
+        $stmtPalmaresGrupal->method('execute')->willReturn(true);
+        $stmtPalmaresGrupal->method('fetchColumn')->willReturn(0);
+
+        $stmtPalmaresIndiv = $this->createMock(PDOStatement::class);
+        $stmtPalmaresIndiv->method('bindValue')->willReturn(true);
+        $stmtPalmaresIndiv->method('execute')->willReturn(true);
+        $stmtPalmaresIndiv->method('fetchColumn')->willReturn(1); // Asociado en palmarés individual
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->method('inTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExistePropia, $stmtTipo, $stmtPalmaresGrupal, $stmtPalmaresIndiv
+        ) {
+            if (str_contains($sql, 'codigo_premio = :id') && str_contains($sql, 'nombre = :valor')) {
+                return $stmtExistePropia;
+            }
+            if (str_contains($sql, 'SELECT tipo FROM premios')) {
+                return $stmtTipo;
+            }
+            if (str_contains($sql, 'FROM `palmares_grupal`')) {
+                return $stmtPalmaresGrupal;
+            }
+            if (str_contains($sql, 'FROM `palmares_individual`')) {
+                return $stmtPalmaresIndiv;
+            }
+            return $this->createMock(PDOStatement::class);
+        });
+
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
+
+        // Se intenta cambiar de 'I' a 'G'
+        $datos = $this->obtenerDatosModificarValidos(['tipo' => 'G']);
+
+        // Act
+        $resultado = $modelo->ProcesarDatos($datos);
+
+        // Assert
+        $this->assertEquals('error', $resultado['accion']);
+        $this->assertEquals('TYPE_ASSOCIATED', $resultado['codigo']);
+    }
+
+    // Caso 13: Modificación exitosa cambiando tipo cuando no está asociado a ningún palmarés
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-13')]
+    public function testModificarTipoPremioSinAsociacionesExitoso(): void
+    {
+        // Arrange
+        $stmtExistePropia = $this->createMock(PDOStatement::class);
+        $stmtExistePropia->method('bindValue')->willReturn(true);
+        $stmtExistePropia->method('execute')->willReturn(true);
+        $stmtExistePropia->method('fetchColumn')->willReturn(1);
+
+        $stmtTipo = $this->createMock(PDOStatement::class);
+        $stmtTipo->method('execute')->willReturn(true);
+        $stmtTipo->method('fetchColumn')->willReturn('I'); // Era Individual
+
+        $stmtPalmaresGrupal = $this->createMock(PDOStatement::class);
+        $stmtPalmaresGrupal->method('bindValue')->willReturn(true);
+        $stmtPalmaresGrupal->method('execute')->willReturn(true);
+        $stmtPalmaresGrupal->method('fetchColumn')->willReturn(0);
+
+        $stmtPalmaresIndiv = $this->createMock(PDOStatement::class);
+        $stmtPalmaresIndiv->method('bindValue')->willReturn(true);
+        $stmtPalmaresIndiv->method('execute')->willReturn(true);
+        $stmtPalmaresIndiv->method('fetchColumn')->willReturn(0);
+
+        $stmtUpdate = $this->createMock(PDOStatement::class);
+        $stmtUpdate->method('bindParam')->willReturn(true);
+        $stmtUpdate->method('execute')->willReturn(true);
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('commit')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExistePropia, $stmtTipo, $stmtPalmaresGrupal, $stmtPalmaresIndiv, $stmtUpdate
+        ) {
+            if (str_contains($sql, 'codigo_premio = :id') && str_contains($sql, 'nombre = :valor')) {
+                return $stmtExistePropia;
+            }
+            if (str_contains($sql, 'SELECT tipo FROM premios')) {
+                return $stmtTipo;
+            }
+            if (str_contains($sql, 'FROM `palmares_grupal`')) {
+                return $stmtPalmaresGrupal;
+            }
+            if (str_contains($sql, 'FROM `palmares_individual`')) {
+                return $stmtPalmaresIndiv;
+            }
+            return $stmtUpdate;
+        });
+
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
+
+        // Cambiando a 'G'
+        $datos = $this->obtenerDatosModificarValidos(['tipo' => 'G']);
+
+        // Act
+        $resultado = $modelo->ProcesarDatos($datos);
+
+        // Assert
+        $this->assertEquals('exito', $resultado['accion']);
+    }
+
+    // Caso 14: Error de base de datos durante UPDATE con rollback
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-14')]
+    public function testModificarPremioErrorBaseDeDatosConRollback(): void
+    {
+        // Arrange
+        $stmtExistePropia = $this->createMock(PDOStatement::class);
+        $stmtExistePropia->method('bindValue')->willReturn(true);
+        $stmtExistePropia->method('execute')->willReturn(true);
+        $stmtExistePropia->method('fetchColumn')->willReturn(1);
 
         $stmtTipo = $this->createMock(PDOStatement::class);
         $stmtTipo->method('execute')->willReturn(true);
@@ -245,27 +387,32 @@ class ModificarPremiosTest extends TestCase
 
         $stmtUpdate = $this->createMock(PDOStatement::class);
         $stmtUpdate->method('bindParam')->willReturn(true);
-        $stmtUpdate->method('execute')->willThrowException(new PDOException('Error de comunicacion SQL en actualizacion'));
+        $stmtUpdate->method('execute')->willThrowException(new PDOException('Error al actualizar registro'));
 
-        $pdoMock = $this->configurarPdoConTransaccion();
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheckPropio, $stmtTipo, $stmtUpdate) {
-            if (str_contains($sql, 'COUNT(*)')) {
-                return $stmtCheckPropio;
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
+        $pdoMock->method('inTransaction')->willReturn(true);
+        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
+
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use (
+            $stmtExistePropia, $stmtTipo, $stmtUpdate
+        ) {
+            if (str_contains($sql, 'codigo_premio = :id') && str_contains($sql, 'nombre = :valor')) {
+                return $stmtExistePropia;
             }
             if (str_contains($sql, 'SELECT tipo FROM premios')) {
                 return $stmtTipo;
             }
             return $stmtUpdate;
         });
-        $this->inyectarPdoMock($pdoMock);
 
-        $modelo = new ModeloPremios();
+        $modelo = $this->crearModeloConPDOMock($pdoMock);
 
         // Act
         $resultado = $modelo->ProcesarDatos($this->obtenerDatosModificarValidos());
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals('Error de comunicacion SQL en actualizacion', $resultado['codigo']);
+        $this->assertStringContainsString('Error al actualizar registro', $resultado['codigo']);
     }
 }

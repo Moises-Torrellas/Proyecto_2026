@@ -1,81 +1,93 @@
 <?php
 
-declare(strict_types=1);
-
 namespace tests\Unit\Premios;
 
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloPremios;
+use App\modelo\Conexion;
 use Exception;
 use PHPUnit\Framework\Attributes\Group;
+use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    $configPath = dirname(__DIR__, 3) . '/config/config.php';
-    if (file_exists($configPath)) {
-        require_once $configPath;
-    }
-}
-
-if (!defined('DUPLICATE_NAME')) {
-    define('DUPLICATE_NAME', '004');
-}
-if (!defined('INVALID_ID')) {
-    define('INVALID_ID', '003');
-}
-if (!defined('ASSOCIATES')) {
-    define('ASSOCIATES', '006');
-}
-if (!defined('VALIDATION')) {
-    define('VALIDATION', '007');
-}
-if (!defined('DB_CONNECTION')) {
-    define('DB_CONNECTION', '500');
+    require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
 #[Group('unit')]
 #[Group('unitPremios')]
-#[Group('validarPremios')]
+#[Group('RF-01')]
+#[Group('ESC-01')]
 class ValidarDatosPremiosTest extends TestCase
 {
-    #[Group('escenario_error')]
-    public function test_deberia_lanzarExcepcion_cuando_datosSonVaciosAlProcesar(): void
+    protected function tearDown(): void
+    {
+        $reflector = new ReflectionClass(Conexion::class);
+        $propiedad = $reflector->getProperty('instancia');
+        $propiedad->setValue(null, null);
+        parent::tearDown();
+    }
+
+    // Caso 01: Rechazo de datos vacíos en ProcesarDatos
+    #[Group('RF-01')]
+    #[Group('ESC-01')]
+    #[Group('CP-01')]
+    public function testDatosVaciosLanzaExcepcion(): void
     {
         // Arrange
         $modelo = new ModeloPremios();
 
-        // Assert Expectation
+        // Assert & Act
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('No se proporcionaron datos para procesar.');
 
-        // Act
         $modelo->ProcesarDatos([]);
     }
 
-    #[Group('escenario_error')]
-    public function test_deberia_lanzarExcepcion_cuando_accionNoEsValida(): void
+    // Caso 02: Rechazo de acción no permitida o desconocida
+    #[Group('RF-01')]
+    #[Group('ESC-01')]
+    #[Group('CP-02')]
+    public function testAccionInvalidaLanzaExcepcion(): void
     {
         // Arrange
         $modelo = new ModeloPremios();
 
-        // Assert Expectation
+        // Assert & Act
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('La acción solicitada no es válida para Premios.');
 
-        // Act
-        $modelo->ProcesarDatos(['accion' => 'accion_desconocida']);
+        $modelo->ProcesarDatos([
+            'accion' => 'accion_inexistente',
+            'nombre' => 'Mejor Jugador',
+            'tipo'   => 'I'
+        ]);
     }
 
-    #[Group('escenario_error')]
-    public function test_deberia_lanzarExcepcion_cuando_noSeEspecificaAccionEnDatos(): void
+    // Caso 03: Normalización del nombre a Title Case y aplicación de trim
+    #[Group('RF-01')]
+    #[Group('ESC-01')]
+    #[Group('CP-03')]
+    public function testNormalizacionNombreFormatoTitleCase(): void
     {
         // Arrange
         $modelo = new ModeloPremios();
+        $reflector = new ReflectionClass($modelo);
+        $propNombre = $reflector->getProperty('nombre');
+        $propTipo = $reflector->getProperty('tipo');
 
-        // Assert Expectation
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('La acción solicitada no es válida para Premios.');
+        // Act - Se simula la captura previa a ejecutar una acción
+        try {
+            $modelo->ProcesarDatos([
+                'accion' => 'accion_invalida',
+                'nombre' => '   campeón de goleo individual   ',
+                'tipo'   => '  I  '
+            ]);
+        } catch (Exception $e) {
+            // Se espera la excepción de acción inválida, pero las propiedades ya fueron procesadas
+        }
 
-        // Act
-        $modelo->ProcesarDatos(['nombre' => 'Copa']);
+        // Assert
+        $this->assertEquals('Campeón De Goleo Individual', $propNombre->getValue($modelo));
+        $this->assertEquals('I', $propTipo->getValue($modelo));
     }
 }
