@@ -195,7 +195,7 @@ final class DevolucionesCest
             // Clic en la cabecera para desplegar detalle
             $I->click(self::RESULTADOS . ' ' . self::CONTENEDOR_GRUPAL . ':first-child ' . self::LISTADO_ITEM);
             $I->waitForElementVisible(self::RESULTADOS . ' ' . self::CONTENEDOR_GRUPAL . ':first-child ' . self::LISTADO_DETALLE, 5);
-            $I->seeElement(self::RESULTADOS . ' ' . self::CONTENEDOR_GRUPAL . ':first-child ' . self::TARJETA_RESUMEN);
+            $I->waitForElementVisible(self::RESULTADOS . ' ' . self::CONTENEDOR_GRUPAL . ':first-child ' . self::TARJETA_RESUMEN, 5);
 
             // Clic nuevamente para colapsar
             $I->click(self::RESULTADOS . ' ' . self::CONTENEDOR_GRUPAL . ':first-child ' . self::LISTADO_ITEM);
@@ -221,7 +221,8 @@ final class DevolucionesCest
         $I->seeElement(self::MODAL_FORM);
         $I->seeElement(self::SELECT_ASIGNACION);
         $I->seeElement(self::SELECT_ESTADO);
-        $I->seeElement(self::INPUT_FECHA);
+        $I->seeElementInDOM(self::INPUT_FECHA);
+        $I->seeElement('#col_fecha_devolucion input.form-control');
         $I->see('Confirmar', self::BTN_GUARDAR);
 
         // Cerrar modal
@@ -244,6 +245,8 @@ final class DevolucionesCest
         $I->executeJS("
             $('#id_asignacion').val('').trigger('change');
             $('#id_estado').val('').trigger('change');
+            var fp = document.querySelector('#fecha_devolucion')._flatpickr;
+            if (fp) fp.clear();
             $('#fecha_devolucion').val('');
         ");
         $I->click(self::BTN_GUARDAR);
@@ -479,19 +482,21 @@ final class DevolucionesCest
         $I->click(self::BTN_AYUDA);
 
         // Verificar que Driver.js inicia el popover interactivo
-        $I->waitForElementVisible('.driver-popover', 5);
-        $I->waitForText('Barra de Búsqueda', 5, '.driver-popover');
+        $I->waitForElementVisible('#driver-popover-item', 5);
+        $I->waitForText('Barra de Búsqueda', 5, '#driver-popover-item');
 
         // Cerrar tour guiado
         $I->executeJS("
             if (window.driver && typeof window.driver.destroy === 'function') {
                 window.driver.destroy();
+            } else if ($('.driver-close-btn').length) {
+                $('.driver-close-btn').click();
             } else {
                 $('.driver-popover-close-btn').click();
             }
         ");
 
-        $I->waitForElementNotVisible('.driver-popover', 5);
+        $I->waitForElementNotVisible('#driver-popover-item', 5);
         $this->verificarSinErroresPhp($I);
     }
 
@@ -503,6 +508,7 @@ final class DevolucionesCest
     {
         $I->amOnPage('/' . self::MODULO_HREF);
         $I->waitForElementVisible(self::TITULO, 10);
+        $I->waitForElement(self::RESULTADOS . ' ' . self::CONTENEDOR_GRUPAL . ', ' . self::RESULTADOS . ' .listado_vacio', 10);
         $this->verificarSinErroresPhp($I);
     }
 
@@ -571,4 +577,3 @@ final class DevolucionesCest
         }
     }
 }
-
