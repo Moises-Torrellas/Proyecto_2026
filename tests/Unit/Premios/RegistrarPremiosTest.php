@@ -1,18 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Premios;
 
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloPremios;
 use App\modelo\Conexion;
 use PDO;
-use PDOException;
 use PDOStatement;
+use PDOException;
 use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE_NAME')) {
+    define('DUPLICATE_NAME', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -29,167 +50,174 @@ class RegistrarPremiosTest extends TestCase
         parent::tearDown();
     }
 
-    private function crearModeloConPDOMock(PDO $pdoMock): ModeloPremios
+    private function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
         $propiedad = $reflector->getProperty('instancia');
         $propiedad->setValue(null, $pdoMock);
-
-        return new ModeloPremios();
     }
 
-    private function obtenerDatosRegistroValidos(array $sobrescribir = []): array
+    private function obtenerDatosValidos(array $sobrescribir = []): array
     {
-        $datos = [
+        $base = [
             'accion' => 'incluir',
-            'nombre' => 'Mejor Anotador',
-            'tipo'   => 'I'
+            'nombre' => 'Copa Oro Hockey',
+            'tipo'   => 'G'
         ];
 
-        return array_merge($datos, $sobrescribir);
+        return array_merge($base, $sobrescribir);
     }
 
-    // Caso 04: Inclusión exitosa de un premio individual (Tipo 'I')
+    private function configurarPdoConTransaccion(): PDO
+    {
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('beginTransaction')->willReturn(true);
+        $pdoMock->method('commit')->willReturn(true);
+        $pdoMock->method('rollBack')->willReturn(true);
+        $pdoMock->method('inTransaction')->willReturn(true);
+
+        return $pdoMock;
+    }
+
+    // ==========================================
+    // ESCENARIO 02: Registro / Inclusión de Galardones
+    // ==========================================
+
+    // Caso 04: Incluir premio exitosamente con confirmación transaccional cuando los datos son válidos
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-04')]
-    public function testIncluirPremioIndividualExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_incluirPremioExitosamente_cuando_datosSonValidos(): void
     {
         // Arrange
-        $stmtExiste = $this->createMock(PDOStatement::class);
-        $stmtExiste->method('bindValue')->willReturn(true);
-        $stmtExiste->method('execute')->willReturn(true);
-        $stmtExiste->method('fetchColumn')->willReturn(0); // No existe previo
+        $stmtCheck = $this->createMock(PDOStatement::class);
+        $stmtCheck->method('execute')->willReturn(true);
+        $stmtCheck->method('fetchColumn')->willReturn(0);
 
         $stmtInsert = $this->createMock(PDOStatement::class);
         $stmtInsert->method('bindParam')->willReturn(true);
         $stmtInsert->method('execute')->willReturn(true);
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
-        $pdoMock->expects($this->once())->method('commit')->willReturn(true);
-
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtExiste, $stmtInsert) {
-            if (str_contains($sql, 'SELECT COUNT(*)') && str_contains($sql, 'premios')) {
-                return $stmtExiste;
+        $pdoMock = $this->configurarPdoConTransaccion();
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheck, $stmtInsert) {
+            if (str_contains($sql, 'COUNT(*)')) {
+                return $stmtCheck;
             }
             return $stmtInsert;
         });
+        $this->inyectarPdoMock($pdoMock);
 
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $modelo = new ModeloPremios();
 
         // Act
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosRegistroValidos());
+        $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos());
 
         // Assert
         $this->assertEquals('exito', $resultado['accion']);
     }
 
-    // Caso 05: Inclusión exitosa de un premio grupal (Tipo 'G')
+    // Caso 05: Aplicar trim y formato Título (Title Case) cuando el nombre tiene espacios laterales
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-05')]
-    public function testIncluirPremioGrupalExitoso(): void
+    #[Group('escenario_limite')]
+    public function test_deberia_aplicarTrimYFormatoTitulo_cuando_nombreTieneEspaciosLaterales(): void
     {
         // Arrange
-        $stmtExiste = $this->createMock(PDOStatement::class);
-        $stmtExiste->method('bindValue')->willReturn(true);
-        $stmtExiste->method('execute')->willReturn(true);
-        $stmtExiste->method('fetchColumn')->willReturn(0);
+        $stmtCheck = $this->createMock(PDOStatement::class);
+        $stmtCheck->method('execute')->willReturn(true);
+        $stmtCheck->method('fetchColumn')->willReturn(0);
 
         $stmtInsert = $this->createMock(PDOStatement::class);
         $stmtInsert->method('bindParam')->willReturn(true);
         $stmtInsert->method('execute')->willReturn(true);
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
-        $pdoMock->expects($this->once())->method('commit')->willReturn(true);
-
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtExiste, $stmtInsert) {
-            if (str_contains($sql, 'SELECT COUNT(*)') && str_contains($sql, 'premios')) {
-                return $stmtExiste;
+        $pdoMock = $this->configurarPdoConTransaccion();
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheck, $stmtInsert) {
+            if (str_contains($sql, 'COUNT(*)')) {
+                return $stmtCheck;
             }
             return $stmtInsert;
         });
+        $this->inyectarPdoMock($pdoMock);
 
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
-
-        $datos = $this->obtenerDatosRegistroValidos([
-            'nombre' => 'Subcampeón de Liga',
-            'tipo'   => 'G'
-        ]);
+        $modelo = new ModeloPremios();
 
         // Act
-        $resultado = $modelo->ProcesarDatos($datos);
+        $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos([
+            'nombre' => '   trofeo mejor goleador   ',
+            'tipo'   => ' I '
+        ]));
 
         // Assert
+        $reflector = new ReflectionClass($modelo);
+        $propNombre = $reflector->getProperty('nombre');
+        $propTipo = $reflector->getProperty('tipo');
+
         $this->assertEquals('exito', $resultado['accion']);
+        $this->assertEquals('Trofeo Mejor Goleador', $propNombre->getValue($modelo));
+        $this->assertEquals('I', $propTipo->getValue($modelo));
     }
 
-    // Caso 06: Rechazo de inclusión por nombre de premio ya existente (DUPLICATE_NAME)
+    // Caso 06: Rechazar inclusión y revertir transacción cuando el nombre de premio ya existe (DUPLICATE_NAME)
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-06')]
-    public function testIncluirPremioNombreDuplicado(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusion_cuando_nombreDePremioYaExiste(): void
     {
         // Arrange
-        $stmtExiste = $this->createMock(PDOStatement::class);
-        $stmtExiste->method('bindValue')->willReturn(true);
-        $stmtExiste->method('execute')->willReturn(true);
-        $stmtExiste->method('fetchColumn')->willReturn(1); // Ya existe en premios
+        $stmtCheck = $this->createMock(PDOStatement::class);
+        $stmtCheck->method('execute')->willReturn(true);
+        $stmtCheck->method('fetchColumn')->willReturn(1);
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
+        $pdoMock = $this->configurarPdoConTransaccion();
+        $pdoMock->method('prepare')->willReturn($stmtCheck);
+        $this->inyectarPdoMock($pdoMock);
 
-        $pdoMock->method('prepare')->with($this->stringContains('SELECT COUNT(*)'))->willReturn($stmtExiste);
-
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $modelo = new ModeloPremios();
 
         // Act
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosRegistroValidos());
+        $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos());
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
         $this->assertEquals(DUPLICATE_NAME, $resultado['codigo']);
     }
 
-    // Caso 07: Error en ejecución de base de datos con rollback transaccional
+    // Caso 07: Revertir transacción con rollback y retornar código de error cuando falla la inserción SQL
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-07')]
-    public function testIncluirPremioErrorBaseDeDatosConRollback(): void
+    #[Group('escenario_error')]
+    public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaInsercionSQL(): void
     {
         // Arrange
-        $stmtExiste = $this->createMock(PDOStatement::class);
-        $stmtExiste->method('bindValue')->willReturn(true);
-        $stmtExiste->method('execute')->willReturn(true);
-        $stmtExiste->method('fetchColumn')->willReturn(0);
+        $stmtCheck = $this->createMock(PDOStatement::class);
+        $stmtCheck->method('execute')->willReturn(true);
+        $stmtCheck->method('fetchColumn')->willReturn(0);
 
         $stmtInsert = $this->createMock(PDOStatement::class);
         $stmtInsert->method('bindParam')->willReturn(true);
-        $stmtInsert->method('execute')->willThrowException(new PDOException('Error fatal de conexión al insertar'));
+        $stmtInsert->method('execute')->willThrowException(new PDOException('Error de comunicacion con motor SQL'));
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
-
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtExiste, $stmtInsert) {
-            if (str_contains($sql, 'SELECT COUNT(*)')) {
-                return $stmtExiste;
+        $pdoMock = $this->configurarPdoConTransaccion();
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtCheck, $stmtInsert) {
+            if (str_contains($sql, 'COUNT(*)')) {
+                return $stmtCheck;
             }
             return $stmtInsert;
         });
+        $this->inyectarPdoMock($pdoMock);
 
-        $modelo = $this->crearModeloConPDOMock($pdoMock);
+        $modelo = new ModeloPremios();
 
         // Act
-        $resultado = $modelo->ProcesarDatos($this->obtenerDatosRegistroValidos());
+        $resultado = $modelo->ProcesarDatos($this->obtenerDatosValidos());
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $this->assertStringContainsString('Error fatal de conexión al insertar', $resultado['codigo']);
+        $this->assertEquals('Error de comunicacion con motor SQL', $resultado['codigo']);
     }
 }

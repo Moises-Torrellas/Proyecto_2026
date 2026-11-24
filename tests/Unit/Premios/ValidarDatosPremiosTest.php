@@ -1,16 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Premios;
 
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloPremios;
-use App\modelo\Conexion;
 use Exception;
 use PHPUnit\Framework\Attributes\Group;
-use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE_NAME')) {
+    define('DUPLICATE_NAME', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -19,75 +38,61 @@ if (!defined('EMPTY_SELECTION')) {
 #[Group('ESC-01')]
 class ValidarDatosPremiosTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        $reflector = new ReflectionClass(Conexion::class);
-        $propiedad = $reflector->getProperty('instancia');
-        $propiedad->setValue(null, null);
-        parent::tearDown();
-    }
+    // ==========================================
+    // ESCENARIO 01: Validación de Datos de Entrada en ProcesarDatos
+    // ==========================================
 
-    // Caso 01: Rechazo de datos vacíos en ProcesarDatos
+    // Caso 01: Lanzar excepción cuando los datos son vacíos al procesar
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-01')]
-    public function testDatosVaciosLanzaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_lanzarExcepcion_cuando_datosSonVaciosAlProcesar(): void
     {
         // Arrange
         $modelo = new ModeloPremios();
 
-        // Assert & Act
+        // Assert Expectation
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('No se proporcionaron datos para procesar.');
 
+        // Act
         $modelo->ProcesarDatos([]);
     }
 
-    // Caso 02: Rechazo de acción no permitida o desconocida
+    // Caso 02: Lanzar excepción cuando la acción solicitada no es válida para Premios
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-02')]
-    public function testAccionInvalidaLanzaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_lanzarExcepcion_cuando_accionNoEsValida(): void
     {
         // Arrange
         $modelo = new ModeloPremios();
 
-        // Assert & Act
+        // Assert Expectation
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('La acción solicitada no es válida para Premios.');
 
-        $modelo->ProcesarDatos([
-            'accion' => 'accion_inexistente',
-            'nombre' => 'Mejor Jugador',
-            'tipo'   => 'I'
-        ]);
+        // Act
+        $modelo->ProcesarDatos(['accion' => 'accion_desconocida']);
     }
 
-    // Caso 03: Normalización del nombre a Title Case y aplicación de trim
+    // Caso 03: Lanzar excepción cuando no se especifica ninguna acción en los datos
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-03')]
-    public function testNormalizacionNombreFormatoTitleCase(): void
+    #[Group('escenario_error')]
+    public function test_deberia_lanzarExcepcion_cuando_noSeEspecificaAccionEnDatos(): void
     {
         // Arrange
         $modelo = new ModeloPremios();
-        $reflector = new ReflectionClass($modelo);
-        $propNombre = $reflector->getProperty('nombre');
-        $propTipo = $reflector->getProperty('tipo');
 
-        // Act - Se simula la captura previa a ejecutar una acción
-        try {
-            $modelo->ProcesarDatos([
-                'accion' => 'accion_invalida',
-                'nombre' => '   campeón de goleo individual   ',
-                'tipo'   => '  I  '
-            ]);
-        } catch (Exception $e) {
-            // Se espera la excepción de acción inválida, pero las propiedades ya fueron procesadas
-        }
+        // Assert Expectation
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('La acción solicitada no es válida para Premios.');
 
-        // Assert
-        $this->assertEquals('Campeón De Goleo Individual', $propNombre->getValue($modelo));
-        $this->assertEquals('I', $propTipo->getValue($modelo));
+        // Act
+        $modelo->ProcesarDatos(['nombre' => 'Copa']);
     }
 }

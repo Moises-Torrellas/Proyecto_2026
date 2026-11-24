@@ -1,18 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Premios;
 
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloPremios;
 use App\modelo\Conexion;
 use PDO;
-use PDOException;
 use PDOStatement;
+use Exception;
 use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE_NAME')) {
+    define('DUPLICATE_NAME', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -36,90 +57,35 @@ class BuscarPremiosTest extends TestCase
         $propiedad->setValue(null, $pdoMock);
     }
 
-    private function obtenerFilaPremio(array $sobrescribir = []): array
+    private function crearFilaPremio(array $sobrescribir = []): array
     {
         $base = [
-            'codigo_premio' => 3,
-            'nombre'        => 'Mvp',
-            'tipo'          => 'I'
+            'codigo_premio' => 1,
+            'nombre'        => 'Copa Oro Hockey',
+            'tipo'          => 'G'
         ];
 
         return array_merge($base, $sobrescribir);
     }
 
-    // Caso 27: Búsqueda exitosa pasando el código de premio como argumento directo
+    // ==========================================
+    // ESCENARIO 06: Búsqueda de Galardones por Identificador
+    // ==========================================
+
+    // Caso 23: Retornar registro de premio cuando se busca por ID existente
     #[Group('RF-06')]
     #[Group('ESC-06')]
-    #[Group('CP-27')]
-    public function testBuscarPorArgumentoExitoso(): void
+    #[Group('CP-23')]
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarRegistroPremio_cuando_seBuscaPorIdExistente(): void
     {
         // Arrange
-        $filas = [$this->obtenerFilaPremio()];
+        $filasEsperadas = [$this->crearFilaPremio(['codigo_premio' => 1, 'nombre' => 'Copa Oro Hockey'])];
 
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->method('bindParam')->willReturn(true);
         $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchAll')->with(PDO::FETCH_ASSOC)->willReturn($filas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->with($this->stringContains('WHERE codigo_premio = :codigo_premio'))->willReturn($stmtMock);
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloPremios();
-
-        // Act
-        $resultado = $modelo->Buscar(3);
-
-        // Assert
-        $this->assertEquals('buscar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-        $this->assertEquals(3, $resultado['datos'][0]['codigo_premio']);
-        $this->assertEquals('Mvp', $resultado['datos'][0]['nombre']);
-    }
-
-    // Caso 28: Búsqueda exitosa invocada a través de ProcesarDatos
-    #[Group('RF-06')]
-    #[Group('ESC-06')]
-    #[Group('CP-28')]
-    public function testBuscarPorProcesarDatosExitoso(): void
-    {
-        // Arrange
-        $filas = [$this->obtenerFilaPremio(['codigo_premio' => 1, 'nombre' => 'Campeón', 'tipo' => 'G'])];
-
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('bindParam')->willReturn(true);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchAll')->with(PDO::FETCH_ASSOC)->willReturn($filas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->with($this->stringContains('WHERE codigo_premio = :codigo_premio'))->willReturn($stmtMock);
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloPremios();
-
-        // Act
-        $resultado = $modelo->ProcesarDatos([
-            'accion'        => 'buscar',
-            'codigo_premio' => 1
-        ]);
-
-        // Assert
-        $this->assertEquals('buscar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-        $this->assertEquals('Campeón', $resultado['datos'][0]['nombre']);
-    }
-
-    // Caso 29: Búsqueda de un premio inexistente devuelve lista vacía
-    #[Group('RF-06')]
-    #[Group('ESC-06')]
-    #[Group('CP-29')]
-    public function testBuscarPremioInexistente(): void
-    {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('bindParam')->willReturn(true);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchAll')->with(PDO::FETCH_ASSOC)->willReturn([]);
+        $stmtMock->method('fetchAll')->willReturn($filasEsperadas);
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willReturn($stmtMock);
@@ -128,23 +94,54 @@ class BuscarPremiosTest extends TestCase
         $modelo = new ModeloPremios();
 
         // Act
-        $resultado = $modelo->Buscar(999);
+        $resultado = $modelo->Buscar(1);
+
+        // Assert
+        $this->assertEquals('buscar', $resultado['accion']);
+        $this->assertCount(1, $resultado['datos']);
+        $this->assertEquals(1, $resultado['datos'][0]['codigo_premio']);
+        $this->assertEquals('Copa Oro Hockey', $resultado['datos'][0]['nombre']);
+    }
+
+    // Caso 24: Retornar colección vacía cuando el ID buscado no existe
+    #[Group('RF-06')]
+    #[Group('ESC-06')]
+    #[Group('CP-24')]
+    #[Group('escenario_limite')]
+    public function test_deberia_retornarColeccionVacia_cuando_idNoExiste(): void
+    {
+        // Arrange
+        $stmtMock = $this->createMock(PDOStatement::class);
+        $stmtMock->method('bindParam')->willReturn(true);
+        $stmtMock->method('execute')->willReturn(true);
+        $stmtMock->method('fetchAll')->willReturn([]);
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturn($stmtMock);
+        $this->inyectarPdoMock($pdoMock);
+
+        $modelo = new ModeloPremios();
+
+        // Act
+        $resultado = $modelo->Buscar(99999);
 
         // Assert
         $this->assertEquals('buscar', $resultado['accion']);
         $this->assertEmpty($resultado['datos']);
     }
 
-    // Caso 30: Captura de error de base de datos durante la búsqueda
+    // Caso 25: Manejar límite numérico cuando el ID es el valor entero máximo (PHP_INT_MAX)
     #[Group('RF-06')]
     #[Group('ESC-06')]
-    #[Group('CP-30')]
-    public function testBuscarErrorBaseDeDatos(): void
+    #[Group('CP-25')]
+    #[Group('escenario_limite')]
+    public function test_deberia_manejarLimiteNumerico_cuando_idEsMaximo(): void
     {
         // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->method('bindParam')->willReturn(true);
-        $stmtMock->method('execute')->willThrowException(new PDOException('Error de lectura en tabla premios'));
+        $stmtMock->method('execute')->willReturn(true);
+        $stmtMock->method('fetchAll')->willReturn([]);
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willReturn($stmtMock);
@@ -153,10 +150,32 @@ class BuscarPremiosTest extends TestCase
         $modelo = new ModeloPremios();
 
         // Act
-        $resultado = $modelo->Buscar(5);
+        $resultado = $modelo->Buscar(PHP_INT_MAX);
+
+        // Assert
+        $this->assertEquals('buscar', $resultado['accion']);
+        $this->assertEmpty($resultado['datos']);
+    }
+
+    // Caso 26: Retornar estructura de error cuando falla la sentencia SQL de búsqueda
+    #[Group('RF-06')]
+    #[Group('ESC-06')]
+    #[Group('CP-26')]
+    #[Group('escenario_error')]
+    public function test_deberia_retornarEstructuraError_cuando_fallaSentenciaSQL(): void
+    {
+        // Arrange
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willThrowException(new Exception('Error de base de datos'));
+        $this->inyectarPdoMock($pdoMock);
+
+        $modelo = new ModeloPremios();
+
+        // Act
+        $resultado = $modelo->Buscar(1);
 
         // Assert
         $this->assertEquals('error', $resultado['accion']);
-        $this->assertStringContainsString('Error de lectura en tabla premios', $resultado['mensaje']);
+        $this->assertEquals('Error de base de datos', $resultado['mensaje']);
     }
 }

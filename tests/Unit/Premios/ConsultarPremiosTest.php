@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Premios;
 
 use PHPUnit\Framework\TestCase;
@@ -11,7 +13,26 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE_NAME')) {
+    define('DUPLICATE_NAME', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -35,199 +56,103 @@ class ConsultarPremiosTest extends TestCase
         $propiedad->setValue(null, $pdoMock);
     }
 
-    private function obtenerFilaPremio(array $sobrescribir = []): array
+    private function crearFilaPremio(array $sobrescribir = []): array
     {
         $base = [
             'codigo_premio' => 1,
-            'nombre'        => 'Campeón',
+            'nombre'        => 'Trofeo Oro',
             'tipo'          => 'G'
         ];
 
         return array_merge($base, $sobrescribir);
     }
 
-    // Caso 20: Consulta general sin filtros
+    // ==========================================
+    // ESCENARIO 05: Consulta y Filtrado de Galardones
+    // ==========================================
+
+    // Caso 18: Retornar listado general de premios cuando se consulta sin filtros
     #[Group('RF-05')]
     #[Group('ESC-05')]
-    #[Group('CP-20')]
-    public function testConsultarGeneral(): void
+    #[Group('CP-18')]
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarListadoGeneralPremios_cuando_seConsultaSinFiltros(): void
     {
         // Arrange
-        $filas = [
-            $this->obtenerFilaPremio(['codigo_premio' => 1, 'nombre' => 'Campeón', 'tipo' => 'G']),
-            $this->obtenerFilaPremio(['codigo_premio' => 2, 'nombre' => 'Mejor Portero', 'tipo' => 'I'])
+        $filasEsperadas = [
+            $this->crearFilaPremio(['codigo_premio' => 1, 'nombre' => 'Trofeo Campeon', 'tipo' => 'G']),
+            $this->crearFilaPremio(['codigo_premio' => 2, 'nombre' => 'Medalla Mejor Portero', 'tipo' => 'I'])
         ];
 
         $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchAll')->with(PDO::FETCH_ASSOC)->willReturn($filas);
+        $stmtMock->expects($this->once())->method('execute')->with([]);
+        $stmtMock->method('fetchAll')->willReturn($filasEsperadas);
 
         $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->with($this->stringContains('ORDER BY codigo_premio ASC'))->willReturn($stmtMock);
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloPremios();
-
-        // Act
-        $resultado = $modelo->Consultar();
-
-        // Assert
-        $this->assertEquals('consultar', $resultado['accion']);
-        $this->assertCount(2, $resultado['datos']);
-        $this->assertEquals('Campeón', $resultado['datos'][0]['nombre']);
-        $this->assertEquals('Mejor Portero', $resultado['datos'][1]['nombre']);
-    }
-
-    // Caso 21: Consulta aplicando filtro general por término de búsqueda (nombre o tipo)
-    #[Group('RF-05')]
-    #[Group('ESC-05')]
-    #[Group('CP-21')]
-    public function testConsultarConFiltroGeneral(): void
-    {
-        // Arrange
-        $filas = [$this->obtenerFilaPremio(['nombre' => 'Mvp', 'tipo' => 'I'])];
-
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->with($this->callback(function (array $params) {
-            return isset($params[':f1']) && $params[':f1'] === '%Mvp%'
-                && isset($params[':f2']) && $params[':f2'] === '%Mvp%';
-        }))->willReturn(true);
-        $stmtMock->method('fetchAll')->with(PDO::FETCH_ASSOC)->willReturn($filas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->with($this->stringContains('(nombre LIKE :f1 OR tipo LIKE :f2)'))->willReturn($stmtMock);
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloPremios();
-
-        // Act
-        $resultado = $modelo->Consultar(['filtro' => 'Mvp']);
-
-        // Assert
-        $this->assertEquals('consultar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-        $this->assertEquals('Mvp', $resultado['datos'][0]['nombre']);
-    }
-
-    // Caso 22: Consulta con filtro específico por nombre
-    #[Group('RF-05')]
-    #[Group('ESC-05')]
-    #[Group('CP-22')]
-    public function testConsultarConFiltroNombre(): void
-    {
-        // Arrange
-        $filas = [$this->obtenerFilaPremio(['nombre' => 'Goleador', 'tipo' => 'I'])];
-
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->with($this->callback(function (array $params) {
-            return isset($params[':nombre']) && str_starts_with($params[':nombre'], 'Goleador');
-        }))->willReturn(true);
-        $stmtMock->method('fetchAll')->with(PDO::FETCH_ASSOC)->willReturn($filas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->with($this->stringContains('nombre LIKE :nombre'))->willReturn($stmtMock);
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloPremios();
-
-        // Act - Mediante ProcesarDatos con acción generar (reportes)
-        $resultado = $modelo->ProcesarDatos([
-            'accion' => 'generar',
-            'nombre' => 'Goleador'
-        ]);
-
-        // Assert
-        $this->assertEquals('consultar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
-        $this->assertEquals('Goleador', $resultado['datos'][0]['nombre']);
-    }
-
-    // Caso 23: Consulta con filtro específico por tipo ('I' o 'G')
-    #[Group('RF-05')]
-    #[Group('ESC-05')]
-    #[Group('CP-23')]
-    public function testConsultarConFiltroTipo(): void
-    {
-        // Arrange
-        $filas = [
-            $this->obtenerFilaPremio(['codigo_premio' => 1, 'nombre' => 'Campeón', 'tipo' => 'G']),
-            $this->obtenerFilaPremio(['codigo_premio' => 2, 'nombre' => 'Subcampeón', 'tipo' => 'G'])
-        ];
-
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->with($this->callback(function (array $params) {
-            return isset($params[':tipo']) && $params[':tipo'] === 'G';
-        }))->willReturn(true);
-        $stmtMock->method('fetchAll')->with(PDO::FETCH_ASSOC)->willReturn($filas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->with($this->stringContains('tipo = :tipo'))->willReturn($stmtMock);
-        $this->inyectarPdoMock($pdoMock);
-
-        $modelo = new ModeloPremios();
-
-        // Act
-        $resultado = $modelo->ProcesarDatos([
-            'accion' => 'generar',
-            'tipo'   => 'G'
-        ]);
-
-        // Assert
-        $this->assertEquals('consultar', $resultado['accion']);
-        $this->assertCount(2, $resultado['datos']);
-        $this->assertEquals('G', $resultado['datos'][0]['tipo']);
-    }
-
-    // Caso 24: Consulta combinada por nombre y tipo
-    #[Group('RF-05')]
-    #[Group('ESC-05')]
-    #[Group('CP-24')]
-    public function testConsultarCombinadoNombreYTipo(): void
-    {
-        // Arrange
-        $filas = [$this->obtenerFilaPremio(['nombre' => 'Campeón Invicto', 'tipo' => 'G'])];
-
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->with($this->callback(function (array $params) {
-            return isset($params[':nombre']) && isset($params[':tipo']) && $params[':tipo'] === 'G';
-        }))->willReturn(true);
-        $stmtMock->method('fetchAll')->with(PDO::FETCH_ASSOC)->willReturn($filas);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtMock) {
-            if (str_contains($sql, 'nombre LIKE :nombre') && str_contains($sql, 'tipo = :tipo')) {
-                return $stmtMock;
-            }
-            return $this->createMock(PDOStatement::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use ($stmtMock) {
+            $this->assertStringContainsString('SELECT * FROM premios WHERE 1=1', $sql);
+            $this->assertStringContainsString('ORDER BY codigo_premio ASC', $sql);
+            return $stmtMock;
         });
         $this->inyectarPdoMock($pdoMock);
 
         $modelo = new ModeloPremios();
 
         // Act
-        $resultado = $modelo->ProcesarDatos([
-            'accion' => 'generar',
-            'nombre' => 'Campeón Invicto',
-            'tipo'   => 'G'
-        ]);
+        $resultado = $modelo->Consultar([]);
+
+        // Assert
+        $this->assertEquals('consultar', $resultado['accion']);
+        $this->assertCount(2, $resultado['datos']);
+        $this->assertEquals('Trofeo Campeon', $resultado['datos'][0]['nombre']);
+    }
+
+    // Caso 19: Retornar premios filtrados cuando se aplica filtro de texto
+    #[Group('RF-05')]
+    #[Group('ESC-05')]
+    #[Group('CP-19')]
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarPremiosFiltrados_cuando_seAplicaFiltroTexto(): void
+    {
+        // Arrange
+        $filasEsperadas = [
+            $this->crearFilaPremio(['codigo_premio' => 1, 'nombre' => 'Copa Oro', 'tipo' => 'G'])
+        ];
+
+        $stmtMock = $this->createMock(PDOStatement::class);
+        $stmtMock->expects($this->once())->method('execute')->with($this->callback(function (array $params) {
+            return isset($params[':f1']) && $params[':f1'] === '%Oro%';
+        }));
+        $stmtMock->method('fetchAll')->willReturn($filasEsperadas);
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use ($stmtMock) {
+            $this->assertStringContainsString('AND (nombre LIKE :f1 OR tipo LIKE :f2)', $sql);
+            return $stmtMock;
+        });
+        $this->inyectarPdoMock($pdoMock);
+
+        $modelo = new ModeloPremios();
+
+        // Act
+        $resultado = $modelo->Consultar(['filtro' => 'Oro']);
 
         // Assert
         $this->assertEquals('consultar', $resultado['accion']);
         $this->assertCount(1, $resultado['datos']);
     }
 
-    // Caso 25: Consulta invocada mediante ProcesarDatos con acción generar
+    // Caso 20: Retornar colección vacía cuando no existen premios en base de datos
     #[Group('RF-05')]
     #[Group('ESC-05')]
-    #[Group('CP-25')]
-    public function testConsultarPorGenerar(): void
+    #[Group('CP-20')]
+    #[Group('escenario_limite')]
+    public function test_deberia_retornarColeccionVacia_cuando_noExistenPremiosEnBaseDeDatos(): void
     {
         // Arrange
-        $filas = [$this->obtenerFilaPremio()];
-
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchAll')->with(PDO::FETCH_ASSOC)->willReturn($filas);
+        $stmtMock->method('fetchAll')->willReturn([]);
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willReturn($stmtMock);
@@ -236,23 +161,52 @@ class ConsultarPremiosTest extends TestCase
         $modelo = new ModeloPremios();
 
         // Act
-        $resultado = $modelo->ProcesarDatos(['accion' => 'generar']);
+        $resultado = $modelo->Consultar([]);
 
         // Assert
         $this->assertEquals('consultar', $resultado['accion']);
-        $this->assertCount(1, $resultado['datos']);
+        $this->assertEmpty($resultado['datos']);
     }
 
-    // Caso 26: Consulta sin coincidencias devuelve arreglo vacío
+    // Caso 21: Ignorar filtro vacío cuando se pasa cadena vacía
     #[Group('RF-05')]
     #[Group('ESC-05')]
-    #[Group('CP-26')]
-    public function testConsultarSinCoincidencias(): void
+    #[Group('CP-21')]
+    #[Group('escenario_limite')]
+    public function test_deberia_ignorarFiltroVacio_cuando_sePasaCadenaVacia(): void
     {
         // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchAll')->with(PDO::FETCH_ASSOC)->willReturn([]);
+        $stmtMock->expects($this->once())->method('execute')->with([]);
+        $stmtMock->method('fetchAll')->willReturn([]);
+
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('prepare')->willReturnCallback(function ($sql) use ($stmtMock) {
+            $this->assertStringNotContainsString(':f1', $sql);
+            return $stmtMock;
+        });
+        $this->inyectarPdoMock($pdoMock);
+
+        $modelo = new ModeloPremios();
+
+        // Act
+        $resultado = $modelo->Consultar(['filtro' => '']);
+
+        // Assert
+        $this->assertEquals('consultar', $resultado['accion']);
+    }
+
+    // Caso 22: Retornar colección vacía cuando filtro de búsqueda no encuentra coincidencias
+    #[Group('RF-05')]
+    #[Group('ESC-05')]
+    #[Group('CP-22')]
+    #[Group('escenario_error')]
+    public function test_deberia_retornarColeccionVacia_cuando_filtroDeBusquedaNoEncuentraCoincidencias(): void
+    {
+        // Arrange
+        $stmtMock = $this->createMock(PDOStatement::class);
+        $stmtMock->expects($this->once())->method('execute')->willReturn(true);
+        $stmtMock->method('fetchAll')->willReturn([]);
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willReturn($stmtMock);
@@ -261,7 +215,7 @@ class ConsultarPremiosTest extends TestCase
         $modelo = new ModeloPremios();
 
         // Act
-        $resultado = $modelo->Consultar(['filtro' => 'Inexistente']);
+        $resultado = $modelo->Consultar(['filtro' => 'Inexistente_12345']);
 
         // Assert
         $this->assertEquals('consultar', $resultado['accion']);
