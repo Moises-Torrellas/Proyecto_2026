@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Estadisticas;
 
 use PHPUnit\Framework\TestCase;
@@ -12,7 +14,29 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '010');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('EMPTY_SELECTION')) {
+    define('EMPTY_SELECTION', '009');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -67,7 +91,8 @@ class BuscarEstadisticasTest extends TestCase
     #[Group('RF-06')]
     #[Group('ESC-06')]
     #[Group('CP-29')]
-    public function testBuscarPorParametroExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarRegistroEstadistica_cuando_seBuscaPorParametroDirecto(): void
     {
         // Arrange
         $filas = [$this->obtenerFilaEstadisticaBuscar()];
@@ -105,7 +130,8 @@ class BuscarEstadisticasTest extends TestCase
     #[Group('RF-06')]
     #[Group('ESC-06')]
     #[Group('CP-30')]
-    public function testBuscarPorProcesarDatosExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarRegistroEstadistica_cuando_seBuscaMedianteProcesarDatos(): void
     {
         // Arrange
         $filas = [$this->obtenerFilaEstadisticaBuscar(['id_estadisticas' => 20])];
@@ -141,7 +167,8 @@ class BuscarEstadisticasTest extends TestCase
     #[Group('RF-06')]
     #[Group('ESC-06')]
     #[Group('CP-31')]
-    public function testBuscarRegistroNoEncontrado(): void
+    #[Group('escenario_error')]
+    public function test_deberia_retornarEstructuraError_cuando_registroNoEsEncontrado(): void
     {
         // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
@@ -168,7 +195,8 @@ class BuscarEstadisticasTest extends TestCase
     #[Group('RF-06')]
     #[Group('ESC-06')]
     #[Group('CP-32')]
-    public function testBuscarErrorBaseDatos(): void
+    #[Group('escenario_error')]
+    public function test_deberia_retornarEstructuraError_cuando_fallaSentenciaSQLDeBusqueda(): void
     {
         // Arrange
         $pdoMock = $this->createMock(PDO::class);

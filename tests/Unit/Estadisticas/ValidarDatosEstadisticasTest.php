@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Estadisticas;
 
 use PHPUnit\Framework\TestCase;
@@ -12,7 +14,29 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '010');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('EMPTY_SELECTION')) {
+    define('EMPTY_SELECTION', '009');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -33,35 +57,39 @@ class ValidarDatosEstadisticasTest extends TestCase
     // ESCENARIO 01: Validación de Datos y Preprocesamiento
     // ==========================================
 
-    // Caso 01: Rechazo de procesamiento si los datos proporcionados están vacíos
+    // Caso 01: Lanzar excepción cuando los datos son vacíos al procesar
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-01')]
-    public function testDatosVaciosLanzaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_lanzarExcepcion_cuando_datosSonVaciosAlProcesar(): void
     {
         // Arrange
         $modelo = new ModeloEstadisticas();
 
-        // Assert & Act
+        // Assert Expectation
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('No se proporcionaron datos para procesar.');
 
+        // Act
         $modelo->ProcesarDatos([]);
     }
 
-    // Caso 02: Rechazo de acción no válida o desconocida para estadísticas
+    // Caso 02: Lanzar excepción cuando la acción solicitada no es válida para estadísticas
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-02')]
-    public function testAccionInvalidaLanzaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_lanzarExcepcion_cuando_accionNoEsValida(): void
     {
         // Arrange
         $modelo = new ModeloEstadisticas();
 
-        // Assert & Act
+        // Assert Expectation
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('La acción solicitada para estadísticas no es válida.');
 
+        // Act
         $modelo->ProcesarDatos([
             'accion'        => 'accion_inexistente',
             'atleta'        => 5,
@@ -69,11 +97,12 @@ class ValidarDatosEstadisticasTest extends TestCase
         ]);
     }
 
-    // Caso 03: Asignación, valores por defecto y casteos correctos de los datos
+    // Caso 03: Asignar, aplicar valores por defecto y casteos correctos de los datos de entrada
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-03')]
-    public function testAsignacionYCasteoPropiedades(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_asignarPropiedadesInternasYTipos_cuando_datosSonProcesados(): void
     {
         // Arrange
         $modelo = new ModeloEstadisticas();
@@ -89,7 +118,7 @@ class ValidarDatosEstadisticasTest extends TestCase
         $propPartidos       = $reflector->getProperty('partidos');
         $propAverage        = $reflector->getProperty('average');
 
-        // Act - Procesamos con acción inválida pero habiendo pasado los datos
+        // Act - Procesamos con acción desconocida tras la asignación de propiedades
         try {
             $modelo->ProcesarDatos([
                 'accion'         => 'invalido',
@@ -104,7 +133,7 @@ class ValidarDatosEstadisticasTest extends TestCase
                 'average'        => '0.60'
             ]);
         } catch (Exception $e) {
-            // Se espera la excepción de acción inválida tras asignar propiedades
+            // Se espera la excepción de acción inválida, pero las propiedades ya fueron procesadas
         }
 
         // Assert
@@ -119,11 +148,12 @@ class ValidarDatosEstadisticasTest extends TestCase
         $this->assertSame(0.60, $propAverage->getValue($modelo));
     }
 
-    // Caso 04: Soporte transicional del campo 'torneo' como respaldo de 'participacion'
+    // Caso 04: Admitir soporte transicional del campo 'torneo' como respaldo de 'participacion'
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-04')]
-    public function testSoporteTransicionalCampoTorneo(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_admitirCampoTorneoComoTransicional_cuando_noSeEnviaParticipacion(): void
     {
         // Arrange
         $modelo = new ModeloEstadisticas();
@@ -145,11 +175,12 @@ class ValidarDatosEstadisticasTest extends TestCase
         $this->assertSame(12, $propParticipacion->getValue($modelo));
     }
 
-    // Caso 05: Inyección de modelos dependientes mediante setters y verificación de getId
+    // Caso 05: Inyectar modelos dependientes mediante setters y verificar lectura de getId
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-05')]
-    public function testInyeccionModelosAuxiliaresYGetId(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_inyectarModelosAuxiliaresYRetornarId_cuando_seInvocanSetters(): void
     {
         // Arrange
         $modelo = new ModeloEstadisticas();

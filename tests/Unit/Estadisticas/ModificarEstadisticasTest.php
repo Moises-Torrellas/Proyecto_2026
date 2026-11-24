@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Estadisticas;
 
 use PHPUnit\Framework\TestCase;
@@ -13,7 +15,29 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '010');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('EMPTY_SELECTION')) {
+    define('EMPTY_SELECTION', '009');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -63,7 +87,8 @@ class ModificarEstadisticasTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-03')]
     #[Group('CP-12')]
-    public function testModificarEstadisticaExitosa(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_modificarEstadisticaExitosamente_cuando_datosSonValidos(): void
     {
         // Arrange
         // 1. Verificar existencia de ID (detalles_participacion)
@@ -140,7 +165,8 @@ class ModificarEstadisticasTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-03')]
     #[Group('CP-13')]
-    public function testModificarEstadisticaIdInexistente(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarModificacion_cuando_idEstadisticaNoExiste(): void
     {
         // Arrange
         $stmtExisteId = $this->createMock(PDOStatement::class);
@@ -170,7 +196,8 @@ class ModificarEstadisticasTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-03')]
     #[Group('CP-14')]
-    public function testModificarEstadisticaParticipacionInexistente(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarModificacion_cuando_participacionNoExiste(): void
     {
         // Arrange
         $stmtExisteId = $this->createMock(PDOStatement::class);
@@ -212,7 +239,8 @@ class ModificarEstadisticasTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-03')]
     #[Group('CP-15')]
-    public function testModificarEstadisticaAtletaInexistente(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarModificacion_cuando_atletaNoExiste(): void
     {
         // Arrange
         $stmtExisteId = $this->createMock(PDOStatement::class);
@@ -263,7 +291,8 @@ class ModificarEstadisticasTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-03')]
     #[Group('CP-16')]
-    public function testModificarEstadisticaAtletaNoPertenecienteAParticipacion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarModificacion_cuando_atletaNoPerteneceAParticipacion(): void
     {
         // Arrange
         $stmtExisteId = $this->createMock(PDOStatement::class);
@@ -318,7 +347,8 @@ class ModificarEstadisticasTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-03')]
     #[Group('CP-17')]
-    public function testModificarEstadisticaDuplicadaOtroRegistro(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarModificacion_cuando_combinacionEstaDuplicadaEnOtroRegistro(): void
     {
         // Arrange
         $stmtExisteId = $this->createMock(PDOStatement::class);
@@ -381,7 +411,8 @@ class ModificarEstadisticasTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-03')]
     #[Group('CP-18')]
-    public function testModificarEstadisticaSinFalsoPositivoDuplicadaPropia(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_permitirModificarSinFalsoPositivo_cuando_duplicadoEsElPropioRegistro(): void
     {
         // Arrange
         $stmtExisteId = $this->createMock(PDOStatement::class);
@@ -453,7 +484,8 @@ class ModificarEstadisticasTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-03')]
     #[Group('CP-19')]
-    public function testModificarEstadisticaErrorBaseDatos(): void
+    #[Group('escenario_error')]
+    public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaSentenciaSQLDeModificacion(): void
     {
         // Arrange
         $stmtExisteId = $this->createMock(PDOStatement::class);

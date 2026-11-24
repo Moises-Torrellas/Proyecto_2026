@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Estadisticas;
 
 use PHPUnit\Framework\TestCase;
@@ -13,7 +15,29 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '010');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('EMPTY_SELECTION')) {
+    define('EMPTY_SELECTION', '009');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -62,7 +86,8 @@ class RegistrarEstadisticasTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-06')]
-    public function testIncluirEstadisticaExitosa(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_incluirEstadisticaExitosamente_cuando_datosSonValidos(): void
     {
         // Arrange
         // 1. Verificar existencia de participación
@@ -140,7 +165,8 @@ class RegistrarEstadisticasTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-07')]
-    public function testIncluirEstadisticaParticipacionInexistente(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusion_cuando_participacionNoExiste(): void
     {
         // Arrange
         $stmtExistePart = $this->createMock(PDOStatement::class);
@@ -170,7 +196,8 @@ class RegistrarEstadisticasTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-08')]
-    public function testIncluirEstadisticaAtletaInexistente(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusion_cuando_atletaNoExiste(): void
     {
         // Arrange
         $stmtExistePart = $this->createMock(PDOStatement::class);
@@ -212,7 +239,8 @@ class RegistrarEstadisticasTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-09')]
-    public function testIncluirEstadisticaAtletaNoPertenecienteAParticipacion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusion_cuando_atletaNoPerteneceAParticipacion(): void
     {
         // Arrange
         $stmtExistePart = $this->createMock(PDOStatement::class);
@@ -258,7 +286,8 @@ class RegistrarEstadisticasTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-10')]
-    public function testIncluirEstadisticaDuplicada(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusion_cuando_estadisticaYaEstaDuplicada(): void
     {
         // Arrange
         $stmtExistePart = $this->createMock(PDOStatement::class);
@@ -314,7 +343,8 @@ class RegistrarEstadisticasTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-11')]
-    public function testIncluirEstadisticaErrorBaseDatos(): void
+    #[Group('escenario_error')]
+    public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaSentenciaSQLDeActualizacion(): void
     {
         // Arrange
         $stmtExistePart = $this->createMock(PDOStatement::class);

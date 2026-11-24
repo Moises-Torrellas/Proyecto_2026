@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Estadisticas;
 
 use PHPUnit\Framework\TestCase;
@@ -13,7 +15,29 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '010');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('EMPTY_SELECTION')) {
+    define('EMPTY_SELECTION', '009');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -45,7 +69,8 @@ class AuxiliaresEstadisticasTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-07')]
     #[Group('CP-33')]
-    public function testValidarEstadisticaDuplicadaRetornaVerdadero(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarVerdadero_cuando_existeEstadisticaDuplicada(): void
     {
         // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
@@ -73,7 +98,8 @@ class AuxiliaresEstadisticasTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-07')]
     #[Group('CP-34')]
-    public function testValidarEstadisticaDuplicadaRetornaFalso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarFalso_cuando_noExisteEstadisticaDuplicada(): void
     {
         // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
@@ -99,7 +125,8 @@ class AuxiliaresEstadisticasTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-07')]
     #[Group('CP-35')]
-    public function testValidarEstadisticaDuplicadaPropiaRetornaVerdadero(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarVerdadero_cuando_existeEstadisticaDuplicadaEnOtroRegistro(): void
     {
         // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
@@ -127,7 +154,8 @@ class AuxiliaresEstadisticasTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-07')]
     #[Group('CP-36')]
-    public function testValidarEstadisticaDuplicadaPropiaRetornaFalso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarFalso_cuando_noExisteEstadisticaDuplicadaPropia(): void
     {
         // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
@@ -153,7 +181,8 @@ class AuxiliaresEstadisticasTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-07')]
     #[Group('CP-37')]
-    public function testConsultarTorneosConParticipacionExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarTorneosConParticipacion_cuando_existenTorneosFinalizados(): void
     {
         // Arrange
         $torneos = [
@@ -187,7 +216,8 @@ class AuxiliaresEstadisticasTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-07')]
     #[Group('CP-38')]
-    public function testConsultarTorneosConParticipacionManejoError(): void
+    #[Group('escenario_error')]
+    public function test_deberia_retornarEstructuraError_cuando_fallaConsultaTorneosConParticipacion(): void
     {
         // Arrange
         $pdoMock = $this->createMock(PDO::class);
@@ -208,7 +238,8 @@ class AuxiliaresEstadisticasTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-07')]
     #[Group('CP-39')]
-    public function testConsultarAtletasPorTorneoExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_retornarAtletasPorTorneo_cuando_existenParticipantes(): void
     {
         // Arrange
         $atletas = [
@@ -250,7 +281,8 @@ class AuxiliaresEstadisticasTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-07')]
     #[Group('CP-40')]
-    public function testConsultarAtletasPorTorneoManejoError(): void
+    #[Group('escenario_error')]
+    public function test_deberia_retornarEstructuraError_cuando_fallaConsultaAtletasPorTorneo(): void
     {
         // Arrange
         $pdoMock = $this->createMock(PDO::class);

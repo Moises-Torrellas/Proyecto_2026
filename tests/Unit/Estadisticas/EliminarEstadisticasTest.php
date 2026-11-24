@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Estadisticas;
 
 use PHPUnit\Framework\TestCase;
@@ -12,7 +14,29 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '010');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('EMPTY_SELECTION')) {
+    define('EMPTY_SELECTION', '009');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -44,7 +68,8 @@ class EliminarEstadisticasTest extends TestCase
     #[Group('RF-04')]
     #[Group('ESC-04')]
     #[Group('CP-20')]
-    public function testEliminarEstadisticaExitosa(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_eliminarEstadisticaExitosamente_cuando_idExiste(): void
     {
         // Arrange
         // 1. Verificar existencia de ID
@@ -90,7 +115,8 @@ class EliminarEstadisticasTest extends TestCase
     #[Group('RF-04')]
     #[Group('ESC-04')]
     #[Group('CP-21')]
-    public function testEliminarEstadisticaIdInexistente(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarEliminacion_cuando_idNoExiste(): void
     {
         // Arrange
         $stmtExiste = $this->createMock(PDOStatement::class);
@@ -123,7 +149,8 @@ class EliminarEstadisticasTest extends TestCase
     #[Group('RF-04')]
     #[Group('ESC-04')]
     #[Group('CP-22')]
-    public function testEliminarEstadisticaErrorBaseDatos(): void
+    #[Group('escenario_error')]
+    public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaSentenciaSQLDeEliminacion(): void
     {
         // Arrange
         $stmtExiste = $this->createMock(PDOStatement::class);
