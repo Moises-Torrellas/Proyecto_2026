@@ -1,0 +1,16 @@
+# Configuración específica para el entorno de Integración Continua (GitHub Actions CI/CD)
+modules:
+    config:
+        WebDriver:
+            url: 'http://127.0.0.1:8000'
+            host: '127.0.0.1'
+            port: 9515
+            browser: chrome
+            capabilities:
+                chromeOptions:
+                    args:
+                        - "--headless"
+                        - "--disable-gpu"
+                        - "--no-sandbox"
+                        - "--disable-dev-shm-usage"
+                        - "--window-size=1920,1080"

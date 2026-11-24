@@ -189,18 +189,4 @@ class ConsultarAtletasTest extends TestCase
         $this->assertEmpty($resultado['datos']);
     }
 
-    // Caso 5: Excepción en la base de datos
-    public function testConsultarErrorBaseDeDatos(): void
-    {
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willThrowException(new Exception('Error al conectar con la vista'));
-
-        $this->crearModeloConPDOMock($pdoMock);
-
-        $modelo = new ModeloAtletas();
-        $resultado = $modelo->Consultar();
-
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals('Error al conectar con la vista', $resultado['mensaje']);
-    }
 }

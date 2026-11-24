@@ -14,6 +14,8 @@ if (!defined('EMPTY_SELECTION')) {
 }
 
 #[Group("integ")]
+#[Group("cargos")]
+#[Group("cargosEliminar")]
 class EliminarCargoIntegrationTest extends TestCase
 {
     private ?PDO $pdo = null;

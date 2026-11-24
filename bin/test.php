@@ -39,6 +39,12 @@ switch ($tipo) {
         ejecutarInterfaz($binCodecept, $grupo);
         break;
 
+    case 'backend':
+    case 'postman':
+    case 'api':
+        ejecutarBackendPostman($grupo);
+        break;
+
     default:
         mostrarAyuda();
         break;
@@ -146,6 +152,101 @@ function ejecutarInterfaz(string $bin, ?string $grupo): void
     exit($status ?? 0);
 }
 
+function comandoExiste(string $cmd): bool
+{
+    $test = (DIRECTORY_SEPARATOR === '\\') ? "where.exe $cmd 2>nul" : "command -v $cmd 2>/dev/null";
+    exec($test, $output, $returnCode);
+    return $returnCode === 0;
+}
+
+function ejecutarBackendPostman(?string $modulo): void
+{
+    echo "============================================================\n";
+    echo "         EJECUTANDO PRUEBAS DE BACKEND (POSTMAN / NEWMAN)\n";
+    echo "============================================================\n";
+
+    $comandoNewman = null;
+    $winNpmNewman = (DIRECTORY_SEPARATOR === '\\' && getenv('APPDATA'))
+        ? getenv('APPDATA') . DIRECTORY_SEPARATOR . 'npm' . DIRECTORY_SEPARATOR . 'newman.cmd'
+        : null;
+
+    if (comandoExiste('newman')) {
+        $comandoNewman = 'newman';
+    } elseif ($winNpmNewman && file_exists($winNpmNewman)) {
+        $comandoNewman = '"' . $winNpmNewman . '"';
+    } elseif (comandoExiste('npx')) {
+        // Verificar si npx tiene newman instalado localmente
+        $testLocal = (DIRECTORY_SEPARATOR === '\\') ? 'where.exe .\\node_modules\\.bin\\newman.cmd 2>nul' : 'test -f ./node_modules/.bin/newman';
+        exec($testLocal, $out, $ret);
+        if ($ret === 0) {
+            $comandoNewman = 'npx newman';
+        }
+    }
+
+    if ($comandoNewman === null) {
+        echo "[ADVERTENCIA] Newman no esta instalado en el sistema.\n";
+        echo "Para ejecutar colecciones de Postman desde consola necesitas Newman.\n";
+        echo "Instalalo con Node.js ejecutando en tu terminal:\n\n";
+        echo "    npm install -g newman\n\n";
+        echo "O abre la aplicacion de escritorio de Postman e importa tests/Backend/\n";
+        echo "============================================================\n";
+        exit(1);
+    }
+
+    $envFile = 'tests/Backend/Hockey-Cannibals Lara - Local Environment.postman_environment.json';
+    if (!file_exists($envFile)) {
+        echo "[ERROR] No se encontro el archivo de entorno: $envFile\n";
+        exit(1);
+    }
+
+    $archivos = glob('tests/Backend/*.postman_collection.json');
+    if (empty($archivos)) {
+        echo "[ERROR] No se encontraron colecciones en tests/Backend/\n";
+        exit(1);
+    }
+
+    if (!empty($modulo)) {
+        $coincidencias = array_filter($archivos, function ($archivo) use ($modulo) {
+            return stripos(basename($archivo), $modulo) !== false;
+        });
+
+        if (empty($coincidencias)) {
+            echo "[ERROR] No se encontro ninguna coleccion de Postman para el modulo: $modulo\n";
+            echo "Colecciones disponibles en tests/Backend/:\n";
+            foreach ($archivos as $a) {
+                echo "  - " . basename($a) . "\n";
+            }
+            exit(1);
+        }
+        $archivos = array_values($coincidencias);
+    }
+
+    $total = count($archivos);
+    echo "[INFO] Se ejecutaran $total coleccion(es) de Postman...\n\n";
+
+    $errores = 0;
+    foreach ($archivos as $i => $col) {
+        $nombre = basename($col, '.postman_collection.json');
+        echo "------------------------------------------------------------\n";
+        echo " [" . ($i + 1) . "/$total] Ejecutando: $nombre\n";
+        echo "------------------------------------------------------------\n";
+        $cmd = sprintf('%s run "%s" -e "%s" --reporters cli', $comandoNewman, $col, $envFile);
+        passthru($cmd, $status);
+        if ($status !== 0) {
+            $errores++;
+        }
+    }
+
+    echo "============================================================\n";
+    if ($errores > 0) {
+        echo "[AVISO] Finalizado con $errores coleccion(es) con incidencias o fallos.\n";
+    } else {
+        echo "[OK] Todas las colecciones de Postman ejecutadas exitosamente.\n";
+    }
+    echo "============================================================\n";
+    exit($errores > 0 ? 1 : 0);
+}
+
 function resolverRuta(string $baseDir, string $nombre): ?string
 {
     $candidatos = [
@@ -174,6 +275,7 @@ function mostrarAyuda(): void
     echo "  composer test:integ [modulo]   -> Ejecuta pruebas de integracion (ej: atletas, cargos)\n";
     echo "  composer test:humo [grupo]     -> Ejecuta pruebas de humo\n";
     echo "  composer test:interfaz [grupo] -> Ejecuta pruebas de interfaz (ej: recuperacion, atletas)\n";
+    echo "  composer test:backend [modulo] -> Ejecuta colecciones de Postman (Newman)\n";
     echo "============================================================\n";
 }
 

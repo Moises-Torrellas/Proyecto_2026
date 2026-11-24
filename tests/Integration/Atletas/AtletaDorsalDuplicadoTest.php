@@ -11,6 +11,8 @@ use ReflectionClass;
 
 #[Group("integ")]
 #[Group("atletas")]
+#[Group("atletasDorsal")]
+
 class AtletaDorsalDuplicadoTest extends TestCase
 {
     private ?PDO $pdo = null;
