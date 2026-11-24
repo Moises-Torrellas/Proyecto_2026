@@ -53,9 +53,9 @@ final class PremiosCest
     private const SWAL_CONFIRM      = 'button.swal2-confirm';
     private const SWAL_CANCEL       = 'button.swal2-cancel';
 
-    // Datos para pruebas transaccionales (Title Case requerido por ModeloPremios)
+    // Datos para pruebas transaccionales (Title Case y máx 30 caracteres según ModeloPremios y JS)
     private const NOMBRE_TEST       = 'Premio Excelencia Ui Test';
-    private const NOMBRE_MODIFICAR  = 'Premio Excelencia Ui Modificado';
+    private const NOMBRE_MODIFICAR  = 'Premio Oro Ui Modificado';
     private const TIPO_INDIVIDUAL   = 'I';
     private const TIPO_GRUPAL       = 'G';
 
@@ -267,7 +267,7 @@ final class PremiosCest
     }
 
     /**
-     * CP-PR-08: Validación de Formato de Nombre Inválido (Longitud Menor o Caracteres Inválidos)
+     * CP-PR-08: Validación de Formato de Nombre Inválido (Longitud Fuera de Rango o Caracteres Inválidos)
      */
     public function probarValidacionNombreFormatoInvalido(AcceptanceTester $I): void
     {
@@ -286,8 +286,17 @@ final class PremiosCest
         $I->click('Entendido');
         $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
 
-        // 2. Caracteres especiales no permitidos
-        $I->fillField(self::INPUT_NOMBRE, 'Premio @#$%');
+        // 2. Longitud mayor a 30 caracteres (el límite de la regla regex en Premios.js y controlador es {3,30})
+        $I->fillField(self::INPUT_NOMBRE, 'Premio Con Nombre Demasiado Largo Que Excede El Limite');
+        $I->click(self::BTN_PROCESO);
+
+        $I->waitForElementVisible(self::SWAL_POPUP, 5);
+        $I->waitForText('Tiene que ingresar un nombre válido', 10, self::SWAL_POPUP);
+        $I->click('Entendido');
+        $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
+
+        // 3. Caracteres especiales no permitidos asignados directamente al DOM
+        $I->executeJS("$('#nombre').val('Premio @#$%');");
         $I->click(self::BTN_PROCESO);
 
         $I->waitForElementVisible(self::SWAL_POPUP, 5);
@@ -396,12 +405,13 @@ final class PremiosCest
         $I->waitForElementVisible($xpathEditar, 5);
         $I->click($xpathEditar);
 
-        // 3. Modal se abre en modo modificación con los datos precargados
+        // 3. Modal se abre en modo modificación con los datos precargados vía AJAX
         $I->waitForElementVisible(self::MODAL, 5);
         $I->waitForText('Modificar Premio', 5, self::MODAL_TITULO);
         $I->see('Modificar Premio', self::BTN_PROCESO);
+        $I->seeInField(self::INPUT_NOMBRE, self::NOMBRE_TEST);
 
-        // 4. Modificar el nombre y cambiar el tipo a Grupal
+        // 4. Modificar el nombre (<= 30 caracteres) y cambiar el tipo a Grupal
         $I->fillField(self::INPUT_NOMBRE, self::NOMBRE_MODIFICAR);
         $this->seleccionarTipo($I, self::TIPO_GRUPAL);
 
@@ -434,14 +444,28 @@ final class PremiosCest
     {
         $this->irAlModulo($I);
 
-        $I->fillField(self::BUSQUEDA, self::NOMBRE_MODIFICAR);
+        // Detectar si el registro a evaluar tiene el nombre modificado o el original
+        $nombreTarget = self::NOMBRE_MODIFICAR;
+        $hayModificado = $I->executeJS(sprintf("
+            var encontrado = false;
+            document.querySelectorAll('.listado_item span').forEach(function(el) {
+                if (el.textContent.trim() === '%s') { encontrado = true; }
+            });
+            return encontrado;
+        ", addslashes(self::NOMBRE_MODIFICAR)));
+
+        if (!$hayModificado) {
+            $nombreTarget = self::NOMBRE_TEST;
+        }
+
+        $I->fillField(self::BUSQUEDA, $nombreTarget);
         $I->executeJS("$('#busqueda').trigger('keyup');");
         $I->wait(1);
-        $I->waitForText(self::NOMBRE_MODIFICAR, 10, self::RESULTADOS);
+        $I->waitForText($nombreTarget, 10, self::RESULTADOS);
 
         $xpathEliminar = sprintf(
             '//div[contains(@class, "listado_item")][.//span[contains(normalize-space(.), "%s")]]//button[contains(@class, "cbt_r")]',
-            self::NOMBRE_MODIFICAR
+            $nombreTarget
         );
         $I->waitForElementVisible($xpathEliminar, 5);
 
@@ -453,7 +477,7 @@ final class PremiosCest
         $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
 
         // 2. El registro sigue visible en el listado
-        $I->see(self::NOMBRE_MODIFICAR, self::RESULTADOS);
+        $I->see($nombreTarget, self::RESULTADOS);
         $this->verificarSinErroresPhp($I);
     }
 
@@ -464,14 +488,28 @@ final class PremiosCest
     {
         $this->irAlModulo($I);
 
-        $I->fillField(self::BUSQUEDA, self::NOMBRE_MODIFICAR);
+        // Detectar si el registro a eliminar tiene el nombre modificado o el original
+        $nombreTarget = self::NOMBRE_MODIFICAR;
+        $hayModificado = $I->executeJS(sprintf("
+            var encontrado = false;
+            document.querySelectorAll('.listado_item span').forEach(function(el) {
+                if (el.textContent.trim() === '%s') { encontrado = true; }
+            });
+            return encontrado;
+        ", addslashes(self::NOMBRE_MODIFICAR)));
+
+        if (!$hayModificado) {
+            $nombreTarget = self::NOMBRE_TEST;
+        }
+
+        $I->fillField(self::BUSQUEDA, $nombreTarget);
         $I->executeJS("$('#busqueda').trigger('keyup');");
         $I->wait(1);
-        $I->waitForText(self::NOMBRE_MODIFICAR, 10, self::RESULTADOS);
+        $I->waitForText($nombreTarget, 10, self::RESULTADOS);
 
         $xpathEliminar = sprintf(
             '//div[contains(@class, "listado_item")][.//span[contains(normalize-space(.), "%s")]]//button[contains(@class, "cbt_r")]',
-            self::NOMBRE_MODIFICAR
+            $nombreTarget
         );
         $I->waitForElementVisible($xpathEliminar, 5);
 
@@ -487,7 +525,7 @@ final class PremiosCest
         $I->waitForElementNotVisible(self::SWAL_POPUP, 5);
 
         // 3. El registro ya no existe en el sistema
-        $I->fillField(self::BUSQUEDA, self::NOMBRE_MODIFICAR);
+        $I->fillField(self::BUSQUEDA, $nombreTarget);
         $I->executeJS("$('#busqueda').trigger('keyup');");
         $I->wait(1);
         $I->waitForText('No se encontraron registros', 10, self::RESULTADOS);
@@ -534,22 +572,25 @@ final class PremiosCest
         $I->waitForElementVisible(self::BTN_AYUDA, 5);
         $I->click(self::BTN_AYUDA);
 
-        // Verificar que Driver.js inicia el popover interactivo
-        $I->waitForElementVisible('.driver-popover', 5);
-        $I->waitForText('Barra de Búsqueda', 5, '.driver-popover');
+        // Verificar que Driver.js inicia el popover interactivo (#driver-popover-item en Driver v0.9)
+        $selectorPopover = '#driver-popover-item, .driver-popover';
+        $I->waitForElementVisible($selectorPopover, 5);
+        $I->waitForText('Barra de Búsqueda', 5, $selectorPopover);
 
         // Cerrar tour guiado limpiamente
         $I->executeJS("
-            if (window.driver && typeof window.driver.destroy === 'function') {
-                window.driver.destroy();
-            } else if (window.driverObj && typeof window.driverObj.destroy === 'function') {
-                window.driverObj.destroy();
-            } else {
+            if ($('.driver-close-btn').length) {
+                $('.driver-close-btn').click();
+            } else if ($('.driver-popover-close-btn').length) {
                 $('.driver-popover-close-btn').click();
+            } else if (window.driver && typeof window.driver.reset === 'function') {
+                window.driver.reset();
+            } else if (window.driver && typeof window.driver.destroy === 'function') {
+                window.driver.destroy();
             }
         ");
 
-        $I->waitForElementNotVisible('.driver-popover', 5);
+        $I->waitForElementNotVisible($selectorPopover, 5);
         $this->verificarSinErroresPhp($I);
     }
 
