@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Palmares;
 
 use PHPUnit\Framework\TestCase;
@@ -12,7 +14,26 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -45,7 +66,8 @@ class ConsultarPalmaresTest extends TestCase
     #[Group('RF-05')]
     #[Group('ESC-07')]
     #[Group('CP-28')]
-    public function testConsultarIndividualGeneralAgrupado(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_consultarIndividualConAgrupacionCorrecta_cuando_noHayFiltros(): void
     {
         $filas = [
             [
@@ -124,7 +146,8 @@ class ConsultarPalmaresTest extends TestCase
     #[Group('RF-05')]
     #[Group('ESC-07')]
     #[Group('CP-29')]
-    public function testConsultarIndividualConFiltro(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_filtrarPalmaresIndividual_cuando_seEnviaCadenaDeFiltro(): void
     {
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->expects($this->once())
@@ -157,7 +180,8 @@ class ConsultarPalmaresTest extends TestCase
     #[Group('RF-05')]
     #[Group('ESC-07')]
     #[Group('CP-30')]
-    public function testConsultarIndividualFalloCapturaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_capturarExcepcionYRetornarError_cuando_fallaConsultaIndividualSQL(): void
     {
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willThrowException(new PDOException('Error de lectura en vista_palmares_individual'));
@@ -179,7 +203,8 @@ class ConsultarPalmaresTest extends TestCase
     #[Group('RF-05')]
     #[Group('ESC-08')]
     #[Group('CP-31')]
-    public function testConsultarGrupalGeneralAgrupado(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_consultarGrupalConAgrupacionCorrecta_cuando_noHayFiltros(): void
     {
         $filas = [
             [
@@ -237,7 +262,8 @@ class ConsultarPalmaresTest extends TestCase
     #[Group('RF-05')]
     #[Group('ESC-08')]
     #[Group('CP-32')]
-    public function testConsultarGrupalConFiltro(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_filtrarPalmaresGrupal_cuando_seEnviaCadenaDeFiltro(): void
     {
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->expects($this->once())
@@ -269,7 +295,8 @@ class ConsultarPalmaresTest extends TestCase
     #[Group('RF-05')]
     #[Group('ESC-08')]
     #[Group('CP-33')]
-    public function testConsultarGrupalFalloCapturaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_capturarExcepcionYRetornarError_cuando_fallaConsultaGrupalSQL(): void
     {
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willThrowException(new PDOException('Error de lectura en vista_palmares_grupal'));

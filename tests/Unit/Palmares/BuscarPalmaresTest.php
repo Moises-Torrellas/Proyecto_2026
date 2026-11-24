@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Palmares;
 
 use PHPUnit\Framework\TestCase;
@@ -12,7 +14,26 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -36,11 +57,16 @@ class BuscarPalmaresTest extends TestCase
         $propiedad->setValue(null, $pdoMock);
     }
 
+    // ==========================================
+    // ESCENARIO 09: Búsqueda Específica de Palmarés por Identificador
+    // ==========================================
+
     // Caso 34: Búsqueda exitosa de palmarés individual por su identificador
     #[Group('RF-06')]
     #[Group('ESC-09')]
     #[Group('CP-34')]
-    public function testBuscarPalmaresIndividualExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_buscarPalmaresIndividualExitosamente_cuando_idExiste(): void
     {
         $datosEsperados = [
             [
@@ -80,7 +106,8 @@ class BuscarPalmaresTest extends TestCase
     #[Group('RF-06')]
     #[Group('ESC-09')]
     #[Group('CP-35')]
-    public function testBuscarPalmaresIndividualFalloCapturaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_capturarExcepcionYRetornarError_cuando_fallaBusquedaIndividualSQL(): void
     {
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willThrowException(new PDOException('Fallo al consultar registro individual'));
@@ -98,7 +125,8 @@ class BuscarPalmaresTest extends TestCase
     #[Group('RF-06')]
     #[Group('ESC-09')]
     #[Group('CP-36')]
-    public function testBuscarPalmaresGrupalExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_buscarPalmaresGrupalExitosamente_cuando_idExiste(): void
     {
         $datosEsperados = [
             [
@@ -135,7 +163,8 @@ class BuscarPalmaresTest extends TestCase
     #[Group('RF-06')]
     #[Group('ESC-09')]
     #[Group('CP-37')]
-    public function testBuscarPalmaresGrupalFalloCapturaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_capturarExcepcionYRetornarError_cuando_fallaBusquedaGrupalSQL(): void
     {
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willThrowException(new PDOException('Fallo al consultar registro grupal'));

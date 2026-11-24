@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Palmares;
 
 use PHPUnit\Framework\TestCase;
@@ -12,7 +14,26 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -29,31 +50,43 @@ class ValidarDatosPalmaresTest extends TestCase
         parent::tearDown();
     }
 
-    // Caso 01: Rechazo de datos vacíos en ProcesarDatos
+    // ==========================================
+    // ESCENARIO 01: Control de Integridad y Validación de Datos de Entrada
+    // ==========================================
+
+    // Caso 01: Lanzar excepción cuando los datos son vacíos al procesar
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-01')]
-    public function testDatosVaciosLanzaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_lanzarExcepcion_cuando_datosSonVaciosAlProcesar(): void
     {
+        // Arrange
         $modelo = new ModeloPalmares();
 
+        // Assert Expectation
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('No se proporcionaron datos para procesar.');
 
+        // Act
         $modelo->ProcesarDatos([]);
     }
 
-    // Caso 02: Rechazo de acción no válida o desconocida
+    // Caso 02: Lanzar excepción cuando la acción solicitada no es válida para Palmarés
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-02')]
-    public function testAccionInvalidaLanzaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_lanzarExcepcion_cuando_accionNoEsValida(): void
     {
+        // Arrange
         $modelo = new ModeloPalmares();
 
+        // Assert Expectation
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('La acción solicitada para el palmarés no es válida.');
 
+        // Act
         $modelo->ProcesarDatos([
             'accion' => 'accion_inexistente',
             'torneo' => 1,
@@ -61,15 +94,18 @@ class ValidarDatosPalmaresTest extends TestCase
         ]);
     }
 
-    // Caso 03: Asignación y almacenamiento correcto de propiedades en el modelo
+    // Caso 03: Asignar y almacenar correctamente las propiedades internas del modelo y verificar getId()
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-03')]
-    public function testAsignacionPropiedadesModeloYGetId(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_asignarPropiedadesInternasYRetornarId_cuando_datosSonProcesados(): void
     {
+        // Arrange
         $modelo = new ModeloPalmares();
         $reflector = new ReflectionClass($modelo);
 
+        // Act
         try {
             $modelo->ProcesarDatos([
                 'id'            => 10,
@@ -81,9 +117,10 @@ class ValidarDatosPalmaresTest extends TestCase
                 'accion'        => 'accion_desconocida'
             ]);
         } catch (Exception $e) {
-            // Se espera la excepción de acción inválida, pero las propiedades ya se asignaron
+            // Se espera la excepción de acción inválida, pero las propiedades ya fueron procesadas
         }
 
+        // Assert
         $this->assertEquals(10, $modelo->getId());
         $this->assertEquals(5, $reflector->getProperty('id_torneo')->getValue($modelo));
         $this->assertEquals(8, $reflector->getProperty('id_atleta')->getValue($modelo));
@@ -92,14 +129,17 @@ class ValidarDatosPalmaresTest extends TestCase
         $this->assertEquals('individual', $reflector->getProperty('tipo_palmares')->getValue($modelo));
     }
 
-    // Caso 04: Inclusión rechazada cuando el modelo de Premios no está configurado
+    // Caso 04: Retornar código de error al incluir cuando el modelo auxiliar de Premios no está inyectado
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-04')]
-    public function testInclusionSinModeloPremiosRetornaError(): void
+    #[Group('escenario_error')]
+    public function test_deberia_retornarError_cuando_modeloPremiosNoEstaConfiguradoAlIncluir(): void
     {
+        // Arrange
         $modelo = new ModeloPalmares();
 
+        // Act
         $resultado = $modelo->ProcesarDatos([
             'accion'        => 'incluir',
             'torneo'        => 1,
@@ -108,18 +148,22 @@ class ValidarDatosPalmaresTest extends TestCase
             'atleta'        => 3
         ]);
 
+        // Assert
         $this->assertEquals('error', $resultado['accion']);
         $this->assertEquals('Modelos requeridos no configurados.', $resultado['codigo']);
     }
 
-    // Caso 05: Modificación rechazada cuando el modelo de Premios no está configurado
+    // Caso 05: Retornar código de error al modificar cuando el modelo auxiliar de Premios no está inyectado
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-05')]
-    public function testModificacionSinModeloPremiosRetornaError(): void
+    #[Group('escenario_error')]
+    public function test_deberia_retornarError_cuando_modeloPremiosNoEstaConfiguradoAlModificar(): void
     {
+        // Arrange
         $modelo = new ModeloPalmares();
 
+        // Act
         $resultado = $modelo->ProcesarDatos([
             'accion'        => 'modificar',
             'id'            => 1,
@@ -129,28 +173,33 @@ class ValidarDatosPalmaresTest extends TestCase
             'atleta'        => 3
         ]);
 
+        // Assert
         $this->assertEquals('error', $resultado['accion']);
         $this->assertEquals('Modelos requeridos no configurados.', $resultado['codigo']);
     }
 
-    // Caso 06: Inyección de modelos auxiliares mediante setters
+    // Caso 06: Inyectar correctamente modelos auxiliares requeridos mediante sus setters
     #[Group('RF-01')]
     #[Group('ESC-01')]
     #[Group('CP-06')]
-    public function testSettersModelosAuxiliares(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_inyectarModelosAuxiliares_cuando_seLlamanSetters(): void
     {
+        // Arrange
         $modelo = new ModeloPalmares();
         $reflector = new ReflectionClass($modelo);
 
         $mockParticipaciones = $this->createMock(ModeloParticipaciones::class);
         $mockPremios = $this->createMock(ModeloPremios::class);
 
+        // Act
         $modelo->setModeloParticipaciones($mockParticipaciones);
         $modelo->setModeloPremios($mockPremios);
 
         $propPart = $reflector->getProperty('modeloParticipaciones')->getValue($modelo);
         $propPrem = $reflector->getProperty('modeloPremios')->getValue($modelo);
 
+        // Assert
         $this->assertSame($mockParticipaciones, $propPart);
         $this->assertSame($mockPremios, $propPrem);
     }

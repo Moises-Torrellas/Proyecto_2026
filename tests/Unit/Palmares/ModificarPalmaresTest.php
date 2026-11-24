@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Palmares;
 
 use PHPUnit\Framework\TestCase;
@@ -14,7 +16,26 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -47,7 +68,8 @@ class ModificarPalmaresTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-04')]
     #[Group('CP-17')]
-    public function testModificarPalmaresIndividualExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_modificarPalmaresIndividualExitosamente_cuando_datosSonValidos(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -104,7 +126,8 @@ class ModificarPalmaresTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-04')]
     #[Group('CP-18')]
-    public function testModificarPalmaresIndividualPremioNoExiste(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarModificacionIndividual_cuando_premioNoExiste(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -141,7 +164,8 @@ class ModificarPalmaresTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-04')]
     #[Group('CP-19')]
-    public function testModificarPalmaresIndividualAtletaSinParticipacion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarModificacionIndividual_cuando_atletaNoTieneParticipacion(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -149,7 +173,7 @@ class ModificarPalmaresTest extends TestCase
 
         $stmtDetalle = $this->createMock(PDOStatement::class);
         $stmtDetalle->method('execute')->willReturn(true);
-        $stmtDetalle->method('fetchColumn')->willReturn(false); // Sin participación
+        $stmtDetalle->method('fetchColumn')->willReturn(false);
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
@@ -189,7 +213,8 @@ class ModificarPalmaresTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-04')]
     #[Group('CP-20')]
-    public function testModificarPalmaresIndividualTipoPremioInvalido(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarModificacionIndividual_cuando_tipoPremioEsInvalido(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -231,7 +256,8 @@ class ModificarPalmaresTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-05')]
     #[Group('CP-21')]
-    public function testModificarPalmaresGrupalExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_modificarPalmaresGrupalExitosamente_cuando_datosSonValidos(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -288,7 +314,8 @@ class ModificarPalmaresTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-05')]
     #[Group('CP-22')]
-    public function testModificarPalmaresGrupalEquipoSinParticipacion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarModificacionGrupal_cuando_equipoNoTieneParticipacion(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -336,7 +363,8 @@ class ModificarPalmaresTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-05')]
     #[Group('CP-23')]
-    public function testModificarPalmaresGrupalTipoPremioInvalido(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarModificacionGrupal_cuando_tipoPremioEsInvalido(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -374,7 +402,8 @@ class ModificarPalmaresTest extends TestCase
     #[Group('RF-03')]
     #[Group('ESC-05')]
     #[Group('CP-24')]
-    public function testModificarPalmaresFalloBDConRollback(): void
+    #[Group('escenario_error')]
+    public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaActualizacionSQL(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);

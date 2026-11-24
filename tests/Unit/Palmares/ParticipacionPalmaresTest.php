@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Palmares;
 
 use PHPUnit\Framework\TestCase;
@@ -12,7 +14,26 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -36,11 +57,16 @@ class ParticipacionPalmaresTest extends TestCase
         $propiedad->setValue(null, $pdoMock);
     }
 
+    // ==========================================
+    // ESCENARIO 10: Consulta de Participantes del Torneo para Asignación
+    // ==========================================
+
     // Caso 38: Consulta exitosa de atletas participantes en un torneo específico
     #[Group('RF-07')]
     #[Group('ESC-10')]
     #[Group('CP-38')]
-    public function testObtenerAtletasParticipacionExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_obtenerAtletasParticipantesExitosamente_cuando_torneoTieneAtletas(): void
     {
         $filas = [
             [
@@ -92,7 +118,8 @@ class ParticipacionPalmaresTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-10')]
     #[Group('CP-39')]
-    public function testObtenerAtletasParticipacionFalloCapturaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_capturarExcepcionYRetornarError_cuando_fallaConsultaAtletasSQL(): void
     {
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willThrowException(new PDOException('Error al consultar atletas de torneo'));
@@ -113,7 +140,8 @@ class ParticipacionPalmaresTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-10')]
     #[Group('CP-40')]
-    public function testObtenerEquiposParticipacionExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_obtenerEquiposParticipantesExitosamente_cuando_torneoTieneEquipos(): void
     {
         $filas = [
             [
@@ -160,7 +188,8 @@ class ParticipacionPalmaresTest extends TestCase
     #[Group('RF-07')]
     #[Group('ESC-10')]
     #[Group('CP-41')]
-    public function testObtenerEquiposParticipacionFalloCapturaExcepcion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_capturarExcepcionYRetornarError_cuando_fallaConsultaEquiposSQL(): void
     {
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->method('prepare')->willThrowException(new PDOException('Error al consultar equipos de torneo'));

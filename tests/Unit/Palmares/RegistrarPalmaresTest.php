@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Palmares;
 
 use PHPUnit\Framework\TestCase;
@@ -14,7 +16,26 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -43,11 +64,12 @@ class RegistrarPalmaresTest extends TestCase
     // ESCENARIO 02: Inclusión de Palmarés Individual
     // ==========================================
 
-    // Caso 07: Inclusión exitosa de un palmarés individual
+    // Caso 07: Inclusión exitosa de un palmarés individual con datos válidos
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-07')]
-    public function testIncluirPalmaresIndividualExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_incluirPalmaresIndividualExitosamente_cuando_datosSonValidos(): void
     {
         // 1. Verificación existencia de premio
         $stmtExistePremio = $this->createMock(PDOStatement::class);
@@ -119,15 +141,16 @@ class RegistrarPalmaresTest extends TestCase
         $this->assertEquals(101, $modelo->getId());
     }
 
-    // Caso 08: Rechazo de palmarés individual cuando el premio no existe
+    // Caso 08: Rechazo de palmarés individual cuando el premio no existe en base de datos
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-08')]
-    public function testIncluirPalmaresIndividualPremioNoExiste(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusionIndividual_cuando_premioNoExiste(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
-        $stmtExistePremio->method('fetchColumn')->willReturn(0); // Premio inexistente
+        $stmtExistePremio->method('fetchColumn')->willReturn(0);
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
@@ -159,7 +182,8 @@ class RegistrarPalmaresTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-09')]
-    public function testIncluirPalmaresIndividualTipoPremioIncorrecto(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusionIndividual_cuando_tipoPremioEsIncorrecto(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -196,7 +220,8 @@ class RegistrarPalmaresTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-10')]
-    public function testIncluirPalmaresIndividualAtletaSinParticipacion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusionIndividual_cuando_atletaNoTieneParticipacion(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -204,7 +229,7 @@ class RegistrarPalmaresTest extends TestCase
 
         $stmtDetalle = $this->createMock(PDOStatement::class);
         $stmtDetalle->method('execute')->willReturn(true);
-        $stmtDetalle->method('fetchColumn')->willReturn(false); // No hay participación
+        $stmtDetalle->method('fetchColumn')->willReturn(false);
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
@@ -237,11 +262,12 @@ class RegistrarPalmaresTest extends TestCase
         $this->assertEquals('El atleta no cuenta con una participación registrada en este torneo.', $resultado['codigo']);
     }
 
-    // Caso 11: Rechazo de palmarés individual por registro duplicado
+    // Caso 11: Rechazo de palmarés individual por registro duplicado en el mismo torneo
     #[Group('RF-02')]
     #[Group('ESC-02')]
     #[Group('CP-11')]
-    public function testIncluirPalmaresIndividualDuplicado(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusionIndividual_cuando_registroEsDuplicado(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -253,7 +279,7 @@ class RegistrarPalmaresTest extends TestCase
 
         $stmtDup = $this->createMock(PDOStatement::class);
         $stmtDup->method('execute')->willReturn(true);
-        $stmtDup->method('fetchColumn')->willReturn(1); // Ya existe
+        $stmtDup->method('fetchColumn')->willReturn(1);
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
@@ -299,29 +325,25 @@ class RegistrarPalmaresTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-03')]
     #[Group('CP-12')]
-    public function testIncluirPalmaresGrupalExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_incluirPalmaresGrupalExitosamente_cuando_datosSonValidos(): void
     {
-        // 1. Verificación existencia premio
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
         $stmtExistePremio->method('fetchColumn')->willReturn(1);
 
-        // 2. Participación del equipo
         $stmtPart = $this->createMock(PDOStatement::class);
         $stmtPart->method('execute')->willReturn(true);
         $stmtPart->method('fetchColumn')->willReturn(18);
 
-        // 3. Verificación de duplicado
         $stmtDup = $this->createMock(PDOStatement::class);
         $stmtDup->method('execute')->willReturn(true);
         $stmtDup->method('fetchColumn')->willReturn(0);
 
-        // 4. Stored Procedure ProcesarPalmaresGrupal
         $stmtSP = $this->createMock(PDOStatement::class);
         $stmtSP->method('execute')->willReturn(true);
         $stmtSP->expects($this->once())->method('closeCursor')->willReturn(true);
 
-        // 5. Obtener ID generado
         $stmtId = $this->createMock(PDOStatement::class);
         $stmtId->method('execute')->willReturn(true);
         $stmtId->method('fetchColumn')->willReturn(50);
@@ -376,7 +398,8 @@ class RegistrarPalmaresTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-03')]
     #[Group('CP-13')]
-    public function testIncluirPalmaresGrupalCommitInternoSP(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_manejarCommitInternoSP_cuando_seIncluyePalmaresGrupal(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -400,7 +423,6 @@ class RegistrarPalmaresTest extends TestCase
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
-        // Simula que inTransaction es true pero commit lanza excepción de no active transaction
         $pdoMock->method('inTransaction')->willReturn(true);
         $pdoMock->method('commit')->willThrowException(new \PDOException('There is no active transaction'));
 
@@ -445,7 +467,8 @@ class RegistrarPalmaresTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-03')]
     #[Group('CP-14')]
-    public function testIncluirPalmaresGrupalEquipoSinParticipacion(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusionGrupal_cuando_equipoNoTieneParticipacion(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -453,7 +476,7 @@ class RegistrarPalmaresTest extends TestCase
 
         $stmtPart = $this->createMock(PDOStatement::class);
         $stmtPart->method('execute')->willReturn(true);
-        $stmtPart->method('fetchColumn')->willReturn(false); // No tiene participación
+        $stmtPart->method('fetchColumn')->willReturn(false);
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
@@ -490,7 +513,8 @@ class RegistrarPalmaresTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-03')]
     #[Group('CP-15')]
-    public function testIncluirPalmaresGrupalDuplicado(): void
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarInclusionGrupal_cuando_registroEsDuplicado(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);
@@ -502,7 +526,7 @@ class RegistrarPalmaresTest extends TestCase
 
         $stmtDup = $this->createMock(PDOStatement::class);
         $stmtDup->method('execute')->willReturn(true);
-        $stmtDup->method('fetchColumn')->willReturn(1); // Duplicado
+        $stmtDup->method('fetchColumn')->willReturn(1);
 
         $pdoMock = $this->createMock(PDO::class);
         $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
@@ -544,7 +568,8 @@ class RegistrarPalmaresTest extends TestCase
     #[Group('RF-02')]
     #[Group('ESC-03')]
     #[Group('CP-16')]
-    public function testIncluirPalmaresGrupalFalloBDConRollback(): void
+    #[Group('escenario_error')]
+    public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaProcedimientoAlmacenadoGrupal(): void
     {
         $stmtExistePremio = $this->createMock(PDOStatement::class);
         $stmtExistePremio->method('execute')->willReturn(true);

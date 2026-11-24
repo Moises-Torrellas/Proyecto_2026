@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace tests\Unit\Palmares;
 
 use PHPUnit\Framework\TestCase;
@@ -12,7 +14,26 @@ use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
 if (!defined('EMPTY_SELECTION')) {
-    require_once dirname(__DIR__, 3) . '/config/config.php';
+    $configPath = dirname(__DIR__, 3) . '/config/config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+}
+
+if (!defined('DUPLICATE')) {
+    define('DUPLICATE', '004');
+}
+if (!defined('INVALID_ID')) {
+    define('INVALID_ID', '003');
+}
+if (!defined('ASSOCIATES')) {
+    define('ASSOCIATES', '006');
+}
+if (!defined('VALIDATION')) {
+    define('VALIDATION', '007');
+}
+if (!defined('DB_CONNECTION')) {
+    define('DB_CONNECTION', '500');
 }
 
 #[Group('unit')]
@@ -36,11 +57,16 @@ class EliminarPalmaresTest extends TestCase
         $propiedad->setValue(null, $pdoMock);
     }
 
+    // ==========================================
+    // ESCENARIO 06: Eliminación de Registros de Palmarés
+    // ==========================================
+
     // Caso 25: Eliminación exitosa de un registro de palmarés individual
     #[Group('RF-04')]
     #[Group('ESC-06')]
     #[Group('CP-25')]
-    public function testEliminarPalmaresIndividualExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_eliminarPalmaresIndividualExitosamente_cuando_idExiste(): void
     {
         $stmtDel = $this->createMock(PDOStatement::class);
         $stmtDel->expects($this->once())->method('bindValue')->with(':id', 15, PDO::PARAM_INT)->willReturn(true);
@@ -73,7 +99,8 @@ class EliminarPalmaresTest extends TestCase
     #[Group('RF-04')]
     #[Group('ESC-06')]
     #[Group('CP-26')]
-    public function testEliminarPalmaresGrupalExitoso(): void
+    #[Group('escenario_exito')]
+    public function test_deberia_eliminarPalmaresGrupalExitosamente_cuando_idExiste(): void
     {
         $stmtDel = $this->createMock(PDOStatement::class);
         $stmtDel->expects($this->once())->method('bindValue')->with(':id', 30, PDO::PARAM_INT)->willReturn(true);
@@ -106,7 +133,8 @@ class EliminarPalmaresTest extends TestCase
     #[Group('RF-04')]
     #[Group('ESC-06')]
     #[Group('CP-27')]
-    public function testEliminarPalmaresFalloBDConRollback(): void
+    #[Group('escenario_error')]
+    public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaEliminacionSQL(): void
     {
         $stmtDel = $this->createMock(PDOStatement::class);
         $stmtDel->method('bindValue')->willReturn(true);
