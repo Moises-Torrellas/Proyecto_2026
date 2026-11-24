@@ -41,6 +41,8 @@
         "test:integ": "@php bin/test.php integ",
         "test:humo": "@php bin/test.php humo",
         "test:interfaz": "@php bin/test.php interfaz",
+        "test:backend": "@php bin/test.php backend",
+        "test:postman": "@php bin/test.php backend",
         "test": "@php bin/test.php"
     }
 }

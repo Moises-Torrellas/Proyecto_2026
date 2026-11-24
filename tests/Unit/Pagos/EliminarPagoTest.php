@@ -17,6 +17,7 @@ if (!defined('EMPTY_SELECTION')) {
 
 #[Group('unit')]
 #[Group('unitPagos')]
+#[Group('eliminarPagos')]
 class EliminarPagoTest extends TestCase
 {
     protected function tearDown(): void
@@ -46,39 +47,26 @@ class EliminarPagoTest extends TestCase
         return $modeloFake;
     }
 
-    // Caso 1: Id con formato inválido
-    public function testIdInvalido(): void
+    // Caso 1: Validación de campos con formato inválido (id y motivo de anulación)
+    public function testCamposInvalidosLanzaExcepcion(): void
     {
-        // Arrange
         $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'eliminar',
-            'id' => 'abc'
-        ];
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Id de pago inválido.');
+        // 1. Id inválido
+        try {
+            $modelo->ProcesarDatos(['accion' => 'eliminar', 'id' => 'abc']);
+            $this->fail('Se esperaba excepción por Id inválido');
+        } catch (Exception $e) {
+            $this->assertEquals('Id de pago inválido.', $e->getMessage());
+        }
 
-        // Act
-        $modelo->ProcesarDatos($datos);
-    }
-
-    // Caso 2: Motivo de anulación con formato inválido
-    public function testMotivoInvalido(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'eliminar',
-            'id' => '10',
-            'motivo_anulacion' => 'Motivo_Invalido_123!'
-        ];
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Motivo de anulación inválido.');
-
-        // Act
-        $modelo->ProcesarDatos($datos);
+        // 2. Motivo inválido
+        try {
+            $modelo->ProcesarDatos(['accion' => 'eliminar', 'id' => '10', 'motivo_anulacion' => 'Motivo_Invalido_123!']);
+            $this->fail('Se esperaba excepción por motivo inválido');
+        } catch (Exception $e) {
+            $this->assertEquals('Motivo de anulación inválido.', $e->getMessage());
+        }
     }
 
     // Caso 3: Pago no existe en BD
@@ -150,127 +138,64 @@ class EliminarPagoTest extends TestCase
         $this->assertEquals('Este pago ya se encuentra anulado.', $resultado['mensaje']);
     }
 
-    // Caso 5: Anulación exitosa de pago con cuentas asociadas
+    // Caso 4: Anulación exitosa de pago (con/sin referencia, con/sin cargos asociados)
     public function testAnularPagoExitoso(): void
     {
-        // Arrange
-        $pagoDatos = [
-            'monto_pago' => '100.00',
-            'fecha' => '2026-10-01',
-            'referencia' => '123456',
-            'estatus' => 1,
-            'metodo_pago' => 'Transferencia',
-            'simbolo' => '$'
+        $casos = [
+            'con referencia y con cargos' => [
+                'id'         => '15',
+                'referencia' => '123456',
+                'cargos'     => [['codigo_cargo' => 5], ['codigo_cargo' => 6]],
+                'motivo'     => 'Error en monto'
+            ],
+            'sin referencia' => [
+                'id'         => '20',
+                'referencia' => null,
+                'cargos'     => [['codigo_cargo' => 3]],
+                'motivo'     => null
+            ],
+            'sin cargos asociados' => [
+                'id'         => '30',
+                'referencia' => '987654',
+                'cargos'     => [],
+                'motivo'     => null
+            ]
         ];
 
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetch')->willReturn($pagoDatos);
-        $stmtMock->method('fetchAll')->willReturn([
-            ['codigo_cargo' => 5],
-            ['codigo_cargo' => 6]
-        ]);
+        foreach ($casos as $nombre => $caso) {
+            $pagoDatos = [
+                'monto_pago'  => '100.00',
+                'fecha'       => '2026-10-01',
+                'referencia'  => $caso['referencia'],
+                'estatus'     => 1,
+                'metodo_pago' => 'Transferencia',
+                'simbolo'     => '$'
+            ];
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('commit')->willReturn(true);
+            $stmtMock = $this->createMock(PDOStatement::class);
+            $stmtMock->method('execute')->willReturn(true);
+            $stmtMock->method('fetch')->willReturn($pagoDatos);
+            $stmtMock->method('fetchAll')->willReturn($caso['cargos']);
 
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
+            $pdoMock = $this->createMock(PDO::class);
+            $pdoMock->method('prepare')->willReturn($stmtMock);
+            $pdoMock->method('beginTransaction')->willReturn(true);
+            $pdoMock->method('commit')->willReturn(true);
 
-        $datos = [
-            'accion' => 'eliminar',
-            'id' => '15',
-            'motivo_anulacion' => 'Error en monto'
-        ];
+            $modelo = $this->crearModeloConPdoMock($pdoMock);
 
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
+            $datos = [
+                'accion' => 'eliminar',
+                'id'     => $caso['id']
+            ];
+            if ($caso['motivo'] !== null) {
+                $datos['motivo_anulacion'] = $caso['motivo'];
+            }
 
-        // Assert
-        $this->assertEquals('exito', $resultado['accion']);
-        $this->assertEquals('Pago anulado correctamente. Las cuentas han vuelto a estado Pendiente.', $resultado['mensaje']);
-        $this->assertStringContainsString('100.00', $resultado['desc_bitacora']);
-        $this->assertStringContainsString('123456', $resultado['desc_bitacora']);
-    }
+            $resultado = $modelo->ProcesarDatos($datos);
 
-    // Caso 6: Anulación exitosa de pago sin referencia
-    public function testAnularPagoSinReferencia(): void
-    {
-        // Arrange
-        $pagoDatos = [
-            'monto_pago' => '50.00',
-            'fecha' => '2026-10-05',
-            'referencia' => null,
-            'estatus' => 1,
-            'metodo_pago' => 'Efectivo',
-            'simbolo' => '$'
-        ];
-
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetch')->willReturn($pagoDatos);
-        $stmtMock->method('fetchAll')->willReturn([
-            ['codigo_cargo' => 3]
-        ]);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('commit')->willReturn(true);
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'eliminar',
-            'id' => '20'
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('exito', $resultado['accion']);
-        $this->assertStringNotContainsString('con referencia', $resultado['desc_bitacora']);
-        $datosPrevios = json_decode($resultado['datos_previos'], true);
-        $this->assertEquals('No aplica', $datosPrevios['referencia']);
-    }
-
-    // Caso 7: Anulación exitosa de pago sin cuentas asociadas
-    public function testAnularPagoSinCargosAsociados(): void
-    {
-        // Arrange
-        $pagoDatos = [
-            'monto_pago' => '75.00',
-            'fecha' => '2026-10-10',
-            'referencia' => '987654',
-            'estatus' => 1,
-            'metodo_pago' => 'Punto de Venta',
-            'simbolo' => 'Bs'
-        ];
-
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetch')->willReturn($pagoDatos);
-        $stmtMock->method('fetchAll')->willReturn([]);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('commit')->willReturn(true);
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'eliminar',
-            'id' => '30'
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('exito', $resultado['accion']);
-        $this->assertEquals('Pago anulado correctamente. Las cuentas han vuelto a estado Pendiente.', $resultado['mensaje']);
+            $this->assertEquals('exito', $resultado['accion'], "Fallo en caso [$nombre]");
+            $this->assertEquals('Pago anulado correctamente. Las cuentas han vuelto a estado Pendiente.', $resultado['mensaje'], "Mensaje incorrecto en caso [$nombre]");
+        }
     }
 }

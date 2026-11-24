@@ -14,6 +14,8 @@ if (!defined('EMPTY_SELECTION')) {
 }
 
 #[Group("integ")]
+#[Group("pagos")]
+#[Group("pagosConsultar")]
 class ConsultasPagoIntegrationTest extends TestCase
 {
     private ?PDO $pdo = null;

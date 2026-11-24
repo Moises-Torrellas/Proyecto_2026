@@ -17,6 +17,8 @@ if (!defined('EMPTY_SELECTION')) {
 
 #[Group("integ")]
 #[Group("atletas")]
+#[Group("atletasRegistrar")]
+
 class RegistrarAtletaIntegrationTest extends TestCase
 {
     private ?PDO $pdo = null;

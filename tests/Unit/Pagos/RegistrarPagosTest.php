@@ -17,6 +17,7 @@ if (!defined('EMPTY_SELECTION')) {
 
 #[Group('unit')]
 #[Group('unitPagos')]
+#[Group('registrarPagos')]
 class RegistrarPagosTest extends TestCase
 {
     protected function tearDown(): void
@@ -46,21 +47,29 @@ class RegistrarPagosTest extends TestCase
         return $modeloFake;
     }
 
-    // Caso 1: Datos vacíos
-    public function testDatosVacios(): void
+    // Caso 1: Validación de estructura de datos de entrada y acción inválida
+    public function testEstructuraDatosYAccionInvalida(): void
     {
-        // Arrange
         $modelo = new ModeloPagos();
-        $datosVacios = [];
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('No se proporcionaron datos para procesar.');
+        // 1. Datos vacíos
+        try {
+            $modelo->ProcesarDatos([]);
+            $this->fail('Se esperaba excepción por datos vacíos');
+        } catch (Exception $e) {
+            $this->assertEquals('No se proporcionaron datos para procesar.', $e->getMessage());
+        }
 
-        // Act
-        $modelo->ProcesarDatos($datosVacios);
+        // 2. Acción inválida
+        try {
+            $modelo->ProcesarDatos(['accion' => 'accion_invalida']);
+            $this->fail('Se esperaba excepción por acción no válida');
+        } catch (Exception $e) {
+            $this->assertEquals('La accion solicitada para el pago no es valida.', $e->getMessage());
+        }
     }
 
-    // Caso 2: Validación de campos con formato o valor inválido
+    // Caso 2: Validación de campos con formato o valor inválido (Reglas y Expresiones)
     public function testValidarCamposInvalidosLanzaExcepcion(): void
     {
         $modelo = new ModeloPagos();
@@ -86,156 +95,95 @@ class RegistrarPagosTest extends TestCase
         }
     }
 
-    // Caso 3: Acción no válida
-    public function testAccionInvalida(): void
+    // Caso 3: Precondiciones de registro de pago inválidas (sin cuentas, monto <= 0, tasa <= 0)
+    public function testPrecondicionesDePagoInvalidas(): void
     {
-        // Arrange
         $modelo = new ModeloPagos();
-        $datosInvalidos = [
-            'accion' => 'accion_invalida'
+        $casos = [
+            'sin cuentas' => [
+                'datos'          => ['accion' => 'incluir', 'cuenta' => []],
+                'codigoEsperado' => EMPTY_SELECTION
+            ],
+            'monto menor o igual a cero' => [
+                'datos'          => [
+                    'accion' => 'incluir',
+                    'cuenta' => ['1'],
+                    'monto'  => '0',
+                    'tasa'   => '1',
+                    'fecha'  => date('Y-m-d')
+                ],
+                'codigoEsperado' => 'El monto del pago debe ser mayor a 0.'
+            ],
+            'tasa menor o igual a cero' => [
+                'datos'          => [
+                    'accion' => 'incluir',
+                    'cuenta' => ['1'],
+                    'monto'  => '100.00',
+                    'tasa'   => '0',
+                    'fecha'  => date('Y-m-d')
+                ],
+                'codigoEsperado' => 'La tasa de cambio debe ser mayor a 0.'
+            ]
         ];
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('La accion solicitada para el pago no es valida.');
-
-        // Act
-        $modelo->ProcesarDatos($datosInvalidos);
+        foreach ($casos as $nombre => $caso) {
+            $resultado = $modelo->ProcesarDatos($caso['datos']);
+            $this->assertEquals('error', $resultado['accion'], "Fallo de acción en caso [$nombre]");
+            $this->assertEquals($caso['codigoEsperado'], $resultado['codigo'], "Código incorrecto en caso [$nombre]");
+        }
     }
 
-    // Caso 12: Sin cuentas seleccionadas
-    public function testSinCuentasSeleccionadas(): void
+    // Caso 4: Entidades relacionadas inexistentes en BD (método de pago o moneda)
+    public function testEntidadesRelacionadasInexistentes(): void
     {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'incluir',
-            'cuenta' => []
+        $casos = [
+            'metodo inexistente' => [
+                'metodo'             => '99',
+                'moneda'             => '1',
+                'retornosExistencia' => [0],
+                'codigoEsperado'     => INVALID_ID
+            ],
+            'moneda inexistente' => [
+                'metodo'             => '1',
+                'moneda'             => '99',
+                'retornosExistencia' => [1, 0],
+                'codigoEsperado'     => INVALID_ID . '0'
+            ]
         ];
 
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
+        foreach ($casos as $nombre => $caso) {
+            $stmtMock = $this->createMock(PDOStatement::class);
+            $stmtMock->method('fetchColumn')->willReturnOnConsecutiveCalls(...$caso['retornosExistencia']);
+            $stmtMock->method('execute')->willReturn(true);
 
-        // Assert
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(EMPTY_SELECTION, $resultado['codigo']);
+            $pdoMock = $this->createMock(PDO::class);
+            $pdoMock->method('prepare')->willReturn($stmtMock);
+            $pdoMock->method('beginTransaction')->willReturn(true);
+            $pdoMock->method('rollBack')->willReturn(true);
+            $pdoMock->method('inTransaction')->willReturn(true);
+
+            $modelo = $this->crearModeloConPdoMock($pdoMock);
+
+            $datos = [
+                'accion'     => 'incluir',
+                'cuenta'     => ['1'],
+                'metodo'     => $caso['metodo'],
+                'moneda'     => $caso['moneda'],
+                'monto'      => '100.00',
+                'tasa'       => '1',
+                'fecha'      => date('Y-m-d'),
+                'referencia' => '123456'
+            ];
+
+            $resultado = $modelo->ProcesarDatos($datos);
+            $this->assertEquals('error', $resultado['accion'], "Fallo en caso [$nombre]");
+            $this->assertEquals($caso['codigoEsperado'], $resultado['codigo'], "Código incorrecto en caso [$nombre]");
+        }
     }
 
-    // Caso 13: Monto menor o igual a cero
-    public function testMontoMenorOIgualACero(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1'],
-            'monto' => '0',
-            'tasa' => '1',
-            'fecha' => date('Y-m-d')
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals('El monto del pago debe ser mayor a 0.', $resultado['codigo']);
-    }
-
-    // Caso 14: Tasa de cambio menor o igual a cero
-    public function testTasaMenorOIgualACero(): void
-    {
-        // Arrange
-        $modelo = new ModeloPagos();
-        $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1'],
-            'monto' => '100.00',
-            'tasa' => '0',
-            'fecha' => date('Y-m-d')
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals('La tasa de cambio debe ser mayor a 0.', $resultado['codigo']);
-    }
-
-    // Caso 15: Método de pago no existe en BD
-    public function testMetodoNoExiste(): void
-    {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('fetchColumn')->willReturn(0);
-        $stmtMock->method('execute')->willReturn(true);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('rollBack')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1'],
-            'metodo' => '99',
-            'moneda' => '1',
-            'monto' => '100.00',
-            'tasa' => '1',
-            'fecha' => date('Y-m-d'),
-            'referencia' => '123456'
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(INVALID_ID, $resultado['codigo']);
-    }
-
-    // Caso 16: Moneda no existe en BD
-    public function testMonedaNoExiste(): void
-    {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('fetchColumn')->willReturnOnConsecutiveCalls(1, 0);
-        $stmtMock->method('execute')->willReturn(true);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('rollBack')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1'],
-            'metodo' => '1',
-            'moneda' => '99',
-            'monto' => '100.00',
-            'tasa' => '1',
-            'fecha' => date('Y-m-d'),
-            'referencia' => '123456'
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals(INVALID_ID . '0', $resultado['codigo']);
-    }
-
-    // Caso 17: Cuentas sin deuda pendiente
+    // Caso 5: Cuentas sin deuda pendiente
     public function testCuentasSinDeuda(): void
     {
-        // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->method('execute')->willReturn(true);
         $stmtMock->method('fetchColumn')->willReturn(1);
@@ -256,154 +204,95 @@ class RegistrarPagosTest extends TestCase
         $modelo = $this->crearModeloConPdoMock($pdoMock);
 
         $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1'],
-            'metodo' => '1',
-            'moneda' => '1',
-            'monto' => '50.00',
-            'tasa' => '1',
-            'fecha' => date('Y-m-d'),
+            'accion'     => 'incluir',
+            'cuenta'     => ['1'],
+            'metodo'     => '1',
+            'moneda'     => '1',
+            'monto'      => '50.00',
+            'tasa'       => '1',
+            'fecha'      => date('Y-m-d'),
             'referencia' => '123456'
         ];
 
-        // Act
         $resultado = $modelo->ProcesarDatos($datos);
 
-        // Assert
         $this->assertEquals('error', $resultado['accion']);
         $this->assertEquals('Las cuentas seleccionadas no poseen deuda pendiente.', $resultado['codigo']);
     }
 
-    // Caso 18: Pago con monto exacto
-    public function testPagoMontoExacto(): void
+    // Caso 6: Distribución de monto y registro exitoso (monto exacto, parcial, con vuelto y sin referencia)
+    public function testDistribucionDeMontoYPagoExitoso(): void
     {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchColumn')->willReturn(1);
-        $stmtMock->method('fetchAll')->willReturn([
-            ['codigo_moneda' => 1, 'nombre' => 'Dolar', 'simbolo' => '$', 'monto_total' => '100.00']
-        ]);
-        $stmtMock->method('fetch')->willReturn([
-            'total_abonado' => '0.00'
-        ]);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('commit')->willReturn(true);
-        $pdoMock->method('lastInsertId')->willReturn('25');
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1'],
-            'metodo' => '1',
-            'moneda' => '1',
-            'monto' => '100.00',
-            'tasa' => '1',
-            'fecha' => date('Y-m-d'),
-            'referencia' => '123456'
+        $casos = [
+            'monto exacto con referencia' => [
+                'montoTotalCuenta' => '100.00',
+                'montoPago'        => '100.00',
+                'referencia'       => '123456',
+                'vueltoEsperado'   => 0
+            ],
+            'pago parcial abono' => [
+                'montoTotalCuenta' => '100.00',
+                'montoPago'        => '40.00',
+                'referencia'       => '123456',
+                'vueltoEsperado'   => 0
+            ],
+            'sobrepago genera vuelto' => [
+                'montoTotalCuenta' => '60.00',
+                'montoPago'        => '100.00',
+                'referencia'       => '123456',
+                'vueltoEsperado'   => 40.00
+            ],
+            'monto exacto sin referencia' => [
+                'montoTotalCuenta' => '100.00',
+                'montoPago'        => '100.00',
+                'referencia'       => null,
+                'vueltoEsperado'   => 0
+            ]
         ];
 
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
+        foreach ($casos as $nombre => $caso) {
+            $stmtMock = $this->createMock(PDOStatement::class);
+            $stmtMock->method('execute')->willReturn(true);
+            $stmtMock->method('fetchColumn')->willReturn(1);
+            $stmtMock->method('fetchAll')->willReturn([
+                ['codigo_moneda' => 1, 'nombre' => 'Dolar', 'simbolo' => '$', 'monto_total' => $caso['montoTotalCuenta']]
+            ]);
+            $stmtMock->method('fetch')->willReturn([
+                'total_abonado' => '0.00'
+            ]);
 
-        // Assert
-        $this->assertEquals('exito', $resultado['accion']);
-        $this->assertEquals('25', $resultado['id_pago']);
-        $this->assertEquals(0, $resultado['vuelto']);
+            $pdoMock = $this->createMock(PDO::class);
+            $pdoMock->method('prepare')->willReturn($stmtMock);
+            $pdoMock->method('beginTransaction')->willReturn(true);
+            $pdoMock->method('commit')->willReturn(true);
+            $pdoMock->method('lastInsertId')->willReturn('100');
+
+            $modelo = $this->crearModeloConPdoMock($pdoMock);
+
+            $datos = [
+                'accion' => 'incluir',
+                'cuenta' => ['1'],
+                'metodo' => '1',
+                'moneda' => '1',
+                'monto'  => $caso['montoPago'],
+                'tasa'   => '1',
+                'fecha'  => date('Y-m-d')
+            ];
+            if ($caso['referencia'] !== null) {
+                $datos['referencia'] = $caso['referencia'];
+            }
+
+            $resultado = $modelo->ProcesarDatos($datos);
+
+            $this->assertEquals('exito', $resultado['accion'], "Fallo en caso [$nombre]");
+            $this->assertEquals('100', $resultado['id_pago'], "ID incorrecto en caso [$nombre]");
+            $this->assertEquals($caso['vueltoEsperado'], $resultado['vuelto'], "Vuelto incorrecto en caso [$nombre]");
+        }
     }
 
-    // Caso 19: Pago con generación de vuelto
-    public function testPagoGeneraVuelto(): void
-    {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchColumn')->willReturn(1);
-        $stmtMock->method('fetchAll')->willReturn([
-            ['codigo_moneda' => 1, 'nombre' => 'Dolar', 'simbolo' => '$', 'monto_total' => '60.00']
-        ]);
-        $stmtMock->method('fetch')->willReturn([
-            'total_abonado' => '0.00'
-        ]);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('commit')->willReturn(true);
-        $pdoMock->method('lastInsertId')->willReturn('30');
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1'],
-            'metodo' => '1',
-            'moneda' => '1',
-            'monto' => '100.00',
-            'tasa' => '1',
-            'fecha' => date('Y-m-d'),
-            'referencia' => '123456'
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('exito', $resultado['accion']);
-        $this->assertEquals('30', $resultado['id_pago']);
-        $this->assertEquals(40.00, $resultado['vuelto']);
-    }
-
-    // Caso 20: Pago parcial (abono)
-    public function testPagoParcial(): void
-    {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchColumn')->willReturn(1);
-        $stmtMock->method('fetchAll')->willReturn([
-            ['codigo_moneda' => 1, 'nombre' => 'Dolar', 'simbolo' => '$', 'monto_total' => '100.00']
-        ]);
-        $stmtMock->method('fetch')->willReturn([
-            'total_abonado' => '0.00'
-        ]);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('commit')->willReturn(true);
-        $pdoMock->method('lastInsertId')->willReturn('35');
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1'],
-            'metodo' => '1',
-            'moneda' => '1',
-            'monto' => '40.00',
-            'tasa' => '1',
-            'fecha' => date('Y-m-d'),
-            'referencia' => '123456'
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('exito', $resultado['accion']);
-        $this->assertEquals('35', $resultado['id_pago']);
-        $this->assertEquals(0, $resultado['vuelto']);
-    }
-
-    // Caso 21: Pago a múltiples cuentas
+    // Caso 7: Pago a múltiples cuentas con distribución secuencial de saldo
     public function testPagoMultiplesCuentas(): void
     {
-        // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->method('execute')->willReturn(true);
         $stmtMock->method('fetchColumn')->willReturn(1);
@@ -425,29 +314,26 @@ class RegistrarPagosTest extends TestCase
         $modelo = $this->crearModeloConPdoMock($pdoMock);
 
         $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1', '2'],
-            'metodo' => '1',
-            'moneda' => '1',
-            'monto' => '80.00',
-            'tasa' => '1',
-            'fecha' => date('Y-m-d'),
+            'accion'     => 'incluir',
+            'cuenta'     => ['1', '2'],
+            'metodo'     => '1',
+            'moneda'     => '1',
+            'monto'      => '80.00',
+            'tasa'       => '1',
+            'fecha'      => date('Y-m-d'),
             'referencia' => '123456'
         ];
 
-        // Act
         $resultado = $modelo->ProcesarDatos($datos);
 
-        // Assert
         $this->assertEquals('exito', $resultado['accion']);
         $this->assertEquals('40', $resultado['id_pago']);
         $this->assertEquals(0, $resultado['vuelto']);
     }
 
-    // Caso 22: Pago con tasa de cambio
+    // Caso 8: Pago con tasa de cambio y conversión de moneda
     public function testPagoConTasaCambio(): void
     {
-        // Arrange
         $stmtMock = $this->createMock(PDOStatement::class);
         $stmtMock->method('execute')->willReturn(true);
         $stmtMock->method('fetchColumn')->willReturn(1);
@@ -467,63 +353,20 @@ class RegistrarPagosTest extends TestCase
         $modelo = $this->crearModeloConPdoMock($pdoMock);
 
         $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1'],
-            'metodo' => '1',
-            'moneda' => '2',
-            'monto' => '365.00',
-            'tasa' => '36.5',
-            'fecha' => date('Y-m-d'),
+            'accion'     => 'incluir',
+            'cuenta'     => ['1'],
+            'metodo'     => '1',
+            'moneda'     => '2',
+            'monto'      => '365.00',
+            'tasa'       => '36.5',
+            'fecha'      => date('Y-m-d'),
             'referencia' => '123456'
         ];
 
-        // Act
         $resultado = $modelo->ProcesarDatos($datos);
 
-        // Assert
         $this->assertEquals('exito', $resultado['accion']);
         $this->assertEquals('45', $resultado['id_pago']);
-        $this->assertEquals(0, $resultado['vuelto']);
-    }
-
-    // Caso 23: Pago sin referencia
-    public function testPagoSinReferencia(): void
-    {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetchColumn')->willReturn(1);
-        $stmtMock->method('fetchAll')->willReturn([
-            ['codigo_moneda' => 1, 'nombre' => 'Dolar', 'simbolo' => '$', 'monto_total' => '100.00']
-        ]);
-        $stmtMock->method('fetch')->willReturn([
-            'total_abonado' => '0.00'
-        ]);
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-        $pdoMock->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('commit')->willReturn(true);
-        $pdoMock->method('lastInsertId')->willReturn('50');
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'incluir',
-            'cuenta' => ['1'],
-            'metodo' => '1',
-            'moneda' => '1',
-            'monto' => '100.00',
-            'tasa' => '1',
-            'fecha' => date('Y-m-d')
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('exito', $resultado['accion']);
-        $this->assertEquals('50', $resultado['id_pago']);
         $this->assertEquals(0, $resultado['vuelto']);
     }
 }

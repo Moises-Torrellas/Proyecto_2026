@@ -17,6 +17,7 @@ if (!defined('EMPTY_SELECTION')) {
 
 #[Group('unit')]
 #[Group('unitPagos')]
+#[Group('consultarPagos')]
 class ConsultarPagosTest extends TestCase
 {
     protected function tearDown(): void
