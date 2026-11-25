@@ -122,8 +122,8 @@ jobs:
           sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' .env
           sed -i 's/DB_USER_SG=root/DB_USER_SG=root/g' .env
           sed -i 's/DB_USER=root/DB_USER=root/g' .env
-          sed -i 's/DB_PASS_SG=/DB_PASS_SG=root/g' .env
-          sed -i 's/DB_PASS=/DB_PASS=root/g' .env
+          sed -i 's/^DB_PASS_SG=.*/DB_PASS_SG=root/g' .env
+          sed -i 's/^DB_PASS=.*/DB_PASS=root/g' .env
 
       - name: Instalar dependencias con Composer
         run: composer install --prefer-dist --no-progress --no-interaction
@@ -203,8 +203,8 @@ jobs:
           sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' .env
           sed -i 's/DB_USER_SG=root/DB_USER_SG=root/g' .env
           sed -i 's/DB_USER=root/DB_USER=root/g' .env
-          sed -i 's/DB_PASS_SG=/DB_PASS_SG=root/g' .env
-          sed -i 's/DB_PASS=/DB_PASS=root/g' .env
+          sed -i 's/^DB_PASS_SG=.*/DB_PASS_SG=root/g' .env
+          sed -i 's/^DB_PASS=.*/DB_PASS=root/g' .env
 
       - name: Instalar dependencias con Composer
         run: composer install --prefer-dist --no-progress --no-interaction
@@ -300,8 +300,8 @@ jobs:
           sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' .env
           sed -i 's/DB_USER_SG=root/DB_USER_SG=root/g' .env
           sed -i 's/DB_USER=root/DB_USER=root/g' .env
-          sed -i 's/DB_PASS_SG=/DB_PASS_SG=root/g' .env
-          sed -i 's/DB_PASS=/DB_PASS=root/g' .env
+          sed -i 's/^DB_PASS_SG=.*/DB_PASS_SG=root/g' .env
+          sed -i 's/^DB_PASS=.*/DB_PASS=root/g' .env
 
       - name: Instalar dependencias con Composer
         run: composer install --prefer-dist --no-progress --no-interaction
