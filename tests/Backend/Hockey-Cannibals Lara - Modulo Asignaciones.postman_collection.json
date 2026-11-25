@@ -11,6 +11,11 @@
             "script": {
                 "type": "text/javascript",
                 "exec": [
+                    "const hoy = new Date();",
+                    "const yyyy = hoy.getFullYear();",
+                    "const mm = String(hoy.getMonth() + 1).padStart(2, \"0\");",
+                    "const dd = String(hoy.getDate()).padStart(2, \"0\");",
+                    "pm.environment.set(\"fecha_hoy\", `${yyyy}-${mm}-${dd}`);",
                     "if (pm.request.method !== \"GET\") {",
                     "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
                     "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
@@ -189,6 +194,36 @@
                                     "name": "POST Registro-Asignacion-Individual-Exitosa",
                                     "event": [
                                         {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.sendRequest({",
+                                                    "    url: pm.environment.get(\"url_base\") + \"Asignaciones\",",
+                                                    "    method: \"POST\",",
+                                                    "    header: {",
+                                                    "        \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "        \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "    },",
+                                                    "    body: {",
+                                                    "        mode: \"urlencoded\",",
+                                                    "        urlencoded: [{ key: \"accion\", value: \"MultiConsulta\" }]",
+                                                    "    }",
+                                                    "}, function (err, res) {",
+                                                    "    if (!err) {",
+                                                    "        try {",
+                                                    "            const data = res.json();",
+                                                    "            const libres = (data.equipos || []).filter(e => String(e.codigo_articulo) !== \"5\");",
+                                                    "            pm.environment.set(\"art_individual\", libres[0] ? String(libres[0].codigo_articulo) : \"1\");",
+                                                    "            pm.environment.set(\"art_lote_1\", libres[1] ? String(libres[1].codigo_articulo) : \"2\");",
+                                                    "            pm.environment.set(\"art_lote_2\", libres[2] ? String(libres[2].codigo_articulo) : \"3\");",
+                                                    "        } catch (e) {}",
+                                                    "    }",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
                                             "listen": "test",
                                             "script": {
                                                 "type": "text/javascript",
@@ -246,12 +281,12 @@
                                                 },
                                                 {
                                                     "key": "codigo_articulo",
-                                                    "value": "1",
+                                                    "value": "{{art_individual}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -319,17 +354,17 @@
                                                 },
                                                 {
                                                     "key": "articulos[]",
-                                                    "value": "2",
+                                                    "value": "{{art_lote_1}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "articulos[]",
-                                                    "value": "3",
+                                                    "value": "{{art_lote_2}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-13",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -407,7 +442,7 @@
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -548,7 +583,7 @@
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -621,7 +656,7 @@
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -699,7 +734,7 @@
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -772,7 +807,7 @@
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1074,7 +1109,7 @@
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1147,7 +1182,7 @@
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1215,12 +1250,12 @@
                                                 },
                                                 {
                                                     "key": "codigo_articulo",
-                                                    "value": "1",
+                                                    "value": "{{art_individual}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1293,7 +1328,7 @@
                                                 },
                                                 {
                                                     "key": "fecha_asignacion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1322,15 +1357,29 @@
                                                     "    pm.response.to.have.status(200);",
                                                     "});",
                                                     "const html = pm.response.text();",
+                                                    "const editarMatches = [...html.matchAll(/editar\\((\\d+),\\s*\\d+,\\s*(\\d+),\\s*'([^']+)'\\)/gi)];",
                                                     "const matches = [...html.matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
-                                                    "if (matches.length > 0) {",
-                                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                                    "if (editarMatches.length > 0) {",
+                                                    "    const candidatos = editarMatches.filter(m => m[1] !== \"1\");",
+                                                    "    const elegido = candidatos.length > 0 ? candidatos[0] : editarMatches[0];",
+                                                    "    const primerId = elegido[1];",
+                                                    "    pm.environment.set(\"id_asignacion\", primerId);",
+                                                    "    pm.environment.set(\"id_registro\", primerId);",
+                                                    "    pm.environment.set(\"id_para_anular\", primerId);",
+                                                    "    pm.environment.set(\"id_primer_registro\", editarMatches[0][1]);",
+                                                    "    const hoy = pm.environment.get(\"fecha_hoy\");",
+                                                    "    const cleanup = candidatos",
+                                                    "        .filter(m => m[1] !== primerId && m[3] === hoy)",
+                                                    "        .map(m => ({ id: m[1], art: m[2] }));",
+                                                    "    pm.environment.set(\"ids_cleanup\", JSON.stringify(cleanup));",
+                                                    "    console.log(\"ID capturado dinámicamente para id_asignacion:\", primerId);",
+                                                    "} else if (matches.length > 0) {",
                                                     "    const primerId = matches[0][1];",
-                                                    "    pm.environment.set(\"id_asignacion\", ultimoId);",
-                                                    "    pm.environment.set(\"id_registro\", ultimoId);",
-                                                    "    pm.environment.set(\"id_para_anular\", ultimoId);",
+                                                    "    pm.environment.set(\"id_asignacion\", primerId);",
+                                                    "    pm.environment.set(\"id_registro\", primerId);",
+                                                    "    pm.environment.set(\"id_para_anular\", primerId);",
                                                     "    pm.environment.set(\"id_primer_registro\", primerId);",
-                                                    "    console.log(\"ID capturado dinámicamente para id_asignacion:\", ultimoId);",
+                                                    "    console.log(\"ID capturado dinámicamente para id_asignacion:\", primerId);",
                                                     "}"
                                                 ]
                                             }
@@ -1607,6 +1656,12 @@
                                                     "    pm.test(\"Acción es MultiConsulta\", function() { pm.expect(res.accion).to.eql(\"MultiConsulta\"); });",
                                                     "    pm.test(\"Contiene lista de atletas\", function() { pm.expect(Array.isArray(res.atletas)).to.be.true; });",
                                                     "    pm.test(\"Contiene lista de equipos disponibles\", function() { pm.expect(Array.isArray(res.equipos)).to.be.true; });",
+                                                    "    if (Array.isArray(res.equipos)) {",
+                                                    "        const eqLibre = res.equipos.find(e => String(e.codigo_articulo) !== \"5\");",
+                                                    "        if (eqLibre) {",
+                                                    "            pm.environment.set(\"codigo_articulo_cambio\", String(eqLibre.codigo_articulo));",
+                                                    "        }",
+                                                    "    }",
                                                     "} catch (e) {",
                                                     "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
                                                     "        pm.response.to.have.status(200);",
@@ -1643,232 +1698,6 @@
                                                 {
                                                     "key": "accion",
                                                     "value": "MultiConsulta",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "Buscar-Detalle-Por-ID",
-                            "item": [
-                                {
-                                    "name": "POST Buscar-Asignacion-Por-ID-Exitoso",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
-                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        },
-                                        {
-                                            "listen": "prerequest",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
-                                                    "if (!pm.environment.get(\"id_asignacion\") && !pm.environment.get(\"id_registro\")) {",
-                                                    "    pm.sendRequest({",
-                                                    "        url: pm.environment.get(\"url_base\") + \"Asignaciones\",",
-                                                    "        method: \"POST\",",
-                                                    "        header: {",
-                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
-                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\",",
-                                                    "        },",
-                                                    "        body: {",
-                                                    "            mode: \"urlencoded\",",
-                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
-                                                    "        }",
-                                                    "    }, function (err, res) {",
-                                                    "        if (!err) {",
-                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
-                                                    "            if (matches.length > 0) {",
-                                                    "                const idCapturado = matches[matches.length - 1][1];",
-                                                    "                pm.environment.set(\"id_asignacion\", idCapturado);",
-                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
-                                                    "            }",
-                                                    "        }",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Obtiene los datos detallados de una asignación específica por su ID.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "id_asignacion",
-                                                    "value": "{{id_asignacion}}",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Buscar-Asignacion-ID-Inexistente",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
-                                                    "    pm.test(\"Retorna arreglo vacío\", function() { pm.expect(res.datos.length).to.eql(0); });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Verifica la respuesta al consultar una asignación con ID inexistente.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "id_asignacion",
-                                                    "value": "999999",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Buscar-ID-Invalido",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es error\", function() { pm.expect(res.accion).to.eql(\"error\"); });",
-                                                    "    pm.test(\"Valida formato numérico\", function() { pm.expect(res.mensaje).to.include(\"ID de asignación inválido\"); });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Asignaciones",
-                                            "host": [
-                                                "{{url_base}}Asignaciones"
-                                            ]
-                                        },
-                                        "description": "Valida rechazo de búsqueda con ID de formato alfanumérico.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "id_asignacion",
-                                                    "value": "abc#xyz",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1983,7 +1812,7 @@
                                                 },
                                                 {
                                                     "key": "codigo_articulo",
-                                                    "value": "2",
+                                                    "value": "{{codigo_articulo_cambio}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -2092,7 +1921,7 @@
                                                 },
                                                 {
                                                     "key": "codigo_articulo",
-                                                    "value": "2",
+                                                    "value": "{{codigo_articulo_cambio}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -3080,7 +2909,7 @@
                                                 },
                                                 {
                                                     "key": "codigo_articulo",
-                                                    "value": "2",
+                                                    "value": "{{codigo_articulo_cambio}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -3811,7 +3640,26 @@
                                                     "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
                                                     "        pm.response.to.have.status(200);",
                                                     "    });",
-                                                    "}"
+                                                    "}",
+                                                    "const cleanup = JSON.parse(pm.environment.get(\"ids_cleanup\") || \"[]\");",
+                                                    "cleanup.forEach(item => {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Asignaciones\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [",
+                                                    "                { key: \"accion\", value: \"anular\" },",
+                                                    "                { key: \"id_asignacion\", value: String(item.id) },",
+                                                    "                { key: \"codigo_articulo\", value: String(item.art) }",
+                                                    "            ]",
+                                                    "        }",
+                                                    "    });",
+                                                    "});"
                                                 ]
                                             }
                                         }
