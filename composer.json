@@ -47,6 +47,9 @@
         "test:carga": "@php bin/test.php carga",
         "test:estres": "@php bin/test.php estres",
         "jmeter:gui": "@php bin/test.php jmeter-gui",
+        "env:testing": "@php bin/env.php testing",
+        "env:local": "@php bin/env.php local",
+        "env": "@php bin/env.php",
         "test": "@php bin/test.php"
     }
 }
