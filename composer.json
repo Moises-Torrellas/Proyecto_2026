@@ -35,6 +35,9 @@
         "codeception/module-phpbrowser": "*",
         "codeception/module-asserts": "*"
     },
+    "config": {
+        "process-timeout": 0
+    },
     "scripts": {
         "chrome": "@php bin/test.php chrome",
         "test:unit": "@php bin/test.php unit",
