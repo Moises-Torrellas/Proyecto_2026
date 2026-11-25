@@ -43,6 +43,10 @@
         "test:interfaz": "@php bin/test.php interfaz",
         "test:backend": "@php bin/test.php backend",
         "test:postman": "@php bin/test.php backend",
+        "test:rendimiento": "@php bin/test.php rendimiento",
+        "test:carga": "@php bin/test.php carga",
+        "test:estres": "@php bin/test.php estres",
+        "jmeter:gui": "@php bin/test.php jmeter-gui",
         "test": "@php bin/test.php"
     }
 }

@@ -30,3 +30,8 @@ analisis-seguridad-login.md
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Resultados temporales de pruebas de rendimiento (JMeter)
+/tests/Performance/resultados/*
+!/tests/Performance/resultados/.gitkeep
+jmeter.log
