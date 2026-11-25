@@ -1,4 +1,4 @@
-name: CI/CD Pipeline - Pruebas Automatizadas
+name: CI Pipeline (Push & PR)
 
 on:
   push:
@@ -11,15 +11,17 @@ on:
   pull_request:
     branches:
       - main
+      - master
+      - test/pruebas
   workflow_dispatch:
     inputs:
-      ejecutar_backend:
-        description: '¿Ejecutar pruebas de Backend / API (Postman Collections)?'
+      ejecutar_api:
+        description: '¿Ejecutar pruebas de API (Postman/Newman)?'
         required: true
         type: boolean
         default: true
-      ejecutar_interfaz:
-        description: '¿Ejecutar pruebas de interfaz (Aceptación / E2E)?'
+      ejecutar_integracion:
+        description: '¿Ejecutar pruebas de Integración con BD real?'
         required: true
         type: boolean
         default: true
@@ -30,10 +32,12 @@ concurrency:
 
 jobs:
   # ===========================================================================
-  # FASE 1: PRUEBAS UNITARIAS (Rápidas, aisladas con mocks de PDO)
+  # 1. PRUEBAS UNITARIAS (PHPUnit)
+  # Cuándo: Cada push y cada PR
+  # Por qué: Tardan segundos y dan feedback inmediato sin depender de BD externa
   # ===========================================================================
   unit-tests:
-    name: Pruebas Unitarias (PHPUnit)
+    name: 🧪 Unitarias (PHPUnit) - Cada Push
     runs-on: ubuntu-latest
     steps:
       - name: Clonar repositorio
@@ -71,10 +75,12 @@ jobs:
         run: vendor/bin/phpunit --testsuite Unit --colors=always
 
   # ===========================================================================
-  # FASE 2: PRUEBAS DE HUMO E INTEGRACIÓN (MySQL 8.0 real y servidor PHP)
+  # 2. PRUEBAS DE HUMO (Smoke Tests)
+  # Cuándo: Cada push y cada PR
+  # Por qué: Tardan 1-2 minutos y detectan si el sistema "levanta" y responde
   # ===========================================================================
-  integration-and-smoke-tests:
-    name: Pruebas de Humo e Integración (BD Real)
+  smoke-tests:
+    name: 💨 Humo (Smoke) - Cada Push / PR
     runs-on: ubuntu-latest
     needs: unit-tests
     services:
@@ -112,12 +118,12 @@ jobs:
       - name: Configurar variables de entorno (.env) para CI
         run: |
           cp .env.example .env
-          sed -i 's/DB_HOST_SG=127.0.0.1/DB_HOST_SG=127.0.0.1/g' .env
-          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/g' .env
+          sed -i 's/DB_HOST_SG=localhost/DB_HOST_SG=127.0.0.1/g' .env
+          sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' .env
           sed -i 's/DB_USER_SG=root/DB_USER_SG=root/g' .env
           sed -i 's/DB_USER=root/DB_USER=root/g' .env
-          sed -i 's/DB_PASS_SG=root/DB_PASS_SG=root/g' .env
-          sed -i 's/DB_PASS=root/DB_PASS=root/g' .env
+          sed -i 's/DB_PASS_SG=/DB_PASS_SG=root/g' .env
+          sed -i 's/DB_PASS=/DB_PASS=root/g' .env
 
       - name: Instalar dependencias con Composer
         run: composer install --prefer-dist --no-progress --no-interaction
@@ -135,22 +141,21 @@ jobs:
           php -S 127.0.0.1:8000 -t public public/router.php > /dev/null 2>&1 &
           sleep 2
 
-      - name: Ejecutar pruebas de Humo (Smoke Tests)
+      - name: Ejecutar pruebas de Humo (Smoke)
         env:
           APP_URL: http://127.0.0.1:8000
         run: vendor/bin/phpunit --testsuite Smoke --colors=always
 
-      - name: Ejecutar pruebas de Integración
-        run: vendor/bin/phpunit --testsuite Integration --colors=always
-
   # ===========================================================================
-  # FASE 3: PRUEBAS DE BACKEND / API (Colecciones Postman con Newman)
+  # 3. PRUEBAS DE API / BACKEND (Postman / Newman)
+  # Cuándo: Cada Pull Request (y manual vía workflow_dispatch)
+  # Por qué: Rápidas y estables, verifican lógica de negocio y endpoints HTTP
   # ===========================================================================
-  backend-api-tests:
-    name: 📮 Pruebas de Backend / API (Postman)
+  api-postman-tests:
+    name: 📮 API (Postman / Newman) - Cada PR
     runs-on: ubuntu-latest
     needs: unit-tests
-    if: github.event_name != 'workflow_dispatch' || inputs.ejecutar_backend == true
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.ejecutar_api == true)
     services:
       mysql:
         image: mysql:8.0
@@ -194,12 +199,12 @@ jobs:
       - name: Configurar variables de entorno (.env) para CI
         run: |
           cp .env.example .env
-          sed -i 's/DB_HOST_SG=127.0.0.1/DB_HOST_SG=127.0.0.1/g' .env
-          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/g' .env
+          sed -i 's/DB_HOST_SG=localhost/DB_HOST_SG=127.0.0.1/g' .env
+          sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' .env
           sed -i 's/DB_USER_SG=root/DB_USER_SG=root/g' .env
           sed -i 's/DB_USER=root/DB_USER=root/g' .env
-          sed -i 's/DB_PASS_SG=root/DB_PASS_SG=root/g' .env
-          sed -i 's/DB_PASS=root/DB_PASS=root/g' .env
+          sed -i 's/DB_PASS_SG=/DB_PASS_SG=root/g' .env
+          sed -i 's/DB_PASS=/DB_PASS=root/g' .env
 
       - name: Instalar dependencias con Composer
         run: composer install --prefer-dist --no-progress --no-interaction
@@ -217,7 +222,7 @@ jobs:
           php -S 127.0.0.1:8000 -t public public/router.php > /dev/null 2>&1 &
           sleep 2
 
-      - name: Ejecutar colecciones de Postman (Backend API)
+      - name: Ejecutar colecciones de Postman con Newman
         run: |
           ENV_FILE="tests/Backend/Hockey-Cannibals Lara - Local Environment.postman_environment.json"
 
@@ -245,13 +250,17 @@ jobs:
           done
 
   # ===========================================================================
-  # FASE 4: PRUEBAS DE INTERFAZ / E2E (Codeception + ChromeDriver Headless)
+  # 4. PRUEBAS DE INTEGRACIÓN CON BD REAL (PHPUnit)
+  # Cuándo: Solo en Pull Requests hacia 'main' o 'master' (y manual)
+  # Por qué: Son más lentas y pesadas, verifican integridad completa con MySQL
   # ===========================================================================
-  acceptance-tests:
-    name: 🌐 Pruebas de Interfaz (Aceptación / E2E)
+  integration-tests:
+    name: 🗄️ Integración con BD Real - Solo PR hacia main
     runs-on: ubuntu-latest
-    needs: unit-tests
-    if: github.event_name != 'workflow_dispatch' || inputs.ejecutar_interfaz == true
+    needs: smoke-tests
+    if: |
+      (github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'master')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.ejecutar_integracion == true)
     services:
       mysql:
         image: mysql:8.0
@@ -287,45 +296,23 @@ jobs:
       - name: Configurar variables de entorno (.env) para CI
         run: |
           cp .env.example .env
-          sed -i 's/DB_HOST_SG=127.0.0.1/DB_HOST_SG=127.0.0.1/g' .env
-          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/g' .env
+          sed -i 's/DB_HOST_SG=localhost/DB_HOST_SG=127.0.0.1/g' .env
+          sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' .env
           sed -i 's/DB_USER_SG=root/DB_USER_SG=root/g' .env
           sed -i 's/DB_USER=root/DB_USER=root/g' .env
-          sed -i 's/DB_PASS_SG=root/DB_PASS_SG=root/g' .env
-          sed -i 's/DB_PASS=root/DB_PASS=root/g' .env
+          sed -i 's/DB_PASS_SG=/DB_PASS_SG=root/g' .env
+          sed -i 's/DB_PASS=/DB_PASS=root/g' .env
 
       - name: Instalar dependencias con Composer
         run: composer install --prefer-dist --no-progress --no-interaction
 
-      - name: Crear directorios del sistema y salida de Codeception
-        run: mkdir -p logs backups storage tests/_output public/img/usuarios public/img/atletas public/docs/reportes
+      - name: Crear directorios del sistema
+        run: mkdir -p logs backups storage public/img/usuarios public/img/atletas public/docs/reportes
 
       - name: Cargar bases de datos MySQL (bds2 y cannibalsbd2)
         run: |
           mysql -h 127.0.0.1 -u root -proot < bds2.sql
           mysql -h 127.0.0.1 -u root -proot < cannibalsbd2.sql
 
-      - name: Configurar e iniciar ChromeDriver
-        run: |
-          if ! command -v chromedriver &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y chromium-chromedriver
-            sudo ln -sf /usr/lib/chromium-browser/chromedriver /usr/local/bin/chromedriver || true
-          fi
-          chromedriver --port=9515 &
-          sleep 2
-
-      - name: Iniciar servidor web PHP incorporado
-        run: |
-          php -S 127.0.0.1:8000 -t public public/router.php > /dev/null 2>&1 &
-          sleep 2
-
-      - name: Ejecutar pruebas de Aceptación (Codeception)
-        run: vendor/bin/codecept run Acceptance --env ci --steps
-
-      - name: Subir artefactos en caso de fallos (Capturas y HTML)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: capturas-fallo-interfaz
-          path: tests/_output/
-          retention-days: 7
+      - name: Ejecutar suite completa de Integración (BD Real)
+        run: vendor/bin/phpunit --testsuite Integration --colors=always

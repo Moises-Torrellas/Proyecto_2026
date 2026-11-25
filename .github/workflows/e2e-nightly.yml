@@ -1,0 +1,105 @@
+name: E2E Pipeline (Nocturnas y Releases)
+
+on:
+  schedule:
+    # Ejecución programada nocturna diaria a las 04:00 AM UTC (00:00 Venezuela)
+    - cron: '0 4 * * *'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      rama:
+        description: 'Rama a evaluar'
+        required: true
+        default: 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ===========================================================================
+  # 5. PRUEBAS DE INTERFAZ / E2E (Codeception + ChromeDriver)
+  # Cuándo: Nocturnas (schedule), antes de un release o manual
+  # Por qué: Son las más lentas y frágiles (navegador completo simulando usuario)
+  # ===========================================================================
+  e2e-acceptance-tests:
+    name: 🌐 Interfaz / E2E (Nocturna / Release)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, gd, pdo, pdo_mysql, curl, dom, xml, zip
+          coverage: none
+
+      - name: Obtener directorio de caché de Composer
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cachear dependencias de Composer
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Configurar variables de entorno (.env) para CI
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_HOST_SG=localhost/DB_HOST_SG=127.0.0.1/g' .env
+          sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' .env
+          sed -i 's/DB_USER_SG=root/DB_USER_SG=root/g' .env
+          sed -i 's/DB_USER=root/DB_USER=root/g' .env
+          sed -i 's/DB_PASS_SG=/DB_PASS_SG=root/g' .env
+          sed -i 's/DB_PASS=/DB_PASS=root/g' .env
+
+      - name: Instalar dependencias con Composer
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Crear directorios del sistema y de salida de Codeception
+        run: mkdir -p logs backups storage tests/_output public/img/usuarios public/img/atletas public/docs/reportes
+
+      - name: Cargar bases de datos MySQL (bds2 y cannibalsbd2)
+        run: |
+          mysql -h 127.0.0.1 -u root -proot < bds2.sql
+          mysql -h 127.0.0.1 -u root -proot < cannibalsbd2.sql
+
+      - name: Configurar e iniciar ChromeDriver
+        run: |
+          if ! command -v chromedriver &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y chromium-chromedriver
+            sudo ln -sf /usr/lib/chromium-browser/chromedriver /usr/local/bin/chromedriver || true
+          fi
+          chromedriver --port=9515 &
+          sleep 2
+
+      - name: Iniciar servidor web PHP incorporado
+        run: |
+          php -S 127.0.0.1:8000 -t public public/router.php > /dev/null 2>&1 &
+          sleep 2
+
+      - name: Ejecutar pruebas de Aceptación (Codeception)
+        run: vendor/bin/codecept run Acceptance --env ci --steps
+
+      - name: Subir capturas en caso de fallos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-fallo-e2e
+          path: tests/_output/
+          retention-days: 7

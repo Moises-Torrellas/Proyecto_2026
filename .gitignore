@@ -32,6 +32,8 @@ analisis-seguridad-login.md
 .DS_Store
 Thumbs.db
 .vscode/
+*.lnk
+*test.sql
 
 # Resultados temporales de pruebas de rendimiento (JMeter)
 /tests/Performance/resultados/*
