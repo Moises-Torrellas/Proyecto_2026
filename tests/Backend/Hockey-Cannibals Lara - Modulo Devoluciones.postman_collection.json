@@ -11,6 +11,11 @@
             "script": {
                 "type": "text/javascript",
                 "exec": [
+                    "const hoy = new Date();",
+                    "const yyyy = hoy.getFullYear();",
+                    "const mm = String(hoy.getMonth() + 1).padStart(2, \"0\");",
+                    "const dd = String(hoy.getDate()).padStart(2, \"0\");",
+                    "pm.environment.set(\"fecha_hoy\", `${yyyy}-${mm}-${dd}`);",
                     "if (pm.request.method !== \"GET\") {",
                     "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
                     "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
@@ -189,6 +194,68 @@
                                     "name": "POST Registro-Devolucion-Exitosa",
                                     "event": [
                                         {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "const base = pm.environment.get(\"url_base\");",
+                                                    "const headers = {",
+                                                    "    \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "    \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "};",
+                                                    "const fechaHoy = pm.environment.get(\"fecha_hoy\");",
+                                                    "pm.sendRequest({ url: base + \"Devoluciones\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"MultiConsulta\" }] } }, function (err0, res0) {",
+                                                    "    if (!err0) {",
+                                                    "        try {",
+                                                    "            const d0 = res0.json();",
+                                                    "            const estados = d0.estados || [];",
+                                                    "            const est0 = estados[0] ? String(estados[0].id_estado) : \"1\";",
+                                                    "            const estMod = (estados.find(e => String(e.nivel_estado) !== \"3\" && String(e.id_estado) !== est0) || estados[0]);",
+                                                    "            pm.environment.set(\"estado_inicial\", est0);",
+                                                    "            pm.environment.set(\"estado_modificado\", estMod ? String(estMod.id_estado) : est0);",
+                                                    "        } catch (e) {}",
+                                                    "    }",
+                                                    "});",
+                                                    "pm.sendRequest({ url: base + \"Asignaciones\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"MultiConsulta\" }] } }, function (err1, res1) {",
+                                                    "    if (err1) return;",
+                                                    "    try {",
+                                                    "        const d1 = res1.json();",
+                                                    "        const libres = (d1.equipos || []).filter(e => String(e.codigo_articulo) !== \"5\");",
+                                                    "        if (libres.length < 2) return;",
+                                                    "        const art1 = String(libres[0].codigo_articulo);",
+                                                    "        const art2 = String(libres[1].codigo_articulo);",
+                                                    "        pm.environment.set(\"art_dev_1\", art1);",
+                                                    "        pm.environment.set(\"art_dev_2\", art2);",
+                                                    "        pm.sendRequest({",
+                                                    "            url: base + \"Asignaciones\",",
+                                                    "            method: \"POST\",",
+                                                    "            header: headers,",
+                                                    "            body: {",
+                                                    "                mode: \"urlencoded\",",
+                                                    "                urlencoded: [",
+                                                    "                    { key: \"accion\", value: \"incluir\" },",
+                                                    "                    { key: \"codigo_atleta\", value: \"1\" },",
+                                                    "                    { key: \"articulos[]\", value: art1 },",
+                                                    "                    { key: \"articulos[]\", value: art2 },",
+                                                    "                    { key: \"fecha_asignacion\", value: fechaHoy }",
+                                                    "                ]",
+                                                    "            }",
+                                                    "        }, function () {",
+                                                    "            pm.sendRequest({ url: base + \"Asignaciones\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"consultar\" }] } }, function (err3, res3) {",
+                                                    "                if (err3) return;",
+                                                    "                const matches = [...res3.text().matchAll(/editar\\((\\d+),\\s*\\d+,\\s*(\\d+),\\s*'([^']+)'\\)/gi)];",
+                                                    "                const m1 = matches.find(m => m[1] !== \"1\" && m[2] === art1);",
+                                                    "                const m2 = matches.find(m => m[1] !== \"1\" && m[2] === art2);",
+                                                    "                if (m1) pm.environment.set(\"asig_dev_1\", m1[1]);",
+                                                    "                if (m2) pm.environment.set(\"asig_dev_2\", m2[1]);",
+                                                    "            });",
+                                                    "        });",
+                                                    "    } catch (e) {}",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
                                             "listen": "test",
                                             "script": {
                                                 "type": "text/javascript",
@@ -241,17 +308,17 @@
                                                 },
                                                 {
                                                     "key": "id_asignacion",
-                                                    "value": "1",
+                                                    "value": "{{asig_dev_1}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "id_estado",
-                                                    "value": "1",
+                                                    "value": "{{estado_inicial}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "fecha_devolucion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -318,17 +385,17 @@
                                                 },
                                                 {
                                                     "key": "id_asignacion",
-                                                    "value": "2",
+                                                    "value": "{{asig_dev_2}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "id_estado",
-                                                    "value": "1",
+                                                    "value": "{{estado_inicial}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "fecha_devolucion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -847,17 +914,17 @@
                                                 },
                                                 {
                                                     "key": "id_asignacion",
-                                                    "value": "1",
+                                                    "value": "{{asig_dev_1}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "id_estado",
-                                                    "value": "1",
+                                                    "value": "{{estado_inicial}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "fecha_devolucion",
-                                                    "value": "2026-11-10",
+                                                    "value": "{{fecha_hoy}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -886,15 +953,29 @@
                                                     "    pm.response.to.have.status(200);",
                                                     "});",
                                                     "const html = pm.response.text();",
+                                                    "const editarMatches = [...html.matchAll(/editar\\((\\d+),\\s*(\\d+),\\s*\\d+,/gi)];",
                                                     "const matches = [...html.matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
-                                                    "if (matches.length > 0) {",
-                                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                                    "if (editarMatches.length > 0) {",
+                                                    "    const asig1 = pm.environment.get(\"asig_dev_1\");",
+                                                    "    const asig2 = pm.environment.get(\"asig_dev_2\");",
+                                                    "    const d1 = editarMatches.find(m => m[2] === asig1) || editarMatches[0];",
+                                                    "    const d2 = editarMatches.find(m => m[2] === asig2) || editarMatches[editarMatches.length - 1];",
+                                                    "    pm.environment.set(\"id_devolucion\", d1[1]);",
+                                                    "    pm.environment.set(\"id_registro\", d1[1]);",
+                                                    "    pm.environment.set(\"id_asig_modificar\", d1[2]);",
+                                                    "    pm.environment.set(\"id_devolucion_anular\", d2[1]);",
+                                                    "    pm.environment.set(\"id_para_anular\", d2[1]);",
+                                                    "    pm.environment.set(\"id_primer_registro\", editarMatches[0][1]);",
+                                                    "    console.log(\"ID capturado dinámicamente para id_devolucion:\", d1[1]);",
+                                                    "} else if (matches.length > 0) {",
                                                     "    const primerId = matches[0][1];",
-                                                    "    pm.environment.set(\"id_devolucion\", ultimoId);",
-                                                    "    pm.environment.set(\"id_registro\", ultimoId);",
+                                                    "    const ultimoId = matches[matches.length - 1][1];",
+                                                    "    pm.environment.set(\"id_devolucion\", primerId);",
+                                                    "    pm.environment.set(\"id_registro\", primerId);",
+                                                    "    pm.environment.set(\"id_devolucion_anular\", ultimoId);",
                                                     "    pm.environment.set(\"id_para_anular\", ultimoId);",
                                                     "    pm.environment.set(\"id_primer_registro\", primerId);",
-                                                    "    console.log(\"ID capturado dinámicamente para id_devolucion:\", ultimoId);",
+                                                    "    console.log(\"ID capturado dinámicamente para id_devolucion:\", primerId);",
                                                     "}"
                                                 ]
                                             }
@@ -1215,169 +1296,6 @@
                                     }
                                 }
                             ]
-                        },
-                        {
-                            "name": "Buscar-Detalle-Por-ID",
-                            "item": [
-                                {
-                                    "name": "POST Buscar-Devolucion-Por-ID-Exitoso",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
-                                                    "    pm.test(\"Contiene arreglo de datos\", function() { pm.expect(Array.isArray(res.datos)).to.be.true; });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        },
-                                        {
-                                            "listen": "prerequest",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "// Fallback dinámico si no se ha ejecutado la consulta previa",
-                                                    "if (!pm.environment.get(\"id_devolucion\") && !pm.environment.get(\"id_registro\")) {",
-                                                    "    pm.sendRequest({",
-                                                    "        url: pm.environment.get(\"url_base\") + \"Devoluciones\",",
-                                                    "        method: \"POST\",",
-                                                    "        header: {",
-                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
-                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\",",
-                                                    "        },",
-                                                    "        body: {",
-                                                    "            mode: \"urlencoded\",",
-                                                    "            urlencoded: [{ key: \"accion\", value: \"consultar\" }]",
-                                                    "        }",
-                                                    "    }, function (err, res) {",
-                                                    "        if (!err) {",
-                                                    "            const matches = [...res.text().matchAll(/onclick=[\"'](?:editar|anular|buscar)\\((\\d+)/gi)];",
-                                                    "            if (matches.length > 0) {",
-                                                    "                const idCapturado = matches[matches.length - 1][1];",
-                                                    "                pm.environment.set(\"id_devolucion\", idCapturado);",
-                                                    "                pm.environment.set(\"id_registro\", idCapturado);",
-                                                    "            }",
-                                                    "        }",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Devoluciones",
-                                            "host": [
-                                                "{{url_base}}Devoluciones"
-                                            ]
-                                        },
-                                        "description": "Obtiene el detalle de una devolución específica por su ID.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "id",
-                                                    "value": "{{id_devolucion}}",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "POST Buscar-Devolucion-ID-Inexistente",
-                                    "event": [
-                                        {
-                                            "listen": "test",
-                                            "script": {
-                                                "type": "text/javascript",
-                                                "exec": [
-                                                    "pm.test(\"Estado HTTP es 200\", function () {",
-                                                    "    pm.response.to.have.status(200);",
-                                                    "});",
-                                                    "",
-                                                    "try {",
-                                                    "    var res = pm.response.json();",
-                                                    "    pm.test(\"Acción es buscar\", function() { pm.expect(res.accion).to.eql(\"buscar\"); });",
-                                                    "    pm.test(\"Retorna arreglo vacío\", function() { pm.expect(res.datos.length).to.eql(0); });",
-                                                    "} catch (e) {",
-                                                    "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
-                                                    "        pm.response.to.have.status(200);",
-                                                    "    });",
-                                                    "}"
-                                                ]
-                                            }
-                                        }
-                                    ],
-                                    "request": {
-                                        "method": "POST",
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json, text/javascript, */*; q=0.01",
-                                                "type": "text"
-                                            },
-                                            {
-                                                "key": "X-Requested-With",
-                                                "value": "XMLHttpRequest",
-                                                "type": "text"
-                                            }
-                                        ],
-                                        "url": {
-                                            "raw": "{{url_base}}Devoluciones",
-                                            "host": [
-                                                "{{url_base}}Devoluciones"
-                                            ]
-                                        },
-                                        "description": "Verifica la respuesta al consultar una devolución con ID inexistente.",
-                                        "body": {
-                                            "mode": "urlencoded",
-                                            "urlencoded": [
-                                                {
-                                                    "key": "accion",
-                                                    "value": "buscar",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "id",
-                                                    "value": "999999",
-                                                    "type": "text"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ]
                         }
                     ]
                 },
@@ -1480,12 +1398,12 @@
                                                 },
                                                 {
                                                     "key": "id_asignacion",
-                                                    "value": "1",
+                                                    "value": "{{id_asig_modificar}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "id_estado",
-                                                    "value": "2",
+                                                    "value": "{{estado_modificado}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -1557,17 +1475,17 @@
                                                 },
                                                 {
                                                     "key": "id_devolucion",
-                                                    "value": "1",
+                                                    "value": "{{id_devolucion}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "id_asignacion",
-                                                    "value": "1",
+                                                    "value": "{{id_asig_modificar}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "id_estado",
-                                                    "value": "3",
+                                                    "value": "{{estado_inicial}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -2003,7 +1921,7 @@
                                                 },
                                                 {
                                                     "key": "id_devolucion",
-                                                    "value": "{{id_devolucion}}",
+                                                    "value": "{{id_devolucion_anular}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -2155,6 +2073,31 @@
                                     "name": "POST Anular-Devolucion-Articulo-Reasignado-Bloqueado",
                                     "event": [
                                         {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "pm.sendRequest({",
+                                                    "    url: pm.environment.get(\"url_base\") + \"Asignaciones\",",
+                                                    "    method: \"POST\",",
+                                                    "    header: {",
+                                                    "        \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "        \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "    },",
+                                                    "    body: {",
+                                                    "        mode: \"urlencoded\",",
+                                                    "        urlencoded: [",
+                                                    "            { key: \"accion\", value: \"incluir\" },",
+                                                    "            { key: \"codigo_atleta\", value: \"2\" },",
+                                                    "            { key: \"codigo_articulo\", value: pm.environment.get(\"art_dev_1\") || \"1\" },",
+                                                    "            { key: \"fecha_asignacion\", value: pm.environment.get(\"fecha_hoy\") }",
+                                                    "        ]",
+                                                    "    }",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
                                             "listen": "test",
                                             "script": {
                                                 "type": "text/javascript",
@@ -2207,7 +2150,7 @@
                                                 },
                                                 {
                                                     "key": "id_devolucion",
-                                                    "value": "5",
+                                                    "value": "{{id_devolucion}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -2442,7 +2385,38 @@
                                                     "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
                                                     "        pm.response.to.have.status(200);",
                                                     "    });",
-                                                    "}"
+                                                    "}",
+                                                    "const base = pm.environment.get(\"url_base\");",
+                                                    "const headers = {",
+                                                    "    \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "    \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "};",
+                                                    "const art1 = pm.environment.get(\"art_dev_1\");",
+                                                    "const art2 = pm.environment.get(\"art_dev_2\");",
+                                                    "const idDev = pm.environment.get(\"id_devolucion\");",
+                                                    "const asig1 = pm.environment.get(\"asig_dev_1\");",
+                                                    "const asig2 = pm.environment.get(\"asig_dev_2\");",
+                                                    "pm.sendRequest({ url: base + \"Asignaciones\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"consultar\" }] } }, function (err, r) {",
+                                                    "    if (err) return;",
+                                                    "    const ms = [...r.text().matchAll(/editar\\((\\d+),\\s*\\d+,\\s*(\\d+),\\s*'([^']+)'\\)/gi)];",
+                                                    "    const reasig = ms.find(m => m[1] !== \"1\" && m[2] === art1);",
+                                                    "    const anularReasig = (cb) => {",
+                                                    "        if (!reasig) return cb();",
+                                                    "        pm.sendRequest({ url: base + \"Asignaciones\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"anular\" }, { key: \"id_asignacion\", value: reasig[1] }, { key: \"codigo_articulo\", value: art1 }] } }, cb);",
+                                                    "    };",
+                                                    "    anularReasig(function () {",
+                                                    "        if (idDev) {",
+                                                    "            pm.sendRequest({ url: base + \"Devoluciones\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"anular\" }, { key: \"id_devolucion\", value: idDev }] } }, function () {",
+                                                    "                if (asig1 && art1) {",
+                                                    "                    pm.sendRequest({ url: base + \"Asignaciones\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"anular\" }, { key: \"id_asignacion\", value: asig1 }, { key: \"codigo_articulo\", value: art1 }] } });",
+                                                    "                }",
+                                                    "            });",
+                                                    "        }",
+                                                    "        if (asig2 && art2) {",
+                                                    "            pm.sendRequest({ url: base + \"Asignaciones\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"anular\" }, { key: \"id_asignacion\", value: asig2 }, { key: \"codigo_articulo\", value: art2 }] } });",
+                                                    "        }",
+                                                    "    });",
+                                                    "});"
                                                 ]
                                             }
                                         }

@@ -1,10 +1,12 @@
 <?php
 
-// 1. CARGA DE VARIABLES DE ENTORNO (.env)
+// 1. CARGA DE VARIABLES DE ENTORNO (.env / .env.testing)
 
-// Ajusta esta ruta dependiendo de dónde esté este config.php
-// Si config.php está dentro de una carpeta "config", esto retrocede un nivel a la raíz.
-$rutaEnv = __DIR__ . '/../.env'; 
+$entorno = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'local');
+$rutaTesting = __DIR__ . '/../.env.testing';
+$rutaEnv = ($entorno === 'testing' && file_exists($rutaTesting)) 
+    ? $rutaTesting 
+    : __DIR__ . '/../.env';
 
 if (file_exists($rutaEnv)) {
     $variables = parse_ini_file($rutaEnv);

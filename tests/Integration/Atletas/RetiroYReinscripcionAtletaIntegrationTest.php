@@ -164,8 +164,10 @@ class RetiroYReinscripcionAtletaIntegrationTest extends TestCase
         $this->sembrarAtletaActivo();
 
         // Insertamos una asignación activa (estatus = 1)
+        $this->pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
         $this->pdo->exec("INSERT INTO asignaciones (id_asignacion, codigo_atleta, codigo_articulo, fecha_asignacion, estatus) 
                           VALUES (1, 1, 10, CURDATE(), 1)");
+        $this->pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
 
         $datosRetiro = [
             'accion'        => 'eliminar',
