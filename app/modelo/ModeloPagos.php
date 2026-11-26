@@ -332,7 +332,7 @@ class ModeloPagos extends Conexion
 
             $vuelto = $this->monto;
             $tasa_cambio = $this->tasa;
-            // -----------------------------
+            
             $this->objCuentas = new ModeloCargos();
 
             foreach ($this->id_cuenta as $id_cobrar) {
