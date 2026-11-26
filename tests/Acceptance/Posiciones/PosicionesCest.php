@@ -12,6 +12,7 @@ if (!defined('_DB_NAME_')) {
 }
 
 #[Group('posiciones')]
+#[Group('administracion')]
 #[Group('interfaz')]
 final class PosicionesCest
 {

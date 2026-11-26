@@ -12,6 +12,7 @@ if (!defined('_DB_NAME_')) {
 }
 
 #[Group('representantes')]
+#[Group('administracion')]
 #[Group('interfaz')]
 final class RepresentantesCest
 {

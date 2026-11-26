@@ -12,6 +12,7 @@ if (!defined('_DB_NAME_')) {
 }
 
 #[Group('atletas')]
+#[Group('administracion')]
 #[Group('interfaz')]
 final class AtletasCest
 {
@@ -171,17 +172,20 @@ final class AtletasCest
         // Esperar que la petición AJAX MultiConsulta popule las opciones en el DOM
         $I->waitForJS("return $('#categoria option[data-min]').length > 0;", 5);
 
-        // Seleccionar una categoría compatible (preferiblemente senior o con rango amplio) y fijar fecha en Flatpickr
+        // Seleccionar una categoría compatible (preferiblemente >=18 y <=60 años) y fijar fecha en Flatpickr
         $I->executeJS("
             let options = $('#categoria option[data-min]').toArray();
             let cat = options.find(function(o) {
-                return parseInt(o.getAttribute('data-min') || '0') >= 18;
+                let mn = parseInt(o.getAttribute('data-min') || '0');
+                return mn >= 18 && mn <= 60;
+            }) || options.find(function(o) {
+                return parseInt(o.getAttribute('data-min') || '0') <= 60;
             }) || options[0];
             let catVal = cat ? cat.value : '1';
             window.catSeleccionada = catVal;
             let min = cat ? parseInt(cat.getAttribute('data-min') || '18') : 18;
-            let max = cat ? parseInt(cat.getAttribute('data-max') || '30') : 30;
-            let edadCalc = Math.floor((min + max) / 2);
+            let max = cat ? Math.min(parseInt(cat.getAttribute('data-max') || '30'), 60) : 30;
+            let edadCalc = Math.min(Math.max(min, Math.floor((min + max) / 2)), 60);
             let anio = new Date().getFullYear() - edadCalc;
             let fechaStr = anio + '-06-15';
 
@@ -536,13 +540,16 @@ final class AtletasCest
         $I->executeJS("
             let options = $('#categoria option[data-min]').toArray();
             let opt = options.find(function(o) {
-                return parseInt(o.getAttribute('data-min') || '0') >= 18;
+                let mn = parseInt(o.getAttribute('data-min') || '0');
+                return mn >= 18 && mn <= 60;
+            }) || options.find(function(o) {
+                return parseInt(o.getAttribute('data-min') || '0') <= 60;
             }) || options[0];
             let catVal = opt ? opt.value : '1';
             window.catCiclo = catVal;
             let min = opt ? parseInt(opt.getAttribute('data-min') || '18') : 18;
-            let max = opt ? parseInt(opt.getAttribute('data-max') || '30') : 30;
-            let edadCalc = Math.floor((min + max) / 2);
+            let max = opt ? Math.min(parseInt(opt.getAttribute('data-max') || '30'), 60) : 30;
+            let edadCalc = Math.min(Math.max(min, Math.floor((min + max) / 2)), 60);
             let anio = new Date().getFullYear() - edadCalc;
             let fechaStr = anio + '-06-15';
 

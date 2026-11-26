@@ -56,7 +56,7 @@ final class RecuperacionCest
     /**
      * Prueba 1: Verifica la carga inicial correcta de la interfaz de recuperación de contraseña.
      */
-    #[Group('carga', 'interfaz')]
+    #[Group( 'interfaz')]
     public function probarCargaInicialDeInterfaz(AcceptanceTester $I): void
     {
         $I->amOnPage(self::RUTA_MODULO);

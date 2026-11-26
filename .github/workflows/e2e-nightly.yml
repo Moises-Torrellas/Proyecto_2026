@@ -11,7 +11,7 @@ on:
       rama:
         description: 'Rama a evaluar'
         required: true
-        default: 'main'
+        default: 'test/pruebas'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -24,7 +24,7 @@ jobs:
   # Por qué: Son las más lentas y frágiles (navegador completo simulando usuario)
   # ===========================================================================
   e2e-acceptance-tests:
-    name: 🌐 Interfaz / E2E (Nocturna / Release)
+    name: Interfaz / E2E (Nocturna / Release)
     runs-on: ubuntu-latest
     services:
       mysql:

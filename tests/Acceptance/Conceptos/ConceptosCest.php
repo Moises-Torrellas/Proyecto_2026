@@ -12,6 +12,7 @@ if (!defined('_DB_NAME_')) {
 }
 
 #[Group('conceptos')]
+#[Group('cobranzas')]
 #[Group('interfaz')]
 final class ConceptosCest
 {

@@ -12,6 +12,7 @@ if (!defined('_DB_NAME_')) {
 }
 
 #[Group('monedas')]
+#[Group('cobranzas')]
 #[Group('interfaz')]
 final class MonedasCest
 {
@@ -30,6 +31,7 @@ final class MonedasCest
 
     public function _before(AcceptanceTester $I): void
     {
+        $this->asegurarMonedasBase();
         // Login con snapshot + navegación + comprobación de título y limpieza de overlays
         $I->irAlModulo(self::RUTA_MODULO, self::TITULO_MODULO);
     }
@@ -309,6 +311,36 @@ final class MonedasCest
     // =========================================================================
     // HELPERS DE BASE DE DATOS
     // =========================================================================
+
+    private function asegurarMonedasBase(): void
+    {
+        try {
+            $pdo = new \PDO(
+                'mysql:host=' . _DB_HOST_ . ';dbname=' . _DB_NAME_ . ';charset=utf8mb4',
+                _DB_USER_,
+                _DB_PASS_,
+                [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
+            );
+
+            $baseMonedas = [
+                ['nombre' => 'Bolívar', 'abreviatura' => 'VES', 'simbolo' => 'Bs', 'base' => 2],
+                ['nombre' => 'Dólar',   'abreviatura' => 'USD', 'simbolo' => '$',  'base' => 1],
+            ];
+
+            foreach ($baseMonedas as $m) {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM monedas WHERE UPPER(abreviatura) = ?");
+                $stmt->execute([$m['abreviatura']]);
+                if ((int) $stmt->fetchColumn() === 0) {
+                    $ins = $pdo->prepare(
+                        "INSERT INTO monedas (nombre, abreviatura, simbolo, base, estatus) VALUES (?, ?, ?, ?, 1)"
+                    );
+                    $ins->execute([$m['nombre'], $m['abreviatura'], $m['simbolo'], $m['base']]);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Silencioso para no interferir con la ejecución UI
+        }
+    }
 
     private function limpiarRegistroSiExiste(string $iso): void
     {
