@@ -213,8 +213,8 @@ class EliminarPalmaresIntegrationTest extends TestCase
     }
 
     /**
-     * ESC-INT-PALM-03 / CP-INT-PALM-29: Eliminación con ID individual no existente.
-     * Verifica que la consulta proceda sin errores colaterales manteniendo la base de datos intacta.
+     * ESC-INT-PALM-03 / CP-INT-PALM-29: Rechazo de eliminación cuando el ID individual no existe en la base de datos.
+     * Verifica que retorne el código INVALID_ID y la base de datos permanezca intacta.
      */
     public function testEliminarIdIndividualInexistente(): void
     {
@@ -226,7 +226,8 @@ class EliminarPalmaresIntegrationTest extends TestCase
 
         $resultado = $this->modelo->ProcesarDatos($datos);
 
-        $this->assertEquals('exito', $resultado['accion']);
+        $this->assertEquals('error', $resultado['accion']);
+        $this->assertEquals(INVALID_ID, $resultado['codigo']);
 
         // El conteo original de 2 registros se mantiene
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM palmares_individual");
@@ -234,8 +235,8 @@ class EliminarPalmaresIntegrationTest extends TestCase
     }
 
     /**
-     * ESC-INT-PALM-03 / CP-INT-PALM-30: Eliminación con ID grupal no existente.
-     * Verifica que la consulta proceda sin errores colaterales manteniendo la base de datos intacta.
+     * ESC-INT-PALM-03 / CP-INT-PALM-30: Rechazo de eliminación cuando el ID grupal no existe en la base de datos.
+     * Verifica que retorne el código INVALID_ID y la base de datos permanezca intacta.
      */
     public function testEliminarIdGrupalInexistente(): void
     {
@@ -247,7 +248,8 @@ class EliminarPalmaresIntegrationTest extends TestCase
 
         $resultado = $this->modelo->ProcesarDatos($datos);
 
-        $this->assertEquals('exito', $resultado['accion']);
+        $this->assertEquals('error', $resultado['accion']);
+        $this->assertEquals(INVALID_ID, $resultado['codigo']);
 
         // El conteo original de 2 registros se mantiene
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM palmares_grupal");

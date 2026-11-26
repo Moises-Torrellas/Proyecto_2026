@@ -22,11 +22,13 @@ class ModeloPalmares extends Conexion
         parent::__construct();
         // Ajustado para coincidir con la flexibilidad de recepción de datos
         $this->campoWhitelist = [
-            'id'          => 'codigo_individual', // o codigo_grupal dependiendo del contexto
-            'id_torneo'   => 'codigo_torneo',
-            'id_atleta'   => 'codigo_atleta',
-            'id_equipo'   => 'codigo_equipo',
-            'id_premio'   => 'codigo_premio',
+            'id'                => 'codigo_individual', // o codigo_grupal dependiendo del contexto
+            'codigo_individual' => 'codigo_individual',
+            'codigo_grupal'     => 'codigo_grupal',
+            'id_torneo'         => 'codigo_torneo',
+            'id_atleta'         => 'codigo_atleta',
+            'id_equipo'         => 'codigo_equipo',
+            'id_premio'         => 'codigo_premio',
         ];
     }
 
@@ -363,6 +365,9 @@ class ModeloPalmares extends Conexion
             }
 
             if ($this->tipo_palmares === 'individual') {
+                if (!$this->verificarExistencia('codigo_individual', $this->id, 'palmares_individual', null)) {
+                    throw new Exception(INVALID_ID);
+                }
                 $this->modeloPremios->validarTipoPremio($this->id_premio, 'I');
 
                 $stmtDetalle = $conex->prepare("
@@ -386,6 +391,9 @@ class ModeloPalmares extends Conexion
                 ]);
 
             } else {
+                if (!$this->verificarExistencia('codigo_grupal', $this->id, 'palmares_grupal', null)) {
+                    throw new Exception(INVALID_ID);
+                }
                 $this->modeloPremios->validarTipoPremio($this->id_premio, 'G');
 
                 // Resolver de nuevo la participación con los datos actualizados del formulario
@@ -426,8 +434,14 @@ class ModeloPalmares extends Conexion
             $conex->beginTransaction();
 
             if ($this->tipo_palmares === 'individual') {
+                if (!$this->verificarExistencia('codigo_individual', $this->id, 'palmares_individual', null)) {
+                    throw new Exception(INVALID_ID);
+                }
                 $stmtDel = $conex->prepare("DELETE FROM palmares_individual WHERE codigo_individual = :id");
             } else {
+                if (!$this->verificarExistencia('codigo_grupal', $this->id, 'palmares_grupal', null)) {
+                    throw new Exception(INVALID_ID);
+                }
                 $stmtDel = $conex->prepare("DELETE FROM palmares_grupal WHERE codigo_grupal = :id");
             }
 

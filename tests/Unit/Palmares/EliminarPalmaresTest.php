@@ -57,30 +57,43 @@ class EliminarPalmaresTest extends TestCase
         $propiedad->setValue(null, $pdoMock);
     }
 
+    private function configurarPdoConTransaccion(): PDO
+    {
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('beginTransaction')->willReturn(true);
+        $pdoMock->method('commit')->willReturn(true);
+        $pdoMock->method('rollBack')->willReturn(true);
+        $pdoMock->method('inTransaction')->willReturn(true);
+
+        return $pdoMock;
+    }
+
     // ==========================================
     // ESCENARIO 06: Eliminación de Registros de Palmarés
     // ==========================================
 
-    // Caso 25: Eliminación exitosa de un registro de palmarés individual
+    // Caso 27: Eliminación exitosa de un registro de palmarés individual
     #[Group('RF-04')]
     #[Group('ESC-06')]
-    #[Group('CP-25')]
+    #[Group('CP-27')]
     #[Group('escenario_exito')]
     public function test_deberia_eliminarPalmaresIndividualExitosamente_cuando_idExiste(): void
     {
+        $stmtExiste = $this->createMock(PDOStatement::class);
+        $stmtExiste->method('execute')->willReturn(true);
+        $stmtExiste->method('fetchColumn')->willReturn(1);
+
         $stmtDel = $this->createMock(PDOStatement::class);
         $stmtDel->expects($this->once())->method('bindValue')->with(':id', 15, PDO::PARAM_INT)->willReturn(true);
         $stmtDel->expects($this->once())->method('execute')->willReturn(true);
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-        $pdoMock->expects($this->once())->method('commit')->willReturn(true);
-
-        $pdoMock->expects($this->once())
-            ->method('prepare')
-            ->with($this->stringContains('DELETE FROM palmares_individual WHERE codigo_individual = :id'))
-            ->willReturn($stmtDel);
+        $pdoMock = $this->configurarPdoConTransaccion();
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtExiste, $stmtDel) {
+            if (str_contains($sql, 'SELECT COUNT(*)')) {
+                return $stmtExiste;
+            }
+            return $stmtDel;
+        });
 
         $this->inyectarPdoMock($pdoMock);
 
@@ -95,26 +108,56 @@ class EliminarPalmaresTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
-    // Caso 26: Eliminación exitosa de un registro de palmarés grupal
+    // Caso 28: Rechazo de eliminación individual cuando el ID no existe en base de datos
     #[Group('RF-04')]
     #[Group('ESC-06')]
-    #[Group('CP-26')]
+    #[Group('CP-28')]
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarEliminacionIndividual_cuando_idNoExiste(): void
+    {
+        $stmtExiste = $this->createMock(PDOStatement::class);
+        $stmtExiste->method('execute')->willReturn(true);
+        $stmtExiste->method('fetchColumn')->willReturn(0);
+
+        $pdoMock = $this->configurarPdoConTransaccion();
+        $pdoMock->method('prepare')->with($this->stringContains('SELECT COUNT(*)'))->willReturn($stmtExiste);
+
+        $this->inyectarPdoMock($pdoMock);
+
+        $modelo = new ModeloPalmares();
+
+        $resultado = $modelo->ProcesarDatos([
+            'accion'        => 'eliminar',
+            'id'            => 999,
+            'tipo_palmares' => 'individual'
+        ]);
+
+        $this->assertEquals('error', $resultado['accion']);
+        $this->assertEquals(INVALID_ID, $resultado['codigo']);
+    }
+
+    // Caso 29: Eliminación exitosa de un registro de palmarés grupal
+    #[Group('RF-04')]
+    #[Group('ESC-06')]
+    #[Group('CP-29')]
     #[Group('escenario_exito')]
     public function test_deberia_eliminarPalmaresGrupalExitosamente_cuando_idExiste(): void
     {
+        $stmtExiste = $this->createMock(PDOStatement::class);
+        $stmtExiste->method('execute')->willReturn(true);
+        $stmtExiste->method('fetchColumn')->willReturn(1);
+
         $stmtDel = $this->createMock(PDOStatement::class);
         $stmtDel->expects($this->once())->method('bindValue')->with(':id', 30, PDO::PARAM_INT)->willReturn(true);
         $stmtDel->expects($this->once())->method('execute')->willReturn(true);
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-        $pdoMock->expects($this->once())->method('commit')->willReturn(true);
-
-        $pdoMock->expects($this->once())
-            ->method('prepare')
-            ->with($this->stringContains('DELETE FROM palmares_grupal WHERE codigo_grupal = :id'))
-            ->willReturn($stmtDel);
+        $pdoMock = $this->configurarPdoConTransaccion();
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtExiste, $stmtDel) {
+            if (str_contains($sql, 'SELECT COUNT(*)')) {
+                return $stmtExiste;
+            }
+            return $stmtDel;
+        });
 
         $this->inyectarPdoMock($pdoMock);
 
@@ -129,23 +172,56 @@ class EliminarPalmaresTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
-    // Caso 27: Error de base de datos durante la eliminación con reversión transaccional
+    // Caso 30: Rechazo de eliminación grupal cuando el ID no existe en base de datos
     #[Group('RF-04')]
     #[Group('ESC-06')]
-    #[Group('CP-27')]
+    #[Group('CP-30')]
+    #[Group('escenario_error')]
+    public function test_deberia_rechazarEliminacionGrupal_cuando_idNoExiste(): void
+    {
+        $stmtExiste = $this->createMock(PDOStatement::class);
+        $stmtExiste->method('execute')->willReturn(true);
+        $stmtExiste->method('fetchColumn')->willReturn(0);
+
+        $pdoMock = $this->configurarPdoConTransaccion();
+        $pdoMock->method('prepare')->with($this->stringContains('SELECT COUNT(*)'))->willReturn($stmtExiste);
+
+        $this->inyectarPdoMock($pdoMock);
+
+        $modelo = new ModeloPalmares();
+
+        $resultado = $modelo->ProcesarDatos([
+            'accion'        => 'eliminar',
+            'id'            => 999,
+            'tipo_palmares' => 'grupal'
+        ]);
+
+        $this->assertEquals('error', $resultado['accion']);
+        $this->assertEquals(INVALID_ID, $resultado['codigo']);
+    }
+
+    // Caso 31: Error de base de datos durante la eliminación con reversión transaccional
+    #[Group('RF-04')]
+    #[Group('ESC-06')]
+    #[Group('CP-31')]
     #[Group('escenario_error')]
     public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaEliminacionSQL(): void
     {
+        $stmtExiste = $this->createMock(PDOStatement::class);
+        $stmtExiste->method('execute')->willReturn(true);
+        $stmtExiste->method('fetchColumn')->willReturn(1);
+
         $stmtDel = $this->createMock(PDOStatement::class);
         $stmtDel->method('bindValue')->willReturn(true);
         $stmtDel->method('execute')->willThrowException(new PDOException('Fallo de clave foránea al eliminar'));
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->expects($this->once())->method('beginTransaction')->willReturn(true);
-        $pdoMock->method('inTransaction')->willReturn(true);
-        $pdoMock->expects($this->once())->method('rollBack')->willReturn(true);
-
-        $pdoMock->method('prepare')->willReturn($stmtDel);
+        $pdoMock = $this->configurarPdoConTransaccion();
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($stmtExiste, $stmtDel) {
+            if (str_contains($sql, 'SELECT COUNT(*)')) {
+                return $stmtExiste;
+            }
+            return $stmtDel;
+        });
 
         $this->inyectarPdoMock($pdoMock);
 
