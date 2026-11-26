@@ -1,4 +1,21 @@
+let timerBusqueda;
+
+function busqueda() {
+    clearTimeout(timerBusqueda);
+    timerBusqueda = setTimeout(function () {
+        let valorBusqueda = $('#busqueda').val();
+        let esIndividual = $('#tab-individual').hasClass('activa');
+        let accionReq = esIndividual ? 'consultarIndividual' : 'consultarGrupal';
+        let datos = new FormData();
+        datos.append('accion', accionReq);
+        datos.append('filtro', valorBusqueda);
+        enviaAjax(datos);
+    }, 500);
+}
+
 $(document).ready(function () {
+    $('#busqueda').off('keyup').on('keyup', busqueda);
+
     // 1. Cargar datos en los selects (MultiConsulta)
     MultiConsulta();
 

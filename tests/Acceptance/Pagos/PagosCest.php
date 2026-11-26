@@ -12,6 +12,7 @@ if (!defined('_DB_NAME_')) {
 }
 
 #[Group('pagos')]
+#[Group('cobranzas')]
 #[Group('interfaz')]
 final class PagosCest
 {
@@ -53,6 +54,8 @@ final class PagosCest
 
     public function _before(AcceptanceTester $I): void
     {
+        $I->asegurarAtletaActivoEnBD();
+        $this->asegurarCargoPendiente();
         // Login con snapshot + navegación a /Pagos + comprobación de título y limpieza de overlays
         $I->irAlModulo(self::RUTA_MODULO, self::TITULO_MODULO);
     }
@@ -85,6 +88,8 @@ final class PagosCest
     #[Group('validacion')]
     public function probarValidacionesDeFormulario(AcceptanceTester $I): void
     {
+        $this->asegurarCargoPendiente();
+
         // 1. Abrir modal de nuevo pago
         $I->click(AcceptanceTester::BTN_NUEVO);
         $I->waitForElementVisible(AcceptanceTester::MODAL, 5);
@@ -365,7 +370,7 @@ final class PagosCest
         $I->waitForElementVisible(AcceptanceTester::MODAL, 5);
         $I->waitForJS("return $('#cuenta option').length > 0 && $('#metodo option:not([value=\"\"])').length > 0;", 5);
 
-        $I->executeJS("
+        $datosCiclo = $I->executeJS("
             let ctaOpt = $('#cuenta option:first');
             let ctaId = ctaOpt.val();
             $('#cuenta').val([ctaId]).trigger('change');
@@ -389,9 +394,15 @@ final class PagosCest
             $('#monto').val('15.00').trigger('input');
 
             let ref = " . json_encode($refCiclo) . ";
+            let usoRef = false;
             if (!$('#referencia').prop('disabled')) {
                 $('#referencia').val(ref).trigger('input');
+                usoRef = true;
             }
+
+            return {
+                termino: usoRef ? ref : (ctaObj && ctaObj.p_nombre ? ctaObj.p_nombre : '')
+            };
         ");
 
         $I->wait(1);
@@ -402,9 +413,12 @@ final class PagosCest
         $I->aceptarSweetAlert();
         $I->waitForElementNotVisible(AcceptanceTester::MODAL, 5);
 
-        // 2. BUSCADOR POR REFERENCIA
-        $I->buscarEnListado($refCiclo);
-        $I->wait(1);
+        // 2. BUSCADOR POR REFERENCIA (o nombre del atleta si el método no requiere referencia)
+        $terminoBusqueda = !empty($datosCiclo['termino']) ? (string) $datosCiclo['termino'] : '';
+        if ($terminoBusqueda !== '') {
+            $I->buscarEnListado($terminoBusqueda);
+            $I->wait(1);
+        }
 
         // 3. EXPANDIR DETALLE
         $I->waitForElementVisible(self::FILA_PAGO, 5);
@@ -436,17 +450,18 @@ final class PagosCest
     {
         try {
             $pdo = new \PDO(
-                'mysql:host=' . _DB_HOST_ . ';dbname=' . _DB_NAME_ . ';charset=' . _DB_CHARSET_,
+                'mysql:host=' . _DB_HOST_ . ';dbname=' . _DB_NAME_ . ';charset=utf8mb4',
                 _DB_USER_,
-                _DB_PASS_
+                _DB_PASS_,
+                [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
             );
             $stmt = $pdo->query("SELECT COUNT(*) FROM cargos WHERE estatus = 1");
             $total = (int) $stmt->fetchColumn();
 
             if ($total === 0) {
-                $idAtleta = $pdo->query("SELECT codigo_atleta FROM atletas WHERE estatus = 1 LIMIT 1")->fetchColumn();
+                $idAtleta = $pdo->query("SELECT codigo_atleta FROM inscripciones WHERE estatus = 1 LIMIT 1")->fetchColumn();
                 $idConcepto = $pdo->query("SELECT codigo_concepto FROM conceptos WHERE estatus = 1 LIMIT 1")->fetchColumn();
-                $idMoneda = $pdo->query("SELECT codigo_moneda FROM monedas WHERE estatus = 1 LIMIT 1")->fetchColumn();
+                $idMoneda = $pdo->query("SELECT codigo_moneda FROM monedas WHERE estatus = 1 ORDER BY base ASC LIMIT 1")->fetchColumn();
 
                 if ($idAtleta && $idConcepto && $idMoneda) {
                     $insert = $pdo->prepare(

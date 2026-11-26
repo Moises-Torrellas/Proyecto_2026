@@ -12,6 +12,7 @@ if (!defined('_DB_NAME_')) {
 }
 
 #[Group('metodospago')]
+#[Group('cobranzas')]
 #[Group('interfaz')]
 final class MetodosPagoCest
 {

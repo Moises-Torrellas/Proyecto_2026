@@ -38,7 +38,8 @@ if (!defined('DB_CONNECTION')) {
 
 #[Group('unit')]
 #[Group('unitPremios')]
-#[Group('cu_premios_incluir')]
+#[Group('RF-02')]
+#[Group('ESC-02')]
 class RegistrarPremiosTest extends TestCase
 {
     protected function tearDown(): void
@@ -78,6 +79,14 @@ class RegistrarPremiosTest extends TestCase
         return $pdoMock;
     }
 
+    // ==========================================
+    // ESCENARIO 02: Registro / Inclusión de Galardones
+    // ==========================================
+
+    // Caso 04: Incluir premio exitosamente con confirmación transaccional cuando los datos son válidos
+    #[Group('RF-02')]
+    #[Group('ESC-02')]
+    #[Group('CP-04')]
     #[Group('escenario_exito')]
     public function test_deberia_incluirPremioExitosamente_cuando_datosSonValidos(): void
     {
@@ -108,6 +117,10 @@ class RegistrarPremiosTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
+    // Caso 05: Aplicar trim y formato Título (Title Case) cuando el nombre tiene espacios laterales
+    #[Group('RF-02')]
+    #[Group('ESC-02')]
+    #[Group('CP-05')]
     #[Group('escenario_limite')]
     public function test_deberia_aplicarTrimYFormatoTitulo_cuando_nombreTieneEspaciosLaterales(): void
     {
@@ -147,6 +160,10 @@ class RegistrarPremiosTest extends TestCase
         $this->assertEquals('I', $propTipo->getValue($modelo));
     }
 
+    // Caso 06: Rechazar inclusión y revertir transacción cuando el nombre de premio ya existe (DUPLICATE_NAME)
+    #[Group('RF-02')]
+    #[Group('ESC-02')]
+    #[Group('CP-06')]
     #[Group('escenario_error')]
     public function test_deberia_rechazarInclusion_cuando_nombreDePremioYaExiste(): void
     {
@@ -169,6 +186,10 @@ class RegistrarPremiosTest extends TestCase
         $this->assertEquals(DUPLICATE_NAME, $resultado['codigo']);
     }
 
+    // Caso 07: Revertir transacción con rollback y retornar código de error cuando falla la inserción SQL
+    #[Group('RF-02')]
+    #[Group('ESC-02')]
+    #[Group('CP-07')]
     #[Group('escenario_error')]
     public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaInsercionSQL(): void
     {

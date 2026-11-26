@@ -47,15 +47,15 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
 
         switch ($accion) {
             case 'consultar':
-                if (empty($permisos['ingresar_modulos'])) throw new Exception('No tienes permisos para consultar representantes.');
+                if (empty($permisos['ingresar_modulos'])) throw new Exception('No tienes permisos para consultar modulos.');
                 consultar($obj, $permisos);
                 break;
             case 'buscar':
-                if (empty($permisos['modificar_modulo'])) throw new Exception('No tienes permisos para modificar representantes.');
+                if (empty($permisos['modificar_modulo'])) throw new Exception('No tienes permisos para modificar modulos.');
                 buscar($obj);
                 break;
             case 'modificar':
-                if (empty($permisos['modificar_modulo'])) throw new Exception('No tienes permisos para modificar representantes.');
+                if (empty($permisos['modificar_modulo'])) throw new Exception('No tienes permisos para modificar modulos.');
                 modificar($obj, $id_modulo, $bitacoraObj);
                 break;
             default:

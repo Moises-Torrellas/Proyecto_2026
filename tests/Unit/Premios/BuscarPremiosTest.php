@@ -38,7 +38,8 @@ if (!defined('DB_CONNECTION')) {
 
 #[Group('unit')]
 #[Group('unitPremios')]
-#[Group('cu_premios_buscar')]
+#[Group('RF-06')]
+#[Group('ESC-06')]
 class BuscarPremiosTest extends TestCase
 {
     protected function tearDown(): void
@@ -67,6 +68,14 @@ class BuscarPremiosTest extends TestCase
         return array_merge($base, $sobrescribir);
     }
 
+    // ==========================================
+    // ESCENARIO 06: Búsqueda de Galardones por Identificador
+    // ==========================================
+
+    // Caso 23: Retornar registro de premio cuando se busca por ID existente
+    #[Group('RF-06')]
+    #[Group('ESC-06')]
+    #[Group('CP-23')]
     #[Group('escenario_exito')]
     public function test_deberia_retornarRegistroPremio_cuando_seBuscaPorIdExistente(): void
     {
@@ -94,6 +103,10 @@ class BuscarPremiosTest extends TestCase
         $this->assertEquals('Copa Oro Hockey', $resultado['datos'][0]['nombre']);
     }
 
+    // Caso 24: Retornar colección vacía cuando el ID buscado no existe
+    #[Group('RF-06')]
+    #[Group('ESC-06')]
+    #[Group('CP-24')]
     #[Group('escenario_limite')]
     public function test_deberia_retornarColeccionVacia_cuando_idNoExiste(): void
     {
@@ -117,6 +130,10 @@ class BuscarPremiosTest extends TestCase
         $this->assertEmpty($resultado['datos']);
     }
 
+    // Caso 25: Manejar límite numérico cuando el ID es el valor entero máximo (PHP_INT_MAX)
+    #[Group('RF-06')]
+    #[Group('ESC-06')]
+    #[Group('CP-25')]
     #[Group('escenario_limite')]
     public function test_deberia_manejarLimiteNumerico_cuando_idEsMaximo(): void
     {
@@ -140,6 +157,10 @@ class BuscarPremiosTest extends TestCase
         $this->assertEmpty($resultado['datos']);
     }
 
+    // Caso 26: Retornar estructura de error cuando falla la sentencia SQL de búsqueda
+    #[Group('RF-06')]
+    #[Group('ESC-06')]
+    #[Group('CP-26')]
     #[Group('escenario_error')]
     public function test_deberia_retornarEstructuraError_cuando_fallaSentenciaSQL(): void
     {

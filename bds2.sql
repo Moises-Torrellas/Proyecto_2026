@@ -119,8 +119,8 @@ CREATE TABLE `bitacora` (
   `id_bitacora` int(11) NOT NULL,
   `id_modulo` int(11) NOT NULL,
   `acciones` varchar(255) NOT NULL,
-  `datos_previos` varchar(255) NOT NULL DEFAULT 'No Aplica',
-  `datos_nuevos` varchar(255) NOT NULL DEFAULT 'No Aplica',
+  `datos_previos` varchar(255) NOT NULL DEFAULT 'Ninguno',
+  `datos_nuevos` varchar(255) NOT NULL DEFAULT 'Ninguno',
   `entorno` varchar(50) NOT NULL,
   `fecha_hora` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `idUsuario` int(11) NOT NULL
@@ -132,7 +132,7 @@ CREATE TABLE `bitacora` (
 
 INSERT INTO `bitacora` (`id_bitacora`, `id_modulo`, `acciones`, `datos_previos`, `datos_nuevos`, `entorno`, `fecha_hora`, `idUsuario`) VALUES
 (1, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-11-09 18:35:00', 1),
-(2, 1, 'Registro al usuario: 87654321 - Soporte Soporte', 'No Aplica', 'Cédula: 87654321, Nombre: Soporte Soporte, Correo: moitcj@gmail.com, Teléfono: 0000-0000000, Rol: Entrenador', 'Base de Datos', '2026-11-09 18:36:08', 1),
+(2, 1, 'Registro al usuario: 87654321 - Soporte Soporte', 'Ninguno', 'Cédula: 87654321, Nombre: Soporte Soporte, Correo: moitcj@gmail.com, Teléfono: 0000-0000000, Rol: Entrenador', 'Base de Datos', '2026-11-09 18:36:08', 1),
 (3, 1, 'Ingreso al Modulo', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-11-09 18:36:38', 1),
 (4, 5, 'Cierre de sesión exitoso.', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-11-09 18:36:52', 1),
 (5, 4, 'Inicio de sesión exitoso', '', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '2026-11-09 18:37:05', 14),
@@ -534,7 +534,7 @@ CREATE TRIGGER `disparador_despues_insertar_usuario` AFTER INSERT ON `usuarios` 
     VALUES (
         1, -- Asumiendo que 1 es el módulo de Seguridad
         CONCAT('Registro al usuario: ', NEW.cedulaUsuario, ' - ', NEW.nombreUsuario, ' ', NEW.apellidoUsuario),
-        'No Aplica',
+        'Ninguno',
         CONCAT('Cédula: ', NEW.cedulaUsuario, ', Nombre: ', NEW.nombreUsuario, ' ', NEW.apellidoUsuario, ', Correo: ', NEW.correo, ', Teléfono: ', NEW.telefonoUsuario, ', Rol: ', IFNULL(v_nombre_rol, 'Desconocido')),
         'Base de Datos',
         IFNULL(@usuario_actual, NEW.idUsuario) -- Se toma el usuario de la sesión de BD o el creado si es el primero

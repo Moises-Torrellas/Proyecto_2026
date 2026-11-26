@@ -2,13 +2,16 @@
 
 namespace tests\Unit\Usuarios;
 
+use App\modelo\Conexion;
+use ReflectionClass;
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloUsuarios;
 use Exception;
 use PHPUnit\Framework\Attributes\Group;
-use ReflectionClass;
 
-require_once __DIR__ . '/UsuariosMockTrait.php';
+if (!defined('INVALID_ID')) {
+    require_once dirname(__DIR__, 3) . '/config/config.php';
+}
 
 /**
  * RF-USU-01: El sistema debe validar y normalizar los datos recibidos antes de procesar
@@ -26,7 +29,19 @@ require_once __DIR__ . '/UsuariosMockTrait.php';
 #[Group('validarDatosUsuarios')]
 class ValidarDatosUsuariosTest extends TestCase
 {
-    use UsuariosMockTrait;
+    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
+    protected array $sentencias = [];
+
+    protected function tearDown(): void
+    {
+        $reflector = new ReflectionClass(Conexion::class);
+        $reflector->getProperty('instanciaSG')->setValue(null, null);
+        $reflector->getProperty('instancia')->setValue(null, null);
+
+        $_SESSION = [];
+        $this->sentencias = [];
+        parent::tearDown();
+    }
 
     private function procesarSinEjecutar(ModeloUsuarios $modelo, array $datos): void
     {
@@ -98,7 +113,7 @@ class ValidarDatosUsuariosTest extends TestCase
         $this->procesarSinEjecutar($modelo, [
             'id'       => 7,
             'cedula'   => ' 12345678 ',
-            'telefono' => ' 04141234567 ',
+            'telefono' => ' 0414-1234567 ',
             'roles_id' => 3,
             'foto'     => 'user_12345678.png',
             'bloqueo'  => 1,
@@ -106,7 +121,7 @@ class ValidarDatosUsuariosTest extends TestCase
 
         $this->assertSame(7, $this->propiedad($modelo, 'id'));
         $this->assertSame('12345678', $this->propiedad($modelo, 'cedula'));
-        $this->assertSame('04141234567', $this->propiedad($modelo, 'telefono'));
+        $this->assertSame('0414-1234567', $this->propiedad($modelo, 'telefono'));
         $this->assertSame(3, $this->propiedad($modelo, 'rol'));
         $this->assertSame('user_12345678.png', $this->propiedad($modelo, 'foto'));
         $this->assertSame(1, $this->propiedad($modelo, 'bloqueo'));

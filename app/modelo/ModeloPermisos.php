@@ -192,6 +192,9 @@ class ModeloPermisos extends Conexion
 
             // Verificar si el permiso existe
             if (!$this->verificarExistencia('id', $this->id, 'permisos', 1, 'sg', bloquear: true)) {
+                if ($this->verificarExistencia('id', $this->id, 'permisos', 2, 'sg')) {
+                    throw new Exception('No se puede modificar un permiso bloqueado.');
+                }
                 throw new Exception('El permiso seleccionado no existe.');
             }
 

@@ -2,12 +2,18 @@
 
 namespace tests\Unit\Usuarios;
 
+use App\modelo\Conexion;
+use PDO;
+use PDOStatement;
+use ReflectionClass;
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloUsuarios;
 use Exception;
 use PHPUnit\Framework\Attributes\Group;
 
-require_once __DIR__ . '/UsuariosMockTrait.php';
+if (!defined('INVALID_ID')) {
+    require_once dirname(__DIR__, 3) . '/config/config.php';
+}
 
 /**
  * RF-USU-04: El sistema debe permitir modificar los datos de un usuario. La cédula, el
@@ -25,13 +31,146 @@ require_once __DIR__ . '/UsuariosMockTrait.php';
  *  E6. Cédula, correo o teléfono usados por otro usuario activo.
  *  E7. Rol inexistente.
  *  E8. Falla de la base de datos.
+ *  E9. El usuario a modificar no existe o fue eliminado.
  */
 #[Group('unit')]
 #[Group('unitUsuarios')]
 #[Group('modificarUsuarios')]
 class ModificarUsuariosTest extends TestCase
 {
-    use UsuariosMockTrait;
+    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
+    protected array $sentencias = [];
+
+    protected function tearDown(): void
+    {
+        $reflector = new ReflectionClass(Conexion::class);
+        $reflector->getProperty('instanciaSG')->setValue(null, null);
+        $reflector->getProperty('instancia')->setValue(null, null);
+
+        $_SESSION = [];
+        $this->sentencias = [];
+        parent::tearDown();
+    }
+
+    /**
+     * ModeloUsuarios trabaja sobre la base de datos de seguridad (conexSG), por lo que
+     * el PDO simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
+     */
+    protected function inyectarPdoMock(PDO $pdoMock): void
+    {
+        $reflector = new ReflectionClass(Conexion::class);
+        $reflector->getProperty('instanciaSG')->setValue(null, $pdoMock);
+        $reflector->getProperty('instancia')->setValue(null, $pdoMock);
+    }
+
+    /**
+     * Crea un PDO simulado.
+     *
+     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
+     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
+     *                         'propia.columna'        => int   (verificarExistenciaPropia)
+     *                         Cualquier verificación no indicada devuelve 0 (no existe).
+     * @param array $respuestas Fragmento de SQL => ['fetch' => , 'fetchAll' => , 'fetchColumn' => , 'error' => Exception]
+     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
+     */
+    protected function crearPdoMock(array $conteos = [], array $respuestas = [], string $lastInsertId = '25'): PDO
+    {
+        $pdoMock = $this->createMock(PDO::class);
+        $pdoMock->method('beginTransaction')->willReturn(true);
+        $pdoMock->method('commit')->willReturn(true);
+        $pdoMock->method('rollBack')->willReturn(true);
+        $pdoMock->method('inTransaction')->willReturn(true);
+        $pdoMock->method('lastInsertId')->willReturn($lastInsertId);
+        $pdoMock->method('exec')->willReturnCallback(function (string $sql) {
+            $this->sentencias[] = ['sql' => $sql, 'params' => []];
+            return 0;
+        });
+        $pdoMock->method('query')->willReturnCallback(
+            fn(string $sql) => $this->crearSentencia($sql, $respuestas, true)
+        );
+        $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($conteos, $respuestas) {
+            // verificarExistenciaPropia: ... WHERE idUsuario = :id AND <columna> = :valor
+            if (preg_match('/SELECT COUNT\(\*\) FROM `\w+`\s+WHERE\s+\w+\s*=\s*:id\s+AND\s+(\w+)\s*=\s*:valor/', $sql, $m)) {
+                return $this->crearSentenciaConteo(fn() => $conteos['propia.' . $m[1]] ?? 0);
+            }
+            // verificarExistencia: SELECT COUNT(*) FROM `<tabla>` WHERE <columna> = :valor [AND estatus = :estatus]
+            if (preg_match('/SELECT COUNT\(\*\) FROM `(\w+)` WHERE (\w+) = :valor/', $sql, $m)) {
+                return $this->crearSentenciaConteo(
+                    fn($estatus) => $conteos[$m[1] . '.' . $m[2] . '.' . ($estatus ?? 'null')] ?? 0
+                );
+            }
+            return $this->crearSentencia($sql, $respuestas);
+        });
+
+        return $pdoMock;
+    }
+
+    private function crearSentenciaConteo(callable $resolver): PDOStatement
+    {
+        $estatus = null;
+        $stmt = $this->createMock(PDOStatement::class);
+        $stmt->method('bindValue')->willReturnCallback(function ($param, $valor) use (&$estatus) {
+            if ($param === ':estatus') {
+                $estatus = $valor;
+            }
+            return true;
+        });
+        $stmt->method('execute')->willReturn(true);
+        $stmt->method('fetchColumn')->willReturnCallback(function () use (&$estatus, $resolver) {
+            return $resolver($estatus);
+        });
+        return $stmt;
+    }
+
+    private function crearSentencia(string $sql, array $respuestas, bool $ejecutadaDirecto = false): PDOStatement
+    {
+        $config = [];
+        foreach ($respuestas as $fragmento => $respuesta) {
+            if (str_contains($sql, $fragmento)) {
+                $config = $respuesta;
+                break;
+            }
+        }
+
+        $binds = new \ArrayObject();
+        $stmt = $this->createMock(PDOStatement::class);
+        $registrarBind = function ($param, $valor) use ($binds) {
+            $binds[$param] = $valor;
+            return true;
+        };
+        $stmt->method('bindValue')->willReturnCallback($registrarBind);
+        $stmt->method('bindParam')->willReturnCallback($registrarBind);
+        $stmt->method('execute')->willReturnCallback(function (?array $params = null) use ($sql, $binds, $config) {
+            $this->sentencias[] = ['sql' => $sql, 'params' => $params ?? $binds->getArrayCopy()];
+            if (isset($config['error'])) {
+                throw $config['error'];
+            }
+            return true;
+        });
+        $stmt->method('fetch')->willReturn($config['fetch'] ?? false);
+        $stmt->method('fetchAll')->willReturn($config['fetchAll'] ?? []);
+        $stmt->method('fetchColumn')->willReturn($config['fetchColumn'] ?? false);
+
+        if ($ejecutadaDirecto) {
+            $this->sentencias[] = ['sql' => $sql, 'params' => []];
+            if (isset($config['error'])) {
+                throw $config['error'];
+            }
+        }
+
+        return $stmt;
+    }
+
+    /** Devuelve la primera sentencia ejecutada que contenga el fragmento indicado, o null. */
+    protected function sentenciaEjecutada(string $fragmento): ?array
+    {
+        foreach ($this->sentencias as $sentencia) {
+            if (str_contains($sentencia['sql'], $fragmento)) {
+                return $sentencia;
+            }
+        }
+        return null;
+    }
 
     private function obtenerDatosValidos(array $sobrescribir = []): array
     {
@@ -41,7 +180,7 @@ class ModificarUsuariosTest extends TestCase
             'cedula'   => '27123456',
             'nombre'   => 'carlos',
             'apellido' => 'mendoza',
-            'telefono' => '04241234567',
+            'telefono' => '0424-1234567',
             'correo'   => 'carlos@correo.com',
             'roles_id' => 3,
             'foto'     => 'user_27123456.png',
@@ -265,5 +404,19 @@ class ModificarUsuariosTest extends TestCase
 
         $this->assertSame('error', $resultado['accion']);
         $this->assertSame('Error al actualizar', $resultado['codigo']);
+    }
+
+    // Caso 15 (E9): Usuario inexistente o eliminado no se modifica
+    public function testUsuarioNoExiste(): void
+    {
+        $resultado = $this->ejecutar(
+            $this->conteosValidos(),
+            ['SELECT u.id_rol, r.nivel_rol' => ['fetch' => false]],
+            ['id' => 999]
+        );
+
+        $this->assertSame(['accion' => 'error', 'codigo' => 'USER_NOT_FOUND'], $resultado);
+        $this->assertStringContainsString('u.estatus = 1', $this->sentenciaEjecutada('SELECT u.id_rol, r.nivel_rol')['sql']);
+        $this->assertNull($this->sentenciaEjecutada('UPDATE `usuarios`'));
     }
 }

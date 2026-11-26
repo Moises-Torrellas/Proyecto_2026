@@ -37,7 +37,8 @@ if (!defined('DB_CONNECTION')) {
 
 #[Group('unit')]
 #[Group('unitPremios')]
-#[Group('cu_premios_consultar')]
+#[Group('RF-05')]
+#[Group('ESC-05')]
 class ConsultarPremiosTest extends TestCase
 {
     protected function tearDown(): void
@@ -66,6 +67,14 @@ class ConsultarPremiosTest extends TestCase
         return array_merge($base, $sobrescribir);
     }
 
+    // ==========================================
+    // ESCENARIO 05: Consulta y Filtrado de Galardones
+    // ==========================================
+
+    // Caso 18: Retornar listado general de premios cuando se consulta sin filtros
+    #[Group('RF-05')]
+    #[Group('ESC-05')]
+    #[Group('CP-18')]
     #[Group('escenario_exito')]
     public function test_deberia_retornarListadoGeneralPremios_cuando_seConsultaSinFiltros(): void
     {
@@ -98,6 +107,10 @@ class ConsultarPremiosTest extends TestCase
         $this->assertEquals('Trofeo Campeon', $resultado['datos'][0]['nombre']);
     }
 
+    // Caso 19: Retornar premios filtrados cuando se aplica filtro de texto
+    #[Group('RF-05')]
+    #[Group('ESC-05')]
+    #[Group('CP-19')]
     #[Group('escenario_exito')]
     public function test_deberia_retornarPremiosFiltrados_cuando_seAplicaFiltroTexto(): void
     {
@@ -129,6 +142,10 @@ class ConsultarPremiosTest extends TestCase
         $this->assertCount(1, $resultado['datos']);
     }
 
+    // Caso 20: Retornar colección vacía cuando no existen premios en base de datos
+    #[Group('RF-05')]
+    #[Group('ESC-05')]
+    #[Group('CP-20')]
     #[Group('escenario_limite')]
     public function test_deberia_retornarColeccionVacia_cuando_noExistenPremiosEnBaseDeDatos(): void
     {
@@ -151,6 +168,10 @@ class ConsultarPremiosTest extends TestCase
         $this->assertEmpty($resultado['datos']);
     }
 
+    // Caso 21: Ignorar filtro vacío cuando se pasa cadena vacía
+    #[Group('RF-05')]
+    #[Group('ESC-05')]
+    #[Group('CP-21')]
     #[Group('escenario_limite')]
     public function test_deberia_ignorarFiltroVacio_cuando_sePasaCadenaVacia(): void
     {
@@ -175,6 +196,10 @@ class ConsultarPremiosTest extends TestCase
         $this->assertEquals('consultar', $resultado['accion']);
     }
 
+    // Caso 22: Retornar colección vacía cuando filtro de búsqueda no encuentra coincidencias
+    #[Group('RF-05')]
+    #[Group('ESC-05')]
+    #[Group('CP-22')]
     #[Group('escenario_error')]
     public function test_deberia_retornarColeccionVacia_cuando_filtroDeBusquedaNoEncuentraCoincidencias(): void
     {

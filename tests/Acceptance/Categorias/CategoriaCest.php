@@ -12,6 +12,7 @@ if (!defined('_DB_NAME_')) {
 }
 
 #[Group('categorias')]
+#[Group('administracion')]
 #[Group('interfaz')]
 final class CategoriaCest
 {
@@ -22,14 +23,14 @@ final class CategoriaCest
     private const INPUT_EDAD_MIN    = '#edad_min';
     private const INPUT_EDAD_MAX    = '#edad_max';
 
-    // Datos de prueba (edades que no colisionan con las categorías preexistentes 3-50 años)
-    private string $nombreBase      = 'U-65';
-    private string $edadMinBase     = '61';
-    private string $edadMaxBase     = '65';
+    // Datos de prueba (edades 51-60 compatibles con el límite máximo de 60 años de Atletas y sin colisionar con 3-50)
+    private string $nombreBase      = 'U-55';
+    private string $edadMinBase     = '51';
+    private string $edadMaxBase     = '55';
 
-    private string $nombreMod       = 'U-70';
-    private string $edadMinMod      = '61';
-    private string $edadMaxMod      = '70';
+    private string $nombreMod       = 'U-60';
+    private string $edadMinMod      = '51';
+    private string $edadMaxMod      = '60';
 
     public function _before(AcceptanceTester $I): void
     {

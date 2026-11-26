@@ -268,6 +268,10 @@ class ModeloRoles extends Conexion
             if ($this->verificarExistencia('id', $this->id, 'usuarios', 1, 'sg', bloquear: true)) {
             throw new Exception(ASSOCIATES);
             }
+            // Los usuarios eliminados (estatus 0) siguen apuntando al rol, y la llave foránea impide borrarlo
+            if ($this->verificarExistencia('id', $this->id, 'usuarios', 0, 'sg', bloquear: true)) {
+            throw new Exception(ASSOCIATES . '0');
+            }
             if (!$this->verificarExistencia('id', $this->id, 'roles', NULL, 'sg', bloquear: true)) {
             throw new Exception(INVALID_ID . '0');
             }

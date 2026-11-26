@@ -9,8 +9,14 @@ use PDO;
 use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 
+if (!defined('EMPTY_SELECTION')) {
+    require_once dirname(__DIR__, 3) . '/config/config.php';
+}
+
 #[Group("integ")]
 #[Group("atletas")]
+#[Group("atletasDorsal")]
+
 class AtletaDorsalDuplicadoTest extends TestCase
 {
     private ?PDO $pdo = null;
@@ -18,7 +24,8 @@ class AtletaDorsalDuplicadoTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->pdo = new PDO('mysql:host=127.0.0.1;dbname=cannibalsbd2;charset=utf8', 'root', '', [
+        $dsn = 'mysql:host=' . (_DB_HOST_ ?: '127.0.0.1') . ';dbname=' . (_DB_NAME_ ?: 'cannibalsbd2') . ';charset=utf8';
+        $this->pdo = new PDO($dsn, _DB_USER_ ?: 'root', _DB_PASS_ ?: '', [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
         ]);

@@ -2,11 +2,15 @@
 
 namespace tests\Unit\Bitacora;
 
+use App\modelo\Conexion;
+use ReflectionClass;
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloBitacora;
 use PHPUnit\Framework\Attributes\Group;
 
-require_once __DIR__ . '/BitacoraMockTrait.php';
+if (!defined('INVALID_ID')) {
+    require_once dirname(__DIR__, 3) . '/config/config.php';
+}
 
 /**
  * RF-BIT-02: Los módulos registran sus acciones mediante la función registrarBitacora()
@@ -25,7 +29,20 @@ require_once __DIR__ . '/BitacoraMockTrait.php';
 #[Group('registrarBitacoraControlador')]
 class RegistrarBitacoraControladorTest extends TestCase
 {
-    use BitacoraMockTrait;
+    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
+    protected array $sentencias = [];
+
+    protected function tearDown(): void
+    {
+        $reflector = new ReflectionClass(Conexion::class);
+        $reflector->getProperty('instanciaSG')->setValue(null, null);
+        $reflector->getProperty('instancia')->setValue(null, null);
+
+        $_SESSION = [];
+        unset($_SERVER['HTTP_USER_AGENT']);
+        $this->sentencias = [];
+        parent::tearDown();
+    }
 
     // Caso 1 (E1): Se registra la acción con el usuario de la sesión y los datos enviados
     public function testRegistraConSesion(): void

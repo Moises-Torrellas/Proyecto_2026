@@ -17,6 +17,7 @@ if (!defined('EMPTY_SELECTION')) {
 
 #[Group('unit')]
 #[Group('unitPagos')]
+#[Group('registrarVuelto')]
 class RegistrarVueltoTest extends TestCase
 {
     protected function tearDown(): void
@@ -119,139 +120,93 @@ class RegistrarVueltoTest extends TestCase
         $this->assertEquals('El pago original no existe.', $resultado['mensaje']);
     }
 
-    // Caso 11: Pago sin saldo disponible para dar vuelto
-    public function testSinSaldoDisponible(): void
+    // Caso 4: Saldo insuficiente o inexistente para vuelto
+    public function testSaldoInsuficienteParaVuelto(): void
     {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetch')->willReturnOnConsecutiveCalls(
-            ['monto_pago' => '100.00', 'codigo_moneda' => 1],
-            ['total_abonado' => '100.00'],
-            ['total_vueltos_base' => '0.00']
-        );
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'codigo_pago' => '10',
-            'codigo_metodo' => '1',
-            'codigo_moneda' => '1',
-            'monto_vuelto' => '15.00'
+        $casos = [
+            'sin saldo' => [
+                'fetchAbonado'    => ['total_abonado' => '100.00'],
+                'montoVuelto'     => '15.00',
+                'mensajeEsperado' => 'Ya no queda saldo disponible para dar vuelto en este pago.'
+            ],
+            'excede saldo' => [
+                'fetchAbonado'    => ['total_abonado' => '80.00'],
+                'montoVuelto'     => '50.00',
+                'mensajeEsperado' => 'El vuelto solicitado excede el saldo disponible restante de este pago.'
+            ]
         ];
 
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
+        foreach ($casos as $nombre => $caso) {
+            $stmtMock = $this->createMock(PDOStatement::class);
+            $stmtMock->method('execute')->willReturn(true);
+            $stmtMock->method('fetch')->willReturnOnConsecutiveCalls(
+                ['monto_pago' => '100.00', 'codigo_moneda' => 1],
+                $caso['fetchAbonado'],
+                ['total_vueltos_base' => '0.00']
+            );
 
-        // Assert
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals('Ya no queda saldo disponible para dar vuelto en este pago.', $resultado['mensaje']);
+            $pdoMock = $this->createMock(PDO::class);
+            $pdoMock->method('prepare')->willReturn($stmtMock);
+
+            $modelo = $this->crearModeloConPdoMock($pdoMock);
+
+            $datos = [
+                'accion'        => 'registrar_vuelto',
+                'codigo_pago'   => '10',
+                'codigo_metodo' => '1',
+                'codigo_moneda' => '1',
+                'monto_vuelto'  => $caso['montoVuelto']
+            ];
+
+            $resultado = $modelo->ProcesarDatos($datos);
+
+            $this->assertEquals('error', $resultado['accion'], "Fallo en caso [$nombre]");
+            $this->assertEquals($caso['mensajeEsperado'], $resultado['mensaje'], "Mensaje incorrecto en caso [$nombre]");
+        }
     }
 
-    // Caso 12: Vuelto solicitado excede el saldo disponible
-    public function testVueltoExcedeSaldoDisponible(): void
-    {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetch')->willReturnOnConsecutiveCalls(
-            ['monto_pago' => '100.00', 'codigo_moneda' => 1],
-            ['total_abonado' => '80.00'],
-            ['total_vueltos_base' => '0.00']
-        );
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'codigo_pago' => '10',
-            'codigo_metodo' => '1',
-            'codigo_moneda' => '1',
-            'monto_vuelto' => '50.00'
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('error', $resultado['accion']);
-        $this->assertEquals('El vuelto solicitado excede el saldo disponible restante de este pago.', $resultado['mensaje']);
-    }
-
-    // Caso 13: Registro exitoso de vuelto en la misma moneda
+    // Caso 5: Registro exitoso de vuelto (total y parcial)
     public function testRegistrarVueltoExitoso(): void
     {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetch')->willReturnOnConsecutiveCalls(
-            ['monto_pago' => '100.00', 'codigo_moneda' => 1],
-            ['total_abonado' => '60.00'],
-            ['total_vueltos_base' => '0.00']
-        );
-
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
-
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
-
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'codigo_pago' => '10',
-            'codigo_metodo' => '1',
-            'codigo_moneda' => '1',
-            'monto_vuelto' => '40.00',
-            'referencia' => '123456',
-            'fecha_vuelto' => date('Y-m-d')
+        $casos = [
+            'vuelto total' => [
+                'totalAbonado' => '60.00',
+                'montoVuelto'  => '40.00'
+            ],
+            'vuelto parcial' => [
+                'totalAbonado' => '50.00',
+                'montoVuelto'  => '20.00'
+            ]
         ];
 
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
+        foreach ($casos as $nombre => $caso) {
+            $stmtMock = $this->createMock(PDOStatement::class);
+            $stmtMock->method('execute')->willReturn(true);
+            $stmtMock->method('fetch')->willReturnOnConsecutiveCalls(
+                ['monto_pago' => '100.00', 'codigo_moneda' => 1],
+                ['total_abonado' => $caso['totalAbonado']],
+                ['total_vueltos_base' => '0.00']
+            );
 
-        // Assert
-        $this->assertEquals('exito_vuelto', $resultado['accion']);
-        $this->assertEquals('Vuelto registrado exitosamente (SP)', $resultado['mensaje']);
-    }
+            $pdoMock = $this->createMock(PDO::class);
+            $pdoMock->method('prepare')->willReturn($stmtMock);
 
-    // Caso 14: Registro exitoso de vuelto parcial
-    public function testRegistrarVueltoParcialExitoso(): void
-    {
-        // Arrange
-        $stmtMock = $this->createMock(PDOStatement::class);
-        $stmtMock->method('execute')->willReturn(true);
-        $stmtMock->method('fetch')->willReturnOnConsecutiveCalls(
-            ['monto_pago' => '100.00', 'codigo_moneda' => 1],
-            ['total_abonado' => '50.00'],
-            ['total_vueltos_base' => '0.00']
-        );
+            $modelo = $this->crearModeloConPdoMock($pdoMock);
 
-        $pdoMock = $this->createMock(PDO::class);
-        $pdoMock->method('prepare')->willReturn($stmtMock);
+            $datos = [
+                'accion'        => 'registrar_vuelto',
+                'codigo_pago'   => '10',
+                'codigo_metodo' => '1',
+                'codigo_moneda' => '1',
+                'monto_vuelto'  => $caso['montoVuelto'],
+                'referencia'    => '123456',
+                'fecha_vuelto'  => date('Y-m-d')
+            ];
 
-        $modelo = $this->crearModeloConPdoMock($pdoMock);
+            $resultado = $modelo->ProcesarDatos($datos);
 
-        $datos = [
-            'accion' => 'registrar_vuelto',
-            'codigo_pago' => '10',
-            'codigo_metodo' => '1',
-            'codigo_moneda' => '1',
-            'monto_vuelto' => '20.00',
-            'referencia' => '123456',
-            'fecha_vuelto' => date('Y-m-d')
-        ];
-
-        // Act
-        $resultado = $modelo->ProcesarDatos($datos);
-
-        // Assert
-        $this->assertEquals('exito_vuelto', $resultado['accion']);
-        $this->assertEquals('Vuelto registrado exitosamente (SP)', $resultado['mensaje']);
+            $this->assertEquals('exito_vuelto', $resultado['accion'], "Fallo en caso [$nombre]");
+            $this->assertEquals('Vuelto registrado exitosamente (SP)', $resultado['mensaje'], "Mensaje incorrecto en caso [$nombre]");
+        }
     }
 }

@@ -38,7 +38,8 @@ if (!defined('DB_CONNECTION')) {
 
 #[Group('unit')]
 #[Group('unitPremios')]
-#[Group('cu_premios_asignar')]
+#[Group('RF-08')]
+#[Group('ESC-08')]
 class AsignarPremiosTest extends TestCase
 {
     protected function tearDown(): void
@@ -56,6 +57,14 @@ class AsignarPremiosTest extends TestCase
         $propiedad->setValue(null, $pdoMock);
     }
 
+    // ==========================================
+    // ESCENARIO 08: Asignación de Premio a Atleta mediante Procedimiento Almacenado
+    // ==========================================
+
+    // Caso 31: Asignar premio exitosamente cuando los datos son válidos invocando el SP RegistrarPremioSeguro
+    #[Group('RF-08')]
+    #[Group('ESC-08')]
+    #[Group('CP-31')]
     #[Group('escenario_exito')]
     public function test_deberia_asignarPremioExitosamente_cuando_datosSonValidos(): void
     {
@@ -82,6 +91,10 @@ class AsignarPremiosTest extends TestCase
         $this->assertEquals('Premio registrado exitosamente para el atleta.', $resultado['mensaje']);
     }
 
+    // Caso 32: Permitir monto 0.0 cuando se asigna un reconocimiento honorífico
+    #[Group('RF-08')]
+    #[Group('ESC-08')]
+    #[Group('CP-32')]
     #[Group('escenario_limite')]
     public function test_deberia_permitirMontoCero_cuando_seAsignaReconocimientoHonorifico(): void
     {
@@ -105,6 +118,10 @@ class AsignarPremiosTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
+    // Caso 33: Permitir descripción vacía cuando se asigna un premio sin detalles
+    #[Group('RF-08')]
+    #[Group('ESC-08')]
+    #[Group('CP-33')]
     #[Group('escenario_limite')]
     public function test_deberia_permitirDescripcionVacia_cuando_seAsignaSinDetalles(): void
     {
@@ -128,6 +145,10 @@ class AsignarPremiosTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
+    // Caso 34: Retornar estructura de error cuando falla la ejecución del procedimiento almacenado
+    #[Group('RF-08')]
+    #[Group('ESC-08')]
+    #[Group('CP-34')]
     #[Group('escenario_error')]
     public function test_deberia_retornarEstructuraError_cuando_fallaProcedimientoAlmacenado(): void
     {

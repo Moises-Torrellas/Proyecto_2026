@@ -34,9 +34,18 @@ if (!defined('DB_CONNECTION')) {
 
 #[Group('unit')]
 #[Group('unitPremios')]
-#[Group('validarPremios')]
+#[Group('RF-01')]
+#[Group('ESC-01')]
 class ValidarDatosPremiosTest extends TestCase
 {
+    // ==========================================
+    // ESCENARIO 01: Validación de Datos de Entrada en ProcesarDatos
+    // ==========================================
+
+    // Caso 01: Lanzar excepción cuando los datos son vacíos al procesar
+    #[Group('RF-01')]
+    #[Group('ESC-01')]
+    #[Group('CP-01')]
     #[Group('escenario_error')]
     public function test_deberia_lanzarExcepcion_cuando_datosSonVaciosAlProcesar(): void
     {
@@ -51,6 +60,10 @@ class ValidarDatosPremiosTest extends TestCase
         $modelo->ProcesarDatos([]);
     }
 
+    // Caso 02: Lanzar excepción cuando la acción solicitada no es válida para Premios
+    #[Group('RF-01')]
+    #[Group('ESC-01')]
+    #[Group('CP-02')]
     #[Group('escenario_error')]
     public function test_deberia_lanzarExcepcion_cuando_accionNoEsValida(): void
     {
@@ -65,6 +78,10 @@ class ValidarDatosPremiosTest extends TestCase
         $modelo->ProcesarDatos(['accion' => 'accion_desconocida']);
     }
 
+    // Caso 03: Lanzar excepción cuando no se especifica ninguna acción en los datos
+    #[Group('RF-01')]
+    #[Group('ESC-01')]
+    #[Group('CP-03')]
     #[Group('escenario_error')]
     public function test_deberia_lanzarExcepcion_cuando_noSeEspecificaAccionEnDatos(): void
     {

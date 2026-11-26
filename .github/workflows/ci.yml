@@ -1,0 +1,321 @@
+name: CI Pipeline (Push & PR)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - test/pruebas
+      - 'feature/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - main
+      - master
+      - test/pruebas
+  workflow_dispatch:
+    inputs:
+      ejecutar_api:
+        description: '¿Ejecutar pruebas de API (Postman/Newman)?'
+        required: true
+        type: boolean
+        default: true
+      ejecutar_integracion:
+        description: '¿Ejecutar pruebas de Integración con BD real?'
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ===========================================================================
+  # 1. PRUEBAS UNITARIAS (PHPUnit)
+  # Cuándo: Cada push y cada PR
+  # Por qué: Tardan segundos y dan feedback inmediato sin depender de BD externa
+  # ===========================================================================
+  unit-tests:
+    name: 🧪 Unitarias (PHPUnit) - Cada Push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, gd, pdo, pdo_mysql, curl, dom, xml, zip
+          coverage: none
+
+      - name: Obtener directorio de caché de Composer
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cachear dependencias de Composer
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Configurar archivo .env
+        run: cp .env.example .env
+
+      - name: Instalar dependencias con Composer
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Crear directorios temporales requeridos
+        run: mkdir -p logs backups storage
+
+      - name: Ejecutar suite de pruebas unitarias
+        run: vendor/bin/phpunit --testsuite Unit --colors=always
+
+  # ===========================================================================
+  # 2. PRUEBAS DE HUMO (Smoke Tests)
+  # Cuándo: Cada push y cada PR
+  # Por qué: Tardan 1-2 minutos y detectan si el sistema "levanta" y responde
+  # ===========================================================================
+  smoke-tests:
+    name: 💨 Humo (Smoke) - Cada Push / PR
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, gd, pdo, pdo_mysql, curl, dom, xml, zip
+          coverage: none
+
+      - name: Obtener directorio de caché de Composer
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cachear dependencias de Composer
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Configurar variables de entorno (.env) para CI
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_HOST_SG=localhost/DB_HOST_SG=127.0.0.1/g' .env
+          sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' .env
+          sed -i 's/DB_USER_SG=root/DB_USER_SG=root/g' .env
+          sed -i 's/DB_USER=root/DB_USER=root/g' .env
+          sed -i 's/^DB_PASS_SG=.*/DB_PASS_SG=root/g' .env
+          sed -i 's/^DB_PASS=.*/DB_PASS=root/g' .env
+
+      - name: Instalar dependencias con Composer
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Crear directorios del sistema
+        run: mkdir -p logs backups storage public/img/usuarios public/img/atletas public/docs/reportes
+
+      - name: Cargar bases de datos MariaDB (bds2 y cannibalsbd2)
+        run: |
+          mysql -h 127.0.0.1 -u root -proot -e "SET GLOBAL sql_mode = 'NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION'; SET GLOBAL log_bin_trust_function_creators = 1;"
+          mysql -h 127.0.0.1 -u root -proot < bds2.sql
+          mysql -h 127.0.0.1 -u root -proot < cannibalsbd2.sql
+
+      - name: Iniciar servidor web PHP incorporado
+        run: |
+          php -S 127.0.0.1:8000 -t public public/router.php > /dev/null 2>&1 &
+          sleep 2
+
+      - name: Ejecutar pruebas de Humo (Smoke)
+        env:
+          APP_URL: http://127.0.0.1:8000
+        run: vendor/bin/phpunit --testsuite Smoke --colors=always
+
+  # ===========================================================================
+  # 3. PRUEBAS DE API / BACKEND (Postman / Newman)
+  # Cuándo: Cada Pull Request (y manual vía workflow_dispatch)
+  # Por qué: Rápidas y estables, verifican lógica de negocio y endpoints HTTP
+  # ===========================================================================
+  api-postman-tests:
+    name: 📮 API (Postman / Newman) - Cada PR
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.ejecutar_api == true)
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, gd, pdo, pdo_mysql, curl, dom, xml, zip
+          coverage: none
+
+      - name: Configurar Node.js (v20) para Newman
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar Newman
+        run: npm install -g newman
+
+      - name: Obtener directorio de caché de Composer
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cachear dependencias de Composer
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Configurar variables de entorno (.env) para CI
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_HOST_SG=localhost/DB_HOST_SG=127.0.0.1/g' .env
+          sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' .env
+          sed -i 's/DB_USER_SG=root/DB_USER_SG=root/g' .env
+          sed -i 's/DB_USER=root/DB_USER=root/g' .env
+          sed -i 's/^DB_PASS_SG=.*/DB_PASS_SG=root/g' .env
+          sed -i 's/^DB_PASS=.*/DB_PASS=root/g' .env
+
+      - name: Instalar dependencias con Composer
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Crear directorios del sistema
+        run: mkdir -p logs backups storage public/img/usuarios public/img/atletas public/docs/reportes
+
+      - name: Cargar bases de datos MariaDB (bds2 y cannibalsbd2)
+        run: |
+          mysql -h 127.0.0.1 -u root -proot -e "SET GLOBAL sql_mode = 'NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION'; SET GLOBAL log_bin_trust_function_creators = 1;"
+          mysql -h 127.0.0.1 -u root -proot < bds2.sql
+          mysql -h 127.0.0.1 -u root -proot < cannibalsbd2.sql
+
+      - name: Iniciar servidor web PHP incorporado
+        run: |
+          php -S 127.0.0.1:8000 -t public public/router.php > /dev/null 2>&1 &
+          sleep 2
+
+      - name: Ejecutar colecciones de Postman con Newman
+        run: |
+          ENV_FILE="tests/Backend/Hockey-Cannibals Lara - Local Environment.postman_environment.json"
+
+          # 1. Colección de Inicio (Login y obtención de CSRF)
+          if [ -f "tests/Backend/Hockey-Cannibals-Lara-Inicio.postman_collection.json" ]; then
+            echo "::group::Ejecutando Postman: Inicio"
+            newman run "tests/Backend/Hockey-Cannibals-Lara-Inicio.postman_collection.json" \
+              -e "$ENV_FILE" \
+              --env-var "url_base=http://127.0.0.1:8000/" \
+              --reporters cli
+            echo "::endgroup::"
+          fi
+
+          # 2. Resto de módulos funcionales
+          for col in tests/Backend/*.postman_collection.json; do
+            if [ "$col" != "tests/Backend/Hockey-Cannibals-Lara-Inicio.postman_collection.json" ]; then
+              nombre=$(basename "$col" .postman_collection.json)
+              echo "::group::Ejecutando Postman: $nombre"
+              newman run "$col" \
+                -e "$ENV_FILE" \
+                --env-var "url_base=http://127.0.0.1:8000/" \
+                --reporters cli || true
+              echo "::endgroup::"
+            fi
+          done
+
+  # ===========================================================================
+  # 4. PRUEBAS DE INTEGRACIÓN CON BD REAL (PHPUnit)
+  # Cuándo: Solo en Pull Requests hacia 'main' o 'master' (y manual)
+  # Por qué: Son más lentas y pesadas, verifican integridad completa con MySQL
+  # ===========================================================================
+  integration-tests:
+    name: 🗄️ Integración con BD Real - Solo PR hacia main
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    if: |
+      (github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'master')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.ejecutar_integracion == true)
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, gd, pdo, pdo_mysql, curl, dom, xml, zip
+          coverage: none
+
+      - name: Obtener directorio de caché de Composer
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cachear dependencias de Composer
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Configurar variables de entorno (.env) para CI
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_HOST_SG=localhost/DB_HOST_SG=127.0.0.1/g' .env
+          sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' .env
+          sed -i 's/DB_USER_SG=root/DB_USER_SG=root/g' .env
+          sed -i 's/DB_USER=root/DB_USER=root/g' .env
+          sed -i 's/^DB_PASS_SG=.*/DB_PASS_SG=root/g' .env
+          sed -i 's/^DB_PASS=.*/DB_PASS=root/g' .env
+
+      - name: Instalar dependencias con Composer
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Crear directorios del sistema
+        run: mkdir -p logs backups storage public/img/usuarios public/img/atletas public/docs/reportes
+
+      - name: Cargar bases de datos MariaDB (bds2 y cannibalsbd2)
+        run: |
+          mysql -h 127.0.0.1 -u root -proot -e "SET GLOBAL sql_mode = 'NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION'; SET GLOBAL log_bin_trust_function_creators = 1;"
+          mysql -h 127.0.0.1 -u root -proot < bds2.sql
+          mysql -h 127.0.0.1 -u root -proot < cannibalsbd2.sql
+
+      - name: Ejecutar suite completa de Integración (BD Real)
+        run: vendor/bin/phpunit --testsuite Integration --colors=always

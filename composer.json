@@ -35,12 +35,24 @@
         "codeception/module-phpbrowser": "*",
         "codeception/module-asserts": "*"
     },
+    "config": {
+        "process-timeout": 0
+    },
     "scripts": {
         "chrome": "@php bin/test.php chrome",
         "test:unit": "@php bin/test.php unit",
         "test:integ": "@php bin/test.php integ",
         "test:humo": "@php bin/test.php humo",
         "test:interfaz": "@php bin/test.php interfaz",
+        "test:backend": "@php bin/test.php backend",
+        "test:postman": "@php bin/test.php backend",
+        "test:rendimiento": "@php bin/test.php rendimiento",
+        "test:carga": "@php bin/test.php carga",
+        "test:estres": "@php bin/test.php estres",
+        "jmeter:gui": "@php bin/test.php jmeter-gui",
+        "env:testing": "@php bin/env.php testing",
+        "env:local": "@php bin/env.php local",
+        "env": "@php bin/env.php",
         "test": "@php bin/test.php"
     }
 }

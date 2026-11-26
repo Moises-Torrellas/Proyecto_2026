@@ -55,7 +55,7 @@ final class AsignacionesCest
 
     // Sección de modificación individual
     private const ROW_ARTICULO_MODIFICAR   = '#row_articulo_modificar';
-    private const SELECT_ARTICULO_MODIFICAR= '#codigo_articulo';
+    private const SELECT_ARTICULO_MODIFICAR = '#codigo_articulo';
 
     // Selectores de SweetAlert2
     private const SWAL_POPUP      = '.swal2-popup';
@@ -522,19 +522,19 @@ final class AsignacionesCest
         $I->click(self::BTN_AYUDA);
 
         // Verificar que Driver.js inicia el popover interactivo
-        $I->waitForElementVisible('.driver-popover', 5);
-        $I->waitForText('Barra de Búsqueda', 5, '.driver-popover');
+        $I->waitForElementVisible('#driver-popover-item', 5);
+        $I->waitForText('Barra de Búsqueda', 5, '#driver-popover-item');
 
         // Cerrar tour guiado
         $I->executeJS("
             if (window.driver && typeof window.driver.destroy === 'function') {
                 window.driver.destroy();
             } else {
-                $('.driver-popover-close-btn').click();
+                $('.driver-close-btn').click();
             }
         ");
 
-        $I->waitForElementNotVisible('.driver-popover', 5);
+        $I->waitForElementNotVisible('#driver-popover-item', 5);
         $this->verificarSinErroresPhp($I);
     }
 
@@ -615,4 +615,3 @@ final class AsignacionesCest
         }
     }
 }
-

@@ -189,6 +189,127 @@
                                     "name": "POST Registro-Equipo-Misma-Categoria-Exitoso",
                                     "event": [
                                         {
+                                            "listen": "prerequest",
+                                            "script": {
+                                                "type": "text/javascript",
+                                                "exec": [
+                                                    "const tag = String(Date.now()).slice(-5);",
+                                                    "pm.environment.set(\"nombre_alpha\", \"Cannibals Alpha \" + tag);",
+                                                    "pm.environment.set(\"nombre_beta\", \"Cannibals Beta \" + tag);",
+                                                    "pm.environment.set(\"nombre_charlie\", \"Cannibals-Sub \" + tag);",
+                                                    "pm.environment.set(\"nombre_modificado\", \"Cannibals Elite \" + tag);",
+                                                    "const base = pm.environment.get(\"url_base\");",
+                                                    "const headers = {",
+                                                    "    \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "    \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "};",
+                                                    "function resolverAtletas(cats, atletas) {",
+                                                    "    const ranking = [...cats].sort((a, b) => Number(b.edad_max) - Number(a.edad_max));",
+                                                    "    const idxByName = {};",
+                                                    "    ranking.forEach((c, idx) => { idxByName[String(c.nombre).trim().toLowerCase()] = idx; });",
+                                                    "    const porIdx = {};",
+                                                    "    atletas.forEach(a => {",
+                                                    "        const idx = idxByName[String(a.categoria || \"\").trim().toLowerCase()];",
+                                                    "        if (idx !== undefined) {",
+                                                    "            if (!porIdx[idx]) porIdx[idx] = [];",
+                                                    "            porIdx[idx].push(String(a.id));",
+                                                    "        }",
+                                                    "    });",
+                                                    "    const idxs = Object.keys(porIdx).map(Number).sort((a, b) => a - b);",
+                                                    "    if (idxs.length > 0) {",
+                                                    "        pm.environment.set(\"atl_misma_cat\", porIdx[idxs[0]][0]);",
+                                                    "    }",
+                                                    "    let contigua = null, noContigua = null;",
+                                                    "    for (let i = 0; i < idxs.length; i++) {",
+                                                    "        for (let j = i + 1; j < idxs.length; j++) {",
+                                                    "            const diff = Math.abs(idxs[i] - idxs[j]);",
+                                                    "            if (diff === 1 && !contigua) contigua = [porIdx[idxs[i]][0], porIdx[idxs[j]][0]];",
+                                                    "            if (diff > 1 && !noContigua) noContigua = [porIdx[idxs[i]][0], porIdx[idxs[j]][0]];",
+                                                    "        }",
+                                                    "    }",
+                                                    "    if (contigua) {",
+                                                    "        pm.environment.set(\"atl_contigua_a\", contigua[0]);",
+                                                    "        pm.environment.set(\"atl_contigua_b\", contigua[1]);",
+                                                    "    }",
+                                                    "    if (noContigua) {",
+                                                    "        pm.environment.set(\"atl_no_contigua_a\", noContigua[0]);",
+                                                    "        pm.environment.set(\"atl_no_contigua_b\", noContigua[1]);",
+                                                    "    }",
+                                                    "    if (idxs.length >= 3) {",
+                                                    "        pm.environment.set(\"atl_3cat_1\", porIdx[idxs[0]][0]);",
+                                                    "        pm.environment.set(\"atl_3cat_2\", porIdx[idxs[1]][0]);",
+                                                    "        pm.environment.set(\"atl_3cat_3\", porIdx[idxs[2]][0]);",
+                                                    "    }",
+                                                    "    return Boolean(contigua && noContigua && idxs.length >= 3);",
+                                                    "}",
+                                                    "pm.sendRequest({ url: base + \"Atletas\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"MultiConsulta\" }] } }, function (errA, resA) {",
+                                                    "    if (errA) return;",
+                                                    "    try {",
+                                                    "        const mc = resA.json();",
+                                                    "        let cats = mc.categorias || [];",
+                                                    "        const pos = (mc.posiciones || [])[0];",
+                                                    "        pm.sendRequest({ url: base + \"Equipos\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"consultarAtletasModal\" }] } }, function (errE, resE) {",
+                                                    "            if (errE) return;",
+                                                    "            const eq = resE.json();",
+                                                    "            const atletas = eq.datos || [];",
+                                                    "            if (resolverAtletas(cats, atletas)) return;",
+                                                    "            const ensureSenior = (cb) => {",
+                                                    "                const s = cats.find(c => Number(c.edad_min) >= 18);",
+                                                    "                if (s) return cb(s);",
+                                                    "                pm.sendRequest({ url: base + \"Categorias\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"incluir\" }, { key: \"nombre\", value: \"SENIOR\" }, { key: \"edad_min\", value: \"18\" }, { key: \"edad_max\", value: \"50\" }] } }, function () {",
+                                                    "                    pm.sendRequest({ url: base + \"Atletas\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"MultiConsulta\" }] } }, function (e2, r2) {",
+                                                    "                        if (!e2) cats = r2.json().categorias || cats;",
+                                                    "                        cb(cats.find(c => Number(c.edad_min) >= 18) || cats[0]);",
+                                                    "                    });",
+                                                    "                });",
+                                                    "            };",
+                                                    "            ensureSenior(function (seniorCat) {",
+                                                    "                if (!seniorCat || !pos) return;",
+                                                    "                const doc = String(80000000 + Number(tag));",
+                                                    "                pm.sendRequest({",
+                                                    "                    url: base + \"Atletas\",",
+                                                    "                    method: \"POST\",",
+                                                    "                    header: headers,",
+                                                    "                    body: {",
+                                                    "                        mode: \"urlencoded\",",
+                                                    "                        urlencoded: [",
+                                                    "                            { key: \"accion\", value: \"incluir\" },",
+                                                    "                            { key: \"nombre\", value: \"Adulto Test\" },",
+                                                    "                            { key: \"apellido\", value: \"Sistema\" },",
+                                                    "                            { key: \"doc_i\", value: doc },",
+                                                    "                            { key: \"fecha_nac\", value: \"2000-05-15\" },",
+                                                    "                            { key: \"genero\", value: \"H\" },",
+                                                    "                            { key: \"telefono\", value: \"0414-55\" + tag },",
+                                                    "                            { key: \"direccion\", value: \"Barquisimeto Centro\" },",
+                                                    "                            { key: \"lugar_nacimiento\", value: \"Barquisimeto\" },",
+                                                    "                            { key: \"municipio\", value: \"Iribarren\" },",
+                                                    "                            { key: \"correo\", value: \"adulto\" + tag + \"@gmail.com\" },",
+                                                    "                            { key: \"instagram\", value: \"@adulto_\" + tag },",
+                                                    "                            { key: \"categoria\", value: String(seniorCat.codigo_categoria) },",
+                                                    "                            { key: \"posicion\", value: String(pos.codigo_posicion) },",
+                                                    "                            { key: \"dorsal\", value: \"99\" },",
+                                                    "                            { key: \"peso\", value: \"70\" },",
+                                                    "                            { key: \"estatura\", value: \"175\" },",
+                                                    "                            { key: \"talla_pantalon\", value: \"L\" },",
+                                                    "                            { key: \"talla_franela\", value: \"L\" },",
+                                                    "                            { key: \"talla_calzado\", value: \"42\" },",
+                                                    "                            { key: \"tipo_sangre\", value: \"O+\" },",
+                                                    "                            { key: \"es_alergico\", value: \"0\" }",
+                                                    "                        ]",
+                                                    "                    }",
+                                                    "                }, function () {",
+                                                    "                    pm.sendRequest({ url: base + \"Equipos\", method: \"POST\", header: headers, body: { mode: \"urlencoded\", urlencoded: [{ key: \"accion\", value: \"consultarAtletasModal\" }] } }, function (e3, r3) {",
+                                                    "                        if (!e3) resolverAtletas(cats, r3.json().datos || []);",
+                                                    "                    });",
+                                                    "                });",
+                                                    "            });",
+                                                    "        });",
+                                                    "    } catch (e) {}",
+                                                    "});"
+                                                ]
+                                            }
+                                        },
+                                        {
                                             "listen": "test",
                                             "script": {
                                                 "type": "text/javascript",
@@ -241,17 +362,12 @@
                                                 },
                                                 {
                                                     "key": "nombre",
-                                                    "value": "Cannibals Alpha Test",
+                                                    "value": "{{nombre_alpha}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
-                                                    "type": "text"
-                                                },
-                                                {
-                                                    "key": "atletas[]",
-                                                    "value": "2",
+                                                    "value": "{{atl_misma_cat}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -314,17 +430,17 @@
                                                 },
                                                 {
                                                     "key": "nombre",
-                                                    "value": "Cannibals Beta Test",
+                                                    "value": "{{nombre_beta}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
+                                                    "value": "{{atl_contigua_a}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "3",
+                                                    "value": "{{atl_contigua_b}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -386,12 +502,12 @@
                                                 },
                                                 {
                                                     "key": "nombre",
-                                                    "value": "Cannibals-Sub 18",
+                                                    "value": "{{nombre_charlie}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
+                                                    "value": "{{atl_misma_cat}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -940,17 +1056,17 @@
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
+                                                    "value": "{{atl_3cat_1}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "5",
+                                                    "value": "{{atl_3cat_2}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "9",
+                                                    "value": "{{atl_3cat_3}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1018,12 +1134,12 @@
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
+                                                    "value": "{{atl_no_contigua_a}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "9",
+                                                    "value": "{{atl_no_contigua_b}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1091,12 +1207,12 @@
                                                 },
                                                 {
                                                     "key": "nombre",
-                                                    "value": "Cannibals Alpha Test",
+                                                    "value": "{{nombre_alpha}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
+                                                    "value": "{{atl_misma_cat}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1125,8 +1241,27 @@
                                                     "    pm.response.to.have.status(200);",
                                                     "});",
                                                     "const html = pm.response.text();",
+                                                    "const eqMatches = [...html.matchAll(/<small>Nombre de Equipo<\\/small>\\s*<span>([^<]+)<\\/span>[\\s\\S]*?onclick=[\"']buscar\\((\\d+)\\)/gi)];",
                                                     "const matches = [...html.matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
-                                                    "if (matches.length > 0) {",
+                                                    "if (eqMatches.length > 0) {",
+                                                    "    const nAlpha = (pm.environment.get(\"nombre_alpha\") || \"\").toLowerCase();",
+                                                    "    const nBeta = (pm.environment.get(\"nombre_beta\") || \"\").toLowerCase();",
+                                                    "    const nCharlie = (pm.environment.get(\"nombre_charlie\") || \"\").toLowerCase();",
+                                                    "    const charlie = eqMatches.find(m => m[1].trim().toLowerCase() === nCharlie) || eqMatches[eqMatches.length - 1];",
+                                                    "    const targetId = charlie[2];",
+                                                    "    pm.environment.set(\"id\", targetId);",
+                                                    "    pm.environment.set(\"id_registro\", targetId);",
+                                                    "    pm.environment.set(\"id_para_eliminar\", targetId);",
+                                                    "    pm.environment.set(\"id_primer_registro\", eqMatches[0][2]);",
+                                                    "    const cleanup = eqMatches",
+                                                    "        .filter(m => {",
+                                                    "            const nom = m[1].trim().toLowerCase();",
+                                                    "            return nom === nAlpha || nom === nBeta;",
+                                                    "        })",
+                                                    "        .map(m => m[2]);",
+                                                    "    pm.environment.set(\"ids_equipos_cleanup\", JSON.stringify(cleanup));",
+                                                    "    console.log(\"ID capturado dinámicamente para id:\", targetId);",
+                                                    "} else if (matches.length > 0) {",
                                                     "    const ultimoId = matches[matches.length - 1][1];",
                                                     "    const primerId = matches[0][1];",
                                                     "    pm.environment.set(\"id\", ultimoId);",
@@ -1436,7 +1571,7 @@
                                                 },
                                                 {
                                                     "key": "id",
-                                                    "value": "{{id}}",
+                                                    "value": "999999",
                                                     "type": "text"
                                                 }
                                             ]
@@ -1586,8 +1721,27 @@
                                                     "    pm.response.to.have.status(200);",
                                                     "});",
                                                     "const html = pm.response.text();",
+                                                    "const eqMatches = [...html.matchAll(/<small>Nombre de Equipo<\\/small>\\s*<span>([^<]+)<\\/span>[\\s\\S]*?onclick=[\"']buscar\\((\\d+)\\)/gi)];",
                                                     "const matches = [...html.matchAll(/onclick=[\"'](?:buscar|eliminar|editar)\\((\\d+)/gi)];",
-                                                    "if (matches.length > 0) {",
+                                                    "if (eqMatches.length > 0) {",
+                                                    "    const nAlpha = (pm.environment.get(\"nombre_alpha\") || \"\").toLowerCase();",
+                                                    "    const nBeta = (pm.environment.get(\"nombre_beta\") || \"\").toLowerCase();",
+                                                    "    const nCharlie = (pm.environment.get(\"nombre_charlie\") || \"\").toLowerCase();",
+                                                    "    const charlie = eqMatches.find(m => m[1].trim().toLowerCase() === nCharlie) || eqMatches[eqMatches.length - 1];",
+                                                    "    const targetId = charlie[2];",
+                                                    "    pm.environment.set(\"id\", targetId);",
+                                                    "    pm.environment.set(\"id_registro\", targetId);",
+                                                    "    pm.environment.set(\"id_para_eliminar\", targetId);",
+                                                    "    pm.environment.set(\"id_primer_registro\", eqMatches[0][2]);",
+                                                    "    const cleanup = eqMatches",
+                                                    "        .filter(m => {",
+                                                    "            const nom = m[1].trim().toLowerCase();",
+                                                    "            return nom === nAlpha || nom === nBeta;",
+                                                    "        })",
+                                                    "        .map(m => m[2]);",
+                                                    "    pm.environment.set(\"ids_equipos_cleanup\", JSON.stringify(cleanup));",
+                                                    "    console.log(\"ID capturado dinámicamente para id:\", targetId);",
+                                                    "} else if (matches.length > 0) {",
                                                     "    const ultimoId = matches[matches.length - 1][1];",
                                                     "    const primerId = matches[0][1];",
                                                     "    pm.environment.set(\"id\", ultimoId);",
@@ -1924,17 +2078,17 @@
                                                 },
                                                 {
                                                     "key": "nombre",
-                                                    "value": "Cannibals Elite Modificado",
+                                                    "value": "{{nombre_modificado}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
+                                                    "value": "{{atl_contigua_a}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "2",
+                                                    "value": "{{atl_contigua_b}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -2033,12 +2187,12 @@
                                                 },
                                                 {
                                                     "key": "nombre",
-                                                    "value": "Cannibals Elite Modificado",
+                                                    "value": "{{nombre_modificado}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
+                                                    "value": "{{atl_misma_cat}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -2476,7 +2630,7 @@
                                                 },
                                                 {
                                                     "key": "id",
-                                                    "value": "1",
+                                                    "value": "{{id}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -2486,17 +2640,17 @@
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
+                                                    "value": "{{atl_3cat_1}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "5",
+                                                    "value": "{{atl_3cat_2}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "9",
+                                                    "value": "{{atl_3cat_3}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -2559,7 +2713,7 @@
                                                 },
                                                 {
                                                     "key": "id",
-                                                    "value": "1",
+                                                    "value": "{{id}}",
                                                     "type": "text"
                                                 },
                                                 {
@@ -2569,12 +2723,12 @@
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
+                                                    "value": "{{atl_no_contigua_a}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "9",
+                                                    "value": "{{atl_no_contigua_b}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -2642,17 +2796,17 @@
                                                 },
                                                 {
                                                     "key": "id",
-                                                    "value": "1",
+                                                    "value": "{{id}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "nombre",
-                                                    "value": "Cannibals Beta Test",
+                                                    "value": "{{nombre_alpha}}",
                                                     "type": "text"
                                                 },
                                                 {
                                                     "key": "atletas[]",
-                                                    "value": "1",
+                                                    "value": "{{atl_misma_cat}}",
                                                     "type": "text"
                                                 }
                                             ]
@@ -3270,7 +3424,25 @@
                                                     "    pm.test(\"Respuesta recibida correctamente (HTML o JSON)\", function() {",
                                                     "        pm.response.to.have.status(200);",
                                                     "    });",
-                                                    "}"
+                                                    "}",
+                                                    "const cleanup = JSON.parse(pm.environment.get(\"ids_equipos_cleanup\") || \"[]\");",
+                                                    "cleanup.forEach(eqId => {",
+                                                    "    pm.sendRequest({",
+                                                    "        url: pm.environment.get(\"url_base\") + \"Equipos\",",
+                                                    "        method: \"POST\",",
+                                                    "        header: {",
+                                                    "            \"X-Requested-With\": \"XMLHttpRequest\",",
+                                                    "            \"X-CSRF-Token\": pm.environment.get(\"csrf_token\") || \"\"",
+                                                    "        },",
+                                                    "        body: {",
+                                                    "            mode: \"urlencoded\",",
+                                                    "            urlencoded: [",
+                                                    "                { key: \"accion\", value: \"eliminar\" },",
+                                                    "                { key: \"id\", value: String(eqId) }",
+                                                    "            ]",
+                                                    "        }",
+                                                    "    });",
+                                                    "});"
                                                 ]
                                             }
                                         }

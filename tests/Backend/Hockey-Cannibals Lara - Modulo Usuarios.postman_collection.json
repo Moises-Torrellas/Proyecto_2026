@@ -1,0 +1,3678 @@
+{
+  "info": {
+    "_postman_id": "cannibals-usua-5d2c8e1f9a7b3",
+    "name": "Hockey-Cannibals Lara - Modulo Usuarios",
+    "description": "Colección de pruebas para el módulo de Usuarios (Seguridad) con escenarios funcionales y aserciones automatizadas en los scripts After-response (Tests), estructurada según los estándares del proyecto Cannibals Lara. Cada corrida genera un usuario con cédula 9999xxxx y lo elimina al final.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "InicioModulo",
+      "item": [
+        {
+          "name": "GET Cargar-Vista-Inicio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_base}}",
+              "host": [
+                "{{url_base}}"
+              ]
+            },
+            "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const html = pm.response.text();",
+                  "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                  "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                  "if (match && match[1]) {",
+                  "    pm.environment.set(\"csrf_token\", match[1]);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Iniciar-Sesion-Exitoso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}",
+              "host": [
+                "{{url_base}}"
+              ]
+            },
+            "description": "Autentica al usuario en el sistema con credenciales del entorno.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "inicio",
+                  "type": "text"
+                },
+                {
+                  "key": "cedula",
+                  "value": "{{cedula}}",
+                  "type": "text"
+                },
+                {
+                  "key": "contraseña",
+                  "value": "{{contraseña}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Inicio de sesión exitoso\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Cargar-Vista-Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_base}}Usuarios",
+              "host": [
+                "{{url_base}}Usuarios"
+              ]
+            },
+            "description": "Carga la interfaz del módulo Usuarios, sincroniza el token CSRF y genera datos aleatorios para esta corrida (cédulas 9999xxxx)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"La vista del módulo Usuarios cargó\", function () {",
+                  "    pm.expect(pm.response.text()).to.include(\"Gestionar Usuarios\");",
+                  "});",
+                  "const html = pm.response.text();",
+                  "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                  "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                  "if (match && match[1]) {",
+                  "    pm.environment.set(\"csrf_token\", match[1]);",
+                  "}",
+                  "",
+                  "// Datos únicos por corrida: los usuarios eliminados conservan su correo y teléfono,",
+                  "// así que no se pueden reutilizar valores fijos entre ejecuciones.",
+                  "const d = n => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join('');",
+                  "const ced = '9999' + d(4);",
+                  "let cedAlt = '9999' + d(4);",
+                  "while (cedAlt === ced) { cedAlt = '9999' + d(4); }",
+                  "const marca = Date.now().toString().slice(-6);",
+                  "pm.environment.set('usu_cedula', ced);",
+                  "pm.environment.set('usu_telefono', '0414-' + d(7));",
+                  "pm.environment.set('usu_correo', 'integ' + ced + '.' + marca + '@prueba.com');",
+                  "pm.environment.set('usu_cedula_alt', cedAlt);",
+                  "pm.environment.set('usu_telefono_alt', '0424-' + d(7));",
+                  "pm.environment.set('usu_correo_alt', 'integ' + cedAlt + '.' + marca + '@prueba.com');",
+                  "console.log('Usuario de prueba de esta corrida:', ced);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Consultar-Roles-Disponibles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}Usuarios",
+              "host": [
+                "{{url_base}}Usuarios"
+              ]
+            },
+            "description": "Lista los roles asignables (nivel 3) y guarda el primero para registrar al usuario de prueba.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "consultarRoles",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Devuelve la lista de roles asignables\", function () {",
+                  "    pm.expect(res.accion).to.eql(\"consultarRoles\");",
+                  "    pm.expect(res.datos).to.be.an(\"array\").that.is.not.empty;",
+                  "    pm.expect(res.datos[0]).to.have.property(\"id_rol\");",
+                  "});",
+                  "if (res.datos && res.datos.length) {",
+                  "    pm.environment.set(\"usu_rol\", res.datos[0].id_rol);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Consultar-Usuario-Sesion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}Usuarios",
+              "host": [
+                "{{url_base}}Usuarios"
+              ]
+            },
+            "description": "Busca en el listado al usuario con el que se inició sesión y guarda su id (para los casos de \"propio usuario\").",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "consultar",
+                  "type": "text"
+                },
+                {
+                  "key": "filtro",
+                  "value": "{{cedula}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const html = pm.response.text();",
+                  "const ids = [...html.matchAll(/onclick=[\"']buscar\\((\\d+)\\)/gi)].map(m => m[1]);",
+                  "pm.test(\"El usuario de la sesión aparece en el listado\", function () {",
+                  "    pm.expect(html).to.include(pm.environment.get(\"cedula\"));",
+                  "    pm.expect(ids.length).to.eql(1);",
+                  "});",
+                  "if (ids.length) { pm.environment.set(\"usu_admin_id\", ids[0]); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Registrar Usuarios",
+          "item": [
+            {
+              "name": "Registro-Usuarios-Exitoso",
+              "item": [
+                {
+                  "name": "POST Registro-Usuario-Exitoso",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "Registra un usuario nuevo con datos válidos y un rol asignable.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"incluir\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Usuario registrado exitosamente.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Campos-Obligatorios-Vacios",
+              "item": [
+                {
+                  "name": "POST Registro-Cedula-Vacia",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "Intenta registrar sin cédula.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"El campo cedula es obligatorio.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Contraseña-Vacia",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "Intenta registrar sin contraseña.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"El campo contraseña es obligatorio.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Rol-Vacio",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "Intenta registrar sin rol.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"El campo rol es obligatorio.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Formato-Invalido",
+              "item": [
+                {
+                  "name": "POST Registro-Cedula-Con-Letras",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "La cédula solo admite entre 7 y 8 dígitos.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "99ab8802",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Cédula inválida: debe tener entre 7 y 8 dígitos.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Nombre-Con-Numeros",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "El nombre solo admite letras.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Post123",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Nombre inválido: solo letras, entre 3 y 30 caracteres.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Telefono-Sin-Formato",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "El teléfono debe tener el formato 0400-0000000.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "04141234567",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Teléfono inválido: el formato es 0400-0000000.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Correo-Invalido",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "El correo debe tener formato usuario@dominio.com.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "noesuncorreo",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Correo inválido: use el formato usuario@dominio.com.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Contraseña-Debil",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "La contraseña exige mayúscula, minúscula, número y carácter especial.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "12345678",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Contraseña inválida: entre 8 y 20 caracteres con mayúscula, minúscula, número y carácter especial.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Datos-Duplicados",
+              "item": [
+                {
+                  "name": "POST Registro-Cedula-Duplicada",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "Intenta registrar con la cédula del usuario recién creado.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"La cedula ingresada ya pertenece a un usuario registrado.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Correo-Duplicado",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "Intenta registrar con el correo del usuario recién creado.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"El correo ingresado ya pertenece a un usuario registrado.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Telefono-Duplicado",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "Intenta registrar con el teléfono del usuario recién creado.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "{{usu_rol}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"El telefono ingresado ya pertenece a un usuario registrado.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Rol-Inexistente",
+              "item": [
+                {
+                  "name": "POST Registro-Rol-Inexistente",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Usuarios",
+                      "host": [
+                        "{{url_base}}Usuarios"
+                      ]
+                    },
+                    "description": "Intenta registrar con un rol que no existe.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "cedula",
+                          "value": "{{usu_cedula_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Postman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "apellido",
+                          "value": "Prueba Newman",
+                          "type": "text"
+                        },
+                        {
+                          "key": "telefono",
+                          "value": "{{usu_telefono_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "correo",
+                          "value": "{{usu_correo_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "contraseña",
+                          "value": "Prueba123$",
+                          "type": "text"
+                        },
+                        {
+                          "key": "rol",
+                          "value": "999999",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"El rol con el que intenta registrar este usuario no existe.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Consultar y Buscar Usuarios",
+          "item": [
+            {
+              "name": "POST Consultar-Usuario-Registrado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Filtra el listado por la cédula del usuario de prueba y guarda su id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "{{usu_cedula}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const ids = [...html.matchAll(/onclick=[\"']buscar\\((\\d+)\\)/gi)].map(m => m[1]);",
+                      "pm.test(\"El listado muestra solo al usuario de prueba\", function () {",
+                      "    pm.expect(html).to.include(pm.environment.get(\"usu_cedula\"));",
+                      "    pm.expect(html).to.include(\"Integ Postman\");",
+                      "    pm.expect(ids.length).to.eql(1);",
+                      "});",
+                      "if (ids.length) { pm.environment.set(\"usu_id\", ids[0]); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Sin-Resultados",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Filtra el listado con un texto que no coincide con ningún usuario.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "zzqxw_inexistente_postman",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"El listado indica que no hay registros\", function () {",
+                      "    pm.expect(pm.response.text()).to.include(\"No se encontraron registros\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Usuario-Existente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Obtiene los datos del usuario de prueba por su id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "const res = pm.response.json();",
+                      "pm.test(\"Devuelve los datos del usuario\", function () {",
+                      "    pm.expect(res.accion).to.eql(\"buscar\");",
+                      "    pm.expect(res.datos).to.have.lengthOf(1);",
+                      "    pm.expect(res.datos[0].cedulaUsuario).to.eql(pm.environment.get(\"usu_cedula\"));",
+                      "    pm.expect(res.datos[0].correo).to.eql(pm.environment.get(\"usu_correo\"));",
+                      "});",
+                      "pm.test(\"No expone el hash de la contraseña\", function () {",
+                      "    pm.expect(res.datos[0]).to.not.have.property(\"pass_hash\");",
+                      "});",
+                      "if (res.datos && res.datos.length) { pm.environment.set(\"usu_foto\", res.datos[0].foto || \"default.png\"); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Usuario-Inexistente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Busca un id que no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "999999",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve una lista vacía\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"buscar\");",
+                      "    pm.expect(res.datos).to.be.an(\"array\").that.is.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Sin-Id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Intenta buscar sin enviar el id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Modificar Usuarios",
+          "item": [
+            {
+              "name": "POST Modificar-Usuario-Exitoso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Cambia el nombre del usuario de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "cedula",
+                      "value": "{{usu_cedula}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Integ Modificado",
+                      "type": "text"
+                    },
+                    {
+                      "key": "apellido",
+                      "value": "Prueba Newman",
+                      "type": "text"
+                    },
+                    {
+                      "key": "telefono",
+                      "value": "{{usu_telefono}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "correo",
+                      "value": "{{usu_correo}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "foto_actual",
+                      "value": "{{usu_foto}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "rol",
+                      "value": "{{usu_rol}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"modificar\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Usuario modificado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Verificar-Modificacion",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Comprueba que el cambio quedó guardado.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"El nombre quedó actualizado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.datos[0].nombreUsuario).to.eql(\"Integ Modificado\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Nombre-Vacio",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Intenta modificar sin nombre.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "cedula",
+                      "value": "{{usu_cedula}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "",
+                      "type": "text"
+                    },
+                    {
+                      "key": "apellido",
+                      "value": "Prueba Newman",
+                      "type": "text"
+                    },
+                    {
+                      "key": "telefono",
+                      "value": "{{usu_telefono}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "correo",
+                      "value": "{{usu_correo}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "foto_actual",
+                      "value": "{{usu_foto}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "rol",
+                      "value": "{{usu_rol}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Telefono-Sin-Formato",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Intenta modificar con un teléfono sin el formato 0400-0000000.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "cedula",
+                      "value": "{{usu_cedula}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Integ Modificado",
+                      "type": "text"
+                    },
+                    {
+                      "key": "apellido",
+                      "value": "Prueba Newman",
+                      "type": "text"
+                    },
+                    {
+                      "key": "telefono",
+                      "value": "abc",
+                      "type": "text"
+                    },
+                    {
+                      "key": "correo",
+                      "value": "{{usu_correo}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "foto_actual",
+                      "value": "{{usu_foto}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "rol",
+                      "value": "{{usu_rol}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Teléfono inválido: el formato es 0400-0000000.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Cedula-Duplicada",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Intenta asignarle la cédula del usuario de la sesión.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "cedula",
+                      "value": "{{cedula}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Integ Modificado",
+                      "type": "text"
+                    },
+                    {
+                      "key": "apellido",
+                      "value": "Prueba Newman",
+                      "type": "text"
+                    },
+                    {
+                      "key": "telefono",
+                      "value": "{{usu_telefono}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "correo",
+                      "value": "{{usu_correo}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "foto_actual",
+                      "value": "{{usu_foto}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "rol",
+                      "value": "{{usu_rol}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"La cedula ingresada ya pertenece a un usuario registrado.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Usuario-Inexistente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Intenta modificar un id que no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "999999",
+                      "type": "text"
+                    },
+                    {
+                      "key": "cedula",
+                      "value": "{{usu_cedula_alt}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Integ Modificado",
+                      "type": "text"
+                    },
+                    {
+                      "key": "apellido",
+                      "value": "Prueba Newman",
+                      "type": "text"
+                    },
+                    {
+                      "key": "telefono",
+                      "value": "{{usu_telefono_alt}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "correo",
+                      "value": "{{usu_correo_alt}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "foto_actual",
+                      "value": "{{usu_foto}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "rol",
+                      "value": "{{usu_rol}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El usuario que intenta modificar ya no existe.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Bloquear Usuarios",
+          "item": [
+            {
+              "name": "POST Bloquear-Usuario-Exitoso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Bloquea al usuario de prueba (bloqueo=1 indica que está activo).",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "bloqueo",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de bloqueo correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"bloquear\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Usuario bloqueado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Desbloquear-Usuario-Exitoso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Desbloquea al usuario de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "bloqueo",
+                      "value": "2",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de desbloqueo correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"bloquear\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Usuario desbloqueado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Bloquear-Propio-Usuario",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "El usuario de la sesión no puede bloquearse a sí mismo.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_admin_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "bloqueo",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"No puedes bloquear tu propio usuario.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Bloquear-Sin-Estado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Intenta bloquear sin enviar el estado actual.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo bloqueo es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Permisos de Usuarios",
+          "item": [
+            {
+              "name": "POST Cargar-Permisos-Usuario",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Carga la matriz de permisos del usuario de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "CargarPermisosUsuario",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "const res = pm.response.json();",
+                      "pm.test(\"Devuelve la matriz de permisos\", function () {",
+                      "    pm.expect(res.accion).to.eql(\"CargarPermisosUsuario\");",
+                      "    pm.expect(res.datos).to.be.an(\"array\").that.is.not.empty;",
+                      "    pm.expect(res.datos[0]).to.include.all.keys(\"id_permiso\", \"clave\", \"asignado\");",
+                      "});",
+                      "if (res.datos && res.datos.length) { pm.environment.set(\"usu_permiso_id\", res.datos[0].id_permiso); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Guardar-Permisos-Usuario",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Guarda una excepción de permiso para el usuario de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "guardar_permisos_usuario",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "permisos[{{usu_permiso_id}}]",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"guardar_permisos_usuario\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Permisos guardados correctamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Cargar-Permisos-Sin-Id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Intenta cargar permisos sin enviar el id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "CargarPermisosUsuario",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Generar Reportes de Usuarios",
+          "item": [
+            {
+              "name": "POST Generar-Reporte-PDF",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Genera el reporte PDF filtrado por la cédula del usuario de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "generar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "formato",
+                      "value": "pdf",
+                      "type": "text"
+                    },
+                    {
+                      "key": "cedula",
+                      "value": "{{usu_cedula}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Genera el reporte\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"reporte\");",
+                      "    pm.expect(res).to.have.property(\"archivo\");",
+                      "    pm.expect(res.archivo).to.not.be.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Generar-Reporte-Excel",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Genera el reporte Excel filtrado por la cédula del usuario de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "generar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "formato",
+                      "value": "excel",
+                      "type": "text"
+                    },
+                    {
+                      "key": "cedula",
+                      "value": "{{usu_cedula}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Genera el reporte\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"reporte\");",
+                      "    pm.expect(res).to.have.property(\"archivo\");",
+                      "    pm.expect(res.archivo).to.not.be.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Generar-Reporte-Sin-Resultados",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Filtra por un nombre que no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "generar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "formato",
+                      "value": "pdf",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Zzqxw",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"No se encontraron registros para hacer el reporte.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Generar-Reporte-Cedula-Invalida",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Filtra por una cédula con letras.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "generar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "formato",
+                      "value": "pdf",
+                      "type": "text"
+                    },
+                    {
+                      "key": "cedula",
+                      "value": "abc",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Cédula inválida.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Eliminar Usuarios",
+          "item": [
+            {
+              "name": "POST Eliminar-Propio-Usuario",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "El usuario de la sesión no puede eliminarse a sí mismo.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_admin_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"No puedes eliminar tu propio usuario.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Eliminar-Sin-Id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Intenta eliminar sin enviar el id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Eliminar-Usuario-Exitoso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Elimina (borrado lógico) al usuario de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"eliminar\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Usuario eliminado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Eliminar-Usuario-Ya-Eliminado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Intenta eliminar de nuevo al mismo usuario.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El usuario que intenta eliminar ya no existe\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Usuario-Eliminado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "El usuario eliminado ya no aparece en la búsqueda.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"El usuario eliminado no se devuelve\", function () {",
+                      "    pm.expect(pm.response.json().datos).to.be.an(\"array\").that.is.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Usuario-Eliminado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Un usuario eliminado no se puede modificar.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "cedula",
+                      "value": "{{usu_cedula}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Integ Modificado",
+                      "type": "text"
+                    },
+                    {
+                      "key": "apellido",
+                      "value": "Prueba Newman",
+                      "type": "text"
+                    },
+                    {
+                      "key": "telefono",
+                      "value": "{{usu_telefono}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "correo",
+                      "value": "{{usu_correo}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "foto_actual",
+                      "value": "{{usu_foto}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "rol",
+                      "value": "{{usu_rol}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El usuario que intenta modificar ya no existe.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Registro-Correo-De-Usuario-Eliminado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "El correo de un usuario eliminado no se puede reutilizar.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "incluir",
+                      "type": "text"
+                    },
+                    {
+                      "key": "cedula",
+                      "value": "{{usu_cedula_alt}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Integ Postman",
+                      "type": "text"
+                    },
+                    {
+                      "key": "apellido",
+                      "value": "Prueba Newman",
+                      "type": "text"
+                    },
+                    {
+                      "key": "telefono",
+                      "value": "{{usu_telefono_alt}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "correo",
+                      "value": "{{usu_correo}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "contraseña",
+                      "value": "Prueba123$",
+                      "type": "text"
+                    },
+                    {
+                      "key": "rol",
+                      "value": "{{usu_rol}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El correo ya fue usado por otro usuario (eliminado). No se puede reutilizar.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Seguridad y Acciones Invalidas",
+          "item": [
+            {
+              "name": "POST Accion-No-Permitida",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Envía una acción que el módulo no reconoce.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "accion_inexistente",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Rechaza la acción\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.include(\"Acción no permitida\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Token-CSRF-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Usuarios",
+                  "host": [
+                    "{{url_base}}Usuarios"
+                  ]
+                },
+                "description": "Envía la petición con un token CSRF falso.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{usu_admin_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: \"token_invalido_postman\" });"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Rechaza la petición por token inválido\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Error de seguridad: Token inválido o expirado.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.request.method !== \"GET\") {",
+          "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
+          "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
+          "}"
+        ]
+      }
+    }
+  ]
+}

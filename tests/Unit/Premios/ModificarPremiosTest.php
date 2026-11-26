@@ -38,7 +38,8 @@ if (!defined('DB_CONNECTION')) {
 
 #[Group('unit')]
 #[Group('unitPremios')]
-#[Group('cu_premios_modificar')]
+#[Group('RF-03')]
+#[Group('ESC-03')]
 class ModificarPremiosTest extends TestCase
 {
     protected function tearDown(): void
@@ -79,6 +80,14 @@ class ModificarPremiosTest extends TestCase
         return $pdoMock;
     }
 
+    // ==========================================
+    // ESCENARIO 03: Modificación y Actualización de Galardones
+    // ==========================================
+
+    // Caso 08: Modificar premio exitosamente con confirmación transaccional cuando los datos son válidos
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-08')]
     #[Group('escenario_exito')]
     public function test_deberia_modificarPremioExitosamente_cuando_datosSonValidos(): void
     {
@@ -116,6 +125,10 @@ class ModificarPremiosTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
+    // Caso 09: Permitir modificar el tipo de premio cuando no tiene asociaciones en palmarés
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-09')]
     #[Group('escenario_limite')]
     public function test_deberia_permitirModificarTipo_cuando_premioNoTieneAsociacionesEnPalmares(): void
     {
@@ -160,6 +173,10 @@ class ModificarPremiosTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
+    // Caso 10: Rechazar modificación por nombre duplicado perteneciente a otro premio (DUPLICATE_NAME)
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-10')]
     #[Group('escenario_error')]
     public function test_deberia_rechazarModificacion_cuando_nombreColisionaConOtroPremio(): void
     {
@@ -193,6 +210,10 @@ class ModificarPremiosTest extends TestCase
         $this->assertEquals(DUPLICATE_NAME, $resultado['codigo']);
     }
 
+    // Caso 11: Rechazar cambio de tipo cuando el premio está asociado a palmarés (TYPE_ASSOCIATED)
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-11')]
     #[Group('escenario_error')]
     public function test_deberia_rechazarCambioDeTipo_cuando_estaAsociadoAPalmares(): void
     {
@@ -231,6 +252,10 @@ class ModificarPremiosTest extends TestCase
         $this->assertEquals('TYPE_ASSOCIATED', $resultado['codigo']);
     }
 
+    // Caso 12: Revertir transacción con rollback y retornar error cuando falla la actualización SQL
+    #[Group('RF-03')]
+    #[Group('ESC-03')]
+    #[Group('CP-12')]
     #[Group('escenario_error')]
     public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaActualizacionSQL(): void
     {

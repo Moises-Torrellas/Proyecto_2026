@@ -14,6 +14,8 @@
 /storage/*
 
 .env
+.env.local
+.env.testing
 datos_prueba_postman.csv
 exposicion_postman.md
 Presentacion_Postman.pptx
@@ -30,3 +32,10 @@ analisis-seguridad-login.md
 .DS_Store
 Thumbs.db
 .vscode/
+*.lnk
+*test.sql
+
+# Resultados temporales de pruebas de rendimiento (JMeter)
+/tests/Performance/resultados/*
+!/tests/Performance/resultados/.gitkeep
+jmeter.log

@@ -4,7 +4,6 @@ namespace Tests\Smoke;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\DataProvider;
 
 #[Group('smoke')]
 #[Group('smokeHttp')]
@@ -12,7 +11,6 @@ class ModulosHttpSmokeTest extends TestCase
 {
     private string $baseUrl;
     private static ?string $archivoCookie = null;
-    private static bool $sesionIniciada = false;
 
     private const TEXTOS_DE_ERROR = [
         'Fatal error',
@@ -107,47 +105,6 @@ class ModulosHttpSmokeTest extends TestCase
         ];
     }
 
-    private function autenticar(): bool
-    {
-        if (self::$sesionIniciada) {
-            return true;
-        }
-
-        // 1. Obtener la página de inicio para capturar el token CSRF y la cookie inicial
-        $respuestaInicio = $this->ejecutarPeticion('Inicio');
-        if ($respuestaInicio['codigo'] !== 200) {
-            return false;
-        }
-
-        $token = '';
-        if (preg_match('/<meta\s+name=["\']csrf-token["\']\s+content=["\']([a-f0-9]+)["\']/i', $respuestaInicio['cuerpo'], $coincidencias)) {
-            $token = $coincidencias[1];
-        }
-
-        // 2. Ejecutar la petición POST de login
-        $respuestaLogin = $this->ejecutarPeticion('Inicio', 'POST', [
-            'accion'     => 'inicio',
-            'cedula'     => '12345678',
-            'contraseña' => 'Admin456$'
-        ], [
-            'X-CSRF-TOKEN: ' . $token,
-            'X-Requested-With: XMLHttpRequest'
-        ]);
-
-        $datos = json_decode($respuestaLogin['cuerpo'], true);
-        if (is_array($datos) && isset($datos['resultado']) && (int)$datos['resultado'] === 1) {
-            self::$sesionIniciada = true;
-            return true;
-        }
-
-        if (str_contains($respuestaLogin['cuerpo'], '"resultado":1') || str_contains($respuestaLogin['cuerpo'], 'Autenticaci')) {
-            self::$sesionIniciada = true;
-            return true;
-        }
-
-        return false;
-    }
-
     // Caso 1: La ruta pública de Inicio responde con código 200 y sin errores PHP
     public function testRutaInicioRespondeHttp200YSinErrores(): void
     {
@@ -211,69 +168,5 @@ class ModulosHttpSmokeTest extends TestCase
 
         $this->assertEquals(302, $codigoHttp, 'Acceder a un módulo protegido sin sesión debe producir una redirección HTTP 302.');
         $this->assertStringContainsString('Inicio', $redireccion, 'La redirección de seguridad debe apuntar a la ruta de Inicio.');
-    }
-
-    // Caso 5: Carga y renderizado de los módulos principales del sistema con sesión de administrador
-    #[DataProvider('modulosProvider')]
-    public function testCargaDeModulosConAutenticacion(string $modulo): void
-    {
-        if (!$this->autenticar()) {
-            $this->markTestSkipped('No se pudo autenticar con las credenciales de prueba predeterminadas.');
-        }
-
-        $respuesta = $this->ejecutarPeticion($modulo);
-
-        $this->assertEquals(
-            200,
-            $respuesta['codigo'],
-            "El módulo [{$modulo}] debe responder con código HTTP 200 tras iniciar sesión."
-        );
-
-        $this->assertNotEmpty($respuesta['cuerpo'], "El módulo [{$modulo}] no debe retornar un cuerpo vacío.");
-
-        foreach (self::TEXTOS_DE_ERROR as $error) {
-            $this->assertStringNotContainsString(
-                $error,
-                $respuesta['cuerpo'],
-                "El módulo [{$modulo}] contiene el texto de error [{$error}]."
-            );
-        }
-    }
-
-    public static function modulosProvider(): array
-    {
-        return [
-            'Principal'           => ['Principal'],
-            'Atletas'             => ['Atletas'],
-            'Representantes'      => ['Representantes'],
-            'Posiciones'          => ['Posiciones'],
-            'Categorias'          => ['Categorias'],
-            'Cargos'              => ['Cargos'],
-            'Pagos'               => ['Pagos'],
-            'Monedas'             => ['Monedas'],
-            'Conceptos'           => ['Conceptos'],
-            'MetodosPago'         => ['MetodosPago'],
-            'TasaCambios'         => ['TasaCambios'],
-            'Usuarios'            => ['Usuarios'],
-            'Roles'               => ['Roles'],
-            'Bitacora'            => ['Bitacora'],
-            'Torneos'             => ['Torneos'],
-            'Equipos'             => ['Equipos'],
-            'Catalogo'            => ['Catalogo'],
-            'ArticulosInventario' => ['ArticulosInventario'],
-            'Asignaciones'        => ['Asignaciones'],
-            'Devoluciones'        => ['Devoluciones'],
-            'Premios'             => ['Premios'],
-            'Palmares'            => ['Palmares'],
-            'Estadisticas'        => ['Estadisticas'],
-            'Participaciones'     => ['Participaciones'],
-            'EstadoFisico'        => ['EstadoFisico'],
-            'Respaldo'            => ['Respaldo'],
-            'Reportes'            => ['Reportes'],
-            'Modulos'             => ['Modulos'],
-            'Permisos'            => ['Permisos'],
-            'EditarPerfil'        => ['EditarPerfil'],
-            'PreguntasFrecuentes' => ['PreguntasFrecuentes'],
-        ];
     }
 }

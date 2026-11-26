@@ -12,6 +12,7 @@ if (!defined('_DB_NAME_')) {
 }
 
 #[Group('cargos')]
+#[Group('cobranzas')]
 #[Group('interfaz')]
 final class CargosCest
 {
@@ -37,6 +38,7 @@ final class CargosCest
 
     public function _before(AcceptanceTester $I): void
     {
+        $I->asegurarAtletaActivoEnBD();
         // Login con snapshot + navegación a /Cargos + verificación de título y limpieza de overlays
         $I->irAlModulo(self::RUTA_MODULO, self::TITULO_MODULO);
     }

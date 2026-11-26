@@ -78,10 +78,33 @@ class AcceptanceTester extends \Codeception\Actor
             $this->waitForElement('input[name="cedula"]', 5);
             $this->fillField('cedula', $cedula);
             $this->fillField('contraseña', $clave);
-            $this->click('Iniciar Sesión');
-            $this->waitForText('Inicio Validado', 10);
+            $this->enviarLoginRespetandoLimite();
             $this->saveSessionSnapshot('login');
         }
+    }
+
+    /**
+     * Pulsa "Iniciar Sesión" respetando el límite del login (3 intentos por minuto por IP,
+     * RateLimit(3, 60) en Inicio.php). Si el sistema responde "Acceso restringido. Por favor,
+     * espera N segundos.", espera esos segundos y reintenta.
+     */
+    public function enviarLoginRespetandoLimite(): void
+    {
+        for ($intento = 1; $intento <= 3; $intento++) {
+            $this->click('Iniciar Sesión');
+            $this->waitForJS(
+                "return document.body.innerText.includes('Inicio Validado') || document.body.innerText.includes('Acceso restringido');",
+                10
+            );
+            $texto = (string)$this->executeJS('return document.body.innerText;');
+            if (str_contains($texto, 'Inicio Validado')) {
+                return;
+            }
+            $segundos = preg_match('/espera (\d+) segundos/', $texto, $m) ? (int)$m[1] : 5;
+            $this->despejarOverlays();
+            $this->wait(min(61, $segundos + 1));
+        }
+        $this->waitForText('Inicio Validado', 10);
     }
 
     /**
@@ -163,6 +186,7 @@ class AcceptanceTester extends \Codeception\Actor
     {
         $this->waitForElementVisible('.swal2-confirm', 5);
         $this->click('Entendido');
+        $this->waitForElementNotVisible('.swal2-container', 5);
     }
 
     /**
@@ -184,6 +208,76 @@ class AcceptanceTester extends \Codeception\Actor
         $this->waitForElementVisible('.swal2-input', 5);
         $this->fillField('.swal2-input', $texto);
         $this->click('SI');
+    }
+
+    /**
+     * Espera hasta que un input o select tome un valor específico (útil para campos auto-rellenados por JS).
+     */
+    public function waitForValue(string $selector, string $valorEsperado, int $timeout = 5): void
+    {
+        $selJson = json_encode($selector);
+        $valJson = json_encode($valorEsperado);
+        $this->waitForJS(
+            "return (function(){ var el = document.querySelector({$selJson}); return el && String(el.value) === String({$valJson}); })()",
+            $timeout
+        );
+    }
+
+    /**
+     * Garantiza que exista al menos un atleta con inscripción activa (estatus = 1)
+     * cuando se ejecuta Cobranzas de forma aislada. Si ya existe uno (ej. creado por AtletasCest),
+     * lo reutiliza sin insertar nada.
+     */
+    public function asegurarAtletaActivoEnBD(): void
+    {
+        if (!defined('_DB_HOST_') || !defined('_DB_NAME_')) {
+            require_once dirname(__DIR__, 2) . '/config/config.php';
+        }
+
+        try {
+            $pdo = new \PDO(
+                'mysql:host=' . _DB_HOST_ . ';dbname=' . _DB_NAME_ . ';charset=utf8mb4',
+                _DB_USER_,
+                _DB_PASS_,
+                [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
+            );
+
+            $activos = (int) $pdo->query("SELECT COUNT(*) FROM vista_atletas WHERE estatus = 1")->fetchColumn();
+            if ($activos > 0) {
+                return;
+            }
+
+            $idCat = $pdo->query("SELECT codigo_categoria FROM categorias WHERE edad_min <= 60 LIMIT 1")->fetchColumn();
+            if (!$idCat) {
+                $pdo->exec("INSERT INTO categorias (nombre, edad_min, edad_max) VALUES ('Senior', 18, 50)");
+                $idCat = $pdo->lastInsertId();
+            }
+
+            $idPos = $pdo->query("SELECT codigo_posicion FROM posiciones LIMIT 1")->fetchColumn();
+            if (!$idPos) {
+                $pdo->exec("INSERT INTO posiciones (nombre, abreviatura, descripcion) VALUES ('Delantero', 'DE', 'Atacante')");
+                $idPos = $pdo->lastInsertId();
+            }
+
+            $pdo->exec("INSERT INTO atletas (p_nombre, s_nombre, p_apellidos, s_apellidos, genero, fecha_nac, lugar_nacimiento, foto)
+                        VALUES ('Carlos', 'Eduardo', 'Perez', 'Silva', 'H', '2000-05-15', 'Barquisimeto', 'default.png')");
+            $idAtleta = $pdo->lastInsertId();
+
+            $doc = '29' . substr((string) time(), -6);
+            $pdo->prepare("INSERT INTO identidad_atleta (codigo_atleta, tipo_doc, numero_doc) VALUES (?, 'V', ?)")
+                ->execute([$idAtleta, $doc]);
+            $pdo->prepare("INSERT INTO contacto_atleta (codigo_atleta, direccion, telefono, correo, municipio, instagram)
+                           VALUES (?, 'Barquisimeto', '0414-5551234', ?, 'Iribarren', '@carlos_test')")
+                ->execute([$idAtleta, "carlos_{$doc}@testmail.com"]);
+            $pdo->prepare("INSERT INTO datos_medicos (codigo_atleta, tipo_sangre, es_alergico, alergias_detalle)
+                           VALUES (?, 'O+', 0, '')")
+                ->execute([$idAtleta]);
+            $pdo->prepare("INSERT INTO inscripciones (codigo_atleta, codigo_categoria, codigo_posicion, dorsal, peso_kg, estatura_cm, fecha_inscripcion, estatus, talla_pantalon, talla_franela, talla_calzado)
+                           VALUES (?, ?, ?, 99, 70.00, 175, CURDATE(), 1, 'M', 'M', '42')")
+                ->execute([$idAtleta, $idCat, $idPos]);
+        } catch (\Throwable $e) {
+            // Silencioso para no interrumpir la ejecución UI
+        }
     }
 
     /**

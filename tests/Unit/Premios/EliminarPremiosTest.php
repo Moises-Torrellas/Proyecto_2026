@@ -38,7 +38,8 @@ if (!defined('DB_CONNECTION')) {
 
 #[Group('unit')]
 #[Group('unitPremios')]
-#[Group('cu_premios_eliminar')]
+#[Group('RF-04')]
+#[Group('ESC-04')]
 class EliminarPremiosTest extends TestCase
 {
     protected function tearDown(): void
@@ -67,6 +68,14 @@ class EliminarPremiosTest extends TestCase
         return $pdoMock;
     }
 
+    // ==========================================
+    // ESCENARIO 04: Eliminación de Galardones
+    // ==========================================
+
+    // Caso 13: Eliminar premio exitosamente cuando existe y no tiene asociaciones en palmarés
+    #[Group('RF-04')]
+    #[Group('ESC-04')]
+    #[Group('CP-13')]
     #[Group('escenario_exito')]
     public function test_deberia_eliminarPremioExitosamente_cuando_existeYNoTieneAsociaciones(): void
     {
@@ -107,6 +116,10 @@ class EliminarPremiosTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
+    // Caso 14: Manejar eliminación con límite numérico cuando el ID es el valor entero máximo
+    #[Group('RF-04')]
+    #[Group('ESC-04')]
+    #[Group('CP-14')]
     #[Group('escenario_limite')]
     public function test_deberia_manejarEliminacionConLimiteNumerico_cuando_idEsMaximo(): void
     {
@@ -147,6 +160,10 @@ class EliminarPremiosTest extends TestCase
         $this->assertEquals('exito', $resultado['accion']);
     }
 
+    // Caso 15: Rechazar eliminación cuando el premio no existe (INVALID_ID)
+    #[Group('RF-04')]
+    #[Group('ESC-04')]
+    #[Group('CP-15')]
     #[Group('escenario_error')]
     public function test_deberia_rechazarEliminacion_cuando_premioNoExiste(): void
     {
@@ -172,6 +189,10 @@ class EliminarPremiosTest extends TestCase
         $this->assertEquals(INVALID_ID, $resultado['codigo']);
     }
 
+    // Caso 16: Rechazar eliminación cuando el premio está asociado en palmarés (ASSOCIATES)
+    #[Group('RF-04')]
+    #[Group('ESC-04')]
+    #[Group('CP-16')]
     #[Group('escenario_error')]
     public function test_deberia_rechazarEliminacion_cuando_premioEstaAsociadoEnPalmares(): void
     {
@@ -206,6 +227,10 @@ class EliminarPremiosTest extends TestCase
         $this->assertEquals(ASSOCIATES, $resultado['codigo']);
     }
 
+    // Caso 17: Revertir transacción con rollback y retornar error cuando falla la sentencia SQL de borrado
+    #[Group('RF-04')]
+    #[Group('ESC-04')]
+    #[Group('CP-17')]
     #[Group('escenario_error')]
     public function test_deberia_revertirTransaccionYRetornarError_cuando_fallaSentenciaSQLDeBorrado(): void
     {
