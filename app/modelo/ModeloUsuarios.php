@@ -179,8 +179,16 @@ class ModeloUsuarios extends Conexion
             if ($this->verificarExistencia('telefono', $this->telefono, 'usuarios', 1, 'sg', bloquear: true)) {
                 throw new Exception(DUPLICATE_PHONE);
             }
+            // Igual que en Modificar: el correo y el teléfono de un usuario eliminado no se reutilizan
+            // (el correo además es UNIQUE en la BD y el procedimiento fallaría al insertarlo).
+            if ($this->perteneceAUsuarioEliminado('correo', $this->correo)) {
+                throw new Exception(DUPLICATE_EMAIL . '0');
+            }
+            if ($this->perteneceAUsuarioEliminado('telefono', $this->telefono)) {
+                throw new Exception(DUPLICATE_PHONE . '0');
+            }
 
-            $Reactivacion = $this->verificarExistencia('cedula', $this->cedula, 'usuarios', 0, 'sg', bloquear: true);
+            $Reactivacion =$this->verificarExistencia('cedula', $this->cedula, 'usuarios', 0, 'sg', bloquear: true);
 
             if ($Reactivacion) {
                 $sql = "UPDATE `usuarios` SET 
@@ -215,9 +223,15 @@ class ModeloUsuarios extends Conexion
                 $stmt->bindValue(':correo', $this->correo, \PDO::PARAM_STR);
                 $stmt->bindValue(':rol', $this->rol, \PDO::PARAM_INT);
                 $stmt->execute();
+                $stmt->closeCursor();
+
+                // pa_incluir_usuario atrapa sus propios errores SQL y solo lo informa en @resultado
+                if ((int)$conex->query("SELECT @resultado")->fetchColumn() !== 1) {
+                    throw new Exception('pa_incluir_usuario no pudo registrar el usuario.');
+                }
             }
 
-            $idUsuario = $Reactivacion
+            $idUsuario =$Reactivacion
                 ? $conex->query("SELECT idUsuario FROM usuarios WHERE cedulaUsuario = '{$this->cedula}'")->fetchColumn()
                 : $conex->lastInsertId();
 
@@ -242,6 +256,23 @@ class ModeloUsuarios extends Conexion
         }
     }
 
+
+    /**
+     * Indica si el valor del campo pertenece a un usuario eliminado distinto del que se registra
+     * (el de la misma cédula se reactiva y conserva sus datos).
+     */
+    private function perteneceAUsuarioEliminado(string $campo, string $valor): bool
+    {
+        $columna = $this->campoWhitelist[$campo];
+        $stmt = $this->conexSG()->prepare(
+            "SELECT COUNT(*) FROM `usuarios` WHERE {$columna} = :valor AND estatus = :estatus AND cedulaUsuario <> :cedula FOR UPDATE"
+        );
+        $stmt->bindValue(':valor', $valor);
+        $stmt->bindValue(':estatus', 0, \PDO::PARAM_INT);
+        $stmt->bindValue(':cedula', $this->cedula);
+        $stmt->execute();
+        return (int)$stmt->fetchColumn() > 0;
+    }
 
     private function Modificar(): array
     {

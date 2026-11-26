@@ -224,7 +224,10 @@ function modificarData($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un permiso registrado con este nombre.',
                 ASSOCIATES  => 'Uno de Los modulos que intenta registrar no existe o esta restringido.',
-                default          => 'Ocurrió un error inesperado en el registro del rol.'
+                'No se puede modificar un permiso bloqueado.' => 'No se puede modificar un permiso bloqueado. Desbloquéelo primero.',
+                'El permiso seleccionado no existe.' => 'El permiso seleccionado no existe.',
+                'Ya existe otro permiso con ese nombre.' => 'Ya existe un permiso registrado con este nombre.',
+                default          => 'Ocurrió un error inesperado en la modificación del permiso.'
             };
         }
         echo json_encode($resultado);
@@ -252,7 +255,7 @@ function bloquear($obj, $id_modulo, $bitacoraObj): void
         if (isset($respuestaVieja['accion']) && $respuestaVieja['accion'] === 'buscar' && !empty($respuestaVieja['datos'])) {
             $viejo = $respuestaVieja['datos'][0];
             $nombrePermiso = $viejo['nombre'];
-            $estadoAnterior = ($viejo['bloqueo'] == 1) ? 'Activo' : 'Bloqueado';
+            $estadoAnterior = ($viejo['estatus'] == 1) ? 'Activo' : 'Bloqueado';
         }
 
         $resultado = $obj->procesarDatos($datos);

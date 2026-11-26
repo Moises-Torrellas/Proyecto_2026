@@ -2,13 +2,16 @@
 
 namespace tests\Unit\Usuarios;
 
+use App\modelo\Conexion;
+use ReflectionClass;
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloUsuarios;
 use Exception;
 use PHPUnit\Framework\Attributes\Group;
-use ReflectionClass;
 
-require_once __DIR__ . '/UsuariosMockTrait.php';
+if (!defined('INVALID_ID')) {
+    require_once dirname(__DIR__, 3) . '/config/config.php';
+}
 
 /**
  * RF-USU-01: El sistema debe validar y normalizar los datos recibidos antes de procesar
@@ -26,7 +29,19 @@ require_once __DIR__ . '/UsuariosMockTrait.php';
 #[Group('validarDatosUsuarios')]
 class ValidarDatosUsuariosTest extends TestCase
 {
-    use UsuariosMockTrait;
+    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
+    protected array $sentencias = [];
+
+    protected function tearDown(): void
+    {
+        $reflector = new ReflectionClass(Conexion::class);
+        $reflector->getProperty('instanciaSG')->setValue(null, null);
+        $reflector->getProperty('instancia')->setValue(null, null);
+
+        $_SESSION = [];
+        $this->sentencias = [];
+        parent::tearDown();
+    }
 
     private function procesarSinEjecutar(ModeloUsuarios $modelo, array $datos): void
     {

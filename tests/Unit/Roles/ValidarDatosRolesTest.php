@@ -2,13 +2,16 @@
 
 namespace tests\Unit\Roles;
 
+use App\modelo\Conexion;
+use Exception;
+use ReflectionClass;
 use PHPUnit\Framework\TestCase;
 use App\modelo\ModeloRoles;
-use Exception;
 use PHPUnit\Framework\Attributes\Group;
-use ReflectionClass;
 
-require_once __DIR__ . '/RolesMockTrait.php';
+if (!defined('INVALID_ID')) {
+    require_once dirname(__DIR__, 3) . '/config/config.php';
+}
 
 /**
  * RF-ROL-01: El sistema debe validar los datos recibidos antes de procesar cualquier
@@ -28,7 +31,22 @@ require_once __DIR__ . '/RolesMockTrait.php';
 #[Group('validarDatosRoles')]
 class ValidarDatosRolesTest extends TestCase
 {
-    use RolesMockTrait;
+    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
+    protected array $sentencias = [];
+
+    /** Sentencias que el modelo intentó preparar sobre la base de datos general. */
+    protected array $sentenciasBdGeneral = [];
+
+    protected function tearDown(): void
+    {
+        $reflector = new ReflectionClass(Conexion::class);
+        $reflector->getProperty('instanciaSG')->setValue(null, null);
+        $reflector->getProperty('instancia')->setValue(null, null);
+
+        $this->sentencias = [];
+        $this->sentenciasBdGeneral = [];
+        parent::tearDown();
+    }
 
     private function procesarSinEjecutar(ModeloRoles $modelo, array $datos): void
     {

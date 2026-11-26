@@ -181,6 +181,8 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
                 DUPLICATE_CEDULA => 'La cedula ingresada ya pertenece a un usuario registrado.',
                 DUPLICATE_PHONE  => 'El telefono ingresado ya pertenece a un usuario registrado.',
                 DUPLICATE_EMAIL  => 'El correo ingresado ya pertenece a un usuario registrado.',
+                DUPLICATE_EMAIL . '0' => 'El correo ya fue usado por otro usuario (eliminado). No se puede reutilizar.',
+                DUPLICATE_PHONE . '0' => 'El Telefono ya fue usado por otro usuario (eliminado). No se puede reutilizar.',
                 default          => 'Ocurrió un error inesperado en el registro.'
             };
         }
