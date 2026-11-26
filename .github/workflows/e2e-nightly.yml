@@ -28,12 +28,12 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:8.0
+        image: mariadb:10.11
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=5
 
     steps:
       - name: Clonar repositorio
@@ -74,8 +74,9 @@ jobs:
       - name: Crear directorios del sistema y de salida de Codeception
         run: mkdir -p logs backups storage tests/_output public/img/usuarios public/img/atletas public/docs/reportes
 
-      - name: Cargar bases de datos MySQL (bds2 y cannibalsbd2)
+      - name: Cargar bases de datos MariaDB (bds2 y cannibalsbd2)
         run: |
+          mysql -h 127.0.0.1 -u root -proot -e "SET GLOBAL sql_mode = 'NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION'; SET GLOBAL log_bin_trust_function_creators = 1;"
           mysql -h 127.0.0.1 -u root -proot < bds2.sql
           mysql -h 127.0.0.1 -u root -proot < cannibalsbd2.sql
 
