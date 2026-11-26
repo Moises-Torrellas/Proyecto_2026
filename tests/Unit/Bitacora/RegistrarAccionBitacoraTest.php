@@ -160,8 +160,8 @@ class RegistrarAccionBitacoraTest extends TestCase
         (new ModeloBitacora())->RegistrarAccion(103, 'Ingreso al Modulo', 4);
 
         $params = $this->sentenciaEjecutada('CALL pa_incluir_bitacora')['params'];
-        $this->assertSame('No Aplica', $params[':datos_previos'], 'Las columnas no admiten NULL.');
-        $this->assertSame('No Aplica', $params[':datos_nuevos'], 'Las columnas no admiten NULL.');
+        $this->assertSame('Ninguno', $params[':datos_previos'], 'Las columnas no admiten NULL.');
+        $this->assertSame('Ninguno', $params[':datos_nuevos'], 'Las columnas no admiten NULL.');
         $this->assertSame('', $params[':entorno']);
         $this->assertSame('Ingreso al Modulo', $params[':accion']);
     }

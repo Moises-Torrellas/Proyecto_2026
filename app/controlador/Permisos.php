@@ -68,7 +68,7 @@ function manejarSolicitud($obj, $id_modulo, $bitacoraObj, array $permisos): void
                 buscarData($obj);
                 break;
             case 'incluir':
-                if (empty($permisos['registrar_permisos']) && $_SESSION['nivel_rol'] === 1) throw new Exception('No tiene permisos para incluir .');
+                if (empty($permisos['registrar_permisos']) || !in_array($_SESSION['nivel_rol'] ?? 0, [1, 2], true)) throw new Exception('No tiene permisos para incluir .');
                 incluirData($obj, $id_modulo, $bitacoraObj);
                 break;
             case 'modificar':

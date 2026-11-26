@@ -11,8 +11,8 @@
             $horaFormateada = date('h:i A', strtotime($dato['hora']));
 
             // Lógica de datos previos y nuevos con escape HTML
-            $datosPrevios = (!empty($dato['datos_previos']) && $dato['datos_previos'] !== 'null') ? htmlspecialchars($dato['datos_previos']) : 'No Aplica';
-            $datosNuevos = (!empty($dato['datos_nuevos']) && $dato['datos_nuevos'] !== 'null') ? htmlspecialchars($dato['datos_nuevos']) : 'No Aplica';
+            $datosPrevios = (!empty($dato['datos_previos']) && $dato['datos_previos'] !== 'null') ? htmlspecialchars($dato['datos_previos']) : 'Ninguno';
+            $datosNuevos = (!empty($dato['datos_nuevos']) && $dato['datos_nuevos'] !== 'null') ? htmlspecialchars($dato['datos_nuevos']) : 'Ninguno';
 
             // Lógica para definir la clase de estatus 
             // (Nota: la mantengo calculada tal como en tu JS, aunque en la estructura HTML original no la inyectabas)
@@ -142,8 +142,8 @@
                                     $horaFormateada = date('h:i A', strtotime($dato['hora']));
 
                                     // Lógica de datos previos y nuevos con escape HTML
-                                    $datosPrevios = (!empty($dato['datos_previos']) && $dato['datos_previos'] !== 'null') ? htmlspecialchars($dato['datos_previos']) : 'No Aplica';
-                                    $datosNuevos = (!empty($dato['datos_nuevos']) && $dato['datos_nuevos'] !== 'null') ? htmlspecialchars($dato['datos_nuevos']) : 'No Aplica';
+                                    $datosPrevios = (!empty($dato['datos_previos']) && $dato['datos_previos'] !== 'null') ? htmlspecialchars($dato['datos_previos']) : 'Ninguno';
+                                    $datosNuevos = (!empty($dato['datos_nuevos']) && $dato['datos_nuevos'] !== 'null') ? htmlspecialchars($dato['datos_nuevos']) : 'Ninguno';
 
                                     // Lógica para definir la clase de estatus 
                                     // (Nota: la mantengo calculada tal como en tu JS, aunque en la estructura HTML original no la inyectabas)

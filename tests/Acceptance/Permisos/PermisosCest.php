@@ -17,7 +17,7 @@ if (!defined('_DB_NAME_')) {
  *
  * Escenarios cubiertos (Plan de Pruebas de Aceptación - Pruebas Alfa "Gestión de Roles y Permisos"):
  *  - CP-PER-01: Carga inicial de la interfaz (listado agrupado por módulo).
- *  - CP-PER-02: Solo el Nivel 1 (Soporte) puede registrar permisos: el Superusuario no ve "Nuevo Permiso".
+ *  - CP-PER-02: El Nivel 1 (Soporte) y el Nivel 2 (Superusuario) ven "Nuevo Permiso" y pueden registrar permisos.
  *  - CP-PER-03: Despliegue del detalle de un módulo con sus permisos.
  *  - CP-PER-04: Buscador en tiempo real (por nombre, por clave, sin resultados y restauración).
  *  - CP-PER-05: Validaciones del formulario de registro (usuario Nivel 1).
@@ -64,7 +64,7 @@ final class PermisosCest
     private string $nombreNuevo        = 'Permiso Prueba Registro';
     private string $claveNueva         = 'registro_prueba_interfaz';
 
-    // Usuario de prueba de Nivel 1 (rol Soporte), único nivel que puede registrar permisos
+    // Usuario de prueba de Nivel 1 (rol Soporte); junto al Superusuario son los niveles que registran permisos
     private const ROL_SOPORTE_ID       = 5;
     private array $usuarioSoporte = [
         'cedula'     => '30111777',
@@ -135,15 +135,16 @@ final class PermisosCest
     }
 
     /**
-     * CP-PER-02: El Superusuario (Nivel 2) no puede registrar permisos; solo el Nivel 1.
+     * CP-PER-02: El Superusuario (Nivel 2) y el Soporte (Nivel 1) pueden registrar permisos.
      */
     #[Group('seguridad')]
-    public function probarSoloNivelUnoRegistraPermisos(AcceptanceTester $I): void
+    public function probarNivelesUnoYDosRegistranPermisos(AcceptanceTester $I): void
     {
-        // 1. Con el Superusuario no aparece el botón "Nuevo Permiso"
-        $I->dontSeeElementInDOM(AcceptanceTester::BTN_NUEVO);
+        // 1. Con el Superusuario aparece el botón "Nuevo Permiso"
+        $I->seeElement(AcceptanceTester::BTN_NUEVO);
+        $I->see('Nuevo Permiso', AcceptanceTester::BTN_NUEVO);
 
-        // 2. Con un usuario de Nivel 1 (Soporte) sí aparece
+        // 2. Con un usuario de Nivel 1 (Soporte) también aparece
         $this->iniciarSesionComo($I, $this->usuarioSoporte, self::ROL_SOPORTE_ID);
         $this->recargarModulo($I);
         $I->seeElement(AcceptanceTester::BTN_NUEVO);

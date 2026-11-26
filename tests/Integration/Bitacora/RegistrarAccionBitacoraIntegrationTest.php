@@ -183,8 +183,8 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $registros = $this->registrosDelUsuario();
         $this->assertCount(1, $registros, 'La acción no quedó registrada en la bitácora.');
         $this->assertSame('Integ Bitacora usuario bloqueado', $registros[0]['acciones']);
-        $this->assertSame('No Aplica', $registros[0]['datos_previos']);
-        $this->assertSame('No Aplica', $registros[0]['datos_nuevos']);
+        $this->assertSame('Ninguno', $registros[0]['datos_previos']);
+        $this->assertSame('Ninguno', $registros[0]['datos_nuevos']);
     }
 
     // Caso 6 (E3): Un entorno de más de 50 caracteres se guarda recortado

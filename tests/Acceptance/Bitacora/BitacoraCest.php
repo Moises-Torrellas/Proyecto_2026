@@ -237,7 +237,7 @@ final class BitacoraCest
         $this->verEnDetalle($I, 'Cambios Realizados:');
         $this->verEnDetalle($I, 'Datos Previos');
         $this->verEnDetalle($I, 'Datos Nuevos');
-        $this->verEnDetalle($I, 'No Aplica');
+        $this->verEnDetalle($I, 'Ninguno');
 
         // 3. Contraer nuevamente
         $I->executeJS("document.querySelector('" . self::PRIMER_REGISTRO . " .listado_item').click();");

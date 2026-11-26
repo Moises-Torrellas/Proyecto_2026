@@ -228,8 +228,8 @@
                     <?php foreach ($datos as $dato): ?>
                         <?php
                             $fechaFormateada = date('d/m/Y', strtotime($dato['fecha'])) . ' ' . date('h:i A', strtotime($dato['hora']));
-                            $datosPrevios = (!empty($dato['datos_previos']) && $dato['datos_previos'] !== 'null') ? $dato['datos_previos'] : 'No Aplica';
-                            $datosNuevos = (!empty($dato['datos_nuevos']) && $dato['datos_nuevos'] !== 'null') ? $dato['datos_nuevos'] : 'No Aplica';
+                            $datosPrevios = (!empty($dato['datos_previos']) && $dato['datos_previos'] !== 'null') ? $dato['datos_previos'] : 'Ninguno';
+                            $datosNuevos = (!empty($dato['datos_nuevos']) && $dato['datos_nuevos'] !== 'null') ? $dato['datos_nuevos'] : 'Ninguno';
                         ?>
                         <tr>
                             <td class="data-cell">

@@ -21,9 +21,9 @@ class ModeloBitacora extends Conexion implements InterBitacora
             $parametros = [
                 ':modulo' => $id_modulo,
                 ':accion' => $accion,
-                // Las columnas no admiten NULL: sin datos se guarda el valor por defecto de la tabla
-                ':datos_previos' => $datos_previos ?? 'No Aplica',
-                ':datos_nuevos' => $datos_nuevos ?? 'No Aplica',
+                // Las columnas no admiten NULL: sin datos se guarda el valor por defecto de la tabla (Ninguno)
+                ':datos_previos' => $datos_previos ?? 'Ninguno',
+                ':datos_nuevos' => $datos_nuevos ?? 'Ninguno',
                 ':entorno' => $entorno,
                 ':usuario' => $id_usuario
             ];
