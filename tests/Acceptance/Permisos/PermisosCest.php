@@ -328,7 +328,7 @@ final class PermisosCest
         $I->click(AcceptanceTester::BTN_PROCESO);
         $I->waitForText('¿Está seguro que quiere registrar este rol?', 5);
         $I->confirmarSweetAlert();
-        $I->waitForText('Ocurrió un error inesperado en el registro del permiso.', 10);
+        $I->waitForText('La clave técnica del permiso ya está registrada.', 10);
         $this->cerrarAlertaError($I);
 
         $I->click(AcceptanceTester::MODAL_CERRAR);
@@ -412,7 +412,7 @@ final class PermisosCest
         $this->clickBoton($I, self::BTN_DESBLOQUEADO);
         $I->waitForText('¿Está seguro que quiere bloquear este permiso? Este permiso se bloquear para todos los roles que lo tengan vinculado', 5);
         $I->confirmarSweetAlert();
-        $this->esperarMensajeExito($I, 'Permiso bloqueada exitosamente.');
+        $this->esperarMensajeExito($I, 'Permiso bloqueado exitosamente.');
 
         // 2. El permiso aparece como Bloqueado
         $I->buscarEnListado($this->claveBase);
@@ -426,7 +426,7 @@ final class PermisosCest
         $this->clickBoton($I, self::BTN_BLOQUEADO);
         $I->waitForText('¿Está seguro que quiere desbloquear este permiso?', 5);
         $I->confirmarSweetAlert();
-        $this->esperarMensajeExito($I, 'Permiso desbloqueada exitosamente.');
+        $this->esperarMensajeExito($I, 'Permiso desbloqueado exitosamente.');
 
         // 4. El permiso vuelve a estar Activo
         $I->buscarEnListado($this->claveBase);
@@ -464,7 +464,7 @@ final class PermisosCest
         $this->clickBoton($I, self::BTN_DESBLOQUEADO);
         $I->waitForText('¿Está seguro que quiere bloquear este permiso?', 5);
         $I->confirmarSweetAlert();
-        $this->esperarMensajeExito($I, 'Permiso bloqueada exitosamente.');
+        $this->esperarMensajeExito($I, 'Permiso bloqueado exitosamente.');
 
         // 3. El mismo usuario ya no puede entrar a Posiciones
         $this->iniciarSesionComo($I, $this->usuarioVinculado, $idRol);
@@ -482,7 +482,7 @@ final class PermisosCest
         $this->clickBoton($I, self::BTN_BLOQUEADO);
         $I->waitForText('¿Está seguro que quiere desbloquear este permiso?', 5);
         $I->confirmarSweetAlert();
-        $this->esperarMensajeExito($I, 'Permiso desbloqueada exitosamente.');
+        $this->esperarMensajeExito($I, 'Permiso desbloqueado exitosamente.');
         Assert::assertSame(1, $this->estatusPermiso(self::PERMISO_INGRESO_ID) ?? 1);
 
         // 5. El usuario recupera el acceso

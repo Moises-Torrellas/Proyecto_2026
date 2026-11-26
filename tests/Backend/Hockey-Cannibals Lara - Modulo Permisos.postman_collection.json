@@ -1,0 +1,2926 @@
+{
+  "info": {
+    "_postman_id": "cannibals-perm-3a9d6c1e4b827",
+    "name": "Hockey-Cannibals Lara - Modulo Permisos",
+    "description": "Colección de pruebas para el módulo de Permisos (Seguridad) con escenarios funcionales y aserciones automatizadas en los scripts After-response (Tests), estructurada según los estándares del proyecto Cannibals Lara. Cada corrida crea un permiso \"Integ Permiso ...\" (clave integ_permiso_...) en el módulo Permisos; como el sistema no permite eliminar permisos, al final lo deja bloqueado.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "InicioModulo",
+      "item": [
+        {
+          "name": "GET Cargar-Vista-Inicio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_base}}",
+              "host": [
+                "{{url_base}}"
+              ]
+            },
+            "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const html = pm.response.text();",
+                  "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                  "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                  "if (match && match[1]) {",
+                  "    pm.environment.set(\"csrf_token\", match[1]);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Iniciar-Sesion-Exitoso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}",
+              "host": [
+                "{{url_base}}"
+              ]
+            },
+            "description": "Autentica al usuario en el sistema con credenciales del entorno.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "inicio",
+                  "type": "text"
+                },
+                {
+                  "key": "cedula",
+                  "value": "{{cedula}}",
+                  "type": "text"
+                },
+                {
+                  "key": "contraseña",
+                  "value": "{{contraseña}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Inicio de sesión exitoso\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Cargar-Vista-Permisos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_base}}Permisos",
+              "host": [
+                "{{url_base}}Permisos"
+              ]
+            },
+            "description": "Carga la interfaz del módulo Permisos, sincroniza el token CSRF y genera un nombre y una clave únicos para esta corrida."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"La vista del módulo Permisos cargó\", function () {",
+                  "    pm.expect(pm.response.text()).to.include(\"<title>Permisos</title>\");",
+                  "});",
+                  "const html = pm.response.text();",
+                  "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                  "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                  "if (match && match[1]) {",
+                  "    pm.environment.set(\"csrf_token\", match[1]);",
+                  "}",
+                  "",
+                  "// El nombre solo admite letras (se guarda en formato título) y la clave minúsculas y guion bajo.",
+                  "const letras = n => Array.from({ length: n }, () => 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)]).join('');",
+                  "const titulo = t => t.charAt(0).toUpperCase() + t.slice(1);",
+                  "const sufijo = letras(6);",
+                  "pm.environment.set('perm_nombre', 'Integ Permiso ' + titulo(sufijo));",
+                  "pm.environment.set('perm_nombre_mod', 'Integ Permiso Modificado ' + titulo(sufijo));",
+                  "pm.environment.set('perm_nombre_alt', 'Integ Permiso Otro ' + titulo(sufijo));",
+                  "pm.environment.set('perm_clave', 'integ_permiso_' + sufijo);",
+                  "pm.environment.set('perm_clave_alt', 'integ_otro_' + sufijo);",
+                  "console.log('Permiso de prueba de esta corrida:', 'integ_permiso_' + sufijo);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Consultar-Modulos-Disponibles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}Permisos",
+              "host": [
+                "{{url_base}}Permisos"
+              ]
+            },
+            "description": "Lista los módulos y guarda el id del módulo Permisos, al que se asocia el permiso de prueba.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "consultarModulos",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "const modulo = (res.modulos || []).find(m => m.nombre_modulo === 'Permisos');",
+                  "pm.test(\"Devuelve la lista de módulos\", function () {",
+                  "    pm.expect(res.accion).to.eql(\"consultarModulos\");",
+                  "    pm.expect(res.modulos).to.be.an(\"array\").that.is.not.empty;",
+                  "    pm.expect(modulo, 'módulo Permisos').to.exist;",
+                  "});",
+                  "if (modulo) { pm.environment.set(\"perm_modulo\", modulo.id_modulo); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Consultar-Permiso-Existente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}Permisos",
+              "host": [
+                "{{url_base}}Permisos"
+              ]
+            },
+            "description": "Toma el primer permiso del listado para usar su nombre en el caso de nombre duplicado.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "consultar",
+                  "type": "text"
+                },
+                {
+                  "key": "filtro",
+                  "value": "",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const ids = [...pm.response.text().matchAll(/onclick=[\"']buscar\\((\\d+)\\)/gi)].map(m => m[1]);",
+                  "pm.test(\"El listado tiene permisos\", function () {",
+                  "    pm.expect(ids.length).to.be.above(0);",
+                  "});",
+                  "if (ids.length) { pm.environment.set(\"perm_existente_id\", ids[0]); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Buscar-Permiso-Existente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}Permisos",
+              "host": [
+                "{{url_base}}Permisos"
+              ]
+            },
+            "description": "Obtiene el nombre y la clave del permiso existente.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "buscar",
+                  "type": "text"
+                },
+                {
+                  "key": "id",
+                  "value": "{{perm_existente_id}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Devuelve el permiso existente\", function () {",
+                  "    pm.expect(res.datos).to.have.lengthOf(1);",
+                  "});",
+                  "if (res.datos && res.datos.length) {",
+                  "    pm.environment.set(\"perm_existente_nombre\", res.datos[0].nombre);",
+                  "    pm.environment.set(\"perm_existente_clave\", res.datos[0].clave);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Permisos",
+      "item": [
+        {
+          "name": "Registrar Permisos",
+          "item": [
+            {
+              "name": "Registro-Permisos-Exitoso",
+              "item": [
+                {
+                  "name": "POST Registro-Permiso-Exitoso",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "Registra un permiso nuevo en el módulo Permisos.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{perm_nombre}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "{{perm_modulo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "{{perm_clave}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "descripcion",
+                          "value": "Permiso creado por postman",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"incluir\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Permiso registrado exitosamente.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Campos-Obligatorios-Vacios",
+              "item": [
+                {
+                  "name": "POST Registro-Nombre-Vacio",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "Intenta registrar sin nombre.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "{{perm_modulo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "{{perm_clave_alt}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Modulo-Vacio",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "Intenta registrar sin módulo.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{perm_nombre_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "{{perm_clave_alt}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"El campo modulo es obligatorio.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Clave-Vacia",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "Intenta registrar sin clave técnica.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{perm_nombre_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "{{perm_modulo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"El campo clave es obligatorio.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Formato-Invalido",
+              "item": [
+                {
+                  "name": "POST Registro-Nombre-Con-Numeros",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "El nombre solo admite letras y espacios.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Permiso 123",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "{{perm_modulo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "{{perm_clave_alt}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Clave-Con-Mayusculas",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "La clave solo admite minúsculas y guion bajo.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{perm_nombre_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "{{perm_modulo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "Integ-Clave",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"La clave del permiso es inválida. Debe estar en minúsculas, usar guion bajo y tener entre 5 y 50 caracteres.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Clave-Muy-Corta",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "La clave debe tener al menos 5 caracteres.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{perm_nombre_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "{{perm_modulo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "abc",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"La clave del permiso es inválida. Debe estar en minúsculas, usar guion bajo y tener entre 5 y 50 caracteres.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Descripcion-Con-Numeros",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "La descripción solo admite letras y espacios.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{perm_nombre_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "{{perm_modulo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "{{perm_clave_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "descripcion",
+                          "value": "Descripcion 123",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Descripción inválida.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Modulo-Invalido",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "El módulo debe ser un id numérico.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{perm_nombre_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "abc",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "{{perm_clave_alt}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Id de módulo inválido.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Datos-Duplicados",
+              "item": [
+                {
+                  "name": "POST Registro-Clave-Duplicada",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "Intenta registrar otro permiso con la misma clave técnica.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{perm_nombre_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "{{perm_modulo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "{{perm_clave}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"La clave técnica del permiso ya está registrada.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Nombre-Duplicado",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "Intenta registrar otro permiso con el mismo nombre.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{perm_nombre}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "{{perm_modulo}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "{{perm_clave_alt}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Ya existe un permiso registrado con este nombre.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Modulo-Inexistente",
+              "item": [
+                {
+                  "name": "POST Registro-Modulo-Inexistente",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Permisos",
+                      "host": [
+                        "{{url_base}}Permisos"
+                      ]
+                    },
+                    "description": "Intenta asociar el permiso a un módulo que no existe.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{perm_nombre_alt}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "modulo",
+                          "value": "999999",
+                          "type": "text"
+                        },
+                        {
+                          "key": "clave",
+                          "value": "{{perm_clave_alt}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Uno de Los modulos que intenta registrar no existe o esta restringido.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Consultar y Buscar Permisos",
+          "item": [
+            {
+              "name": "POST Consultar-Permiso-Registrado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Filtra el listado por la clave del permiso de prueba y guarda su id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "{{perm_clave}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const ids = [...html.matchAll(/onclick=[\"']buscar\\((\\d+)\\)/gi)].map(m => m[1]);",
+                      "pm.test(\"El listado muestra solo el rol buscado\", function () {",
+                      "    pm.expect(html).to.include(pm.environment.get(\"perm_nombre\"));",
+                      "    pm.expect(ids.length).to.eql(1);",
+                      "});",
+                      "if (ids.length) { pm.environment.set(\"perm_id\", ids[0]); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Sin-Resultados",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Filtra el listado con un texto que no coincide con ningún permiso.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "zzqxw_inexistente_postman",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"El listado indica que no hay registros\", function () {",
+                      "    pm.expect(pm.response.text()).to.include(\"No se encontraron registros\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Permiso-Registrado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Obtiene los datos del permiso de prueba por su id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve los datos normalizados del permiso\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"buscar\");",
+                      "    pm.expect(res.datos).to.have.lengthOf(1);",
+                      "    const p = res.datos[0];",
+                      "    pm.expect(p.nombre).to.eql(pm.environment.get(\"perm_nombre\"));",
+                      "    pm.expect(p.clave).to.eql(pm.environment.get(\"perm_clave\"));",
+                      "    pm.expect(p.descripcion).to.eql(\"Permiso Creado Por Postman\");",
+                      "    pm.expect(String(p.id_modulo)).to.eql(String(pm.environment.get(\"perm_modulo\")));",
+                      "    pm.expect(Number(p.estatus)).to.eql(1);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Permiso-Inexistente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Busca un id que no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "999999",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve una lista vacía\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"buscar\");",
+                      "    pm.expect(res.datos).to.be.an(\"array\").that.is.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Id-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "El id solo admite números.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "x1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Sin-Id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Intenta buscar sin enviar el id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Modificar Permisos",
+          "item": [
+            {
+              "name": "POST Modificar-Permiso-Exitoso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Cambia el nombre y la descripción del permiso de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "{{perm_nombre_mod}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "descripcion",
+                      "value": "Descripcion modificada",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"modificar\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Permiso modificado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Permiso-Sin-Descripcion",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Sin descripción se conserva la que tenía.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "{{perm_nombre_mod}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"modificar\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Permiso modificado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Verificar-Modificacion",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Comprueba el cambio; la clave técnica y el módulo no se modifican.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Nombre y descripción actualizados, clave intacta\", function () {",
+                      "    const p = pm.response.json().datos[0];",
+                      "    pm.expect(p.nombre).to.eql(pm.environment.get(\"perm_nombre_mod\"));",
+                      "    pm.expect(p.descripcion).to.eql(\"Descripcion Modificada\");",
+                      "    pm.expect(p.clave).to.eql(pm.environment.get(\"perm_clave\"));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Nombre-Vacio",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Intenta modificar sin nombre.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "",
+                      "type": "text"
+                    },
+                    {
+                      "key": "descripcion",
+                      "value": "Descripcion modificada",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Nombre-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "El nombre solo admite letras y espacios.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Permiso_99",
+                      "type": "text"
+                    },
+                    {
+                      "key": "descripcion",
+                      "value": "Descripcion modificada",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Nombre-Duplicado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Intenta usar el nombre de otro permiso existente.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "{{perm_existente_nombre}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Ya existe un permiso registrado con este nombre.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Permiso-Inexistente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Intenta modificar un id que no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "999999",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "{{perm_nombre_mod}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "descripcion",
+                      "value": "Descripcion modificada",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El permiso seleccionado no existe.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Bloquear Permisos",
+          "item": [
+            {
+              "name": "POST Bloquear-Permiso-Exitoso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Bloquea el permiso de prueba (bloqueo=1 indica que está activo).",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "bloqueo",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de bloqueo correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"bloquear\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Permiso bloqueado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Permiso-Bloqueado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Un permiso bloqueado no se puede modificar.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "{{perm_nombre_mod}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "descripcion",
+                      "value": "Descripcion modificada",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"No se puede modificar un permiso bloqueado. Desbloquéelo primero.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Bloquear-Permiso-Ya-Bloqueado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Volver a bloquear un permiso bloqueado no cambia nada.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "bloqueo",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El permiso no existe o ya tenía el estado solicitado.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Desbloquear-Permiso-Exitoso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Desbloquea el permiso de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "bloqueo",
+                      "value": "2",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de desbloqueo correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"bloquear\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Permiso desbloqueado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Verificar-Desbloqueo",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "El permiso vuelve a estar activo.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"El permiso está activo\", function () {",
+                      "    pm.expect(Number(pm.response.json().datos[0].estatus)).to.eql(1);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Bloquear-Permiso-Inexistente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Intenta bloquear un id que no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "999999",
+                      "type": "text"
+                    },
+                    {
+                      "key": "bloqueo",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El permiso no existe o ya tenía el estado solicitado.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Bloquear-Estado-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "El estado solo admite 1 (activo) o 2 (bloqueado).",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "bloqueo",
+                      "value": "5",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"bloqueo inválido.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Bloquear-Sin-Estado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Intenta bloquear sin enviar el estado actual.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo bloqueo es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Seguridad y Acciones Invalidas",
+          "item": [
+            {
+              "name": "POST Accion-No-Permitida",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Envía una acción que el módulo no reconoce (el módulo no permite eliminar permisos).",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Rechaza la acción\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Acción no reconocida.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Token-CSRF-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "Envía la petición con un token CSRF falso.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: \"token_invalido_postman\" });"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Rechaza la petición por token inválido\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Error de seguridad: Token inválido o expirado.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Limpieza",
+          "item": [
+            {
+              "name": "POST Bloquear-Permiso-De-Prueba",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Permisos",
+                  "host": [
+                    "{{url_base}}Permisos"
+                  ]
+                },
+                "description": "El módulo no permite eliminar permisos: el permiso de prueba queda bloqueado para que no se pueda usar.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "bloquear",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{perm_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "bloqueo",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"El permiso de prueba queda bloqueado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"bloquear\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Permiso bloqueado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.request.method !== \"GET\") {",
+          "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
+          "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
+          "}"
+        ]
+      }
+    }
+  ]
+}

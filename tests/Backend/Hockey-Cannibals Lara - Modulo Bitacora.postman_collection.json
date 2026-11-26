@@ -1,0 +1,1894 @@
+{
+  "info": {
+    "_postman_id": "cannibals-bita-6f2e9a0c3d714",
+    "name": "Hockey-Cannibals Lara - Modulo Bitacora",
+    "description": "Colección de pruebas para el módulo de Bitácora (Seguridad) con escenarios funcionales y aserciones automatizadas en los scripts After-response (Tests), estructurada según los estándares del proyecto Cannibals Lara. La bitácora es de solo lectura: la colección no crea ni modifica registros (solo los que el propio sistema anota al ingresar y al generar reportes).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "InicioModulo",
+      "item": [
+        {
+          "name": "GET Cargar-Vista-Inicio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_base}}",
+              "host": [
+                "{{url_base}}"
+              ]
+            },
+            "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const html = pm.response.text();",
+                  "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                  "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                  "if (match && match[1]) {",
+                  "    pm.environment.set(\"csrf_token\", match[1]);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Iniciar-Sesion-Exitoso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}",
+              "host": [
+                "{{url_base}}"
+              ]
+            },
+            "description": "Autentica al usuario en el sistema con credenciales del entorno.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "inicio",
+                  "type": "text"
+                },
+                {
+                  "key": "cedula",
+                  "value": "{{cedula}}",
+                  "type": "text"
+                },
+                {
+                  "key": "contraseña",
+                  "value": "{{contraseña}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Inicio de sesión exitoso\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Cargar-Vista-Bitacora",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_base}}Bitacora",
+              "host": [
+                "{{url_base}}Bitacora"
+              ]
+            },
+            "description": "Carga la interfaz del módulo Bitácora (el sistema registra el ingreso) y sincroniza el token CSRF."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"La vista del módulo Bitácora cargó\", function () {",
+                  "    pm.expect(pm.response.text()).to.include(\"<title>Bitacora</title>\");",
+                  "});",
+                  "const html = pm.response.text();",
+                  "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                  "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                  "if (match && match[1]) {",
+                  "    pm.environment.set(\"csrf_token\", match[1]);",
+                  "}",
+                  "",
+                  "// Fecha de hoy (YYYY-MM-DD) para filtrar el reporte",
+                  "const d = new Date();",
+                  "const dos = n => String(n).padStart(2, '0');",
+                  "pm.environment.set('bit_hoy', d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Consultar-Usuarios-Filtro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}Bitacora",
+              "host": [
+                "{{url_base}}Bitacora"
+              ]
+            },
+            "description": "Lista los usuarios para el filtro del reporte y guarda el id del usuario de la sesión.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "consultar_usuarios",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "const yo = (res.datos || []).find(u => u.cedulaUsuario === pm.environment.get('cedula'));",
+                  "pm.test(\"Devuelve la lista de usuarios con el de la sesión\", function () {",
+                  "    pm.expect(res.accion).to.eql(\"consultar_usuarios\");",
+                  "    pm.expect(res.datos).to.be.an(\"array\").that.is.not.empty;",
+                  "    pm.expect(res.datos[0]).to.include.all.keys(\"idUsuario\", \"cedulaUsuario\", \"nombreUsuario\", \"apellidoUsuario\");",
+                  "    pm.expect(yo, 'usuario de la sesión').to.exist;",
+                  "});",
+                  "pm.test(\"No expone datos sensibles\", function () {",
+                  "    pm.expect(res.datos[0]).to.not.have.any.keys(\"pass_hash\", \"correo\", \"telefonoUsuario\");",
+                  "});",
+                  "if (yo) { pm.environment.set('bit_usuario_id', yo.idUsuario); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Consultar-Modulos-Filtro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}Bitacora",
+              "host": [
+                "{{url_base}}Bitacora"
+              ]
+            },
+            "description": "Lista los módulos para el filtro del reporte y guarda el id del módulo Bitácora.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "consultar_modulos",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "const bit = (res.datos || []).find(m => m.nombre_modulo === 'Bitacora');",
+                  "pm.test(\"Devuelve la lista de módulos con Bitácora\", function () {",
+                  "    pm.expect(res.accion).to.eql(\"consultar_modulos\");",
+                  "    pm.expect(res.datos).to.be.an(\"array\").that.is.not.empty;",
+                  "    pm.expect(bit, 'módulo Bitacora').to.exist;",
+                  "});",
+                  "if (bit) { pm.environment.set('bit_modulo_id', bit.id_modulo); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bitacora",
+      "item": [
+        {
+          "name": "Consultar Bitacora",
+          "item": [
+            {
+              "name": "POST Consultar-Bitacora-Sin-Filtro",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "El listado devuelve los últimos registros; el primero es el ingreso al módulo recién hecho.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const grupos = html.split('<div class=\"listado_contenedor_grupal\">').slice(1);",
+                      "pm.test(\"El listado trae registros y el primero es el ingreso a Bitácora\", function () {",
+                      "    pm.expect(grupos.length).to.be.within(1, 100);",
+                      "    pm.expect(grupos[0]).to.include(\"Bitacora\");",
+                      "    pm.expect(grupos[0]).to.include(\"Ingreso al Modulo\");",
+                      "    pm.expect(grupos[0]).to.include(pm.environment.get(\"cedula\"));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Por-Cedula",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "Filtra por la cédula del usuario de la sesión.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "{{cedula}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const grupos = html.split('<div class=\"listado_contenedor_grupal\">').slice(1);",
+                      "pm.test(\"Todos los registros son del usuario filtrado\", function () {",
+                      "    pm.expect(grupos.length).to.be.above(0);",
+                      "    grupos.forEach(g => pm.expect(g).to.include(pm.environment.get(\"cedula\")));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Por-Accion",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "Filtra por el texto de la acción.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "Ingreso al Modulo",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const grupos = html.split('<div class=\"listado_contenedor_grupal\">').slice(1);",
+                      "pm.test(\"Todos los registros tienen la acción filtrada\", function () {",
+                      "    pm.expect(grupos.length).to.be.above(0);",
+                      "    grupos.forEach(g => pm.expect(g).to.include(\"Ingreso al Modulo\"));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Por-Modulo",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "Filtra por el nombre del módulo.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "Bitacora",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const grupos = html.split('<div class=\"listado_contenedor_grupal\">').slice(1);",
+                      "pm.test(\"Se encuentran registros del módulo filtrado\", function () {",
+                      "    pm.expect(grupos.length).to.be.above(0);",
+                      "    pm.expect(grupos[0]).to.include(\"Bitacora\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Sin-Resultados",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "Filtra con un texto que no coincide con ningún registro.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "zzqxw_inexistente_postman",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const grupos = html.split('<div class=\"listado_contenedor_grupal\">').slice(1);",
+                      "pm.test(\"El listado indica que no hay registros\", function () {",
+                      "    pm.expect(grupos.length).to.eql(0);",
+                      "    pm.expect(html).to.include(\"No se encontraron registros\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Pagina-Fuera-De-Rango",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "Un desplazamiento mayor que la cantidad de registros no trae nada.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "100000000",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const grupos = html.split('<div class=\"listado_contenedor_grupal\">').slice(1);",
+                      "pm.test(\"La página está vacía\", function () {",
+                      "    pm.expect(html).to.include(\"No se encontraron registros\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Offset-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "Un desplazamiento no numérico se toma como 0.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "abc",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const grupos = html.split('<div class=\"listado_contenedor_grupal\">').slice(1);",
+                      "pm.test(\"Devuelve la primera página\", function () {",
+                      "    pm.expect(grupos.length).to.be.above(0);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Filtro-Con-Comillas",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "Un filtro con comillas y comodines SQL no rompe la consulta.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "' OR '1'='1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const grupos = html.split('<div class=\"listado_contenedor_grupal\">').slice(1);",
+                      "pm.test(\"No hay error ni registros\", function () {",
+                      "    pm.expect(html).to.not.include(\"SQLSTATE\");",
+                      "    pm.expect(html).to.include(\"No se encontraron registros\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Generar Reportes de Bitacora",
+          "item": [
+            {
+              "name": "Reporte-Exitoso",
+              "item": [
+                {
+                  "name": "POST Generar-Reporte-PDF-Filtrado",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "PDF de los registros de hoy del usuario de la sesión en el módulo Bitácora.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "pdf",
+                          "type": "text"
+                        },
+                        {
+                          "key": "filtro_modulo",
+                          "value": "{{bit_modulo_id}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "filtro_usuario",
+                          "value": "{{bit_usuario_id}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "fecha_inicio",
+                          "value": "{{bit_hoy}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "fecha_fin",
+                          "value": "{{bit_hoy}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Genera el reporte\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"reporte\");",
+                          "    pm.expect(res.archivo).to.be.a(\"string\").and.include(\"bitacora\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Generar-Reporte-Excel-Sin-Filtros",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "Excel con todos los registros de la bitácora.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "excel",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Genera el reporte\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"reporte\");",
+                          "    pm.expect(res.archivo).to.be.a(\"string\").and.include(\"bitacora\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Generar-Reporte-Excel-Por-Modulo",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "Excel filtrado por el módulo Bitácora.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "excel",
+                          "type": "text"
+                        },
+                        {
+                          "key": "filtro_modulo",
+                          "value": "{{bit_modulo_id}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Genera el reporte\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"reporte\");",
+                          "    pm.expect(res.archivo).to.be.a(\"string\").and.include(\"bitacora\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Reporte-Filtros-Invalidos",
+              "item": [
+                {
+                  "name": "POST Generar-Fechas-Invertidas",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "La fecha de inicio no puede ser mayor a la de fin.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "pdf",
+                          "type": "text"
+                        },
+                        {
+                          "key": "fecha_inicio",
+                          "value": "2026-01-02",
+                          "type": "text"
+                        },
+                        {
+                          "key": "fecha_fin",
+                          "value": "2026-01-01",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"La fecha de inicio no puede ser mayor a la fecha de fin.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Generar-Solo-Fecha-Inicio",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "El rango necesita ambas fechas.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "pdf",
+                          "type": "text"
+                        },
+                        {
+                          "key": "fecha_inicio",
+                          "value": "{{bit_hoy}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Debe seleccionar ambas fechas para filtrar por rango.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Generar-Solo-Fecha-Fin",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "El rango necesita ambas fechas.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "pdf",
+                          "type": "text"
+                        },
+                        {
+                          "key": "fecha_fin",
+                          "value": "{{bit_hoy}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Debe seleccionar ambas fechas para filtrar por rango.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Generar-Fecha-Formato-Invalido",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "Las fechas deben tener el formato AAAA-MM-DD.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "pdf",
+                          "type": "text"
+                        },
+                        {
+                          "key": "fecha_inicio",
+                          "value": "26/11/2026",
+                          "type": "text"
+                        },
+                        {
+                          "key": "fecha_fin",
+                          "value": "{{bit_hoy}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Fecha inicio inválida.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Generar-Modulo-Invalido",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "El módulo del filtro debe ser numérico.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "pdf",
+                          "type": "text"
+                        },
+                        {
+                          "key": "filtro_modulo",
+                          "value": "abc",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Módulo inválido.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Generar-Usuario-Invalido",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "El usuario del filtro debe ser numérico.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "pdf",
+                          "type": "text"
+                        },
+                        {
+                          "key": "filtro_usuario",
+                          "value": "x1",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Usuario inválido.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Generar-Formato-Invalido",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "Solo se admiten los formatos pdf y excel.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "word",
+                          "type": "text"
+                        },
+                        {
+                          "key": "filtro_modulo",
+                          "value": "{{bit_modulo_id}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Formato de reporte no válido.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Reporte-Sin-Resultados",
+              "item": [
+                {
+                  "name": "POST Generar-Modulo-Inexistente",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "Filtra por un módulo que no existe.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "pdf",
+                          "type": "text"
+                        },
+                        {
+                          "key": "filtro_modulo",
+                          "value": "999999",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"No hay registros que coincidan con los filtros seleccionados.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Generar-Rango-Sin-Registros",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Bitacora",
+                      "host": [
+                        "{{url_base}}Bitacora"
+                      ]
+                    },
+                    "description": "Filtra por un rango de fechas antiguo sin registros.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "generar",
+                          "type": "text"
+                        },
+                        {
+                          "key": "formato",
+                          "value": "pdf",
+                          "type": "text"
+                        },
+                        {
+                          "key": "fecha_inicio",
+                          "value": "2000-01-01",
+                          "type": "text"
+                        },
+                        {
+                          "key": "fecha_fin",
+                          "value": "2000-01-31",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"No hay registros que coincidan con los filtros seleccionados.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Seguridad y Acciones Invalidas",
+          "item": [
+            {
+              "name": "POST Eliminar-No-Permitido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "La bitácora no se puede borrar: la acción no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Rechaza la acción\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Acción no permitida.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-No-Permitido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "La bitácora no se puede modificar: la acción no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "acciones",
+                      "value": "Alterado",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Rechaza la acción\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Acción no permitida.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Token-CSRF-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Bitacora",
+                  "host": [
+                    "{{url_base}}Bitacora"
+                  ]
+                },
+                "description": "Envía la petición con un token CSRF falso.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: \"token_invalido_postman\" });"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Rechaza la petición por token inválido\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Error de seguridad: Token inválido o expirado.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.request.method !== \"GET\") {",
+          "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
+          "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
+          "}"
+        ]
+      }
+    }
+  ]
+}

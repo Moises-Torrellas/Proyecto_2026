@@ -155,7 +155,7 @@ function incluirData($obj, $id_modulo, $bitacoraObj): void
 
         $datos = [
             'nombre' => $_POST['nombre'],
-            'descripcion'   => $_POST['descripcion'],
+            'descripcion'   => $_POST['descripcion'] ?? '',
             'modulo' => $_POST['modulo'],
             'clave' => $_POST['clave'],
             'accion' => 'incluir'
@@ -175,6 +175,7 @@ function incluirData($obj, $id_modulo, $bitacoraObj): void
             $resultado['mensaje'] = match ($resultado['codigo']) {
                 DUPLICATE_NAME => 'Ya existe un permiso registrado con este nombre.',
                 ASSOCIATES  => 'Uno de Los modulos que intenta registrar no existe o esta restringido.',
+                'La clave técnica del permiso ya está registrada.' => 'La clave técnica del permiso ya está registrada.',
                 default          => 'Ocurrió un error inesperado en el registro del permiso.'
             };
         }
@@ -196,7 +197,7 @@ function modificarData($obj, $id_modulo, $bitacoraObj): void
 
         $datos = [
             'nombre' => $_POST['nombre'],
-            'descripcion'   => $_POST['descripcion'],
+            'descripcion'   => $_POST['descripcion'] ?? '',
             'id' => $_POST['id'],
             'accion' => 'modificar'
         ];
@@ -263,7 +264,7 @@ function bloquear($obj, $id_modulo, $bitacoraObj): void
         if (isset($resultado['accion']) && $resultado['accion'] === 'exito') {
             $nuevoEstado = ($_POST['bloqueo'] == 1) ? 2 : 1;
             $nuevoEstadoStr = ($nuevoEstado == 2) ? 'Bloqueado' : 'Activo';
-            $mensajeExito = ($nuevoEstado == 2) ? "Permiso bloqueada exitosamente." : "Permiso desbloqueada exitosamente.";
+            $mensajeExito = ($nuevoEstado == 2) ? "Permiso bloqueado exitosamente." : "Permiso desbloqueado exitosamente.";
 
             $datosPrevios = json_encode(['estado' => $estadoAnterior]);
             $datosNuevos = json_encode(['estado' => $nuevoEstadoStr]);
@@ -273,9 +274,8 @@ function bloquear($obj, $id_modulo, $bitacoraObj): void
             $resultado = array('accion' => 'bloquear', 'mensaje' => $mensajeExito);
         } else if (isset($resultado['accion']) && $resultado['accion'] === 'error') {
             $resultado['mensaje'] = match ($resultado['codigo']) {
-                DUPLICATE_NAME => 'Ya existe un permiso registrado con este nombre.',
-                ASSOCIATES  => 'Uno de Los modulos que intenta registrar no existe o esta restringido.',
-                default          => 'Ocurrió un error inesperado en el registro del rol.'
+                'No se encontró el permiso o el estatus ya era el solicitado.' => 'El permiso no existe o ya tenía el estado solicitado.',
+                default          => 'Ocurrió un error inesperado al cambiar el estado del permiso.'
             };
         }
         echo json_encode($resultado);

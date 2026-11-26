@@ -167,7 +167,7 @@ function incluirRolesData($obj, $id_modulo, $bitacoraObj): void
 
         $datos = [
             'nombre' => $_POST['nombre'],
-            'descripcion'   => $_POST['descripcion'],
+            'descripcion'   => $_POST['descripcion'] ?? '',
             'accion' => 'incluir'
         ];
 
@@ -205,7 +205,7 @@ function modificarRolesData($obj, $id_modulo, $bitacoraObj): void
 
         $datos = [
             'nombre' => $_POST['nombre'],
-            'descripcion'   => $_POST['descripcion'],
+            'descripcion'   => $_POST['descripcion'] ?? '',
             'id' => $_POST['id'],
             'accion' => 'modificar'
         ];
@@ -324,7 +324,7 @@ function generar($obj, $id_modulo, $bitacoraObj)
         $datosFiltro = ['accion' => 'reporte'];
 
         if (!empty($_POST['nombre'])) {
-            $validacionesReporte['nombre'] = ['regla' => '/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]{3,30}$/', 'mensaje' => 'Nombre inválido.'];
+            $validacionesReporte['nombre'] = ['regla' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{1,30}$/u', 'mensaje' => 'Nombre inválido.'];
             $datosFiltro['nombre'] = $_POST['nombre'];
         }
 

@@ -1,0 +1,3076 @@
+{
+  "info": {
+    "_postman_id": "cannibals-role-8e41b7c2d9f05",
+    "name": "Hockey-Cannibals Lara - Modulo Roles",
+    "description": "Colección de pruebas para el módulo de Roles (Seguridad) con escenarios funcionales y aserciones automatizadas en los scripts After-response (Tests), estructurada según los estándares del proyecto Cannibals Lara. Cada corrida crea dos roles \"Integ Rol ...\" y los elimina al final.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "InicioModulo",
+      "item": [
+        {
+          "name": "GET Cargar-Vista-Inicio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_base}}",
+              "host": [
+                "{{url_base}}"
+              ]
+            },
+            "description": "Carga la vista de inicio/login para obtener cookies de sesión y el token CSRF inicial."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const html = pm.response.text();",
+                  "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                  "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                  "if (match && match[1]) {",
+                  "    pm.environment.set(\"csrf_token\", match[1]);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Iniciar-Sesion-Exitoso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}",
+              "host": [
+                "{{url_base}}"
+              ]
+            },
+            "description": "Autentica al usuario en el sistema con credenciales del entorno.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "inicio",
+                  "type": "text"
+                },
+                {
+                  "key": "cedula",
+                  "value": "{{cedula}}",
+                  "type": "text"
+                },
+                {
+                  "key": "contraseña",
+                  "value": "{{contraseña}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Inicio de sesión exitoso\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.accion).to.be.oneOf([\"inicio\", \"login\", \"exito\", \"success\"]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Cargar-Vista-Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_base}}Roles",
+              "host": [
+                "{{url_base}}Roles"
+              ]
+            },
+            "description": "Carga la interfaz del módulo Roles, sincroniza el token CSRF y genera nombres de rol únicos para esta corrida."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"La vista del módulo Roles cargó\", function () {",
+                  "    pm.expect(pm.response.text()).to.include(\"Gestionar Roles\");",
+                  "});",
+                  "const html = pm.response.text();",
+                  "const match = html.match(/<meta\\s+name=[\"']csrf-token[\"']\\s+content=[\"']([^\"']+)[\"']/i) ||",
+                  "            html.match(/<meta\\s+content=[\"']([^\"']+)[\"']\\s+name=[\"']csrf-token[\"']/i);",
+                  "if (match && match[1]) {",
+                  "    pm.environment.set(\"csrf_token\", match[1]);",
+                  "}",
+                  "",
+                  "// El nombre del rol solo admite letras; el modelo lo guarda en formato título.",
+                  "const letras = n => Array.from({ length: n }, () => 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)]).join('');",
+                  "const titulo = t => t.charAt(0).toUpperCase() + t.slice(1);",
+                  "const sufijo = titulo(letras(6));",
+                  "pm.environment.set('rol_nombre', 'Integ Rol ' + sufijo);",
+                  "pm.environment.set('rol_nombre_b', 'Integ Rol Dos ' + sufijo);",
+                  "pm.environment.set('rol_nombre_mod', 'Integ Rol Modificado ' + sufijo);",
+                  "console.log('Rol de prueba de esta corrida:', 'Integ Rol ' + sufijo);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Consultar-Rol-Con-Usuarios",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01",
+                "type": "text"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url_base}}Roles",
+              "host": [
+                "{{url_base}}Roles"
+              ]
+            },
+            "description": "Busca el rol Entrenador (siempre tiene usuarios) y guarda su id para el caso de eliminación con usuarios asociados.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "accion",
+                  "value": "consultar",
+                  "type": "text"
+                },
+                {
+                  "key": "filtro",
+                  "value": "Entrenador",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const html = pm.response.text();",
+                  "const ids = [...html.matchAll(/onclick=[\"']buscar\\((\\d+)\\)/gi)].map(m => m[1]);",
+                  "pm.test(\"El rol Entrenador aparece en el listado\", function () {",
+                  "    pm.expect(html).to.include(\"Entrenador\");",
+                  "    pm.expect(ids.length).to.be.at.least(1);",
+                  "});",
+                  "if (ids.length) { pm.environment.set(\"rol_con_usuarios_id\", ids[0]); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "Registrar Roles",
+          "item": [
+            {
+              "name": "Registro-Roles-Exitoso",
+              "item": [
+                {
+                  "name": "POST Registro-Rol-Exitoso",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Roles",
+                      "host": [
+                        "{{url_base}}Roles"
+                      ]
+                    },
+                    "description": "Registra un rol nuevo con nombre y descripción.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{rol_nombre}}",
+                          "type": "text"
+                        },
+                        {
+                          "key": "descripcion",
+                          "value": "Rol creado por postman",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"incluir\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Rol registrado exitosamente.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Rol-Sin-Descripcion-Exitoso",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Roles",
+                      "host": [
+                        "{{url_base}}Roles"
+                      ]
+                    },
+                    "description": "La descripción es opcional: registra un rol solo con nombre.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{rol_nombre_b}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"incluir\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Rol registrado exitosamente.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Campos-Obligatorios-Vacios",
+              "item": [
+                {
+                  "name": "POST Registro-Nombre-Vacio",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Roles",
+                      "host": [
+                        "{{url_base}}Roles"
+                      ]
+                    },
+                    "description": "Intenta registrar un rol sin nombre.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "",
+                          "type": "text"
+                        },
+                        {
+                          "key": "descripcion",
+                          "value": "Sin nombre",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Formato-Invalido",
+              "item": [
+                {
+                  "name": "POST Registro-Nombre-Con-Numeros",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Roles",
+                      "host": [
+                        "{{url_base}}Roles"
+                      ]
+                    },
+                    "description": "El nombre solo admite letras y espacios.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Rol123",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Nombre-Muy-Largo",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Roles",
+                      "host": [
+                        "{{url_base}}Roles"
+                      ]
+                    },
+                    "description": "El nombre admite hasta 30 caracteres.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "Integ Rol Con Un Nombre Demasiado Largo",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Registro-Datos-Duplicados",
+              "item": [
+                {
+                  "name": "POST Registro-Nombre-Duplicado",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Roles",
+                      "host": [
+                        "{{url_base}}Roles"
+                      ]
+                    },
+                    "description": "Intenta registrar otro rol con el mismo nombre.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{rol_nombre}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Ya existe un rol registrado con este nombre.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "POST Registro-Nombre-Duplicado-Minusculas",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json, text/javascript, */*; q=0.01",
+                        "type": "text"
+                      },
+                      {
+                        "key": "X-Requested-With",
+                        "value": "XMLHttpRequest",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{url_base}}Roles",
+                      "host": [
+                        "{{url_base}}Roles"
+                      ]
+                    },
+                    "description": "El nombre se normaliza: en minúsculas sigue siendo duplicado.",
+                    "body": {
+                      "mode": "urlencoded",
+                      "urlencoded": [
+                        {
+                          "key": "accion",
+                          "value": "incluir",
+                          "type": "text"
+                        },
+                        {
+                          "key": "nombre",
+                          "value": "{{rol_nombre}}",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [],
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.request.body.urlencoded.upsert({ key: 'nombre', value: pm.environment.get('rol_nombre').toLowerCase() });"
+                        ]
+                      }
+                    },
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code es 200\", function () {",
+                          "    pm.response.to.have.status(200);",
+                          "});",
+                          "",
+                          "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                          "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                          "});",
+                          "",
+                          "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                          "    const res = pm.response.json();",
+                          "    pm.expect(res.accion).to.eql(\"error\");",
+                          "    pm.expect(res.mensaje).to.eql(\"Ya existe un rol registrado con este nombre.\");",
+                          "});"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Consultar y Buscar Roles",
+          "item": [
+            {
+              "name": "POST Consultar-Rol-Registrado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Filtra el listado por el nombre del rol de prueba y guarda su id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "{{rol_nombre}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const ids = [...html.matchAll(/onclick=[\"']buscar\\((\\d+)\\)/gi)].map(m => m[1]);",
+                      "pm.test(\"El listado muestra solo el rol buscado\", function () {",
+                      "    pm.expect(html).to.include(pm.environment.get(\"rol_nombre\"));",
+                      "    pm.expect(ids.length).to.eql(1);",
+                      "});",
+                      "if (ids.length) { pm.environment.set(\"rol_id\", ids[0]); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Rol-Sin-Descripcion",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Filtra el listado por el segundo rol de prueba y guarda su id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "{{rol_nombre_b}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "const html = pm.response.text();",
+                      "const ids = [...html.matchAll(/onclick=[\"']buscar\\((\\d+)\\)/gi)].map(m => m[1]);",
+                      "pm.test(\"El listado muestra solo el rol buscado\", function () {",
+                      "    pm.expect(html).to.include(pm.environment.get(\"rol_nombre_b\"));",
+                      "    pm.expect(ids.length).to.eql(1);",
+                      "});",
+                      "if (ids.length) { pm.environment.set(\"rol_id_b\", ids[0]); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-Sin-Resultados",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Filtra el listado con un texto que no coincide con ningún rol.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "zzqxw_inexistente_postman",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"El listado indica que no hay registros\", function () {",
+                      "    pm.expect(pm.response.text()).to.include(\"No se encontraron registros\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Consultar-No-Muestra-Roles-Protegidos",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "El listado nunca muestra los roles de nivel 1 y 2 (Superusuario).",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "consultar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "filtro",
+                      "value": "Superusuario",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Superusuario no aparece en el listado\", function () {",
+                      "    pm.expect(pm.response.text()).to.include(\"No se encontraron registros\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Rol-Existente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Obtiene los datos del rol de prueba por su id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve los datos del rol en formato título\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"buscar\");",
+                      "    pm.expect(res.datos).to.have.lengthOf(1);",
+                      "    pm.expect(res.datos[0].nombre_rol).to.eql(pm.environment.get(\"rol_nombre\"));",
+                      "    pm.expect(res.datos[0].descripcion).to.eql(\"Rol Creado Por Postman\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Rol-Inexistente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Busca un id que no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "999999",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve una lista vacía\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"buscar\");",
+                      "    pm.expect(res.datos).to.be.an(\"array\").that.is.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Rol-Protegido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "El rol protegido id 1 (Superusuario) no se puede abrir para modificar.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Este rol no puede ser modificado\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Id-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "El id solo admite números.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "abc",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Id inválido.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Sin-Id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Intenta buscar sin enviar el id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Modificar Roles",
+          "item": [
+            {
+              "name": "POST Modificar-Rol-Exitoso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Cambia el nombre y la descripción del rol de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "{{rol_nombre_mod}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "descripcion",
+                      "value": "Descripcion modificada",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"modificar\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Rol modificado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Rol-Sin-Descripcion",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Sin descripción se conserva la que tenía.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "{{rol_nombre_mod}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"modificar\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Rol modificado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Verificar-Modificacion",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Comprueba que el cambio quedó guardado.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"El nombre y la descripción quedaron actualizados\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.datos[0].nombre_rol).to.eql(pm.environment.get(\"rol_nombre_mod\"));",
+                      "    pm.expect(res.datos[0].descripcion).to.eql(\"Descripcion Modificada\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Nombre-Vacio",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Intenta modificar sin nombre.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo nombre es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Nombre-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "El nombre solo admite letras y espacios.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Rol_99",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Nombre-Duplicado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Intenta usar el nombre del segundo rol de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "{{rol_nombre_b}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Ya existe un rol registrado con este nombre.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Modificar-Rol-Inexistente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Intenta modificar un id que no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "modificar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "999999",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Integ Rol Fantasma",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"No existe el rol que intenta modificar.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Permisos de Roles",
+          "item": [
+            {
+              "name": "POST Cargar-Permisos-Rol",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Carga la matriz de permisos del rol de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "CargarPermisos",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "const res = pm.response.json();",
+                      "pm.test(\"Devuelve la matriz de permisos sin asignar\", function () {",
+                      "    pm.expect(res.accion).to.eql(\"CargarPermisos\");",
+                      "    pm.expect(res.datos).to.be.an(\"array\").that.is.not.empty;",
+                      "    pm.expect(res.datos[0]).to.include.all.keys(\"id_permiso\", \"clave\", \"asignado\");",
+                      "    pm.expect(res.datos.every(p => Number(p.asignado) === 0)).to.be.true;",
+                      "});",
+                      "if (res.datos && res.datos.length) { pm.environment.set(\"rol_permiso_id\", res.datos[0].id_permiso); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Guardar-Permisos-Rol",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Asigna un permiso al rol de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "guardar_permisos",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "permisos[{{rol_permiso_id}}]",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"guardar_permisos\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Permisos guardados correctamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Cargar-Permisos-Verificar-Asignado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Comprueba que solo quedó asignado el permiso guardado.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "CargarPermisos",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Solo el permiso guardado está asignado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    const asignados = res.datos.filter(p => Number(p.asignado) === 1).map(p => String(p.id_permiso));",
+                      "    pm.expect(asignados).to.eql([String(pm.environment.get(\"rol_permiso_id\"))]);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Cargar-Permisos-Rol-Protegido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Los permisos del rol protegido id 1 (Superusuario) no se pueden ver ni cambiar.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "CargarPermisos",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Los permisos de este rol no pueden ser modificados\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Cargar-Permisos-Sin-Id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Intenta cargar permisos sin enviar el id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "CargarPermisos",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Guardar-Permisos-Sin-Id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Intenta guardar permisos sin enviar el id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "guardar_permisos",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Generar Reportes de Roles",
+          "item": [
+            {
+              "name": "POST Generar-Reporte-PDF",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Genera el reporte PDF filtrado por el nombre del rol de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "generar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "formato",
+                      "value": "pdf",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "{{rol_nombre_mod}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Genera el reporte\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"reporte\");",
+                      "    pm.expect(res.archivo).to.be.a(\"string\").and.not.be.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Generar-Reporte-Excel",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Genera el reporte Excel filtrado por el nombre del rol de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "generar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "formato",
+                      "value": "excel",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "{{rol_nombre_mod}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Genera el reporte\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"reporte\");",
+                      "    pm.expect(res.archivo).to.be.a(\"string\").and.not.be.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Generar-Reporte-Sin-Filtros",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Genera el reporte PDF de todos los roles.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "generar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "formato",
+                      "value": "pdf",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Genera el reporte\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"reporte\");",
+                      "    pm.expect(res.archivo).to.be.a(\"string\").and.not.be.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Generar-Reporte-Sin-Resultados",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Filtra por un nombre que no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "generar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "formato",
+                      "value": "pdf",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Zzqxw",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"No se encontraron registros para hacer el reporte.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Generar-Reporte-Nombre-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Filtra por un nombre con números.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "generar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "formato",
+                      "value": "pdf",
+                      "type": "text"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "Rol1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Nombre inválido.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Eliminar Roles",
+          "item": [
+            {
+              "name": "POST Eliminar-Rol-Protegido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "El rol protegido id 1 (Superusuario) no se puede eliminar.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"No puedes eliminar roles protegidos.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Eliminar-Rol-Con-Usuarios",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Un rol con usuarios activos no se puede eliminar.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_con_usuarios_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El rol tiene usuarios asociados.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Eliminar-Sin-Id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Intenta eliminar sin enviar el id.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El campo id es obligatorio.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Eliminar-Rol-Exitoso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Elimina el rol de prueba (borrado físico).",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"eliminar\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Rol eliminado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Eliminar-Segundo-Rol-Exitoso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Elimina el segundo rol de prueba.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id_b}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Accion y mensaje de éxito correctos\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"eliminar\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Rol eliminado exitosamente.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Eliminar-Rol-Ya-Eliminado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Intenta eliminar de nuevo el mismo rol.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "eliminar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Devuelve error con el mensaje esperado\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"El rol que intenta eliminar no existe\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Buscar-Rol-Eliminado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "El rol eliminado ya no existe.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"El rol eliminado no se devuelve\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"buscar\");",
+                      "    pm.expect(res.datos).to.be.an(\"array\").that.is.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Seguridad y Acciones Invalidas",
+          "item": [
+            {
+              "name": "POST Accion-No-Permitida",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Envía una acción que el módulo no reconoce.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "accion_inexistente",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Rechaza la acción\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Acción no reconocida.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Token-CSRF-Invalido",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json, text/javascript, */*; q=0.01",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{url_base}}Roles",
+                  "host": [
+                    "{{url_base}}Roles"
+                  ]
+                },
+                "description": "Envía la petición con un token CSRF falso.",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "accion",
+                      "value": "buscar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "{{rol_con_usuarios_id}}",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: \"token_invalido_postman\" });"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code es 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"La respuesta no trae avisos de PHP\", function () {",
+                      "    pm.expect(pm.response.text()).to.not.match(/<b>(Warning|Notice|Deprecated)<\\/b>/);",
+                      "});",
+                      "",
+                      "pm.test(\"Rechaza la petición por token inválido\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res.accion).to.eql(\"error\");",
+                      "    pm.expect(res.mensaje).to.eql(\"Error de seguridad: Token inválido o expirado.\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.request.method !== \"GET\") {",
+          "    pm.request.headers.upsert({ key: \"X-Requested-With\", value: \"XMLHttpRequest\" });",
+          "    pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: pm.environment.get(\"csrf_token\") || \"\" });",
+          "}"
+        ]
+      }
+    }
+  ]
+}
