@@ -176,7 +176,7 @@ class RegistrarUsuariosTest extends TestCase
             'cedula'     => '27123456',
             'nombre'     => 'carlos',
             'apellido'   => 'mendoza',
-            'telefono'   => '04241234567',
+            'telefono'   => '0424-1234567',
             'correo'     => 'Carlos.Mendoza@Correo.com',
             'contraseña' => 'Clave.Segura123',
             'roles_id'   => 3,

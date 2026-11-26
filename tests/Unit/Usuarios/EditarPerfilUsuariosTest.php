@@ -247,16 +247,16 @@ class EditarPerfilUsuariosTest extends TestCase
     {
         $resultado = $this->editar(
             'contacto',
-            ['telefono' => '04149876543', 'correo' => 'Nuevo@Correo.com'],
+            ['telefono' => '0414-9876543', 'correo' => 'Nuevo@Correo.com'],
             ['propia.correo' => 0, 'propia.telefonoUsuario' => 0]
         );
 
         $this->assertSame('exito', $resultado['accion']);
 
         $update = $this->sentenciaEjecutada('UPDATE `usuarios`');
-        $this->assertSame('04149876543', $update['params'][':telefono']);
+        $this->assertSame('0414-9876543', $update['params'][':telefono']);
         $this->assertSame('nuevo@correo.com', $update['params'][':correo']);
-        $this->assertSame('04149876543', $_SESSION['telefono']);
+        $this->assertSame('0414-9876543', $_SESSION['telefono']);
         $this->assertSame('nuevo@correo.com', $_SESSION['correo']);
     }
 
@@ -265,7 +265,7 @@ class EditarPerfilUsuariosTest extends TestCase
     {
         $resultado = $this->editar(
             'contacto',
-            ['telefono' => '04149876543', 'correo' => 'otro@correo.com'],
+            ['telefono' => '0414-9876543', 'correo' => 'otro@correo.com'],
             ['usuarios.correo.1' => 1]
         );
 
@@ -278,7 +278,7 @@ class EditarPerfilUsuariosTest extends TestCase
     {
         $resultado = $this->editar(
             'contacto',
-            ['telefono' => '04140000000', 'correo' => 'carlos@correo.com'],
+            ['telefono' => '0414-0000000', 'correo' => 'carlos@correo.com'],
             ['propia.correo' => 1, 'usuarios.telefonoUsuario.1' => 1]
         );
 
@@ -331,7 +331,7 @@ class EditarPerfilUsuariosTest extends TestCase
     {
         $resultado = $this->editar(
             'contacto',
-            ['telefono' => '04149876543', 'correo' => 'carlos@correo.com'],
+            ['telefono' => '0414-9876543', 'correo' => 'carlos@correo.com'],
             ['propia.correo' => 1, 'propia.telefonoUsuario' => 1],
             ['UPDATE `usuarios`' => ['error' => new Exception('Error al actualizar perfil')]]
         );

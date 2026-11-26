@@ -43,10 +43,51 @@ class ModeloUsuarios extends Conexion
 
     use VerificarExistencia;
 
+    /**
+     * Valida en el servidor el formato de los datos recibidos (las mismas reglas que aplica la
+     * interfaz), para que una petición directa al backend no pueda guardar datos inválidos.
+     * Solo se validan los campos que vienen con valor.
+     */
+    private function ValidarExpresiones(array $datos): void
+    {
+        $reglas = [
+            'id'         => ['/^[0-9]+$/', 'Id inválido.'],
+            'roles_id'   => ['/^[0-9]+$/', 'Rol inválido.'],
+            'cedula'     => ['/^[0-9]{7,8}$/', 'Cédula inválida: debe tener entre 7 y 8 dígitos.'],
+            'nombre'     => ['/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,30}$/u', 'Nombre inválido: solo letras, entre 3 y 30 caracteres.'],
+            'apellido'   => ['/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,30}$/u', 'Apellido inválido: solo letras, entre 3 y 30 caracteres.'],
+            'telefono'   => ['/^[0-9]{4}-[0-9]{7}$/', 'Teléfono inválido: el formato es 0400-0000000.'],
+            'contraseña' => [
+                '/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*)(+=._-])[0-9A-Za-zñÑáéíóúÁÉÍÓÚ!@#$%^&*)(+=._-]{8,20}$/u',
+                'Contraseña inválida: entre 8 y 20 caracteres con mayúscula, minúscula, número y carácter especial.'
+            ],
+        ];
+
+        foreach ($reglas as $campo => [$regla, $mensaje]) {
+            $valor = $datos[$campo] ?? '';
+            if (is_string($valor) || is_int($valor)) {
+                $valor = trim((string)$valor);
+                if ($valor !== '' && !preg_match($regla, $valor)) {
+                    throw new Exception($mensaje);
+                }
+            }
+        }
+
+        $correo = trim((string)($datos['correo'] ?? ''));
+        if ($correo !== '' && (mb_strlen($correo) > 60 || !filter_var($correo, FILTER_VALIDATE_EMAIL))) {
+            throw new Exception('Correo inválido: use el formato usuario@dominio.com.');
+        }
+    }
+
     public function procesarDatos(array $datos): array
     {
         if (empty($datos)) {
             throw new Exception('No se proporcionaron datos para procesar.');
+        }
+
+        // El reporte filtra por valores parciales que el controlador ya valida
+        if (($datos['accion'] ?? null) !== 'reporte') {
+            $this->ValidarExpresiones($datos);
         }
 
         $this->id = $datos['id'] ?? null;
@@ -278,7 +319,15 @@ class ModeloUsuarios extends Conexion
     {
         try {
 
-            $conex = null;
+            $conex = $this->conexSG();
+
+            $stmtRolActual = $conex->prepare("SELECT u.id_rol, r.nivel_rol FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol WHERE u.idUsuario = :id AND u.estatus = 1");
+            $stmtRolActual->execute([':id' => $this->id]);
+            $rolActualData = $stmtRolActual->fetch(\PDO::FETCH_ASSOC);
+            if (!$rolActualData) {
+                throw new Exception('USER_NOT_FOUND');
+            }
+
             if ($this->verificarExistencia('cedula', $this->cedula, 'usuarios', 0, 'sg')) {
                 throw new Exception(DUPLICATE_CEDULA . '0');
             }
@@ -289,12 +338,8 @@ class ModeloUsuarios extends Conexion
                 throw new Exception(DUPLICATE_PHONE . '0');
             }
 
-            $conex = $this->conexSG();
             $conex->beginTransaction();
 
-            $stmtRolActual = $conex->prepare("SELECT u.id_rol, r.nivel_rol FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol WHERE u.idUsuario = :id");
-            $stmtRolActual->execute([':id' => $this->id]);
-            $rolActualData = $stmtRolActual->fetch(\PDO::FETCH_ASSOC);
             $rolActual = $rolActualData['id_rol'];
             $nivelActual = $rolActualData['nivel_rol'];
 
@@ -496,6 +541,11 @@ class ModeloUsuarios extends Conexion
             $str->bindParam(':id', $this->id);
             $str->execute();
             $datos = $str->fetchAll();
+            // El hash de la contraseña nunca debe salir del servidor
+            foreach ($datos as &$fila) {
+                unset($fila['pass_hash']);
+            }
+            unset($fila);
             $resultado = array('accion' => 'buscar', 'datos' => $datos);
         } catch (Exception $e) {
             logs('Usuarios', $e->getMessage(), 'Modelo_Buscar');

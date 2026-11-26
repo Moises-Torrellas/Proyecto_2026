@@ -286,7 +286,7 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
     // Caso 9 (E5): Tipo de edición no válido
     public function testTipoEdicionInvalido(): void
     {
-        $resultado = $this->editar('otro', ['nombre' => 'X']);
+        $resultado = $this->editar('otro', ['nombre' => 'Xavier']);
 
         $this->assertSame('error', $resultado['accion']);
         $this->assertSame('Perfil', $this->obtenerUsuario($this->idUsuario)['nombreUsuario']);

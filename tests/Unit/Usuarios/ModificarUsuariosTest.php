@@ -31,6 +31,7 @@ if (!defined('INVALID_ID')) {
  *  E6. Cédula, correo o teléfono usados por otro usuario activo.
  *  E7. Rol inexistente.
  *  E8. Falla de la base de datos.
+ *  E9. El usuario a modificar no existe o fue eliminado.
  */
 #[Group('unit')]
 #[Group('unitUsuarios')]
@@ -179,7 +180,7 @@ class ModificarUsuariosTest extends TestCase
             'cedula'   => '27123456',
             'nombre'   => 'carlos',
             'apellido' => 'mendoza',
-            'telefono' => '04241234567',
+            'telefono' => '0424-1234567',
             'correo'   => 'carlos@correo.com',
             'roles_id' => 3,
             'foto'     => 'user_27123456.png',
@@ -403,5 +404,19 @@ class ModificarUsuariosTest extends TestCase
 
         $this->assertSame('error', $resultado['accion']);
         $this->assertSame('Error al actualizar', $resultado['codigo']);
+    }
+
+    // Caso 15 (E9): Usuario inexistente o eliminado no se modifica
+    public function testUsuarioNoExiste(): void
+    {
+        $resultado = $this->ejecutar(
+            $this->conteosValidos(),
+            ['SELECT u.id_rol, r.nivel_rol' => ['fetch' => false]],
+            ['id' => 999]
+        );
+
+        $this->assertSame(['accion' => 'error', 'codigo' => 'USER_NOT_FOUND'], $resultado);
+        $this->assertStringContainsString('u.estatus = 1', $this->sentenciaEjecutada('SELECT u.id_rol, r.nivel_rol')['sql']);
+        $this->assertNull($this->sentenciaEjecutada('UPDATE `usuarios`'));
     }
 }

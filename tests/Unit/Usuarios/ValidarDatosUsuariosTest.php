@@ -113,7 +113,7 @@ class ValidarDatosUsuariosTest extends TestCase
         $this->procesarSinEjecutar($modelo, [
             'id'       => 7,
             'cedula'   => ' 12345678 ',
-            'telefono' => ' 04141234567 ',
+            'telefono' => ' 0414-1234567 ',
             'roles_id' => 3,
             'foto'     => 'user_12345678.png',
             'bloqueo'  => 1,
@@ -121,7 +121,7 @@ class ValidarDatosUsuariosTest extends TestCase
 
         $this->assertSame(7, $this->propiedad($modelo, 'id'));
         $this->assertSame('12345678', $this->propiedad($modelo, 'cedula'));
-        $this->assertSame('04141234567', $this->propiedad($modelo, 'telefono'));
+        $this->assertSame('0414-1234567', $this->propiedad($modelo, 'telefono'));
         $this->assertSame(3, $this->propiedad($modelo, 'rol'));
         $this->assertSame('user_12345678.png', $this->propiedad($modelo, 'foto'));
         $this->assertSame(1, $this->propiedad($modelo, 'bloqueo'));

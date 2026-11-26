@@ -362,10 +362,11 @@ class RegistrarUsuarioIntegrationTest extends TestCase
     // el modelo informa error en vez de éxito
     public function testErrorDelProcedimientoNoReportaExito(): void
     {
-        // Nombre de más de 35 caracteres: el procedimiento falla y devuelve @resultado = 0
+        // Nombre de foto de más de 255 caracteres (la foto no pasa por la validación de formato):
+        // el procedimiento falla y devuelve @resultado = 0
         $this->pdo->exec("SET SESSION sql_mode = 'STRICT_ALL_TABLES'");
 
-        $resultado = $this->modelo->procesarDatos($this->datosValidos(['nombre' => str_repeat('a', 40)]));
+        $resultado = $this->modelo->procesarDatos($this->datosValidos(['foto' => str_repeat('a', 300) . '.png']));
 
         $this->assertSame('error', $resultado['accion']);
         $this->assertSame(0, $this->contarUsuariosPorCedula('99990010'));

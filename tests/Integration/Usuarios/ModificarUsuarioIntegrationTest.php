@@ -26,6 +26,7 @@ if (!defined('EMPTY_SELECTION')) {
  *  E5. Cédula, correo o teléfono de un usuario eliminado.
  *  E6. Cédula, correo o teléfono de otro usuario activo.
  *  E7. Rol inexistente.
+ *  E8. El usuario a modificar no existe o fue eliminado.
  */
 #[Group('integ')]
 #[Group('usuarios')]
@@ -413,5 +414,30 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $usuario = $this->obtenerUsuario($this->idUsuario);
         $this->assertSame($this->roles['nivel3'], (int)$usuario['id_rol']);
         $this->assertSame('Original', $usuario['nombreUsuario']);
+    }
+
+    // Caso 15 (E8): Id de un usuario que no existe
+    public function testRechazaUsuarioInexistente(): void
+    {
+        $this->prepararUsuario();
+
+        $resultado = $this->modelo->procesarDatos($this->datosModificacion(['id' => 999999]));
+
+        $this->assertSame(['accion' => 'error', 'codigo' => 'USER_NOT_FOUND'], $resultado);
+        $this->assertSame('Original', $this->obtenerUsuario($this->idUsuario)['nombreUsuario']);
+    }
+
+    // Caso 16 (E8): Un usuario eliminado no se puede modificar
+    public function testRechazaUsuarioEliminado(): void
+    {
+        $this->prepararUsuario();
+        $this->pdo->prepare("UPDATE usuarios SET estatus = 0 WHERE idUsuario = :id")->execute([':id' => $this->idUsuario]);
+
+        $resultado = $this->modelo->procesarDatos($this->datosModificacion());
+
+        $this->assertSame(['accion' => 'error', 'codigo' => 'USER_NOT_FOUND'], $resultado);
+        $usuario = $this->obtenerUsuario($this->idUsuario);
+        $this->assertSame('Original', $usuario['nombreUsuario']);
+        $this->assertSame(0, (int)$usuario['estatus']);
     }
 }

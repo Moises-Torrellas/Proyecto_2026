@@ -143,7 +143,7 @@ function incluirUsuario($obj, $id_modulo, $bitacoraObj): void
         }
         validar_requeridos(['cedula', 'nombre', 'apellido', 'telefono', 'contraseña', 'correo', 'rol']);
 
-        $foto_nombre = subirImagen($_FILES['foto'], 'user', $_POST['cedula'], 'usuarios',);
+        $foto_nombre = subirImagen($_FILES['foto'] ?? null, 'user', $_POST['cedula'], 'usuarios',);
 
 
         $datos = [
@@ -213,7 +213,7 @@ function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
             ]);
         }
 
-        $foto_nombre = subirImagen($_FILES['foto'], 'user', $_POST['cedula'], 'usuarios', $_POST['foto_actual']);
+        $foto_nombre = subirImagen($_FILES['foto'] ?? null, 'user', $_POST['cedula'], 'usuarios', $_POST['foto_actual']);
 
         $datos = [
             'id' => $_POST['id'],
@@ -257,6 +257,7 @@ function modificarUsuario($obj, $id_modulo, $bitacoraObj): void
                 'ROLE_RULES_1' => 'No se puede cambiar el rol de un usuario de Nivel 1.',
                 'ROLE_RULES_2' => 'Un usuario de Nivel 2 no puede cambiar su propio rol.',
                 'ROLE_RULES_3' => 'Debe existir al menos un usuario activo con nivel de rol 2.',
+                'USER_NOT_FOUND' => 'El usuario que intenta modificar ya no existe.',
                 default          => 'Ocurrió un error inesperado en la modificacion.'
             };
         }
