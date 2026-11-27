@@ -15,23 +15,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-PER-05: El sistema debe permitir bloquear y desbloquear permisos. Se envía el estado
- * actual (1 = activo, 2 = bloqueado) y el sistema lo alterna. Si el permiso no existe se
- * informa el error, en la clave "codigo" que lee el controlador.
- *
- * Escenarios:
- *  E1. Bloquear un permiso activo.
- *  E2. Desbloquear un permiso bloqueado.
- *  E3. Permiso inexistente.
- *  E4. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitPermisos')]
 #[Group('bloquearPermisos')]
 class BloquearPermisosTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -44,10 +32,6 @@ class BloquearPermisosTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * Los permisos viven en la base de datos de seguridad (conexSG), por lo que el PDO
-     * simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
@@ -55,14 +39,6 @@ class BloquearPermisosTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoMock);
     }
 
-    /**
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'rowCount' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = []): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -143,7 +119,6 @@ class BloquearPermisosTest extends TestCase
         return null;
     }
 
-    /** Mensaje de error devuelto por el modelo, venga en 'codigo' o en 'mensaje'. */
     protected function textoError(array $resultado): ?string
     {
         return $resultado['codigo'] ?? $resultado['mensaje'] ?? null;
@@ -155,7 +130,6 @@ class BloquearPermisosTest extends TestCase
         return (new ModeloPermisos())->ProcesarDatos(['accion' => 'bloquear', 'id' => '9', 'bloqueo' => $bloqueo]);
     }
 
-    // Caso 1 (E1): Bloquear un permiso activo (1 -> 2)
     public function testBloquear(): void
     {
         $resultado = $this->ejecutar('1');
@@ -167,7 +141,6 @@ class BloquearPermisosTest extends TestCase
         );
     }
 
-    // Caso 2 (E2): Desbloquear un permiso bloqueado (2 -> 1)
     public function testDesbloquear(): void
     {
         $resultado = $this->ejecutar('2');
@@ -179,7 +152,6 @@ class BloquearPermisosTest extends TestCase
         );
     }
 
-    // Caso 3 (E3): Permiso inexistente (ninguna fila actualizada)
     public function testPermisoNoExiste(): void
     {
         $resultado = $this->ejecutar('1', ['UPDATE `permisos`' => ['rowCount' => 0]]);
@@ -191,7 +163,6 @@ class BloquearPermisosTest extends TestCase
         );
     }
 
-    // Caso 4 (E3): El error se devuelve en la clave "codigo" que lee el controlador
     public function testErrorEnClaveCodigo(): void
     {
         $resultado = $this->ejecutar('1', ['UPDATE `permisos`' => ['rowCount' => 0]]);
@@ -203,7 +174,6 @@ class BloquearPermisosTest extends TestCase
         );
     }
 
-    // Caso 5 (E4): Error de base de datos al bloquear
     public function testErrorBaseDatosAlBloquear(): void
     {
         $resultado = $this->ejecutar('1', [

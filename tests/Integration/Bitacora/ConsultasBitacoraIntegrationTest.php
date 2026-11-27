@@ -15,20 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-BIT-03 / RF-BIT-04 (integración): Consultar la bitácora de la BD de seguridad real a
- * través de vista_consulta_bitacora, del registro más reciente al más antiguo, con
- * búsqueda por texto, filtros por módulo, usuario y rango de fechas, paginación y modo
- * reporte; y cargar los catálogos de usuarios y módulos para los filtros.
- *
- * Escenarios:
- *  E1. Consulta sin filtros (orden y datos de la vista).
- *  E2. Búsqueda por texto (usuario, cédula, acción o módulo).
- *  E3. Filtro por módulo y por usuario.
- *  E4. Filtro por rango de fechas.
- *  E5. Paginación y reporte sin límite.
- *  E6. Catálogos de usuarios y módulos.
- */
 #[Group('integ')]
 #[Group('bitacora')]
 #[Group('bitacoraConsultar')]
@@ -81,11 +67,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar
-     * tablas. Solo se borra lo que crean: los módulos "Integ Bitacora ...", el rol
-     * "Integ Bitacora Rol", los usuarios con cédula "9999xxxx" y sus registros de bitácora.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -103,9 +84,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    /**
-     * Dos módulos y dos usuarios de prueba, sin registros de bitácora.
-     */
     private function crearDatosBase(): void
     {
         $stmt = $this->pdo->prepare("INSERT INTO modulos (nombre_modulo, descripcion, icono, estatus) VALUES (:nombre, 'Modulo de prueba', 'circle-minus', 1)");
@@ -139,9 +117,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         return (int)$this->pdo->lastInsertId();
     }
 
-    /**
-     * Inserta un registro de bitácora directamente en la BD (para poder fijar la fecha) y devuelve su id.
-     */
     private function crearRegistro(int $modulo, int $usuario, string $accion, string $fechaHora = 'now'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO bitacora (id_modulo, acciones, datos_previos, datos_nuevos, entorno, fecha_hora, idUsuario)
@@ -155,7 +130,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         return (int)$this->pdo->lastInsertId();
     }
 
-    /** @return string[] acciones devueltas que pertenecen a las pruebas */
     private function acciones(array $resultado): array
     {
         $this->assertSame('consultar', $resultado['accion']);
@@ -165,7 +139,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         ));
     }
 
-    // Caso 1 (E1): Los registros salen del más reciente al más antiguo con los datos de la vista
     public function testConsultaOrdenadaConDatosDeLaVista(): void
     {
         $this->crearRegistro($this->moduloA, $this->usuarioA, 'Integ Bitacora primero');
@@ -183,7 +156,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertMatchesRegularExpression('/^\d{2}:\d{2}:\d{2}$/', $fila['hora']);
     }
 
-    // Caso 2 (E1): Sin parámetros se devuelven como máximo 100 registros
     public function testConsultaSinFiltrosLimitaA100(): void
     {
         $this->crearRegistro($this->moduloA, $this->usuarioA, 'Integ Bitacora ultimo');
@@ -195,7 +167,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame('Integ Bitacora ultimo', $resultado['datos'][0]['acciones'], 'El registro más reciente va primero.');
     }
 
-    // Caso 3 (E2): La búsqueda encuentra por acción, nombre de usuario, cédula y módulo
     public function testBusquedaPorTexto(): void
     {
         $this->crearRegistro($this->moduloA, $this->usuarioA, 'Integ Bitacora registro de ana');
@@ -207,7 +178,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame(['Integ Bitacora registro de beto'], $this->acciones($this->modelo->Consultar(['filtro' => 'Integ Bitacora Beta'])));
     }
 
-    // Caso 4 (E2): Una búsqueda sin coincidencias devuelve una lista vacía
     public function testBusquedaSinCoincidencias(): void
     {
         $this->crearRegistro($this->moduloA, $this->usuarioA, 'Integ Bitacora algo');
@@ -217,7 +187,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame(['accion' => 'consultar', 'datos' => []], $resultado);
     }
 
-    // Caso 5 (E2): Un texto con comillas o comodines no rompe la consulta
     public function testBusquedaConCaracteresEspeciales(): void
     {
         $resultado = $this->modelo->Consultar(['filtro' => "' OR 1=1 -- %_"]);
@@ -225,7 +194,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame(['accion' => 'consultar', 'datos' => []], $resultado);
     }
 
-    // Caso 6 (E3): Filtrar por módulo devuelve solo los registros de ese módulo
     public function testFiltroPorModulo(): void
     {
         $this->crearRegistro($this->moduloA, $this->usuarioA, 'Integ Bitacora en alfa');
@@ -237,7 +205,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame(['Integ Bitacora Beta'], array_unique(array_column($resultado['datos'], 'nombre_modulo')));
     }
 
-    // Caso 7 (E3): Filtrar por usuario devuelve solo los registros de ese usuario
     public function testFiltroPorUsuario(): void
     {
         $this->crearRegistro($this->moduloA, $this->usuarioA, 'Integ Bitacora de ana');
@@ -249,7 +216,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame(['99990711'], array_unique(array_column($resultado['datos'], 'cedulaUsuario')));
     }
 
-    // Caso 8 (E3): Los filtros por módulo, usuario y texto se combinan
     public function testFiltrosCombinados(): void
     {
         $this->crearRegistro($this->moduloA, $this->usuarioA, 'Integ Bitacora ana alfa');
@@ -265,7 +231,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame(['Integ Bitacora ana beta'], $this->acciones($resultado));
     }
 
-    // Caso 9 (E4): El rango de fechas incluye ambos extremos y excluye lo que queda fuera
     public function testFiltroPorRangoDeFechas(): void
     {
         $this->crearRegistro($this->moduloA, $this->usuarioA, 'Integ Bitacora hace diez dias', '-10 days');
@@ -282,7 +247,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame(['Integ Bitacora hace tres dias', 'Integ Bitacora hace cinco dias'], $this->acciones($resultado));
     }
 
-    // Caso 10 (E4): Con una sola fecha no se aplica el filtro de fechas
     public function testUnaSolaFechaNoFiltra(): void
     {
         $this->crearRegistro($this->moduloA, $this->usuarioA, 'Integ Bitacora antiguo', '-30 days');
@@ -296,7 +260,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame(['Integ Bitacora reciente', 'Integ Bitacora antiguo'], $this->acciones($resultado));
     }
 
-    // Caso 11 (E5): La paginación respeta límite y desplazamiento
     public function testPaginacion(): void
     {
         foreach ([1, 2, 3, 4, 5] as $n) {
@@ -312,7 +275,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame(['Integ Bitacora pagina 1'], $this->acciones($pagina3));
     }
 
-    // Caso 12 (E5): En modo reporte se devuelven todos los registros sin importar el límite
     public function testReporteSinLimite(): void
     {
         foreach ([1, 2, 3, 4, 5] as $n) {
@@ -324,7 +286,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertCount(5, $this->acciones($resultado));
     }
 
-    // Caso 13 (E5): Registrar un usuario deja automáticamente su registro en la bitácora (disparador)
     public function testRegistroDeUsuarioApareceEnBitacora(): void
     {
         $idRol = (int)$this->pdo->query("SELECT id_rol FROM roles WHERE nombre_rol = 'Integ Bitacora Rol'")->fetchColumn();
@@ -335,7 +296,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertNotEmpty($resultado['datos'], 'El disparador de usuarios debe dejar un registro en la bitácora.');
     }
 
-    // Caso 14 (E6): El catálogo de usuarios incluye a los usuarios de prueba, ordenado y sin contraseñas
     public function testCatalogoUsuarios(): void
     {
         $resultado = $this->modelo->consultarUsuarios();
@@ -352,7 +312,6 @@ class ConsultasBitacoraIntegrationTest extends TestCase
         $this->assertSame(['idUsuario', 'cedulaUsuario', 'nombreUsuario', 'apellidoUsuario'], array_keys($porId[$this->usuarioA]));
     }
 
-    // Caso 15 (E6): El catálogo de módulos incluye a los módulos de prueba ordenados por nombre
     public function testCatalogoModulos(): void
     {
         $resultado = $this->modelo->consultarModulos();

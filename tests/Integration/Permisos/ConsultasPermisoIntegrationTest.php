@@ -15,15 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-PER-02 (integración): Listar los permisos agrupados por módulo usando la vista
- * vista_consulta_permisos, buscarlos por nombre o clave y consultar el detalle de uno.
- *
- * Escenarios:
- *  E1. Listado general con los datos del módulo.
- *  E2. Búsqueda por nombre o clave.
- *  E3. Detalle de un permiso.
- */
 #[Group('integ')]
 #[Group('permisos')]
 #[Group('permisosConsultas')]
@@ -77,15 +68,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas.
-     * Todo lo que crean las pruebas se identifica y se elimina antes y después de cada prueba:
-     * - módulos cuyo nombre empieza por "Integ Permisos",
-     * - permisos con clave "integ_..." o nombre "Integ Prueba ...",
-     * - roles cuyo nombre empieza por "Integ Permisos",
-     * - usuarios con cédula "9999xxxx".
-     * Los permisos, roles y usuarios propios del sistema nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -116,9 +98,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         return (int)$this->pdo->lastInsertId();
     }
 
-    /**
-     * Inserta un permiso directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearPermiso(string $nombre, string $clave, int $estatus = 1, ?int $modulo = null, string $descripcion = 'Descripcion De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO permisos (id_modulo, nombre, clave, descripcion, estatus) VALUES (:modulo, :nombre, :clave, :descripcion, :estatus)");
@@ -139,7 +118,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         $this->ids['bloqueado'] = $this->crearPermiso('Integ Prueba Bloqueado', 'integ_consulta_bloq', 2);
     }
 
-    /** Claves de prueba presentes en un resultado (ignora los permisos propios del sistema). */
     private function clavesDePrueba(array $resultado): array
     {
         $claves = array_values(array_filter(
@@ -150,7 +128,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         return $claves;
     }
 
-    // Caso 1 (E1): El listado trae los permisos con su módulo, incluidos los bloqueados
     public function testListadoGeneralConDatosDelModulo(): void
     {
         $this->cargarPermisos();
@@ -168,7 +145,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         $this->assertSame(1, (int)$ver['estatus_modulo']);
     }
 
-    // Caso 2 (E1): El listado viene ordenado por módulo y luego por permiso (la vista agrupa así)
     public function testListadoOrdenadoPorModuloYPermiso(): void
     {
         $this->cargarPermisos();
@@ -183,7 +159,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         $this->assertSame($ordenados, $pares);
     }
 
-    // Caso 3 (E2): Búsqueda por parte del nombre
     public function testBusquedaPorNombre(): void
     {
         $this->cargarPermisos();
@@ -193,7 +168,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         $this->assertSame(['integ_consulta_crear'], $this->clavesDePrueba($resultado));
     }
 
-    // Caso 4 (E2): Búsqueda por clave técnica
     public function testBusquedaPorClave(): void
     {
         $this->cargarPermisos();
@@ -203,7 +177,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         $this->assertSame(['integ_consulta_ver'], $this->clavesDePrueba($resultado));
     }
 
-    // Caso 5 (E2): Búsqueda sin coincidencias
     public function testBusquedaSinCoincidencias(): void
     {
         $this->cargarPermisos();
@@ -214,7 +187,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 6 (E3): Detalle de un permiso por id
     public function testBuscarPorId(): void
     {
         $this->cargarPermisos();
@@ -227,7 +199,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         $this->assertSame('Descripcion De Prueba', $resultado['datos'][0]['descripcion']);
     }
 
-    // Caso 7 (E3): El detalle también se puede ver si el permiso está bloqueado
     public function testBuscarPermisoBloqueado(): void
     {
         $this->cargarPermisos();
@@ -238,7 +209,6 @@ class ConsultasPermisoIntegrationTest extends TestCase
         $this->assertSame(2, (int)$resultado['datos'][0]['estatus']);
     }
 
-    // Caso 8 (E3): Un id que no existe no devuelve datos
     public function testBuscarPermisoInexistente(): void
     {
         $resultado = $this->modelo->ProcesarDatos(['accion' => 'buscar', 'id' => '99999999']);

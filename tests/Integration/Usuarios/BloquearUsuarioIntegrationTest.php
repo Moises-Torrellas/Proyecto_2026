@@ -15,19 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-06 (integración): Bloquear y desbloquear usuarios en la BD de seguridad real.
- * En la columna `bloqueo`, 1 = desbloqueado y 2 = bloqueado. El parámetro `bloqueo`
- * recibido es el estado actual: si vale 1 se bloquea, en otro caso se desbloquea y
- * se reinician los intentos fallidos.
- *
- * Escenarios:
- *  E1. Bloqueo de un usuario activo.
- *  E2. Desbloqueo de un usuario bloqueado.
- *  E3. Intento sobre el superusuario (id 1).
- *  E4. Intento sobre un usuario inexistente o eliminado.
- *  E5. Intento sobre un usuario de nivel 1 o 2.
- */
 #[Group('integ')]
 #[Group('usuarios')]
 #[Group('usuariosBloquear')]
@@ -36,7 +23,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
     private ?PDO $pdo = null;
     private ModeloUsuarios $modelo;
 
-    /** Roles creados para la prueba: ['nivel1' => id, 'nivel2' => id, 'nivel3' => id, 'nivel3b' => id] */
     private array $roles = [];
 
     private string $claveInicial = 'ClaveInicial.123';
@@ -80,12 +66,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas:
-     * todo lo que crean las pruebas se identifica con la cédula "9999xxxx" y con roles cuyo
-     * nombre empieza por "Integ Usuarios", y se elimina antes y después de cada prueba.
-     * Así los usuarios propios del sistema (Admin, Soporte, ...) nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -115,9 +95,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un usuario directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearUsuario(array $datos = []): int
     {
         $base = [
@@ -164,7 +141,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         return $this->modelo->procesarDatos(['accion' => 'bloquear', 'id' => $id, 'bloqueo' => $estadoActual]);
     }
 
-    // Caso 1 (E1): Un usuario desbloqueado pasa a bloqueado
     public function testBloquearUsuario(): void
     {
         $id = $this->crearUsuario(['bloqueo' => 1]);
@@ -175,7 +151,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         $this->assertSame(2, (int)$this->obtenerUsuario($id)['bloqueo']);
     }
 
-    // Caso 2 (E2): Un usuario bloqueado pasa a desbloqueado y se reinician sus intentos fallidos
     public function testDesbloquearUsuarioReiniciaIntentos(): void
     {
         $id = $this->crearUsuario(['bloqueo' => 2]);
@@ -189,7 +164,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         $this->assertSame(0, (int)$usuario['intentos_fallidos']);
     }
 
-    // Caso 3 (E1): Al bloquear no se tocan los intentos fallidos
     public function testBloquearConservaIntentos(): void
     {
         $id = $this->crearUsuario(['bloqueo' => 1]);
@@ -200,7 +174,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         $this->assertSame(2, (int)$this->obtenerUsuario($id)['intentos_fallidos']);
     }
 
-    // Caso 4 (E1/E2): El estado de bloqueo se refleja en la consulta del módulo
     public function testBloqueoSeReflejaEnConsulta(): void
     {
         $id = $this->crearUsuario(['bloqueo' => 1]);
@@ -212,7 +185,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         $this->assertSame(2, (int)$datos[0]['bloqueo']);
     }
 
-    // Caso 5 (E3): El superusuario (id 1) no se puede bloquear
     public function testNoBloqueaSuperusuario(): void
     {
         $bloqueoAntes = $this->obtenerUsuario(1)['bloqueo'] ?? null;
@@ -224,7 +196,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         $this->assertSame($bloqueoAntes, $this->obtenerUsuario(1)['bloqueo'] ?? null);
     }
 
-    // Caso 6 (E4): Usuario inexistente
     public function testNoBloqueaUsuarioInexistente(): void
     {
         $resultado = $this->cambiarBloqueo(99999999, 1);
@@ -233,7 +204,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         $this->assertSame(INVALID_ID, $resultado['codigo']);
     }
 
-    // Caso 7 (E4): Usuario eliminado
     public function testNoBloqueaUsuarioEliminado(): void
     {
         $id = $this->crearUsuario(['estatus' => 0, 'bloqueo' => 1]);
@@ -245,7 +215,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         $this->assertSame(1, (int)$this->obtenerUsuario($id)['bloqueo']);
     }
 
-    // Caso 8 (E5): Usuario de nivel 1
     public function testNoBloqueaUsuarioNivel1(): void
     {
         $id = $this->crearUsuario(['rol' => $this->roles['nivel1']]);
@@ -257,7 +226,6 @@ class BloquearUsuarioIntegrationTest extends TestCase
         $this->assertSame(1, (int)$this->obtenerUsuario($id)['bloqueo']);
     }
 
-    // Caso 9 (E5): Usuario de nivel 2
     public function testNoBloqueaUsuarioNivel2(): void
     {
         $id = $this->crearUsuario(['rol' => $this->roles['nivel2']]);

@@ -16,25 +16,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-PER-01: El sistema debe validar los datos de un permiso antes de procesarlo:
- *  - id e id de módulo numéricos.
- *  - estado de bloqueo: 1 (activo) o 2 (bloqueado).
- *  - nombre y descripción: solo letras y espacios, de 3 a 100 caracteres.
- *  - clave técnica: minúsculas y guion bajo, de 5 a 50 caracteres.
- * Nombre y descripción se normalizan a formato título y la clave a minúsculas.
- *
- * Escenarios:
- *  E1. Petición sin datos o con acción no reconocida.
- *  E2. Datos con formato inválido.
- *  E3. Datos válidos que deben normalizarse.
- */
 #[Group('unit')]
 #[Group('unitPermisos')]
 #[Group('validarDatosPermisos')]
 class ValidarDatosPermisosTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -47,10 +33,6 @@ class ValidarDatosPermisosTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * Los permisos viven en la base de datos de seguridad (conexSG), por lo que el PDO
-     * simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
@@ -58,14 +40,6 @@ class ValidarDatosPermisosTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoMock);
     }
 
-    /**
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'rowCount' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = []): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -152,7 +126,6 @@ class ValidarDatosPermisosTest extends TestCase
         return (new ReflectionClass($modelo))->getProperty($nombre)->getValue($modelo);
     }
 
-    // Caso 1 (E1): Arreglo de datos vacío lanza excepción
     public function testDatosVacios(): void
     {
         $this->expectException(Exception::class);
@@ -161,7 +134,6 @@ class ValidarDatosPermisosTest extends TestCase
         (new ModeloPermisos())->ProcesarDatos([]);
     }
 
-    // Caso 2 (E1): Acción no reconocida lanza excepción
     public function testAccionInvalida(): void
     {
         $this->expectException(Exception::class);
@@ -188,19 +160,16 @@ class ValidarDatosPermisosTest extends TestCase
         ];
     }
 
-    // Casos 3 a 14 (E2): Datos con formato inválido son rechazados
     #[DataProvider('datosInvalidos')]
     public function testDatoInvalido(array $datos, string $mensaje): void
     {
         $this->expectException(Exception::class);
         $this->expectExceptionMessage($mensaje);
 
-        // Si la validación no detiene la petición, la búsqueda no debe llegar a la BD real
         $this->inyectarPdoMock($this->crearPdoMock());
         (new ModeloPermisos())->ProcesarDatos($datos + ['accion' => 'buscar']);
     }
 
-    // Caso 15 (E3): Nombre, descripción y clave se normalizan
     public function testNormalizaDatos(): void
     {
         $modelo = new ModeloPermisos();
@@ -221,7 +190,6 @@ class ValidarDatosPermisosTest extends TestCase
         $this->assertSame('registrar_atleta', $this->propiedad($modelo, 'clave'));
     }
 
-    // Caso 16 (E3): Sin descripción queda nula; sin clave queda vacía
     public function testValoresPorDefecto(): void
     {
         $modelo = new ModeloPermisos();

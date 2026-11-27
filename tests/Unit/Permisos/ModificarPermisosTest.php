@@ -15,27 +15,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-PER-04: El sistema debe permitir modificar el nombre y la descripción de un permiso
- * existente (la clave técnica y el módulo no se modifican). El nombre no puede pertenecer
- * a otro permiso. Si no se envía descripción no debe enviarse NULL a la base de datos,
- * porque la columna no lo admite. Los errores deben devolverse en la clave "codigo",
- * que es la que lee el controlador.
- *
- * Escenarios:
- *  E1. Modificación con nombre y descripción.
- *  E2. Modificación sin descripción.
- *  E3. El permiso conserva su propio nombre.
- *  E4. Permiso inexistente.
- *  E5. Nombre usado por otro permiso.
- *  E6. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitPermisos')]
 #[Group('modificarPermisos')]
 class ModificarPermisosTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -48,10 +32,6 @@ class ModificarPermisosTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * Los permisos viven en la base de datos de seguridad (conexSG), por lo que el PDO
-     * simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
@@ -59,14 +39,6 @@ class ModificarPermisosTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoMock);
     }
 
-    /**
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'rowCount' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = []): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -147,7 +119,6 @@ class ModificarPermisosTest extends TestCase
         return null;
     }
 
-    /** Mensaje de error devuelto por el modelo, venga en 'codigo' o en 'mensaje'. */
     protected function textoError(array $resultado): ?string
     {
         return $resultado['codigo'] ?? $resultado['mensaje'] ?? null;
@@ -169,7 +140,6 @@ class ModificarPermisosTest extends TestCase
         return (new ModeloPermisos())->ProcesarDatos($this->obtenerDatosValidos($datos));
     }
 
-    // Caso 1 (E1): Modificación exitosa de nombre y descripción
     public function testModificacionExitosa(): void
     {
         $resultado = $this->ejecutar(['permisos.id_permiso.1' => 1]);
@@ -186,7 +156,6 @@ class ModificarPermisosTest extends TestCase
         ], $update['params']);
     }
 
-    // Caso 2 (E2): Sin descripción no se envía NULL a una columna NOT NULL
     public function testModificacionSinDescripcion(): void
     {
         $resultado = $this->ejecutar(['permisos.id_permiso.1' => 1], [], ['descripcion' => '']);
@@ -200,7 +169,6 @@ class ModificarPermisosTest extends TestCase
         );
     }
 
-    // Caso 3 (E3): El permiso puede guardar su mismo nombre
     public function testConservaSuPropioNombre(): void
     {
         $resultado = $this->ejecutar([
@@ -212,7 +180,6 @@ class ModificarPermisosTest extends TestCase
         $this->assertSame('exito', $resultado['accion']);
     }
 
-    // Caso 4 (E4): Permiso inexistente
     public function testPermisoNoExiste(): void
     {
         $resultado = $this->ejecutar(['permisos.id_permiso.1' => 0]);
@@ -222,7 +189,6 @@ class ModificarPermisosTest extends TestCase
         $this->assertNull($this->sentenciaEjecutada('UPDATE `permisos`'));
     }
 
-    // Caso 5 (E5): Nombre usado por otro permiso
     public function testNombreDuplicado(): void
     {
         $resultado = $this->ejecutar([
@@ -236,7 +202,6 @@ class ModificarPermisosTest extends TestCase
         $this->assertNull($this->sentenciaEjecutada('UPDATE `permisos`'));
     }
 
-    // Caso 6 (E4/E5): Los errores se devuelven en la clave "codigo" que lee el controlador
     public function testErrorEnClaveCodigo(): void
     {
         $resultado = $this->ejecutar(['permisos.id_permiso.1' => 0]);
@@ -248,7 +213,6 @@ class ModificarPermisosTest extends TestCase
         );
     }
 
-    // Caso 7 (E6): Error de base de datos al modificar
     public function testErrorBaseDatosAlModificar(): void
     {
         $resultado = $this->ejecutar(['permisos.id_permiso.1' => 1], [

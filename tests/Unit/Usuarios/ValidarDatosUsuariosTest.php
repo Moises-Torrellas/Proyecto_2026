@@ -13,23 +13,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-01: El sistema debe validar y normalizar los datos recibidos antes de procesar
- * cualquier operación sobre usuarios.
- *
- * Escenarios:
- *  E1. Se envía la petición sin datos.
- *  E2. Se envía una acción que el módulo no reconoce.
- *  E3. Se envían datos con espacios y mayúsculas/minúsculas mezcladas.
- *  E4. Se envía una contraseña (debe almacenarse cifrada, nunca en texto plano).
- *  E5. No se envía contraseña.
- */
 #[Group('unit')]
 #[Group('unitUsuarios')]
 #[Group('validarDatosUsuarios')]
 class ValidarDatosUsuariosTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -48,7 +36,6 @@ class ValidarDatosUsuariosTest extends TestCase
         try {
             $modelo->procesarDatos($datos + ['accion' => 'accion_inexistente']);
         } catch (Exception $e) {
-            // Se ignora la excepción de acción inválida para inspeccionar los datos asignados
         }
     }
 
@@ -57,7 +44,6 @@ class ValidarDatosUsuariosTest extends TestCase
         return (new ReflectionClass($modelo))->getProperty($nombre)->getValue($modelo);
     }
 
-    // Caso 1 (E1): Arreglo de datos vacío lanza excepción
     public function testDatosVacios(): void
     {
         $this->expectException(Exception::class);
@@ -66,7 +52,6 @@ class ValidarDatosUsuariosTest extends TestCase
         (new ModeloUsuarios())->procesarDatos([]);
     }
 
-    // Caso 2 (E2): Acción no reconocida lanza excepción
     public function testAccionInvalida(): void
     {
         $this->expectException(Exception::class);
@@ -75,7 +60,6 @@ class ValidarDatosUsuariosTest extends TestCase
         (new ModeloUsuarios())->procesarDatos(['accion' => 'accion_inexistente']);
     }
 
-    // Caso 3 (E2): Petición sin acción lanza excepción
     public function testSinAccion(): void
     {
         $this->expectException(Exception::class);
@@ -84,7 +68,6 @@ class ValidarDatosUsuariosTest extends TestCase
         (new ModeloUsuarios())->procesarDatos(['cedula' => '12345678']);
     }
 
-    // Caso 4 (E3): Nombre y apellido se guardan en formato título y sin espacios sobrantes
     public function testNormalizaNombreYApellido(): void
     {
         $modelo = new ModeloUsuarios();
@@ -97,7 +80,6 @@ class ValidarDatosUsuariosTest extends TestCase
         $this->assertSame('Pérez González', $this->propiedad($modelo, 'apellido'));
     }
 
-    // Caso 5 (E3): El correo se guarda en minúsculas y sin espacios
     public function testNormalizaCorreo(): void
     {
         $modelo = new ModeloUsuarios();
@@ -106,7 +88,6 @@ class ValidarDatosUsuariosTest extends TestCase
         $this->assertSame('usuario.prueba@correo.com', $this->propiedad($modelo, 'correo'));
     }
 
-    // Caso 6 (E3): Cédula y teléfono se recortan; rol, foto e id se asignan tal cual
     public function testAsignaCamposBasicos(): void
     {
         $modelo = new ModeloUsuarios();
@@ -127,7 +108,6 @@ class ValidarDatosUsuariosTest extends TestCase
         $this->assertSame(1, $this->propiedad($modelo, 'bloqueo'));
     }
 
-    // Caso 7 (E4): La contraseña se cifra con BCRYPT y se marca para actualizar
     public function testContraseñaSeCifra(): void
     {
         $modelo = new ModeloUsuarios();
@@ -141,7 +121,6 @@ class ValidarDatosUsuariosTest extends TestCase
         $this->assertTrue($this->propiedad($modelo, 'actualizar_contraseña'));
     }
 
-    // Caso 8 (E5): Sin contraseña no se marca para actualizar
     public function testSinContraseña(): void
     {
         $modelo = new ModeloUsuarios();
@@ -151,7 +130,6 @@ class ValidarDatosUsuariosTest extends TestCase
         $this->assertFalse($this->propiedad($modelo, 'actualizar_contraseña'));
     }
 
-    // Caso 9 (E3): Valores por defecto cuando no se envían campos
     public function testValoresPorDefecto(): void
     {
         $modelo = new ModeloUsuarios();

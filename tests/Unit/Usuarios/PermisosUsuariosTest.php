@@ -15,24 +15,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-08: El sistema debe permitir ver y personalizar los permisos de un usuario.
- * Los permisos parten de los de su rol; las diferencias se guardan como excepciones:
- *  - tipo 0 (denegar): el rol tiene el permiso pero se desmarcó para el usuario.
- *  - tipo 1 (permitir): el rol no tiene el permiso pero se marcó para el usuario.
- *
- * Escenarios:
- *  E1. Cargar los permisos de un usuario.
- *  E2. Guardar permisos quitando y agregando permisos respecto al rol.
- *  E3. Guardar permisos idénticos a los del rol (sin excepciones).
- *  E4. Falla de la base de datos al guardar.
- */
 #[Group('unit')]
 #[Group('unitUsuarios')]
 #[Group('permisosUsuarios')]
 class PermisosUsuariosTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -46,10 +33,6 @@ class PermisosUsuariosTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * ModeloUsuarios trabaja sobre la base de datos de seguridad (conexSG), por lo que
-     * el PDO simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
@@ -57,16 +40,6 @@ class PermisosUsuariosTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoMock);
     }
 
-    /**
-     * Crea un PDO simulado.
-     *
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetch' => , 'fetchAll' => , 'fetchColumn' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = [], string $lastInsertId = '25'): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -83,11 +56,9 @@ class PermisosUsuariosTest extends TestCase
             fn(string $sql) => $this->crearSentencia($sql, $respuestas, true)
         );
         $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($conteos, $respuestas) {
-            // verificarExistenciaPropia: ... WHERE idUsuario = :id AND <columna> = :valor
             if (preg_match('/SELECT COUNT\(\*\) FROM `\w+`\s+WHERE\s+\w+\s*=\s*:id\s+AND\s+(\w+)\s*=\s*:valor/', $sql, $m)) {
                 return $this->crearSentenciaConteo(fn() => $conteos['propia.' . $m[1]] ?? 0);
             }
-            // verificarExistencia: SELECT COUNT(*) FROM `<tabla>` WHERE <columna> = :valor [AND estatus = :estatus]
             if (preg_match('/SELECT COUNT\(\*\) FROM `(\w+)` WHERE (\w+) = :valor/', $sql, $m)) {
                 return $this->crearSentenciaConteo(
                     fn($estatus) => $conteos[$m[1] . '.' . $m[2] . '.' . ($estatus ?? 'null')] ?? 0
@@ -155,7 +126,6 @@ class PermisosUsuariosTest extends TestCase
         return $stmt;
     }
 
-    /** Devuelve la primera sentencia ejecutada que contenga el fragmento indicado, o null. */
     protected function sentenciaEjecutada(string $fragmento): ?array
     {
         foreach ($this->sentencias as $sentencia) {
@@ -166,7 +136,6 @@ class PermisosUsuariosTest extends TestCase
         return null;
     }
 
-    /** Devuelve todas las sentencias ejecutadas que contengan el fragmento indicado. */
     protected function sentenciasEjecutadas(string $fragmento): array
     {
         return array_values(array_filter(
@@ -175,7 +144,6 @@ class PermisosUsuariosTest extends TestCase
         ));
     }
 
-    /** Rol con permisos 1 y 2; el sistema tiene permisos 1, 2 y 3. */
     private function respuestasPermisos(array $extra = []): array
     {
         return array_merge($extra, [
@@ -194,7 +162,6 @@ class PermisosUsuariosTest extends TestCase
         ]);
     }
 
-    // Caso 1 (E1): Cargar los permisos de un usuario
     public function testCargarPermisosUsuario(): void
     {
         $filas = [
@@ -212,10 +179,8 @@ class PermisosUsuariosTest extends TestCase
         $this->assertSame(5, $this->sentenciaEjecutada('FROM modulos m')['params'][':id1']);
     }
 
-    // Caso 2 (E2): Quitar un permiso del rol y agregar uno fuera del rol genera las excepciones
     public function testGuardarPermisosConExcepciones(): void
     {
-        // Se desmarca el permiso 1 (del rol), se mantiene el 2 y se agrega el 3
         $resultado = $this->guardar([2 => 1, 3 => 1]);
 
         $this->assertSame(['accion' => 'exito'], $resultado);
@@ -228,7 +193,6 @@ class PermisosUsuariosTest extends TestCase
         $this->assertSame([':id_usuario' => 5, ':id_permiso' => 3, ':tipo' => 1], $inserts[1]['params']);
     }
 
-    // Caso 3 (E3): Permisos iguales a los del rol no generan excepciones
     public function testGuardarPermisosIgualesAlRol(): void
     {
         $resultado = $this->guardar([1 => 1, 2 => 1]);
@@ -238,7 +202,6 @@ class PermisosUsuariosTest extends TestCase
         $this->assertCount(0, $this->sentenciasEjecutadas('INSERT INTO `excepciones`'));
     }
 
-    // Caso 4 (E2): Sin permisos seleccionados se deniegan todos los del rol
     public function testGuardarSinPermisosDeniegaLosDelRol(): void
     {
         $resultado = $this->guardar([]);
@@ -252,7 +215,6 @@ class PermisosUsuariosTest extends TestCase
         }
     }
 
-    // Caso 5 (E4): Error de base de datos al guardar permisos
     public function testErrorBaseDatosAlGuardarPermisos(): void
     {
         $resultado = $this->guardar([3 => 1], [

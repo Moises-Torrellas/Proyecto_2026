@@ -16,18 +16,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-BIT-01 (integración): Registrar acciones en la tabla bitacora de la BD de seguridad
- * real a través del procedimiento pa_incluir_bitacora. Una falla al registrar no debe
- * interrumpir la operación que el usuario estaba realizando.
- *
- * Escenarios:
- *  E1. Registro de una acción con todos sus datos.
- *  E2. Registro de una acción sin datos previos ni nuevos.
- *  E3. Datos que superan el tamaño de las columnas.
- *  E4. Usuario o módulo inexistente.
- *  E5. Registro desde los controladores con registrarBitacora() (app/controlador/Base.php).
- */
 #[Group('integ')]
 #[Group('bitacora')]
 #[Group('bitacoraRegistrar')]
@@ -79,11 +67,6 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar
-     * tablas. Solo se borra lo que crean: el módulo "Integ Bitacora ...", el rol
-     * "Integ Bitacora Rol", los usuarios con cédula "9999xxxx" y sus registros de bitácora.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -115,11 +98,9 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $stmt->execute([':pass' => password_hash('Clave.Prueba123', PASSWORD_BCRYPT), ':rol' => $idRol]);
         $this->idUsuario = (int)$this->pdo->lastInsertId();
 
-        // El disparador de usuarios deja su propio registro; se borra para partir de una bitácora vacía
         $this->pdo->exec("DELETE FROM bitacora WHERE idUsuario = {$this->idUsuario}");
     }
 
-    /** @return array[] registros de bitácora del usuario de prueba, del más antiguo al más reciente */
     private function registrosDelUsuario(): array
     {
         $stmt = $this->pdo->prepare("SELECT * FROM bitacora WHERE idUsuario = :id ORDER BY id_bitacora ASC");
@@ -127,13 +108,11 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         return $stmt->fetchAll();
     }
 
-    // Caso 1 (E1): El modelo cumple el contrato de bitácora que usan los demás módulos
     public function testImplementaInterfaz(): void
     {
         $this->assertInstanceOf(InterBitacora::class, $this->modelo);
     }
 
-    // Caso 2 (E1): La acción queda guardada con todos sus datos y la fecha actual
     public function testRegistroConTodosLosDatos(): void
     {
         $this->modelo->RegistrarAccion($this->idModulo, 'Integ Bitacora modifico un dato', $this->idUsuario, '{"nombre":"Antes"}', '{"nombre":"Despues"}', 'Mozilla/5.0');
@@ -150,7 +129,6 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $this->assertLessThanOrEqual(5, abs(strtotime($ahora) - strtotime($registros[0]['fecha_hora'])));
     }
 
-    // Caso 3 (E1): El registro se ve en la consulta con el nombre del usuario y del módulo
     public function testRegistroApareceEnConsulta(): void
     {
         $this->modelo->RegistrarAccion($this->idModulo, 'Integ Bitacora consulta visible', $this->idUsuario, '', '', 'Firefox');
@@ -163,7 +141,6 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $this->assertSame('Integ Bitacora Modulo', $datos[0]['nombre_modulo']);
     }
 
-    // Caso 4 (E2): Con datos vacíos (como hace registrarBitacora) el registro se guarda
     public function testRegistroConDatosVacios(): void
     {
         $this->modelo->RegistrarAccion($this->idModulo, 'Integ Bitacora sin datos', $this->idUsuario, '', '', '');
@@ -174,8 +151,6 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $this->assertSame('', $registros[0]['datos_nuevos']);
     }
 
-    // Caso 5 (E2): Sin pasar datos previos ni nuevos (como hace Inicio al bloquear un usuario)
-    // la acción también debe quedar registrada
     public function testRegistroSinPasarDatosOpcionales(): void
     {
         $this->modelo->RegistrarAccion($this->idModulo, 'Integ Bitacora usuario bloqueado', $this->idUsuario);
@@ -187,7 +162,6 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $this->assertSame('Ninguno', $registros[0]['datos_nuevos']);
     }
 
-    // Caso 6 (E3): Un entorno de más de 50 caracteres se guarda recortado
     public function testEntornoLargoSeRecorta(): void
     {
         $entorno = str_repeat('N', 80);
@@ -199,7 +173,6 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $this->assertSame(str_repeat('N', 50), $registros[0]['entorno']);
     }
 
-    // Caso 7 (E4): Un usuario inexistente no genera registro ni interrumpe la operación
     public function testUsuarioInexistenteNoInterrumpe(): void
     {
         $this->modelo->RegistrarAccion($this->idModulo, 'Integ Bitacora usuario fantasma', 99999999, '', '', '');
@@ -208,7 +181,6 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $this->assertSame(0, (int)$stmt->fetchColumn());
     }
 
-    // Caso 8 (E4): Un módulo inexistente no genera registro ni interrumpe la operación
     public function testModuloInexistenteNoInterrumpe(): void
     {
         $this->modelo->RegistrarAccion(99999999, 'Integ Bitacora modulo fantasma', $this->idUsuario, '', '', '');
@@ -216,7 +188,6 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $this->assertSame([], $this->registrosDelUsuario());
     }
 
-    // Caso 9 (E5): Con sesión iniciada se registra a nombre del usuario y con el navegador recortado a 50
     public function testControladorRegistraConSesion(): void
     {
         $_SESSION['id'] = $this->idUsuario;
@@ -232,7 +203,6 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $this->assertSame(substr(str_repeat('Mozilla ', 10), 0, 50), $registros[0]['entorno']);
     }
 
-    // Caso 10 (E5): Sin navegador identificado el entorno queda como "Desconocido"
     public function testControladorSinNavegador(): void
     {
         $_SESSION['id'] = $this->idUsuario;
@@ -245,7 +215,6 @@ class RegistrarAccionBitacoraIntegrationTest extends TestCase
         $this->assertSame('Desconocido', $registros[0]['entorno']);
     }
 
-    // Caso 11 (E5): Sin sesión iniciada no se registra nada
     public function testControladorSinSesionNoRegistra(): void
     {
         registrarBitacora($this->modelo, $this->idModulo, 'Integ Bitacora sin sesion');

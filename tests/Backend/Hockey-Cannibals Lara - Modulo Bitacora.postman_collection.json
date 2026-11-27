@@ -141,7 +141,6 @@
                   "    pm.environment.set(\"csrf_token\", match[1]);",
                   "}",
                   "",
-                  "// Fecha de hoy (YYYY-MM-DD) para filtrar el reporte",
                   "const d = new Date();",
                   "const dos = n => String(n).padStart(2, '0');",
                   "pm.environment.set('bit_hoy', d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()));"

@@ -141,8 +141,6 @@
                   "    pm.environment.set(\"csrf_token\", match[1]);",
                   "}",
                   "",
-                  "// Datos únicos por corrida: los usuarios eliminados conservan su correo y teléfono,",
-                  "// así que no se pueden reutilizar valores fijos entre ejecuciones.",
                   "const d = n => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join('');",
                   "const ced = '9999' + d(4);",
                   "let cedAlt = '9999' + d(4);",

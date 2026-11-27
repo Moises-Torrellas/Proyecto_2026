@@ -16,18 +16,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-ROL-07 (integración): Ver y asignar los permisos de un rol en la tabla real
- * permisos_rol. Al guardar, los permisos anteriores se reemplazan por los seleccionados
- * (valor 1), y el cambio se refleja en los permisos de los usuarios de ese rol.
- *
- * Escenarios:
- *  E1. Cargar los permisos de un rol.
- *  E2. Guardar una selección de permisos.
- *  E3. Guardar sin permisos seleccionados.
- *  E4. Guardar con un permiso inexistente (se revierte todo).
- *  E5. Los permisos del rol se reflejan en sus usuarios.
- */
 #[Group('integ')]
 #[Group('roles')]
 #[Group('rolesPermisos')]
@@ -37,7 +25,6 @@ class PermisosRolIntegrationTest extends TestCase
     private ModeloRoles $modelo;
 
     private int $modulo;
-    /** @var int[] Tres permisos de prueba del módulo de prueba */
     private array $permisos = [];
 
     private int $idRol;
@@ -81,14 +68,6 @@ class PermisosRolIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas.
-     * Todo lo que crean las pruebas se identifica y se elimina antes y después de cada prueba:
-     * - roles cuyo nombre empieza por "Integ Roles",
-     * - el módulo "Integ Roles Modulo" y sus permisos (clave "integ_rol_..."),
-     * - usuarios con cédula "9999xxxx".
-     * Los roles, permisos y usuarios propios del sistema nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -122,9 +101,6 @@ class PermisosRolIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un rol directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearRol(string $nombre, int $nivel = 3, string $descripcion = 'Descripcion De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO roles (nombre_rol, descripcion, nivel_rol, estatus) VALUES (:nombre, :descripcion, :nivel, 1)");
@@ -140,7 +116,6 @@ class PermisosRolIntegrationTest extends TestCase
         }
     }
 
-    /** @return int[] ids de permisos asignados al rol, ordenados */
     private function permisosDelRol(int $idRol): array
     {
         $stmt = $this->pdo->prepare("SELECT id_permiso FROM permisos_rol WHERE id_rol = :rol ORDER BY id_permiso");
@@ -179,7 +154,6 @@ class PermisosRolIntegrationTest extends TestCase
         ]);
     }
 
-    /** @return array<int,array> id_permiso => fila */
     private function cargar(): array
     {
         $resultado = $this->modelo->CargarPermisos($this->idRol);
@@ -187,7 +161,6 @@ class PermisosRolIntegrationTest extends TestCase
         return array_column($resultado['datos'], null, 'id_permiso');
     }
 
-    // Caso 1 (E1): La matriz marca como asignados los permisos del rol
     public function testCargarPermisosDelRol(): void
     {
         $this->prepararRol([$this->permisos[0]]);
@@ -200,7 +173,6 @@ class PermisosRolIntegrationTest extends TestCase
         $this->assertSame('Integ Roles Modulo', $matriz[$this->permisos[0]]['nombre_modulo']);
     }
 
-    // Caso 2 (E1): La matriz no incluye los módulos internos (1, 2, 3, 4, 5 y 8)
     public function testCargarPermisosExcluyeModulosInternos(): void
     {
         $this->prepararRol();
@@ -210,7 +182,6 @@ class PermisosRolIntegrationTest extends TestCase
         $this->assertEmpty(array_intersect($modulos, [1, 2, 3, 4, 5, 8]));
     }
 
-    // Caso 3 (E2): Guardar reemplaza los permisos anteriores por los seleccionados
     public function testGuardarReemplazaPermisos(): void
     {
         $this->prepararRol([$this->permisos[0]]);
@@ -225,7 +196,6 @@ class PermisosRolIntegrationTest extends TestCase
         $this->assertSame(1, (int)$matriz[$this->permisos[1]]['asignado']);
     }
 
-    // Caso 4 (E2): Los permisos con valor distinto de 1 no se guardan
     public function testGuardarIgnoraPermisosNoMarcados(): void
     {
         $this->prepararRol();
@@ -235,7 +205,6 @@ class PermisosRolIntegrationTest extends TestCase
         $this->assertSame([$this->permisos[0]], $this->permisosDelRol($this->idRol));
     }
 
-    // Caso 5 (E2): Guardar un rol no toca los permisos de otros roles
     public function testGuardarNoAfectaOtrosRoles(): void
     {
         $otroRol = $this->crearRol('Integ Roles Otro');
@@ -247,7 +216,6 @@ class PermisosRolIntegrationTest extends TestCase
         $this->assertSame([$this->permisos[0]], $this->permisosDelRol($otroRol));
     }
 
-    // Caso 6 (E3): Guardar sin selección deja al rol sin permisos
     public function testGuardarSinPermisos(): void
     {
         $this->prepararRol([$this->permisos[0], $this->permisos[1]]);
@@ -258,7 +226,6 @@ class PermisosRolIntegrationTest extends TestCase
         $this->assertSame([], $this->permisosDelRol($this->idRol));
     }
 
-    // Caso 7 (E4): Un permiso que no existe hace fallar el guardado y se conservan los anteriores
     public function testGuardarConPermisoInexistenteRevierte(): void
     {
         $this->prepararRol([$this->permisos[0]]);
@@ -269,7 +236,6 @@ class PermisosRolIntegrationTest extends TestCase
         $this->assertSame([$this->permisos[0]], $this->permisosDelRol($this->idRol), 'La transacción debe revertirse.');
     }
 
-    // Caso 8 (E5): Los usuarios del rol reciben los permisos guardados
     public function testPermisosGuardadosSeReflejanEnUsuariosDelRol(): void
     {
         $this->prepararRol();

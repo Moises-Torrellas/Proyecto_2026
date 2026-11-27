@@ -15,17 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-07 (integración): Permisos individuales de un usuario. Los permisos efectivos son
- * los de su rol (permisos_rol) más las excepciones del usuario (excepciones):
- * tipo 1 = permiso concedido que el rol no tiene, tipo 0 = permiso del rol denegado.
- *
- * Escenarios:
- *  E1. Cargar los permisos de un usuario combinando rol y excepciones.
- *  E2. Guardar una selección distinta a la del rol (crea excepciones).
- *  E3. Guardar una selección igual a la del rol (no crea excepciones).
- *  E4. Guardar reemplaza las excepciones anteriores.
- */
 #[Group('integ')]
 #[Group('usuarios')]
 #[Group('usuariosPermisos')]
@@ -34,13 +23,11 @@ class PermisosUsuarioIntegrationTest extends TestCase
     private ?PDO $pdo = null;
     private ModeloUsuarios $modelo;
 
-    /** Roles creados para la prueba: ['nivel1' => id, 'nivel2' => id, 'nivel3' => id, 'nivel3b' => id] */
     private array $roles = [];
 
     private string $claveInicial = 'ClaveInicial.123';
 
     private int $idUsuario;
-    /** @var int[] Tres permisos visibles: [0] y [1] los tiene el rol, [2] no */
     private array $permisos;
 
     protected function setUp(): void
@@ -82,12 +69,6 @@ class PermisosUsuarioIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas:
-     * todo lo que crean las pruebas se identifica con la cédula "9999xxxx" y con roles cuyo
-     * nombre empieza por "Integ Usuarios", y se elimina antes y después de cada prueba.
-     * Así los usuarios propios del sistema (Admin, Soporte, ...) nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -117,9 +98,6 @@ class PermisosUsuarioIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un usuario directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearUsuario(array $datos = []): int
     {
         $base = [
@@ -154,10 +132,6 @@ class PermisosUsuarioIntegrationTest extends TestCase
         return (int)$this->pdo->lastInsertId();
     }
 
-    /**
-     * Devuelve ids de permisos que se muestran en la pantalla de permisos de usuario
-     * (los módulos 1, 2, 3, 4, 5 y 8 se excluyen en ModeloPermisos::permisosUsuarios).
-     */
     private function obtenerPermisosVisibles(int $cantidad): array
     {
         $stmt = $this->pdo->query("SELECT id_permiso FROM permisos WHERE id_modulo NOT IN (1, 2, 3, 4, 5, 8) ORDER BY id_permiso ASC LIMIT {$cantidad}");
@@ -182,7 +156,6 @@ class PermisosUsuarioIntegrationTest extends TestCase
         $stmt->execute([':permiso' => $idPermiso, ':usuario' => $idUsuario, ':tipo' => $tipo]);
     }
 
-    /** @return array<int,int> id_permiso => tipo */
     private function obtenerExcepciones(int $idUsuario): array
     {
         $stmt = $this->pdo->prepare("SELECT id_permiso, tipo FROM excepciones WHERE id_usuario = :id ORDER BY id_permiso");
@@ -214,7 +187,6 @@ class PermisosUsuarioIntegrationTest extends TestCase
         ]);
     }
 
-    /** @return array<int,array> id_permiso => fila */
     private function cargar(): array
     {
         $resultado = $this->modelo->procesarDatos(['accion' => 'CargarPermisosUsuario', 'id' => $this->idUsuario]);
@@ -222,7 +194,6 @@ class PermisosUsuarioIntegrationTest extends TestCase
         return array_column($resultado['datos'], null, 'id_permiso');
     }
 
-    // Caso 1 (E1): Sin excepciones, el usuario hereda exactamente los permisos de su rol
     public function testCargarPermisosHeredadosDelRol(): void
     {
         $this->preparar();
@@ -236,12 +207,11 @@ class PermisosUsuarioIntegrationTest extends TestCase
         $this->assertSame($this->roles['nivel3'], (int)$permisos[$this->permisos[0]]['id_rol']);
     }
 
-    // Caso 2 (E1): Las excepciones prevalecen sobre los permisos del rol
     public function testCargarPermisosAplicaExcepciones(): void
     {
         $this->preparar();
-        $this->crearExcepcion($this->idUsuario, $this->permisos[0], 0); // deniega uno del rol
-        $this->crearExcepcion($this->idUsuario, $this->permisos[2], 1); // concede uno fuera del rol
+        $this->crearExcepcion($this->idUsuario, $this->permisos[0], 0);
+        $this->crearExcepcion($this->idUsuario, $this->permisos[2], 1);
 
         $permisos = $this->cargar();
 
@@ -252,7 +222,6 @@ class PermisosUsuarioIntegrationTest extends TestCase
         $this->assertSame(1, (int)$permisos[$this->permisos[2]]['excepcion']);
     }
 
-    // Caso 3 (E1): No se muestran los módulos internos (usuarios, roles, bitácora, inicio, ...)
     public function testCargarPermisosExcluyeModulosInternos(): void
     {
         $this->preparar();
@@ -262,7 +231,6 @@ class PermisosUsuarioIntegrationTest extends TestCase
         $this->assertEmpty(array_intersect($modulos, [1, 2, 3, 4, 5, 8]));
     }
 
-    // Caso 4 (E2): Quitar un permiso del rol y agregar uno ajeno crea las excepciones correctas
     public function testGuardarSeleccionDistintaCreaExcepciones(): void
     {
         $this->preparar();
@@ -281,7 +249,6 @@ class PermisosUsuarioIntegrationTest extends TestCase
         $this->assertSame(1, (int)$permisos[$this->permisos[2]]['asignado']);
     }
 
-    // Caso 5 (E3): Guardar exactamente los permisos del rol no deja excepciones
     public function testGuardarSeleccionIgualAlRolNoCreaExcepciones(): void
     {
         $this->preparar();
@@ -292,7 +259,6 @@ class PermisosUsuarioIntegrationTest extends TestCase
         $this->assertSame([], $this->obtenerExcepciones($this->idUsuario));
     }
 
-    // Caso 6 (E4): Guardar reemplaza por completo las excepciones previas
     public function testGuardarReemplazaExcepcionesAnteriores(): void
     {
         $this->preparar();

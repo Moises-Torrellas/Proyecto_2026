@@ -15,17 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-ROL-05 (integración): Eliminar roles en la BD de seguridad real. La eliminación es
- * física (DELETE) y borra en cascada los permisos del rol (permisos_rol).
- *
- * Escenarios:
- *  E1. Eliminación de un rol sin usuarios.
- *  E2. Intento de eliminar un rol protegido (id 1 y 2).
- *  E3. Rol con usuarios activos asociados.
- *  E4. Rol inexistente.
- *  E5. Rol cuyos únicos usuarios están eliminados.
- */
 #[Group('integ')]
 #[Group('roles')]
 #[Group('rolesEliminar')]
@@ -35,7 +24,6 @@ class EliminarRolIntegrationTest extends TestCase
     private ModeloRoles $modelo;
 
     private int $modulo;
-    /** @var int[] Tres permisos de prueba del módulo de prueba */
     private array $permisos = [];
 
     protected function setUp(): void
@@ -77,14 +65,6 @@ class EliminarRolIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas.
-     * Todo lo que crean las pruebas se identifica y se elimina antes y después de cada prueba:
-     * - roles cuyo nombre empieza por "Integ Roles",
-     * - el módulo "Integ Roles Modulo" y sus permisos (clave "integ_rol_..."),
-     * - usuarios con cédula "9999xxxx".
-     * Los roles, permisos y usuarios propios del sistema nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -118,9 +98,6 @@ class EliminarRolIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un rol directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearRol(string $nombre, int $nivel = 3, string $descripcion = 'Descripcion De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO roles (nombre_rol, descripcion, nivel_rol, estatus) VALUES (:nombre, :descripcion, :nivel, 1)");
@@ -143,7 +120,6 @@ class EliminarRolIntegrationTest extends TestCase
         }
     }
 
-    /** @return int[] ids de permisos asignados al rol, ordenados */
     private function permisosDelRol(int $idRol): array
     {
         $stmt = $this->pdo->prepare("SELECT id_permiso FROM permisos_rol WHERE id_rol = :rol ORDER BY id_permiso");
@@ -172,7 +148,6 @@ class EliminarRolIntegrationTest extends TestCase
         return $this->modelo->procesarDatos(['accion' => 'eliminar', 'id' => (string)$id]);
     }
 
-    // Caso 1 (E1): El rol se borra de la BD
     public function testEliminacionExitosa(): void
     {
         $id = $this->crearRol('Integ Roles Eliminar');
@@ -183,7 +158,6 @@ class EliminarRolIntegrationTest extends TestCase
         $this->assertFalse($this->obtenerRol($id));
     }
 
-    // Caso 2 (E1): Al eliminar el rol se borran en cascada sus permisos asignados
     public function testEliminarBorraPermisosDelRol(): void
     {
         $id = $this->crearRol('Integ Roles Eliminar');
@@ -194,7 +168,6 @@ class EliminarRolIntegrationTest extends TestCase
         $this->assertSame([], $this->permisosDelRol($id));
     }
 
-    // Caso 3 (E1): El rol eliminado deja de aparecer en el listado
     public function testRolEliminadoNoApareceEnConsulta(): void
     {
         $id = $this->crearRol('Integ Roles Eliminar');
@@ -204,7 +177,6 @@ class EliminarRolIntegrationTest extends TestCase
         $this->assertSame([], $this->modelo->consultar(['filtro' => 'Integ Roles Eliminar'])['datos']);
     }
 
-    // Caso 4 (E2): El rol con id 1 está protegido
     public function testNoEliminaRolProtegido1(): void
     {
         $existiaAntes = $this->obtenerRol(1) !== false;
@@ -216,7 +188,6 @@ class EliminarRolIntegrationTest extends TestCase
         $this->assertSame($existiaAntes, $this->obtenerRol(1) !== false);
     }
 
-    // Caso 5 (E2): El rol con id 2 está protegido
     public function testNoEliminaRolProtegido2(): void
     {
         $resultado = $this->eliminar(2);
@@ -225,7 +196,6 @@ class EliminarRolIntegrationTest extends TestCase
         $this->assertSame(INVALID_ID, $resultado['codigo']);
     }
 
-    // Caso 6 (E3): Un rol con usuarios activos no se elimina
     public function testNoEliminaRolConUsuariosActivos(): void
     {
         $id = $this->crearRol('Integ Roles Ocupado');
@@ -240,7 +210,6 @@ class EliminarRolIntegrationTest extends TestCase
         $this->assertSame([$this->permisos[0]], $this->permisosDelRol($id), 'La transacción debe revertirse.');
     }
 
-    // Caso 7 (E4): Un rol que no existe
     public function testNoEliminaRolInexistente(): void
     {
         $resultado = $this->eliminar(99999999);
@@ -249,8 +218,6 @@ class EliminarRolIntegrationTest extends TestCase
         $this->assertSame(INVALID_ID . '0', $resultado['codigo']);
     }
 
-    // Caso 8 (E5): Un rol cuyos únicos usuarios están eliminados no puede borrarse (siguen
-    // apuntando al rol) y se informa con su propio código
     public function testRolConSoloUsuariosEliminados(): void
     {
         $id = $this->crearRol('Integ Roles Historico');

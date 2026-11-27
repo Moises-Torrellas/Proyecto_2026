@@ -16,18 +16,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-PER-06 (integración): Matriz de permisos de un rol y de un usuario, leída de las
- * tablas reales permisos_rol y excepciones. Para un usuario, el permiso asignado combina
- * los de su rol con sus excepciones (tipo 1 concede, tipo 0 deniega). Los módulos
- * internos (1, 2, 3, 4, 5 y 8) no se muestran.
- *
- * Escenarios:
- *  E1. Matriz de permisos de un rol.
- *  E2. La matriz refleja lo que guarda el módulo Roles.
- *  E3. Matriz de permisos de un usuario (rol + excepciones).
- *  E4. Los permisos nuevos aparecen en la matriz sin asignar.
- */
 #[Group('integ')]
 #[Group('permisos')]
 #[Group('permisosAsignados')]
@@ -40,7 +28,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
     private int $moduloInactivo;
 
     private int $idRol;
-    /** @var int[] Permisos de prueba: [0] y [1] los tiene el rol, [2] no */
     private array $permisos = [];
 
     protected function setUp(): void
@@ -83,15 +70,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas.
-     * Todo lo que crean las pruebas se identifica y se elimina antes y después de cada prueba:
-     * - módulos cuyo nombre empieza por "Integ Permisos",
-     * - permisos con clave "integ_..." o nombre "Integ Prueba ...",
-     * - roles cuyo nombre empieza por "Integ Permisos",
-     * - usuarios con cédula "9999xxxx".
-     * Los permisos, roles y usuarios propios del sistema nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -122,9 +100,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
         return (int)$this->pdo->lastInsertId();
     }
 
-    /**
-     * Inserta un permiso directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearPermiso(string $nombre, string $clave, int $estatus = 1, ?int $modulo = null, string $descripcion = 'Descripcion De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO permisos (id_modulo, nombre, clave, descripcion, estatus) VALUES (:modulo, :nombre, :clave, :descripcion, :estatus)");
@@ -186,7 +161,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
         $this->asignarPermisosRol($this->idRol, [$this->permisos[0], $this->permisos[1]]);
     }
 
-    /** @return array<int,array> id_permiso => fila */
     private function matrizRol(int $idRol): array
     {
         $resultado = $this->modelo->permisosRoles($idRol);
@@ -194,7 +168,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
         return array_column($resultado['datos'], null, 'id_permiso');
     }
 
-    /** @return array<int,array> id_permiso => fila */
     private function matrizUsuario(int $idUsuario): array
     {
         $resultado = $this->modelo->permisosUsuarios($idUsuario);
@@ -202,7 +175,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
         return array_column($resultado['datos'], null, 'id_permiso');
     }
 
-    // Caso 1 (E1): Se marcan como asignados exactamente los permisos del rol
     public function testMatrizRolMarcaPermisosAsignados(): void
     {
         $this->preparar();
@@ -216,7 +188,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
         $this->assertSame('Integ Permisos Activo', $matriz[$this->permisos[0]]['nombre_modulo']);
     }
 
-    // Caso 2 (E1): La matriz no muestra los módulos internos del sistema
     public function testMatrizRolExcluyeModulosInternos(): void
     {
         $this->preparar();
@@ -227,7 +198,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
         $this->assertContains($this->moduloActivo, $modulos);
     }
 
-    // Caso 3 (E2): Lo que guarda el módulo Roles se ve en la matriz de permisos
     public function testMatrizRolReflejaLoGuardadoPorRoles(): void
     {
         $this->preparar();
@@ -246,7 +216,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
         $this->assertSame(1, (int)$matriz[$this->permisos[2]]['asignado']);
     }
 
-    // Caso 4 (E3): Sin excepciones, el usuario hereda los permisos de su rol
     public function testMatrizUsuarioHeredaPermisosDelRol(): void
     {
         $this->preparar();
@@ -261,13 +230,12 @@ class PermisosAsignadosIntegrationTest extends TestCase
         $this->assertSame($this->idRol, (int)$matriz[$this->permisos[0]]['id_rol']);
     }
 
-    // Caso 5 (E3): Las excepciones del usuario prevalecen sobre su rol
     public function testMatrizUsuarioAplicaExcepciones(): void
     {
         $this->preparar();
         $idUsuario = $this->crearUsuario($this->idRol);
-        $this->crearExcepcion($idUsuario, $this->permisos[0], 0); // deniega uno del rol
-        $this->crearExcepcion($idUsuario, $this->permisos[2], 1); // concede uno fuera del rol
+        $this->crearExcepcion($idUsuario, $this->permisos[0], 0);
+        $this->crearExcepcion($idUsuario, $this->permisos[2], 1);
 
         $matriz = $this->matrizUsuario($idUsuario);
 
@@ -278,7 +246,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
         $this->assertSame(1, (int)$matriz[$this->permisos[2]]['excepcion']);
     }
 
-    // Caso 6 (E3): Las excepciones de un usuario no afectan la matriz de su rol
     public function testExcepcionesNoAfectanMatrizDelRol(): void
     {
         $this->preparar();
@@ -290,7 +257,6 @@ class PermisosAsignadosIntegrationTest extends TestCase
         $this->assertSame(1, (int)$matriz[$this->permisos[0]]['asignado']);
     }
 
-    // Caso 7 (E4): Un permiso registrado desde el módulo aparece en la matriz sin asignar
     public function testPermisoNuevoApareceSinAsignar(): void
     {
         $this->preparar();

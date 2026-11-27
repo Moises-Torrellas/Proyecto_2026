@@ -15,25 +15,13 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-ROL-03: El sistema debe permitir registrar roles con nombre (obligatorio y único)
- * y descripción (opcional).
- *
- * Escenarios:
- *  E1. Registro con nombre y descripción.
- *  E2. Registro solo con nombre.
- *  E3. Registro con un nombre ya existente.
- *  E4. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitRoles')]
 #[Group('registrarRoles')]
 class RegistrarRolesTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
-    /** Sentencias que el modelo intentó preparar sobre la base de datos general. */
     protected array $sentenciasBdGeneral = [];
 
     protected function tearDown(): void
@@ -47,11 +35,6 @@ class RegistrarRolesTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * Los roles viven en la base de datos de seguridad (conexSG). El PDO simulado se inyecta
-     * en "instanciaSG"; la conexión general ("instancia") se reemplaza por un PDO que falla,
-     * de modo que si el modelo consulta por error la base de datos general la prueba lo detecta.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $pdoGeneral = $this->createMock(PDO::class);
@@ -65,16 +48,6 @@ class RegistrarRolesTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoGeneral);
     }
 
-    /**
-     * Crea el PDO simulado de la base de datos de seguridad.
-     *
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = []): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -163,7 +136,6 @@ class RegistrarRolesTest extends TestCase
         ], $sobrescribir);
     }
 
-    // Caso 1 (E1): Registro exitoso con nombre y descripción
     public function testRegistroExitoso(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock());
@@ -180,7 +152,6 @@ class RegistrarRolesTest extends TestCase
         ], $insert['params']);
     }
 
-    // Caso 2 (E2): Registro exitoso sin descripción (usa el valor por defecto de la BD)
     public function testRegistroSinDescripcion(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock());
@@ -194,7 +165,6 @@ class RegistrarRolesTest extends TestCase
         $this->assertSame([':nombre' => 'Entrenador Auxiliar'], $insert['params']);
     }
 
-    // Caso 3 (E3): Nombre de rol duplicado
     public function testNombreDuplicado(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock(['roles.nombre_rol.1' => 1]));
@@ -206,7 +176,6 @@ class RegistrarRolesTest extends TestCase
         $this->assertNull($this->sentenciaEjecutada('INSERT INTO `roles`'));
     }
 
-    // Caso 4 (E4): Error de base de datos al registrar
     public function testErrorBaseDatosAlRegistrar(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [

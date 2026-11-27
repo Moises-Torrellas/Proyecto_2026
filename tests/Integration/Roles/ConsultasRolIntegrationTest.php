@@ -15,17 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-ROL-02 / RF-ROL-06 (integración): Listar los roles ocultando los protegidos
- * (nivel 1 y 2), filtrarlos por nombre desde la tabla o el reporte y consultar el
- * detalle de uno.
- *
- * Escenarios:
- *  E1. Listado general.
- *  E2. Búsqueda por nombre desde la tabla.
- *  E3. Reporte filtrado por nombre.
- *  E4. Detalle de un rol.
- */
 #[Group('integ')]
 #[Group('roles')]
 #[Group('rolesConsultas')]
@@ -35,7 +24,6 @@ class ConsultasRolIntegrationTest extends TestCase
     private ModeloRoles $modelo;
 
     private int $modulo;
-    /** @var int[] Tres permisos de prueba del módulo de prueba */
     private array $permisos = [];
 
     private array $ids = [];
@@ -79,14 +67,6 @@ class ConsultasRolIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas.
-     * Todo lo que crean las pruebas se identifica y se elimina antes y después de cada prueba:
-     * - roles cuyo nombre empieza por "Integ Roles",
-     * - el módulo "Integ Roles Modulo" y sus permisos (clave "integ_rol_..."),
-     * - usuarios con cédula "9999xxxx".
-     * Los roles, permisos y usuarios propios del sistema nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -120,9 +100,6 @@ class ConsultasRolIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un rol directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearRol(string $nombre, int $nivel = 3, string $descripcion = 'Descripcion De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO roles (nombre_rol, descripcion, nivel_rol, estatus) VALUES (:nombre, :descripcion, :nivel, 1)");
@@ -138,7 +115,6 @@ class ConsultasRolIntegrationTest extends TestCase
         $this->ids['nivel2'] = $this->crearRol('Integ Roles Admin', 2);
     }
 
-    /** Nombres de los roles de prueba presentes en un resultado, ordenados. */
     private function rolesDePrueba(array $resultado): array
     {
         $nombres = array_values(array_filter(
@@ -149,7 +125,6 @@ class ConsultasRolIntegrationTest extends TestCase
         return $nombres;
     }
 
-    // Caso 1 (E1): El listado oculta los roles de nivel 1 y 2
     public function testListadoOcultaRolesProtegidos(): void
     {
         $this->cargarRoles();
@@ -163,7 +138,6 @@ class ConsultasRolIntegrationTest extends TestCase
         }
     }
 
-    // Caso 2 (E1): El listado viene ordenado por id
     public function testListadoOrdenadoPorId(): void
     {
         $this->cargarRoles();
@@ -175,7 +149,6 @@ class ConsultasRolIntegrationTest extends TestCase
         $this->assertSame($ordenados, $ids);
     }
 
-    // Caso 3 (E2): Búsqueda por parte del nombre
     public function testBusquedaPorNombre(): void
     {
         $this->cargarRoles();
@@ -185,7 +158,6 @@ class ConsultasRolIntegrationTest extends TestCase
         $this->assertSame(['Integ Roles Entrenador'], $this->rolesDePrueba($resultado));
     }
 
-    // Caso 4 (E2): La búsqueda tampoco muestra roles protegidos
     public function testBusquedaNoMuestraRolesProtegidos(): void
     {
         $this->cargarRoles();
@@ -195,7 +167,6 @@ class ConsultasRolIntegrationTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 5 (E2): Búsqueda sin coincidencias
     public function testBusquedaSinCoincidencias(): void
     {
         $this->cargarRoles();
@@ -206,7 +177,6 @@ class ConsultasRolIntegrationTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 6 (E3): El reporte filtra por nombre
     public function testReporteFiltradoPorNombre(): void
     {
         $this->cargarRoles();
@@ -217,7 +187,6 @@ class ConsultasRolIntegrationTest extends TestCase
         $this->assertSame(['Integ Roles Delegado'], $this->rolesDePrueba($resultado));
     }
 
-    // Caso 7 (E4): Detalle de un rol por id
     public function testBuscarPorId(): void
     {
         $this->cargarRoles();
@@ -232,7 +201,6 @@ class ConsultasRolIntegrationTest extends TestCase
         ]], $resultado['datos']);
     }
 
-    // Caso 8 (E4): Un id que no existe no devuelve datos
     public function testBuscarRolInexistente(): void
     {
         $resultado = $this->modelo->procesarDatos(['accion' => 'buscar', 'id' => '99999999']);

@@ -15,23 +15,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-MOD-02: El sistema debe listar los módulos ordenados por id, ocultando los módulos
- * internos del sistema (ids 4, 5 y 8), permitir buscarlos por nombre y consultar el
- * detalle de un módulo.
- *
- * Escenarios:
- *  E1. Listado general.
- *  E2. Búsqueda por nombre.
- *  E3. Detalle de un módulo.
- *  E4. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitModulos')]
 #[Group('consultarModulos')]
 class ConsultarModulosTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -44,10 +32,6 @@ class ConsultarModulosTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * Los módulos viven en la base de datos de seguridad (conexSG), por lo que el PDO
-     * simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
@@ -55,14 +39,6 @@ class ConsultarModulosTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoMock);
     }
 
-    /**
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'rowCount' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = []): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -151,7 +127,6 @@ class ConsultarModulosTest extends TestCase
         ];
     }
 
-    // Caso 1 (E1): Listado ordenado que excluye los módulos internos 4, 5 y 8
     public function testConsultaExitosa(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -169,7 +144,6 @@ class ConsultarModulosTest extends TestCase
         $this->assertSame([], $sentencia['params']);
     }
 
-    // Caso 2 (E2): La búsqueda filtra por nombre del módulo
     public function testBusquedaPorNombre(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -185,7 +159,6 @@ class ConsultarModulosTest extends TestCase
         $this->assertSame([':f1' => '%Atle%'], $sentencia['params']);
     }
 
-    // Caso 3 (E4): Error de base de datos al listar
     public function testConsultaError(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -198,7 +171,6 @@ class ConsultarModulosTest extends TestCase
         $this->assertSame('Tabla no encontrada', $resultado['mensaje']);
     }
 
-    // Caso 4 (E3): Detalle de un módulo existente
     public function testBuscarExitoso(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -212,7 +184,6 @@ class ConsultarModulosTest extends TestCase
         $this->assertSame([':id' => '6'], $this->sentenciaEjecutada('FROM modulos WHERE id_modulo')['params']);
     }
 
-    // Caso 5 (E3): Detalle de un módulo inexistente devuelve datos vacíos
     public function testBuscarNoEncontrado(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -225,7 +196,6 @@ class ConsultarModulosTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 6 (E4): Error de base de datos al buscar
     public function testBuscarError(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [

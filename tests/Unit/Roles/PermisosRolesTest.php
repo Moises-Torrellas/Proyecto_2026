@@ -16,26 +16,13 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-ROL-07: El sistema debe permitir ver y asignar los permisos de un rol. Al guardar,
- * los permisos anteriores del rol se reemplazan por los seleccionados (valor 1).
- *
- * Escenarios:
- *  E1. Cargar los permisos de un rol.
- *  E2. Falla al cargar los permisos.
- *  E3. Guardar una selección de permisos.
- *  E4. Guardar sin permisos seleccionados.
- *  E5. Falla de la base de datos al guardar.
- */
 #[Group('unit')]
 #[Group('unitRoles')]
 #[Group('permisosRoles')]
 class PermisosRolesTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
-    /** Sentencias que el modelo intentó preparar sobre la base de datos general. */
     protected array $sentenciasBdGeneral = [];
 
     protected function tearDown(): void
@@ -49,11 +36,6 @@ class PermisosRolesTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * Los roles viven en la base de datos de seguridad (conexSG). El PDO simulado se inyecta
-     * en "instanciaSG"; la conexión general ("instancia") se reemplaza por un PDO que falla,
-     * de modo que si el modelo consulta por error la base de datos general la prueba lo detecta.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $pdoGeneral = $this->createMock(PDO::class);
@@ -67,16 +49,6 @@ class PermisosRolesTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoGeneral);
     }
 
-    /**
-     * Crea el PDO simulado de la base de datos de seguridad.
-     *
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = []): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -188,7 +160,6 @@ class PermisosRolesTest extends TestCase
         ]);
     }
 
-    // Caso 1 (E1): Cargar los permisos de un rol
     public function testCargarPermisos(): void
     {
         $filas = [
@@ -203,7 +174,6 @@ class PermisosRolesTest extends TestCase
         $this->assertSame($filas, $resultado['datos']);
     }
 
-    // Caso 2 (E2): Excepción al cargar los permisos devuelve error
     public function testCargarPermisosExcepcion(): void
     {
         $modelo = $this->modeloConPermisos(new Exception('Sin conexión'));
@@ -214,7 +184,6 @@ class PermisosRolesTest extends TestCase
         $this->assertSame('Sin conexión', $resultado['mensaje']);
     }
 
-    // Caso 3 (E2): Si la consulta de permisos responde con error, el error se informa
     public function testCargarPermisosRespuestaError(): void
     {
         $modelo = $this->modeloConPermisos(['accion' => 'error', 'mensaje' => 'Error de consulta']);
@@ -228,7 +197,6 @@ class PermisosRolesTest extends TestCase
         );
     }
 
-    // Caso 4 (E3): Guardar reemplaza los permisos del rol por los seleccionados
     public function testGuardarPermisos(): void
     {
         $resultado = $this->guardar(['1' => 1, '4' => '1', '7' => 0]);
@@ -242,7 +210,6 @@ class PermisosRolesTest extends TestCase
         $this->assertSame([':id_rol' => 5, ':id_permiso' => 4], $inserts[1]['params']);
     }
 
-    // Caso 5 (E4): Guardar sin permisos deja el rol sin permisos
     public function testGuardarSinPermisos(): void
     {
         $resultado = $this->guardar([]);
@@ -252,7 +219,6 @@ class PermisosRolesTest extends TestCase
         $this->assertCount(0, $this->sentenciasEjecutadas('INSERT INTO `permisos_rol`'));
     }
 
-    // Caso 6 (E5): Error de base de datos al guardar permisos
     public function testErrorBaseDatosAlGuardarPermisos(): void
     {
         $resultado = $this->guardar([1 => 1], [

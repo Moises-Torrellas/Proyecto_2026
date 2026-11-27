@@ -8,25 +8,15 @@ use Codeception\Attribute\DataProvider;
 use Codeception\Example;
 use Tests\Support\AcceptanceTester;
 
-/**
- * Pruebas de Humo (Smoke Testing) con Codeception
- * Módulo: Bitacora (Seguridad > Bitacora)
- *
- * Valida la disponibilidad crítica, renderizado, navegación e integridad
- * del módulo de Bitácora sin ejecutar mutaciones destructivas en la BD.
- * (Entrar al módulo deja el registro "Ingreso al Modulo", como hace el sistema.)
- */
 final class BitacoraCest
 {
     private const SECCION           = 'Seguridad';
     private const MODULO_HREF       = 'Bitacora';
     private const MODULO_TITULO     = 'Bitacora';
 
-    // Usuario con el que se inicia sesión y acción que el sistema registra al entrar al módulo
     private const CEDULA_ADMIN      = '12345678';
     private const ACCION_INGRESO    = 'Ingreso al Modulo';
 
-    // Selectores principales de la vista
     private const TITULO            = '#titulo';
     private const RESULTADOS        = '#resultadoconsulta';
     private const CONTENEDOR_GRUPAL = '.listado_contenedor_grupal';
@@ -34,7 +24,6 @@ final class BitacoraCest
     private const BTN_REPORTE       = '#generar';
     private const DETALLE_OCULTO    = '.listado_detalle_oculto';
 
-    // Selectores del modal de filtros del reporte
     private const MODAL             = '#modal';
     private const MODAL_TITULO      = '#titulo_modal';
     private const MODAL_CERRAR      = '#cerrar_modal';
@@ -45,7 +34,6 @@ final class BitacoraCest
     private const FECHA_INICIO_VISIBLE = '#fecha_inicio + input[type="text"]';
     private const FECHA_FIN_VISIBLE    = '#fecha_fin + input[type="text"]';
 
-    /** Si algo de esto aparece en pantalla, la vista está rota. */
     private const TEXTOS_DE_ERROR = [
         'Fatal error',
         'Parse error',
@@ -60,7 +48,7 @@ final class BitacoraCest
 
     public function _before(AcceptanceTester $I): void
     {
-        $I->amOnPage('/'); // necesario para que el navegador esté en tu dominio antes de cargar cookies
+        $I->amOnPage('/');
 
         if ($I->loadSessionSnapshot('login')) {
             $I->amOnPage('/Principal');
@@ -78,35 +66,25 @@ final class BitacoraCest
         $this->esperarCargaDePagina($I);
     }
 
-    /**
-     * Humo: entrar al módulo Bitácora desde el menú y comprobar que responde y se renderiza.
-     */
     #[DataProvider('modulosProvider')]
     public function ProbarCargaDeModulo(AcceptanceTester $I, Example $example): void
     {
         $href = $example['href'];
 
-        // Entrar desde el menú
         $I->click($this->xpathSeccion(self::SECCION));
         $enlace = sprintf('a[href="%s"]', $href);
         $I->waitForElementVisible($enlace, 5);
         $I->click($enlace);
 
-        // La vista cargó
         $I->waitForText($example['titulo'], 10, self::TITULO);
         $this->esperarCargaDePagina($I);
         $I->seeInCurrentUrl($href);
 
-        // La consulta a la base de datos respondió: hay registros o mensaje de vacío
         $I->seeElement($this->selectorListado());
 
-        // Sin errores de PHP
         $this->verificarSinErrores($I);
     }
 
-    /**
-     * Humo: Acceso directo por URL, controles esenciales y registro del ingreso al módulo.
-     */
     public function ProbarAccesoDirectoYControlesBase(AcceptanceTester $I): void
     {
         $I->amOnPage('/' . self::MODULO_HREF);
@@ -114,27 +92,21 @@ final class BitacoraCest
         $I->waitForText(self::MODULO_TITULO, 10, self::TITULO);
         $I->seeInCurrentUrl(self::MODULO_HREF);
 
-        // Controles esenciales de la interfaz
         $I->seeElement(self::BUSQUEDA);
         $I->seeElement(self::BTN_REPORTE);
         $I->seeElement(self::RESULTADOS);
 
-        // El ingreso recién hecho quedó registrado y es lo primero del listado
         $primero = self::RESULTADOS . ' ' . self::CONTENEDOR_GRUPAL . ':first-child';
         $I->seeElement($primero);
         $I->see(self::MODULO_TITULO, $primero . ' .listado_titulo');
         $I->see(self::ACCION_INGRESO, $primero);
 
-        // El modal existe en el DOM pero debe permanecer oculto
         $I->seeElementInDOM(self::MODAL);
         $I->dontSeeElement(self::MODAL);
 
         $this->verificarSinErrores($I);
     }
 
-    /**
-     * Humo: Al pulsar un registro se despliega su detalle con el usuario y el entorno.
-     */
     public function ProbarDetalleDeRegistro(AcceptanceTester $I): void
     {
         $I->amOnPage('/' . self::MODULO_HREF);
@@ -154,10 +126,6 @@ final class BitacoraCest
         $this->verificarSinErrores($I);
     }
 
-    /**
-     * Humo: El modal de filtros del reporte abre con las listas de módulos y usuarios cargadas
-     * desde la BD, y se cierra sin generar archivos.
-     */
     public function ProbarModalDeReporte(AcceptanceTester $I): void
     {
         $I->amOnPage('/' . self::MODULO_HREF);
@@ -170,37 +138,29 @@ final class BitacoraCest
         $I->waitForText('Filtros del Reporte', 10, self::MODAL_TITULO);
         $I->see('Generar Reporte', self::BTN_PROCESO);
 
-        // Filtros de fecha: main.js aplica flatpickr, que oculta el input original y muestra
-        // en su lugar un campo alternativo; se revisa ese campo visible
         $I->seeElementInDOM('#fecha_inicio');
         $I->seeElementInDOM('#fecha_fin');
         $I->seeElement(self::FECHA_INICIO_VISIBLE);
         $I->seeElement(self::FECHA_FIN_VISIBLE);
 
-        // El calendario (flatpickr) quedó inicializado en ambos campos
         $I->waitForJS(
             "return !!document.getElementById('fecha_inicio')._flatpickr"
             . " && !!document.getElementById('fecha_fin')._flatpickr;",
             5
         );
 
-        // Las listas trajeron registros de la BD además de la opción "Todos"
         $I->waitForJS(
             "return document.querySelectorAll('" . self::FILTRO_MODULO . " option').length > 1"
             . " && document.querySelectorAll('" . self::FILTRO_USUARIO . " option').length > 1;",
             10
         );
 
-        // Cerrar sin generar
         $I->click(self::MODAL_CERRAR);
         $I->waitForElementNotVisible(self::MODAL, 5);
 
         $this->verificarSinErrores($I);
     }
 
-    /**
-     * Humo: La búsqueda rápida vía AJAX encuentra los registros del administrador por su cédula.
-     */
     public function ProbarBusquedaConResultados(AcceptanceTester $I): void
     {
         $I->amOnPage('/' . self::MODULO_HREF);
@@ -209,7 +169,6 @@ final class BitacoraCest
 
         $I->fillField(self::BUSQUEDA, self::CEDULA_ADMIN);
 
-        // El listado se redibuja solo con registros de ese usuario
         $I->waitForJS(
             "var g = document.querySelectorAll('" . self::RESULTADOS . " " . self::CONTENEDOR_GRUPAL . "');"
             . " return g.length > 0 && Array.from(g).every(e => e.textContent.includes('" . self::CEDULA_ADMIN . "'));",
@@ -219,9 +178,6 @@ final class BitacoraCest
         $this->verificarSinErrores($I);
     }
 
-    /**
-     * Humo: La búsqueda rápida vía AJAX responde adecuadamente ante cadenas sin coincidencia.
-     */
     public function ProbarBusquedaSinResultados(AcceptanceTester $I): void
     {
         $I->amOnPage('/' . self::MODULO_HREF);
@@ -248,21 +204,12 @@ final class BitacoraCest
             . self::RESULTADOS . ' .listado_vacio';
     }
 
-    /**
-     * Cada vista muestra una capa de carga (#loader) a pantalla completa que main.js oculta
-     * cuando la página termina de cargar. Mientras está visible intercepta los clics.
-     */
     private function esperarCargaDePagina(AcceptanceTester $I): void
     {
         $I->waitForElementNotVisible('#loader', 30);
         $this->desactivarAnimaciones($I);
     }
 
-    /**
-     * Los modales aparecen con transiciones CSS de 0.2 s. Si la ventana de Chrome queda detrás
-     * de otra, Windows pausa esas transiciones y el modal sigue "invisible" para WebDriver
-     * aunque ya esté abierto. Sin animaciones los cambios son inmediatos.
-     */
     private function desactivarAnimaciones(AcceptanceTester $I): void
     {
         $I->executeJS(

@@ -15,26 +15,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-BIT-03: El sistema debe mostrar los registros de la bitácora del más reciente al más
- * antiguo, paginados (100 por página por defecto), y permitir filtrarlos por texto
- * (usuario, cédula, acción o módulo), por módulo, por usuario y por rango de fechas.
- * El reporte incluye todos los registros que cumplan los filtros, sin paginar.
- *
- * Escenarios:
- *  E1. Listado inicial sin filtros.
- *  E2. Navegación entre páginas.
- *  E3. Búsqueda general por texto.
- *  E4. Filtros por módulo, usuario y rango de fechas.
- *  E5. Generación del reporte.
- *  E6. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitBitacora')]
 #[Group('consultarBitacora')]
 class ConsultarBitacoraTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -49,10 +34,6 @@ class ConsultarBitacoraTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * La bitácora vive en la base de datos de seguridad (conexSG), por lo que el PDO
-     * simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
@@ -60,10 +41,6 @@ class ConsultarBitacoraTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoMock);
     }
 
-    /**
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'error' => Exception]
-     *                          Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $respuestas = [], bool $enTransaccion = false): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -140,7 +117,6 @@ class ConsultarBitacoraTest extends TestCase
         return $this->sentenciaEjecutada('vista_consulta_bitacora');
     }
 
-    // Caso 1 (E1): Listado inicial: del más reciente al más antiguo, primera página de 100
     public function testListadoInicial(): void
     {
         $resultado = $this->consultar([]);
@@ -154,7 +130,6 @@ class ConsultarBitacoraTest extends TestCase
         $this->assertSame([':limit' => 100, ':offset' => 0], $sentencia['params']);
     }
 
-    // Caso 2 (E1): Bitácora vacía devuelve un listado vacío
     public function testListadoVacio(): void
     {
         $resultado = $this->consultar([], ['vista_consulta_bitacora' => ['fetchAll' => []]]);
@@ -163,7 +138,6 @@ class ConsultarBitacoraTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 3 (E2): Paginación con límite y desplazamiento indicados (convertidos a entero)
     public function testPaginacion(): void
     {
         $this->consultar(['limit' => '50', 'offset' => '200']);
@@ -173,7 +147,6 @@ class ConsultarBitacoraTest extends TestCase
         $this->assertSame(200, $params[':offset']);
     }
 
-    // Caso 4 (E3): La búsqueda general filtra por usuario, cédula, acción y módulo
     public function testBusquedaGeneral(): void
     {
         $this->consultar(['filtro' => 'Rol']);
@@ -187,7 +160,6 @@ class ConsultarBitacoraTest extends TestCase
         }
     }
 
-    // Caso 5 (E3): Una búsqueda vacía no agrega condiciones
     public function testBusquedaVaciaNoFiltra(): void
     {
         $this->consultar(['filtro' => '']);
@@ -196,7 +168,6 @@ class ConsultarBitacoraTest extends TestCase
         $this->assertStringNotContainsString('LIKE', $sentencia['sql']);
     }
 
-    // Caso 6 (E4): Filtro por módulo
     public function testFiltroPorModulo(): void
     {
         $this->consultar(['id_modulo' => '103']);
@@ -206,7 +177,6 @@ class ConsultarBitacoraTest extends TestCase
         $this->assertSame('103', $sentencia['params'][':id_modulo']);
     }
 
-    // Caso 7 (E4): Filtro por usuario
     public function testFiltroPorUsuario(): void
     {
         $this->consultar(['idUsuario' => '4']);
@@ -216,7 +186,6 @@ class ConsultarBitacoraTest extends TestCase
         $this->assertSame('4', $sentencia['params'][':idUsuario']);
     }
 
-    // Caso 8 (E4): Filtro por rango de fechas
     public function testFiltroPorRangoFechas(): void
     {
         $this->consultar(['fecha_inicio' => '2026-11-01', 'fecha_fin' => '2026-11-12']);
@@ -227,7 +196,6 @@ class ConsultarBitacoraTest extends TestCase
         $this->assertSame('2026-11-12', $sentencia['params'][':fecha_fin']);
     }
 
-    // Caso 9 (E4): Con una sola fecha no se aplica el filtro de rango
     public function testUnaSolaFechaNoFiltra(): void
     {
         $this->consultar(['fecha_inicio' => '2026-11-01']);
@@ -237,7 +205,6 @@ class ConsultarBitacoraTest extends TestCase
         $this->assertArrayNotHasKey(':fecha_inicio', $sentencia['params']);
     }
 
-    // Caso 10 (E4): Todos los filtros combinados
     public function testFiltrosCombinados(): void
     {
         $this->consultar([
@@ -254,7 +221,6 @@ class ConsultarBitacoraTest extends TestCase
         }
     }
 
-    // Caso 11 (E5): El reporte incluye todos los registros, sin paginar
     public function testReporteSinPaginacion(): void
     {
         $resultado = $this->consultar(['accion' => 'reporte', 'limit' => 100]);
@@ -267,7 +233,6 @@ class ConsultarBitacoraTest extends TestCase
         $this->assertArrayNotHasKey(':limit', $sentencia['params']);
     }
 
-    // Caso 12 (E5): El reporte aplica los filtros seleccionados
     public function testReporteConFiltros(): void
     {
         $this->consultar([
@@ -285,7 +250,6 @@ class ConsultarBitacoraTest extends TestCase
         ], $params);
     }
 
-    // Caso 13 (E6): Error de base de datos devuelve mensaje controlado
     public function testErrorBaseDatos(): void
     {
         $resultado = $this->consultar([], [

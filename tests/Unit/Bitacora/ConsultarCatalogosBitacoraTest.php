@@ -15,21 +15,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-BIT-04: El sistema debe ofrecer las listas de usuarios y de módulos, ordenadas
- * alfabéticamente, para usarlas como opciones de filtro en la bitácora y su reporte.
- *
- * Escenarios:
- *  E1. Cargar la lista de usuarios.
- *  E2. Cargar la lista de módulos.
- *  E3. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitBitacora')]
 #[Group('consultarCatalogosBitacora')]
 class ConsultarCatalogosBitacoraTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -44,10 +34,6 @@ class ConsultarCatalogosBitacoraTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * La bitácora vive en la base de datos de seguridad (conexSG), por lo que el PDO
-     * simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
@@ -55,10 +41,6 @@ class ConsultarCatalogosBitacoraTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoMock);
     }
 
-    /**
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'error' => Exception]
-     *                          Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $respuestas = [], bool $enTransaccion = false): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -114,7 +96,6 @@ class ConsultarCatalogosBitacoraTest extends TestCase
         return null;
     }
 
-    // Caso 1 (E1): Lista de usuarios ordenada por nombre, sin datos sensibles
     public function testConsultarUsuarios(): void
     {
         $filas = [
@@ -136,7 +117,6 @@ class ConsultarCatalogosBitacoraTest extends TestCase
         $this->assertStringNotContainsString('*', $sql);
     }
 
-    // Caso 2 (E3): Error de base de datos al cargar usuarios
     public function testConsultarUsuariosError(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([
@@ -149,7 +129,6 @@ class ConsultarCatalogosBitacoraTest extends TestCase
         $this->assertSame('Tabla no encontrada', $resultado['mensaje']);
     }
 
-    // Caso 3 (E2): Lista de módulos ordenada por nombre
     public function testConsultarModulos(): void
     {
         $filas = [
@@ -170,7 +149,6 @@ class ConsultarCatalogosBitacoraTest extends TestCase
         );
     }
 
-    // Caso 4 (E3): Error de base de datos al cargar módulos
     public function testConsultarModulosError(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([

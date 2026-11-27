@@ -15,22 +15,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-02: El sistema debe listar los usuarios registrados y permitir filtrarlos
- * (buscador general de la tabla y filtros específicos del reporte).
- *
- * Escenarios:
- *  E1. Listado general sin filtros.
- *  E2. Búsqueda general desde la tabla.
- *  E3. Filtros específicos del reporte (cédula, nombre, apellido, rol).
- *  E4. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitUsuarios')]
 #[Group('consultarUsuarios')]
 class ConsultarUsuariosTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -44,10 +33,6 @@ class ConsultarUsuariosTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * ModeloUsuarios trabaja sobre la base de datos de seguridad (conexSG), por lo que
-     * el PDO simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
@@ -55,16 +40,6 @@ class ConsultarUsuariosTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoMock);
     }
 
-    /**
-     * Crea un PDO simulado.
-     *
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetch' => , 'fetchAll' => , 'fetchColumn' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = [], string $lastInsertId = '25'): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -81,11 +56,9 @@ class ConsultarUsuariosTest extends TestCase
             fn(string $sql) => $this->crearSentencia($sql, $respuestas, true)
         );
         $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($conteos, $respuestas) {
-            // verificarExistenciaPropia: ... WHERE idUsuario = :id AND <columna> = :valor
             if (preg_match('/SELECT COUNT\(\*\) FROM `\w+`\s+WHERE\s+\w+\s*=\s*:id\s+AND\s+(\w+)\s*=\s*:valor/', $sql, $m)) {
                 return $this->crearSentenciaConteo(fn() => $conteos['propia.' . $m[1]] ?? 0);
             }
-            // verificarExistencia: SELECT COUNT(*) FROM `<tabla>` WHERE <columna> = :valor [AND estatus = :estatus]
             if (preg_match('/SELECT COUNT\(\*\) FROM `(\w+)` WHERE (\w+) = :valor/', $sql, $m)) {
                 return $this->crearSentenciaConteo(
                     fn($estatus) => $conteos[$m[1] . '.' . $m[2] . '.' . ($estatus ?? 'null')] ?? 0
@@ -153,7 +126,6 @@ class ConsultarUsuariosTest extends TestCase
         return $stmt;
     }
 
-    /** Devuelve la primera sentencia ejecutada que contenga el fragmento indicado, o null. */
     protected function sentenciaEjecutada(string $fragmento): ?array
     {
         foreach ($this->sentencias as $sentencia) {
@@ -172,7 +144,6 @@ class ConsultarUsuariosTest extends TestCase
         ];
     }
 
-    // Caso 1 (E1): Listado exitoso sin filtros
     public function testConsultaExitosaSinFiltros(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -189,7 +160,6 @@ class ConsultarUsuariosTest extends TestCase
         $this->assertSame([], $sentencia['params']);
     }
 
-    // Caso 2 (E1): Listado vacío cuando no hay usuarios
     public function testConsultaSinRegistros(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -202,7 +172,6 @@ class ConsultarUsuariosTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 3 (E2): La búsqueda general filtra por cédula, nombre, apellido, correo y rol
     public function testBusquedaGeneral(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -221,7 +190,6 @@ class ConsultarUsuariosTest extends TestCase
         }
     }
 
-    // Caso 4 (E3): Reporte filtrado por cédula, nombre y apellido
     public function testReporteConFiltrosEspecificos(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -244,7 +212,6 @@ class ConsultarUsuariosTest extends TestCase
         $this->assertArrayNotHasKey(':rol', $params);
     }
 
-    // Caso 5 (E3): Reporte filtrado por rol (el id se convierte a entero)
     public function testReporteFiltradoPorRol(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -258,7 +225,6 @@ class ConsultarUsuariosTest extends TestCase
         $this->assertSame(2, $sentencia['params'][':rol']);
     }
 
-    // Caso 6 (E3): El rol "0" (todos) no se aplica como filtro
     public function testReporteRolTodosNoFiltra(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -271,7 +237,6 @@ class ConsultarUsuariosTest extends TestCase
         $this->assertStringNotContainsString(':rol', $sentencia['sql']);
     }
 
-    // Caso 7 (E4): Error de base de datos devuelve mensaje controlado
     public function testErrorBaseDatos(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [

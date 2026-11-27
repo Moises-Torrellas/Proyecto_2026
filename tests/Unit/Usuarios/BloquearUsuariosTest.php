@@ -15,26 +15,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-06: El sistema debe permitir bloquear y desbloquear el acceso de un usuario.
- * Al desbloquear se reinician los intentos fallidos de inicio de sesión. El Super Usuario
- * y los usuarios de nivel de rol 1 o 2 no pueden ser bloqueados.
- * (bloqueo: 1 = permitido, 2 = bloqueado; se envía el estado actual y se alterna)
- *
- * Escenarios:
- *  E1. Bloquear un usuario activo.
- *  E2. Desbloquear un usuario bloqueado.
- *  E3. Intento de bloquear al Super Usuario.
- *  E4. Usuario inexistente.
- *  E5. Usuario con nivel de rol 1 o 2.
- *  E6. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitUsuarios')]
 #[Group('bloquearUsuarios')]
 class BloquearUsuariosTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -48,10 +33,6 @@ class BloquearUsuariosTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * ModeloUsuarios trabaja sobre la base de datos de seguridad (conexSG), por lo que
-     * el PDO simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
@@ -59,16 +40,6 @@ class BloquearUsuariosTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoMock);
     }
 
-    /**
-     * Crea un PDO simulado.
-     *
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetch' => , 'fetchAll' => , 'fetchColumn' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = [], string $lastInsertId = '25'): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -85,11 +56,9 @@ class BloquearUsuariosTest extends TestCase
             fn(string $sql) => $this->crearSentencia($sql, $respuestas, true)
         );
         $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($conteos, $respuestas) {
-            // verificarExistenciaPropia: ... WHERE idUsuario = :id AND <columna> = :valor
             if (preg_match('/SELECT COUNT\(\*\) FROM `\w+`\s+WHERE\s+\w+\s*=\s*:id\s+AND\s+(\w+)\s*=\s*:valor/', $sql, $m)) {
                 return $this->crearSentenciaConteo(fn() => $conteos['propia.' . $m[1]] ?? 0);
             }
-            // verificarExistencia: SELECT COUNT(*) FROM `<tabla>` WHERE <columna> = :valor [AND estatus = :estatus]
             if (preg_match('/SELECT COUNT\(\*\) FROM `(\w+)` WHERE (\w+) = :valor/', $sql, $m)) {
                 return $this->crearSentenciaConteo(
                     fn($estatus) => $conteos[$m[1] . '.' . $m[2] . '.' . ($estatus ?? 'null')] ?? 0
@@ -157,7 +126,6 @@ class BloquearUsuariosTest extends TestCase
         return $stmt;
     }
 
-    /** Devuelve la primera sentencia ejecutada que contenga el fragmento indicado, o null. */
     protected function sentenciaEjecutada(string $fragmento): ?array
     {
         foreach ($this->sentencias as $sentencia) {
@@ -179,7 +147,6 @@ class BloquearUsuariosTest extends TestCase
         return array_merge($extra, ['SELECT r.nivel_rol' => ['fetchColumn' => $nivel]]);
     }
 
-    // Caso 1 (E1): Bloquear un usuario (estado 1 -> 2) sin reiniciar intentos
     public function testBloquearUsuario(): void
     {
         $resultado = $this->ejecutar(5, 1, ['usuarios.idUsuario.1' => 1], $this->nivel(3));
@@ -191,7 +158,6 @@ class BloquearUsuariosTest extends TestCase
         $this->assertStringNotContainsString('intentos_fallidos', $update['sql']);
     }
 
-    // Caso 2 (E2): Desbloquear un usuario (estado 2 -> 1) reinicia los intentos fallidos
     public function testDesbloquearUsuario(): void
     {
         $resultado = $this->ejecutar(5, 2, ['usuarios.idUsuario.1' => 1], $this->nivel(3));
@@ -203,7 +169,6 @@ class BloquearUsuariosTest extends TestCase
         $this->assertStringContainsString('`intentos_fallidos` = 0', $update['sql']);
     }
 
-    // Caso 3 (E3): El Super Usuario no puede ser bloqueado
     public function testNoBloqueaSuperUsuario(): void
     {
         $resultado = $this->ejecutar(1, 1, ['usuarios.idUsuario.1' => 1], $this->nivel(1));
@@ -213,7 +178,6 @@ class BloquearUsuariosTest extends TestCase
         $this->assertNull($this->sentenciaEjecutada('UPDATE `usuarios`'));
     }
 
-    // Caso 4 (E4): Usuario inexistente
     public function testUsuarioNoExiste(): void
     {
         $resultado = $this->ejecutar(50, 1, ['usuarios.idUsuario.1' => 0]);
@@ -222,7 +186,6 @@ class BloquearUsuariosTest extends TestCase
         $this->assertSame(INVALID_ID, $resultado['codigo']);
     }
 
-    // Caso 5 (E5): Usuario de nivel de rol 1 no puede ser bloqueado
     public function testNoBloqueaNivel1(): void
     {
         $resultado = $this->ejecutar(5, 1, ['usuarios.idUsuario.1' => 1], $this->nivel(1));
@@ -232,7 +195,6 @@ class BloquearUsuariosTest extends TestCase
         $this->assertNull($this->sentenciaEjecutada('UPDATE `usuarios`'));
     }
 
-    // Caso 6 (E5): Usuario de nivel de rol 2 no puede ser bloqueado
     public function testNoBloqueaNivel2(): void
     {
         $resultado = $this->ejecutar(5, 1, ['usuarios.idUsuario.1' => 1], $this->nivel(2));
@@ -241,7 +203,6 @@ class BloquearUsuariosTest extends TestCase
         $this->assertSame('ROLE_RULES_5', $resultado['codigo']);
     }
 
-    // Caso 7 (E6): Error de base de datos al bloquear
     public function testErrorBaseDatosAlBloquear(): void
     {
         $resultado = $this->ejecutar(

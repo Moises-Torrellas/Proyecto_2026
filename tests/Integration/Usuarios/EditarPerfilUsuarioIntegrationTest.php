@@ -15,17 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-08 (integración): Edición del perfil propio por secciones (personal, contacto,
- * seguridad). Cada sección actualiza solo sus columnas en la BD y refresca la sesión.
- *
- * Escenarios:
- *  E1. Edición de datos personales (con y sin foto nueva).
- *  E2. Edición de datos de contacto.
- *  E3. Cambio de contraseña.
- *  E4. Datos duplicados de otro usuario activo.
- *  E5. Tipo de edición inválido o falta de contraseña.
- */
 #[Group('integ')]
 #[Group('usuarios')]
 #[Group('usuariosEditarPerfil')]
@@ -34,7 +23,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
     private ?PDO $pdo = null;
     private ModeloUsuarios $modelo;
 
-    /** Roles creados para la prueba: ['nivel1' => id, 'nivel2' => id, 'nivel3' => id, 'nivel3b' => id] */
     private array $roles = [];
 
     private string $claveInicial = 'ClaveInicial.123';
@@ -45,7 +33,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
     {
         parent::setUp();
         if (session_status() === PHP_SESSION_NONE) {
-            // Sesión sin cookies ni cabeceras para poder iniciarla en CLI
             ini_set('session.use_cookies', '0');
             ini_set('session.cache_limiter', '');
             session_start();
@@ -95,12 +82,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas:
-     * todo lo que crean las pruebas se identifica con la cédula "9999xxxx" y con roles cuyo
-     * nombre empieza por "Integ Usuarios", y se elimina antes y después de cada prueba.
-     * Así los usuarios propios del sistema (Admin, Soporte, ...) nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -130,9 +111,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un usuario directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearUsuario(array $datos = []): int
     {
         $base = [
@@ -183,7 +161,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         ], $datos));
     }
 
-    // Caso 1 (E1): Datos personales sin foto: se actualizan y la foto se conserva
     public function testEditarDatosPersonalesSinFoto(): void
     {
         $resultado = $this->editar('personal', ['cedula' => '99990041', 'nombre' => 'nuevo', 'apellido' => 'perfil']);
@@ -201,7 +178,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         $this->assertArrayNotHasKey('foto', $_SESSION);
     }
 
-    // Caso 2 (E1): Datos personales con foto nueva
     public function testEditarDatosPersonalesConFoto(): void
     {
         $resultado = $this->editar('personal', [
@@ -213,7 +189,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         $this->assertSame('foto_nueva.png', $_SESSION['foto']);
     }
 
-    // Caso 3 (E2): Datos de contacto
     public function testEditarDatosContacto(): void
     {
         $resultado = $this->editar('contacto', ['telefono' => '0414-9990049', 'correo' => 'Contacto.Nuevo@Integ.test']);
@@ -226,7 +201,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         $this->assertSame('contacto.nuevo@integ.test', $_SESSION['correo']);
     }
 
-    // Caso 4 (E3): Cambio de contraseña
     public function testCambiarContraseña(): void
     {
         $resultado = $this->editar('seguridad', ['contraseña' => 'Perfil.Nueva789']);
@@ -237,7 +211,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         $this->assertArrayNotHasKey('contraseña', $_SESSION);
     }
 
-    // Caso 5 (E4): Cédula de otro usuario activo
     public function testRechazaCedulaDeOtroUsuario(): void
     {
         $this->crearUsuario(['cedula' => '99990048', 'correo' => 'otro@integ.test', 'telefono' => '0414-9990048']);
@@ -249,7 +222,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         $this->assertSame('Perfil', $this->obtenerUsuario($this->idUsuario)['nombreUsuario']);
     }
 
-    // Caso 6 (E4): Correo de otro usuario activo
     public function testRechazaCorreoDeOtroUsuario(): void
     {
         $this->crearUsuario(['cedula' => '99990048', 'correo' => 'otro@integ.test', 'telefono' => '0414-9990048']);
@@ -261,7 +233,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         $this->assertSame('0414-9990040', $this->obtenerUsuario($this->idUsuario)['telefonoUsuario']);
     }
 
-    // Caso 7 (E4): Teléfono de otro usuario activo
     public function testRechazaTelefonoDeOtroUsuario(): void
     {
         $this->crearUsuario(['cedula' => '99990048', 'correo' => 'otro@integ.test', 'telefono' => '0414-9990048']);
@@ -272,7 +243,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         $this->assertSame(DUPLICATE_PHONE, $resultado['codigo']);
     }
 
-    // Caso 8 (E5): Seguridad sin contraseña nueva
     public function testSeguridadSinContraseña(): void
     {
         $hashAnterior = $this->obtenerUsuario($this->idUsuario)['pass_hash'];
@@ -283,7 +253,6 @@ class EditarPerfilUsuarioIntegrationTest extends TestCase
         $this->assertSame($hashAnterior, $this->obtenerUsuario($this->idUsuario)['pass_hash']);
     }
 
-    // Caso 9 (E5): Tipo de edición no válido
     public function testTipoEdicionInvalido(): void
     {
         $resultado = $this->editar('otro', ['nombre' => 'Xavier']);

@@ -15,17 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-PER-05 (integración): Bloquear y desbloquear permisos en la BD de seguridad real.
- * En la columna `estatus`, 1 = activo y 2 = bloqueado. El parámetro `bloqueo` recibido
- * es el estado actual y el sistema lo alterna.
- *
- * Escenarios:
- *  E1. Bloquear un permiso activo.
- *  E2. Desbloquear un permiso bloqueado.
- *  E3. Permiso inexistente o que ya tiene el estado pedido.
- *  E4. El estado se refleja en la consulta y en las reglas del módulo.
- */
 #[Group('integ')]
 #[Group('permisos')]
 #[Group('permisosBloquear')]
@@ -77,15 +66,6 @@ class BloquearPermisoIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas.
-     * Todo lo que crean las pruebas se identifica y se elimina antes y después de cada prueba:
-     * - módulos cuyo nombre empieza por "Integ Permisos",
-     * - permisos con clave "integ_..." o nombre "Integ Prueba ...",
-     * - roles cuyo nombre empieza por "Integ Permisos",
-     * - usuarios con cédula "9999xxxx".
-     * Los permisos, roles y usuarios propios del sistema nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -116,9 +96,6 @@ class BloquearPermisoIntegrationTest extends TestCase
         return (int)$this->pdo->lastInsertId();
     }
 
-    /**
-     * Inserta un permiso directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearPermiso(string $nombre, string $clave, int $estatus = 1, ?int $modulo = null, string $descripcion = 'Descripcion De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO permisos (id_modulo, nombre, clave, descripcion, estatus) VALUES (:modulo, :nombre, :clave, :descripcion, :estatus)");
@@ -144,7 +121,6 @@ class BloquearPermisoIntegrationTest extends TestCase
         return $this->modelo->ProcesarDatos(['accion' => 'bloquear', 'id' => (string)$id, 'bloqueo' => (string)$estadoActual]);
     }
 
-    // Caso 1 (E1): Un permiso activo pasa a bloqueado
     public function testBloquearPermiso(): void
     {
         $id = $this->crearPermiso('Integ Prueba Bloqueo', 'integ_bloqueo');
@@ -155,7 +131,6 @@ class BloquearPermisoIntegrationTest extends TestCase
         $this->assertSame(2, (int)$this->obtenerPermiso($id)['estatus']);
     }
 
-    // Caso 2 (E2): Un permiso bloqueado pasa a activo
     public function testDesbloquearPermiso(): void
     {
         $id = $this->crearPermiso('Integ Prueba Bloqueo', 'integ_bloqueo', 2);
@@ -166,7 +141,6 @@ class BloquearPermisoIntegrationTest extends TestCase
         $this->assertSame(1, (int)$this->obtenerPermiso($id)['estatus']);
     }
 
-    // Caso 3 (E1/E2): Bloquear y desbloquear deja el permiso como estaba
     public function testCicloCompletoBloqueoDesbloqueo(): void
     {
         $id = $this->crearPermiso('Integ Prueba Bloqueo', 'integ_bloqueo');
@@ -177,7 +151,6 @@ class BloquearPermisoIntegrationTest extends TestCase
         $this->assertSame(1, (int)$this->obtenerPermiso($id)['estatus']);
     }
 
-    // Caso 4 (E3): Un permiso que no existe
     public function testRechazaPermisoInexistente(): void
     {
         $resultado = $this->cambiarEstado(99999999, 1);
@@ -186,18 +159,16 @@ class BloquearPermisoIntegrationTest extends TestCase
         $this->assertSame('No se encontró el permiso o el estatus ya era el solicitado.', $resultado['codigo']);
     }
 
-    // Caso 5 (E3): Pedir un estado que el permiso ya tiene no cambia nada
     public function testRechazaEstadoQueYaTiene(): void
     {
         $id = $this->crearPermiso('Integ Prueba Bloqueo', 'integ_bloqueo', 2);
 
-        $resultado = $this->cambiarEstado($id, 1); // pide bloquear uno ya bloqueado
+        $resultado = $this->cambiarEstado($id, 1);
 
         $this->assertSame('error', $resultado['accion']);
         $this->assertSame(2, (int)$this->obtenerPermiso($id)['estatus']);
     }
 
-    // Caso 6 (E4): La consulta del módulo muestra el nuevo estado
     public function testEstadoSeReflejaEnConsulta(): void
     {
         $id = $this->crearPermiso('Integ Prueba Bloqueo', 'integ_bloqueo');
@@ -209,7 +180,6 @@ class BloquearPermisoIntegrationTest extends TestCase
         $this->assertSame(2, (int)$datos[0]['estatus_permiso']);
     }
 
-    // Caso 7 (E4): Un permiso bloqueado no se puede modificar hasta desbloquearlo
     public function testPermisoBloqueadoNoSePuedeModificar(): void
     {
         $id = $this->crearPermiso('Integ Prueba Bloqueo', 'integ_bloqueo');

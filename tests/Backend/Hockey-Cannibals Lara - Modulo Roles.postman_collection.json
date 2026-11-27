@@ -141,7 +141,6 @@
                   "    pm.environment.set(\"csrf_token\", match[1]);",
                   "}",
                   "",
-                  "// El nombre del rol solo admite letras; el modelo lo guarda en formato título.",
                   "const letras = n => Array.from({ length: n }, () => 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)]).join('');",
                   "const titulo = t => t.charAt(0).toUpperCase() + t.slice(1);",
                   "const sufijo = titulo(letras(6));",

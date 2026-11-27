@@ -15,17 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-01/02 (integración): Consultar, filtrar (reporte), buscar usuarios y registrar
- * el último ingreso usando la vista vista_consulta_usuarios y las tablas reales.
- *
- * Escenarios:
- *  E1. Listado general: solo usuarios activos, con el nombre de su rol.
- *  E2. Búsqueda general por cédula, nombre, apellido, correo o rol.
- *  E3. Reporte con filtros específicos (cédula, nombre, apellido, rol).
- *  E4. Búsqueda de un usuario por id.
- *  E5. Registro del último ingreso.
- */
 #[Group('integ')]
 #[Group('usuarios')]
 #[Group('usuariosConsultas')]
@@ -34,7 +23,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
     private ?PDO $pdo = null;
     private ModeloUsuarios $modelo;
 
-    /** Roles creados para la prueba: ['nivel1' => id, 'nivel2' => id, 'nivel3' => id, 'nivel3b' => id] */
     private array $roles = [];
 
     private string $claveInicial = 'ClaveInicial.123';
@@ -80,12 +68,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas:
-     * todo lo que crean las pruebas se identifica con la cédula "9999xxxx" y con roles cuyo
-     * nombre empieza por "Integ Usuarios", y se elimina antes y después de cada prueba.
-     * Así los usuarios propios del sistema (Admin, Soporte, ...) nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -115,9 +97,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un usuario directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearUsuario(array $datos = []): int
     {
         $base = [
@@ -175,7 +154,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         ]);
     }
 
-    /** Cédulas de prueba presentes en un resultado (ignora los usuarios propios del sistema). */
     private function cedulasDePrueba(array $resultado): array
     {
         $cedulas = array_column($resultado['datos'], 'cedulaUsuario');
@@ -189,7 +167,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         return $this->modelo->procesarDatos(array_merge(['accion' => 'reporte'], $filtros));
     }
 
-    // Caso 1 (E1): El listado general trae solo usuarios activos con el nombre de su rol
     public function testListadoGeneralSoloActivos(): void
     {
         $this->cargarUsuarios();
@@ -204,7 +181,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertArrayNotHasKey('pass_hash', $ana, 'La vista no debe exponer la contraseña.');
     }
 
-    // Caso 2 (E1): Los resultados vienen ordenados por id
     public function testListadoOrdenadoPorId(): void
     {
         $this->cargarUsuarios();
@@ -216,7 +192,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame($ordenados, $ids);
     }
 
-    // Caso 3 (E2): Búsqueda general por apellido
     public function testBusquedaGeneralPorApellido(): void
     {
         $this->cargarUsuarios();
@@ -226,7 +201,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame(['99990031', '99990032'], $this->cedulasDePrueba($resultado));
     }
 
-    // Caso 4 (E2): Búsqueda general por correo
     public function testBusquedaGeneralPorCorreo(): void
     {
         $this->cargarUsuarios();
@@ -236,7 +210,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame(['99990032'], $this->cedulasDePrueba($resultado));
     }
 
-    // Caso 5 (E2): Búsqueda general por nombre de rol
     public function testBusquedaGeneralPorRol(): void
     {
         $this->cargarUsuarios();
@@ -246,7 +219,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame(['99990032'], $this->cedulasDePrueba($resultado));
     }
 
-    // Caso 6 (E2): Búsqueda sin coincidencias
     public function testBusquedaSinCoincidencias(): void
     {
         $this->cargarUsuarios();
@@ -257,7 +229,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 7 (E3): Reporte filtrado por inicio de cédula
     public function testReportePorCedula(): void
     {
         $this->cargarUsuarios();
@@ -268,7 +239,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame(['99990031', '99990032'], $this->cedulasDePrueba($resultado));
     }
 
-    // Caso 8 (E3): Reporte combinando nombre y apellido
     public function testReportePorNombreYApellido(): void
     {
         $this->cargarUsuarios();
@@ -278,7 +248,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame(['99990031'], $this->cedulasDePrueba($resultado));
     }
 
-    // Caso 9 (E3): Reporte filtrado por rol
     public function testReportePorRol(): void
     {
         $this->cargarUsuarios();
@@ -288,7 +257,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame(['99990032'], array_column($resultado['datos'], 'cedulaUsuario'));
     }
 
-    // Caso 10 (E3): Rol "0" (todos) no filtra por rol
     public function testReporteRolTodosNoFiltra(): void
     {
         $this->cargarUsuarios();
@@ -298,7 +266,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame(['99990031', '99990032'], $this->cedulasDePrueba($resultado));
     }
 
-    // Caso 11 (E4): Buscar por id devuelve el usuario con el nivel de su rol
     public function testBuscarPorId(): void
     {
         $this->cargarUsuarios();
@@ -311,7 +278,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame(3, (int)$resultado['datos'][0]['nivel_rol']);
     }
 
-    // Caso 12 (E4): Buscar un usuario eliminado no devuelve datos
     public function testBuscarUsuarioEliminado(): void
     {
         $this->cargarUsuarios();
@@ -322,7 +288,6 @@ class ConsultasUsuarioIntegrationTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 13 (E5): Registrar el último ingreso guarda la fecha y hora actual
     public function testRegistrarUltimoIngreso(): void
     {
         $id = $this->crearUsuario();

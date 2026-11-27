@@ -15,16 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-05 (integración): Eliminar (desactivar) usuarios en la BD de seguridad real.
- * La eliminación es lógica (estatus = 0) y borra las excepciones de permisos del usuario.
- *
- * Escenarios:
- *  E1. Eliminación de un usuario de nivel 3.
- *  E2. Intento de eliminar al superusuario (id 1).
- *  E3. Intento de eliminar un usuario inexistente o ya eliminado.
- *  E4. Intento de eliminar un usuario de nivel 1 o 2.
- */
 #[Group('integ')]
 #[Group('usuarios')]
 #[Group('usuariosEliminar')]
@@ -33,7 +23,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
     private ?PDO $pdo = null;
     private ModeloUsuarios $modelo;
 
-    /** Roles creados para la prueba: ['nivel1' => id, 'nivel2' => id, 'nivel3' => id, 'nivel3b' => id] */
     private array $roles = [];
 
     private string $claveInicial = 'ClaveInicial.123';
@@ -77,12 +66,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas:
-     * todo lo que crean las pruebas se identifica con la cédula "9999xxxx" y con roles cuyo
-     * nombre empieza por "Integ Usuarios", y se elimina antes y después de cada prueba.
-     * Así los usuarios propios del sistema (Admin, Soporte, ...) nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -112,9 +95,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un usuario directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearUsuario(array $datos = []): int
     {
         $base = [
@@ -156,10 +136,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         return $stmt->fetch();
     }
 
-    /**
-     * Devuelve ids de permisos que se muestran en la pantalla de permisos de usuario
-     * (los módulos 1, 2, 3, 4, 5 y 8 se excluyen en ModeloPermisos::permisosUsuarios).
-     */
     private function obtenerPermisosVisibles(int $cantidad): array
     {
         $stmt = $this->pdo->query("SELECT id_permiso FROM permisos WHERE id_modulo NOT IN (1, 2, 3, 4, 5, 8) ORDER BY id_permiso ASC LIMIT {$cantidad}");
@@ -176,7 +152,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         $stmt->execute([':permiso' => $idPermiso, ':usuario' => $idUsuario, ':tipo' => $tipo]);
     }
 
-    /** @return array<int,int> id_permiso => tipo */
     private function obtenerExcepciones(int $idUsuario): array
     {
         $stmt = $this->pdo->prepare("SELECT id_permiso, tipo FROM excepciones WHERE id_usuario = :id ORDER BY id_permiso");
@@ -193,7 +168,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         return $this->modelo->procesarDatos(['accion' => 'eliminar', 'id' => $id]);
     }
 
-    // Caso 1 (E1): El usuario queda inactivo (no se borra) y sin excepciones
     public function testEliminacionLogicaExitosa(): void
     {
         $id = $this->crearUsuario();
@@ -209,7 +183,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         $this->assertSame([], $this->obtenerExcepciones($id));
     }
 
-    // Caso 2 (E1): El usuario eliminado deja de aparecer en la consulta y en la búsqueda
     public function testUsuarioEliminadoNoApareceEnConsultas(): void
     {
         $id = $this->crearUsuario();
@@ -221,7 +194,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         $this->assertSame([], $busqueda['datos']);
     }
 
-    // Caso 3 (E2): El superusuario (id 1) no se puede eliminar
     public function testNoEliminaSuperusuario(): void
     {
         $estatusAntes = $this->obtenerUsuario(1)['estatus'] ?? null;
@@ -233,7 +205,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         $this->assertSame($estatusAntes, $this->obtenerUsuario(1)['estatus'] ?? null);
     }
 
-    // Caso 4 (E3): Un id que no existe
     public function testNoEliminaUsuarioInexistente(): void
     {
         $resultado = $this->eliminar(99999999);
@@ -242,7 +213,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         $this->assertSame(INVALID_ID, $resultado['codigo']);
     }
 
-    // Caso 5 (E3): Un usuario que ya estaba eliminado
     public function testNoEliminaUsuarioYaEliminado(): void
     {
         $id = $this->crearUsuario(['estatus' => 0]);
@@ -253,7 +223,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         $this->assertSame(INVALID_ID, $resultado['codigo']);
     }
 
-    // Caso 6 (E4): Usuario con rol de nivel 1
     public function testNoEliminaUsuarioNivel1(): void
     {
         $id = $this->crearUsuario(['rol' => $this->roles['nivel1']]);
@@ -265,7 +234,6 @@ class EliminarUsuarioIntegrationTest extends TestCase
         $this->assertSame(1, (int)$this->obtenerUsuario($id)['estatus']);
     }
 
-    // Caso 7 (E4): Usuario con rol de nivel 2
     public function testNoEliminaUsuarioNivel2(): void
     {
         $id = $this->crearUsuario(['rol' => $this->roles['nivel2']]);

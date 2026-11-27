@@ -15,18 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-03 (integración): Registrar usuarios contra la BD de seguridad real, pasando por
- * el procedimiento almacenado pa_incluir_usuario y el disparador que escribe en la bitácora.
- *
- * Escenarios:
- *  E1. Registro de un usuario nuevo con datos válidos.
- *  E2. Registro de una cédula que pertenecía a un usuario eliminado (reactivación).
- *  E3. Registro sin contraseña.
- *  E4. Registro con un rol inexistente.
- *  E5. Registro con cédula, correo o teléfono de un usuario activo.
- *  E6. Registro con el correo o teléfono de un usuario eliminado, o falla del procedimiento.
- */
 #[Group('integ')]
 #[Group('usuarios')]
 #[Group('usuariosRegistrar')]
@@ -35,7 +23,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
     private ?PDO $pdo = null;
     private ModeloUsuarios $modelo;
 
-    /** Roles creados para la prueba: ['nivel1' => id, 'nivel2' => id, 'nivel3' => id, 'nivel3b' => id] */
     private array $roles = [];
 
     private string $claveInicial = 'ClaveInicial.123';
@@ -79,12 +66,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas:
-     * todo lo que crean las pruebas se identifica con la cédula "9999xxxx" y con roles cuyo
-     * nombre empieza por "Integ Usuarios", y se elimina antes y después de cada prueba.
-     * Así los usuarios propios del sistema (Admin, Soporte, ...) nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -114,9 +95,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un usuario directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearUsuario(array $datos = []): int
     {
         $base = [
@@ -187,7 +165,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         ], $sobrescribir);
     }
 
-    // Caso 1 (E1): El usuario queda guardado con los datos normalizados y la contraseña cifrada
     public function testRegistroExitosoGuardaUsuarioEnBD(): void
     {
         $resultado = $this->modelo->procesarDatos($this->datosValidos());
@@ -208,7 +185,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertTrue(password_verify('Clave.Segura123', $usuario['pass_hash']));
     }
 
-    // Caso 2 (E1): El disparador registra la operación en la bitácora a nombre del usuario de sesión
     public function testRegistroQuedaEnBitacoraConUsuarioDeSesion(): void
     {
         $idOperador = $this->crearUsuario(['cedula' => '99990099', 'correo' => 'operador@integ.test', 'telefono' => '0414-9990099']);
@@ -226,7 +202,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertStringContainsString('Integ Usuarios nivel3', $bitacora[0]['datos_nuevos']);
     }
 
-    // Caso 3 (E1): El usuario registrado aparece en la consulta del módulo
     public function testUsuarioRegistradoApareceEnConsulta(): void
     {
         $this->modelo->procesarDatos($this->datosValidos());
@@ -238,7 +213,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertSame('Integ Usuarios nivel3', $resultado['datos'][0]['nombre_rol']);
     }
 
-    // Caso 4 (E2): Una cédula eliminada se reactiva con los datos nuevos y conserva su id
     public function testReactivaUsuarioEliminado(): void
     {
         $idOriginal = $this->crearUsuario([
@@ -262,7 +236,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertTrue(password_verify('Clave.Segura123', $usuario['pass_hash']));
     }
 
-    // Caso 5 (E3): Sin contraseña no se registra nada
     public function testRegistroSinContraseñaNoInserta(): void
     {
         $resultado = $this->modelo->procesarDatos($this->datosValidos(['contraseña' => '']));
@@ -272,7 +245,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarUsuariosPorCedula('99990010'));
     }
 
-    // Caso 6 (E4): Con un rol que no existe en la BD no se registra nada
     public function testRegistroConRolInexistenteNoInserta(): void
     {
         $resultado = $this->modelo->procesarDatos($this->datosValidos(['roles_id' => 999999]));
@@ -282,7 +254,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarUsuariosPorCedula('99990010'));
     }
 
-    // Caso 7 (E5): Cédula de un usuario activo
     public function testRechazaCedulaDeUsuarioActivo(): void
     {
         $idExistente = $this->crearUsuario(['cedula' => '99990010', 'nombre' => 'Existente']);
@@ -297,7 +268,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertSame('Existente', $this->obtenerUsuario($idExistente)['nombreUsuario'], 'El usuario existente no debe cambiar.');
     }
 
-    // Caso 8 (E5): Correo de un usuario activo
     public function testRechazaCorreoDeUsuarioActivo(): void
     {
         $this->crearUsuario(['cedula' => '99990001', 'correo' => 'maria.perez@integ.test']);
@@ -309,7 +279,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarUsuariosPorCedula('99990010'));
     }
 
-    // Caso 9 (E5): Teléfono de un usuario activo
     public function testRechazaTelefonoDeUsuarioActivo(): void
     {
         $this->crearUsuario(['cedula' => '99990001', 'telefono' => '0414-9990010']);
@@ -321,7 +290,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarUsuariosPorCedula('99990010'));
     }
 
-    // Caso 10 (E6): El correo de un usuario eliminado no se reutiliza (además es UNIQUE en la BD)
     public function testRechazaCorreoDeUsuarioEliminado(): void
     {
         $this->crearUsuario(['cedula' => '99990001', 'correo' => 'maria.perez@integ.test', 'estatus' => 0]);
@@ -333,7 +301,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarUsuariosPorCedula('99990010'));
     }
 
-    // Caso 11 (E6): El teléfono de un usuario eliminado tampoco se reutiliza (igual que en Modificar)
     public function testRechazaTelefonoDeUsuarioEliminado(): void
     {
         $this->crearUsuario(['cedula' => '99990001', 'telefono' => '0414-9990010', 'estatus' => 0]);
@@ -345,7 +312,6 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarUsuariosPorCedula('99990010'));
     }
 
-    // Caso 12 (E2/E6): Al reactivar una cédula no se puede tomar el correo de OTRO usuario eliminado
     public function testReactivacionRechazaCorreoDeOtroUsuarioEliminado(): void
     {
         $idReactivar = $this->crearUsuario(['cedula' => '99990010', 'correo' => 'propio@integ.test', 'telefono' => '0414-9990000', 'estatus' => 0]);
@@ -358,12 +324,8 @@ class RegistrarUsuarioIntegrationTest extends TestCase
         $this->assertSame(0, (int)$this->obtenerUsuario($idReactivar)['estatus'], 'No debe reactivarse.');
     }
 
-    // Caso 13 (E6): Si pa_incluir_usuario no inserta (error SQL atrapado en el procedimiento),
-    // el modelo informa error en vez de éxito
     public function testErrorDelProcedimientoNoReportaExito(): void
     {
-        // Nombre de foto de más de 255 caracteres (la foto no pasa por la validación de formato):
-        // el procedimiento falla y devuelve @resultado = 0
         $this->pdo->exec("SET SESSION sql_mode = 'STRICT_ALL_TABLES'");
 
         $resultado = $this->modelo->procesarDatos($this->datosValidos(['foto' => str_repeat('a', 300) . '.png']));

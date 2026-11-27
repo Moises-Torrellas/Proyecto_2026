@@ -16,18 +16,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-PER-03 (integración): Registrar permisos en la BD de seguridad real, asociados a un
- * módulo activo, con nombre y clave técnica únicos y descripción opcional.
- *
- * Escenarios:
- *  E1. Registro con todos los datos.
- *  E2. Registro sin descripción (la BD aplica su valor por defecto).
- *  E3. Módulo inexistente o inactivo.
- *  E4. Clave técnica repetida (aunque el permiso que la usa esté bloqueado).
- *  E5. Nombre repetido.
- *  E6. Datos con formato inválido.
- */
 #[Group('integ')]
 #[Group('permisos')]
 #[Group('permisosRegistrar')]
@@ -79,15 +67,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas.
-     * Todo lo que crean las pruebas se identifica y se elimina antes y después de cada prueba:
-     * - módulos cuyo nombre empieza por "Integ Permisos",
-     * - permisos con clave "integ_..." o nombre "Integ Prueba ...",
-     * - roles cuyo nombre empieza por "Integ Permisos",
-     * - usuarios con cédula "9999xxxx".
-     * Los permisos, roles y usuarios propios del sistema nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -118,9 +97,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         return (int)$this->pdo->lastInsertId();
     }
 
-    /**
-     * Inserta un permiso directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearPermiso(string $nombre, string $clave, int $estatus = 1, ?int $modulo = null, string $descripcion = 'Descripcion De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO permisos (id_modulo, nombre, clave, descripcion, estatus) VALUES (:modulo, :nombre, :clave, :descripcion, :estatus)");
@@ -160,7 +136,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         ], $sobrescribir);
     }
 
-    // Caso 1 (E1): El permiso queda guardado con los datos normalizados y activo
     public function testRegistroExitosoGuardaPermiso(): void
     {
         $resultado = $this->modelo->ProcesarDatos($this->datosValidos());
@@ -175,7 +150,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         $this->assertSame(1, (int)$permiso['estatus']);
     }
 
-    // Caso 2 (E1): El permiso registrado aparece en la consulta del módulo con el nombre de su módulo
     public function testPermisoRegistradoApareceEnConsulta(): void
     {
         $this->modelo->ProcesarDatos($this->datosValidos());
@@ -187,7 +161,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         $this->assertSame('Integ Permisos Activo', $resultado['datos'][0]['nombre_modulo']);
     }
 
-    // Caso 3 (E2): Sin descripción se usa el valor por defecto de la BD (no se envía NULL)
     public function testRegistroSinDescripcionUsaValorPorDefecto(): void
     {
         $resultado = $this->modelo->ProcesarDatos($this->datosValidos(['descripcion' => '']));
@@ -198,7 +171,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         $this->assertStringStartsWith('Sin Descripci', $permiso['descripcion']);
     }
 
-    // Caso 4 (E3): Un módulo que no existe
     public function testRechazaModuloInexistente(): void
     {
         $resultado = $this->modelo->ProcesarDatos($this->datosValidos(['modulo' => '999999']));
@@ -208,7 +180,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarPermisos('clave', 'integ_registrar'));
     }
 
-    // Caso 5 (E3): Un módulo inactivo
     public function testRechazaModuloInactivo(): void
     {
         $resultado = $this->modelo->ProcesarDatos($this->datosValidos(['modulo' => (string)$this->moduloInactivo]));
@@ -218,7 +189,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarPermisos('clave', 'integ_registrar'));
     }
 
-    // Caso 6 (E4): Clave técnica que ya usa un permiso activo
     public function testRechazaClaveRepetida(): void
     {
         $this->crearPermiso('Integ Prueba Existente', 'integ_registrar');
@@ -230,7 +200,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         $this->assertSame(1, $this->contarPermisos('clave', 'integ_registrar'));
     }
 
-    // Caso 7 (E4): Clave técnica que usa un permiso bloqueado
     public function testRechazaClaveDePermisoBloqueado(): void
     {
         $this->crearPermiso('Integ Prueba Bloqueado', 'integ_registrar', 2);
@@ -242,7 +211,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         $this->assertSame(1, $this->contarPermisos('clave', 'integ_registrar'));
     }
 
-    // Caso 8 (E5): Nombre que ya usa otro permiso activo
     public function testRechazaNombreRepetido(): void
     {
         $this->crearPermiso('Integ Prueba Registrar', 'integ_otra_clave');
@@ -254,7 +222,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarPermisos('clave', 'integ_registrar'));
     }
 
-    // Caso 9 (E6): Una clave con formato inválido se rechaza antes de llegar a la BD
     public function testClaveInvalidaNoInserta(): void
     {
         try {
@@ -267,7 +234,6 @@ class RegistrarPermisoIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarPermisos('nombre', 'Integ Prueba Registrar'));
     }
 
-    // Caso 10 (E6): Un nombre con números se rechaza antes de llegar a la BD
     public function testNombreInvalidoNoInserta(): void
     {
         try {

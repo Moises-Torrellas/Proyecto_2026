@@ -15,27 +15,13 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-ROL-04: El sistema debe permitir modificar el nombre y la descripción de un rol
- * existente. El nombre no puede pertenecer a otro rol; conservar el propio nombre es válido.
- *
- * Escenarios:
- *  E1. Modificación válida con nombre y descripción.
- *  E2. Modificación solo del nombre.
- *  E3. El rol conserva su propio nombre.
- *  E4. Rol inexistente.
- *  E5. Nombre ya usado por otro rol.
- *  E6. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitRoles')]
 #[Group('modificarRoles')]
 class ModificarRolesTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
-    /** Sentencias que el modelo intentó preparar sobre la base de datos general. */
     protected array $sentenciasBdGeneral = [];
 
     protected function tearDown(): void
@@ -49,11 +35,6 @@ class ModificarRolesTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * Los roles viven en la base de datos de seguridad (conexSG). El PDO simulado se inyecta
-     * en "instanciaSG"; la conexión general ("instancia") se reemplaza por un PDO que falla,
-     * de modo que si el modelo consulta por error la base de datos general la prueba lo detecta.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $pdoGeneral = $this->createMock(PDO::class);
@@ -67,16 +48,6 @@ class ModificarRolesTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoGeneral);
     }
 
-    /**
-     * Crea el PDO simulado de la base de datos de seguridad.
-     *
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = []): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -172,7 +143,6 @@ class ModificarRolesTest extends TestCase
         return (new ModeloRoles())->procesarDatos($this->obtenerDatosValidos($datos));
     }
 
-    // Caso 1 (E1): Modificación exitosa de nombre y descripción
     public function testModificacionExitosa(): void
     {
         $resultado = $this->ejecutar(['roles.id_rol.1' => 1]);
@@ -188,7 +158,6 @@ class ModificarRolesTest extends TestCase
         ], $update['params']);
     }
 
-    // Caso 2 (E2): Modificación sin descripción no la sobrescribe
     public function testModificacionSinDescripcion(): void
     {
         $resultado = $this->ejecutar(['roles.id_rol.1' => 1], [], ['descripcion' => '']);
@@ -200,7 +169,6 @@ class ModificarRolesTest extends TestCase
         $this->assertSame([':id' => 5, ':nombre' => 'Preparador Fisico'], $update['params']);
     }
 
-    // Caso 3 (E3): El rol puede guardar su mismo nombre sin considerarse duplicado
     public function testConservaSuPropioNombre(): void
     {
         $resultado = $this->ejecutar([
@@ -213,7 +181,6 @@ class ModificarRolesTest extends TestCase
         $this->assertNotNull($this->sentenciaEjecutada('UPDATE `roles`'));
     }
 
-    // Caso 4 (E4): Rol inexistente
     public function testRolNoExiste(): void
     {
         $resultado = $this->ejecutar(['roles.id_rol.1' => 0]);
@@ -223,7 +190,6 @@ class ModificarRolesTest extends TestCase
         $this->assertNull($this->sentenciaEjecutada('UPDATE `roles`'));
     }
 
-    // Caso 5 (E5): Nombre ya usado por otro rol
     public function testNombreDuplicado(): void
     {
         $resultado = $this->ejecutar([
@@ -237,7 +203,6 @@ class ModificarRolesTest extends TestCase
         $this->assertNull($this->sentenciaEjecutada('UPDATE `roles`'));
     }
 
-    // Caso 6 (E6): Error de base de datos al modificar
     public function testErrorBaseDatosAlModificar(): void
     {
         $resultado = $this->ejecutar(['roles.id_rol.1' => 1], [

@@ -16,16 +16,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-ROL-03 (integración): Registrar roles en la BD de seguridad real con nombre
- * (obligatorio y único) y descripción (opcional).
- *
- * Escenarios:
- *  E1. Registro con nombre y descripción.
- *  E2. Registro solo con nombre (la BD aplica la descripción por defecto).
- *  E3. Registro con un nombre ya existente.
- *  E4. Nombre con formato inválido.
- */
 #[Group('integ')]
 #[Group('roles')]
 #[Group('rolesRegistrar')]
@@ -35,7 +25,6 @@ class RegistrarRolIntegrationTest extends TestCase
     private ModeloRoles $modelo;
 
     private int $modulo;
-    /** @var int[] Tres permisos de prueba del módulo de prueba */
     private array $permisos = [];
 
     protected function setUp(): void
@@ -77,14 +66,6 @@ class RegistrarRolIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas.
-     * Todo lo que crean las pruebas se identifica y se elimina antes y después de cada prueba:
-     * - roles cuyo nombre empieza por "Integ Roles",
-     * - el módulo "Integ Roles Modulo" y sus permisos (clave "integ_rol_..."),
-     * - usuarios con cédula "9999xxxx".
-     * Los roles, permisos y usuarios propios del sistema nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -118,9 +99,6 @@ class RegistrarRolIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un rol directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearRol(string $nombre, int $nivel = 3, string $descripcion = 'Descripcion De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO roles (nombre_rol, descripcion, nivel_rol, estatus) VALUES (:nombre, :descripcion, :nivel, 1)");
@@ -142,7 +120,6 @@ class RegistrarRolIntegrationTest extends TestCase
         return (int)$stmt->fetchColumn();
     }
 
-    /** @return int[] ids de permisos asignados al rol, ordenados */
     private function permisosDelRol(int $idRol): array
     {
         $stmt = $this->pdo->prepare("SELECT id_permiso FROM permisos_rol WHERE id_rol = :rol ORDER BY id_permiso");
@@ -155,7 +132,6 @@ class RegistrarRolIntegrationTest extends TestCase
         return $this->modelo->procesarDatos(array_merge(['accion' => 'incluir'], $datos));
     }
 
-    // Caso 1 (E1): El rol queda guardado con los textos normalizados, nivel 3 y activo
     public function testRegistroExitosoGuardaRol(): void
     {
         $resultado = $this->registrar(['nombre' => '  integ roles alfa ', 'descripcion' => 'rol para pruebas']);
@@ -169,7 +145,6 @@ class RegistrarRolIntegrationTest extends TestCase
         $this->assertSame(1, (int)$rol['estatus']);
     }
 
-    // Caso 2 (E1): El rol registrado aparece en el listado del módulo
     public function testRolRegistradoApareceEnConsulta(): void
     {
         $this->registrar(['nombre' => 'Integ Roles Alfa', 'descripcion' => 'Rol Para Pruebas']);
@@ -180,7 +155,6 @@ class RegistrarRolIntegrationTest extends TestCase
         $this->assertSame('Integ Roles Alfa', $datos[0]['nombre_rol']);
     }
 
-    // Caso 3 (E1): Un rol nuevo nace sin permisos asignados
     public function testRolNuevoNaceSinPermisos(): void
     {
         $this->registrar(['nombre' => 'Integ Roles Alfa']);
@@ -192,7 +166,6 @@ class RegistrarRolIntegrationTest extends TestCase
         $this->assertSame(0, (int)$matriz[$this->permisos[0]]['asignado']);
     }
 
-    // Caso 4 (E2): Sin descripción se usa el valor por defecto de la BD
     public function testRegistroSinDescripcion(): void
     {
         $resultado = $this->registrar(['nombre' => 'Integ Roles Alfa', 'descripcion' => '']);
@@ -203,7 +176,6 @@ class RegistrarRolIntegrationTest extends TestCase
         $this->assertStringStartsWith('Sin Descrip', $rol['descripcion']);
     }
 
-    // Caso 5 (E3): Un nombre que ya usa otro rol
     public function testRechazaNombreRepetido(): void
     {
         $this->crearRol('Integ Roles Alfa');
@@ -215,7 +187,6 @@ class RegistrarRolIntegrationTest extends TestCase
         $this->assertSame(1, $this->contarRoles('Integ Roles Alfa'));
     }
 
-    // Caso 6 (E4): Un nombre con números se rechaza antes de llegar a la BD
     public function testNombreInvalidoNoInserta(): void
     {
         try {
@@ -228,7 +199,6 @@ class RegistrarRolIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarRoles('Integ Roles 2'));
     }
 
-    // Caso 7 (E4): Un nombre de más de 30 caracteres se rechaza antes de llegar a la BD
     public function testNombreDemasiadoLargoNoInserta(): void
     {
         $nombre = 'Integ Roles ' . str_repeat('a', 25);

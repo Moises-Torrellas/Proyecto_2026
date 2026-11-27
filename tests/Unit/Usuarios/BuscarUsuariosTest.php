@@ -15,22 +15,11 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-07: El sistema debe permitir consultar el detalle de un usuario activo
- * (incluyendo el nivel de su rol) y registrar la fecha de su último ingreso.
- *
- * Escenarios:
- *  E1. Buscar un usuario activo existente.
- *  E2. Buscar un usuario inexistente o eliminado.
- *  E3. Falla de la base de datos al buscar.
- *  E4. Registrar el último ingreso del usuario.
- */
 #[Group('unit')]
 #[Group('unitUsuarios')]
 #[Group('buscarUsuarios')]
 class BuscarUsuariosTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
     protected function tearDown(): void
@@ -44,10 +33,6 @@ class BuscarUsuariosTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * ModeloUsuarios trabaja sobre la base de datos de seguridad (conexSG), por lo que
-     * el PDO simulado se inyecta en la propiedad estática "instanciaSG" de Conexion.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $reflector = new ReflectionClass(Conexion::class);
@@ -55,16 +40,6 @@ class BuscarUsuariosTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoMock);
     }
 
-    /**
-     * Crea un PDO simulado.
-     *
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetch' => , 'fetchAll' => , 'fetchColumn' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = [], string $lastInsertId = '25'): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -81,11 +56,9 @@ class BuscarUsuariosTest extends TestCase
             fn(string $sql) => $this->crearSentencia($sql, $respuestas, true)
         );
         $pdoMock->method('prepare')->willReturnCallback(function (string $sql) use ($conteos, $respuestas) {
-            // verificarExistenciaPropia: ... WHERE idUsuario = :id AND <columna> = :valor
             if (preg_match('/SELECT COUNT\(\*\) FROM `\w+`\s+WHERE\s+\w+\s*=\s*:id\s+AND\s+(\w+)\s*=\s*:valor/', $sql, $m)) {
                 return $this->crearSentenciaConteo(fn() => $conteos['propia.' . $m[1]] ?? 0);
             }
-            // verificarExistencia: SELECT COUNT(*) FROM `<tabla>` WHERE <columna> = :valor [AND estatus = :estatus]
             if (preg_match('/SELECT COUNT\(\*\) FROM `(\w+)` WHERE (\w+) = :valor/', $sql, $m)) {
                 return $this->crearSentenciaConteo(
                     fn($estatus) => $conteos[$m[1] . '.' . $m[2] . '.' . ($estatus ?? 'null')] ?? 0
@@ -153,7 +126,6 @@ class BuscarUsuariosTest extends TestCase
         return $stmt;
     }
 
-    /** Devuelve la primera sentencia ejecutada que contenga el fragmento indicado, o null. */
     protected function sentenciaEjecutada(string $fragmento): ?array
     {
         foreach ($this->sentencias as $sentencia) {
@@ -164,7 +136,6 @@ class BuscarUsuariosTest extends TestCase
         return null;
     }
 
-    // Caso 1 (E1): Buscar usuario activo devuelve sus datos y el nivel de rol
     public function testBuscarExitoso(): void
     {
         $fila = [
@@ -185,7 +156,6 @@ class BuscarUsuariosTest extends TestCase
         $this->assertSame(5, $sentencia['params'][':id']);
     }
 
-    // Caso 2 (E2): Usuario inexistente o eliminado devuelve datos vacíos
     public function testBuscarNoEncontrado(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -198,7 +168,6 @@ class BuscarUsuariosTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 3 (E3): Error de base de datos al buscar
     public function testErrorBaseDatosAlBuscar(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -211,7 +180,6 @@ class BuscarUsuariosTest extends TestCase
         $this->assertSame('Error de consulta', $resultado['mensaje']);
     }
 
-    // Caso 4 (E4): Registrar el último ingreso actualiza la fecha del usuario
     public function testRegistrarUltimoIngreso(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock());
@@ -223,7 +191,6 @@ class BuscarUsuariosTest extends TestCase
         $this->assertSame(5, $sentencia['params'][':id']);
     }
 
-    // Caso 5 (E4): Error al registrar el último ingreso
     public function testErrorRegistrarUltimoIngreso(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [

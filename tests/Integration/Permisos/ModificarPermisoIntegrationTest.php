@@ -15,17 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-PER-04 (integración): Modificar el nombre y la descripción de un permiso en la BD de
- * seguridad real. La clave técnica y el módulo no se modifican.
- *
- * Escenarios:
- *  E1. Modificación con nombre y descripción.
- *  E2. Modificación sin descripción (se conserva la anterior).
- *  E3. El permiso conserva su propio nombre.
- *  E4. Permiso inexistente o bloqueado.
- *  E5. Nombre usado por otro permiso.
- */
 #[Group('integ')]
 #[Group('permisos')]
 #[Group('permisosModificar')]
@@ -79,15 +68,6 @@ class ModificarPermisoIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas.
-     * Todo lo que crean las pruebas se identifica y se elimina antes y después de cada prueba:
-     * - módulos cuyo nombre empieza por "Integ Permisos",
-     * - permisos con clave "integ_..." o nombre "Integ Prueba ...",
-     * - roles cuyo nombre empieza por "Integ Permisos",
-     * - usuarios con cédula "9999xxxx".
-     * Los permisos, roles y usuarios propios del sistema nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -118,9 +98,6 @@ class ModificarPermisoIntegrationTest extends TestCase
         return (int)$this->pdo->lastInsertId();
     }
 
-    /**
-     * Inserta un permiso directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearPermiso(string $nombre, string $clave, int $estatus = 1, ?int $modulo = null, string $descripcion = 'Descripcion De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO permisos (id_modulo, nombre, clave, descripcion, estatus) VALUES (:modulo, :nombre, :clave, :descripcion, :estatus)");
@@ -162,7 +139,6 @@ class ModificarPermisoIntegrationTest extends TestCase
         ], $datos));
     }
 
-    // Caso 1 (E1): Se actualizan nombre y descripción
     public function testModificacionExitosa(): void
     {
         $this->prepararPermiso();
@@ -175,7 +151,6 @@ class ModificarPermisoIntegrationTest extends TestCase
         $this->assertSame('Nueva Descripcion', $permiso['descripcion']);
     }
 
-    // Caso 2 (E1): La clave técnica y el módulo no cambian aunque se envíen
     public function testNoModificaClaveNiModulo(): void
     {
         $this->prepararPermiso();
@@ -193,7 +168,6 @@ class ModificarPermisoIntegrationTest extends TestCase
         $this->assertSame($this->moduloActivo, (int)$permiso['id_modulo']);
     }
 
-    // Caso 3 (E2): Sin descripción se conserva la que tenía
     public function testModificacionSinDescripcionConservaLaAnterior(): void
     {
         $this->prepararPermiso();
@@ -206,7 +180,6 @@ class ModificarPermisoIntegrationTest extends TestCase
         $this->assertSame('Descripcion Original', $permiso['descripcion']);
     }
 
-    // Caso 4 (E3): Guardar con su mismo nombre no se considera duplicado
     public function testConservaSuPropioNombre(): void
     {
         $this->prepararPermiso();
@@ -217,7 +190,6 @@ class ModificarPermisoIntegrationTest extends TestCase
         $this->assertSame('Otra Descripcion', $this->obtenerPermiso($this->idPermiso)['descripcion']);
     }
 
-    // Caso 5 (E4): Un permiso que no existe
     public function testRechazaPermisoInexistente(): void
     {
         $this->idPermiso = 99999999;
@@ -229,7 +201,6 @@ class ModificarPermisoIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarPermisos('nombre', 'Integ Prueba Cambiado'));
     }
 
-    // Caso 6 (E4): Un permiso bloqueado no se puede modificar y se informa el motivo
     public function testRechazaPermisoBloqueado(): void
     {
         $this->prepararPermiso(2);
@@ -241,7 +212,6 @@ class ModificarPermisoIntegrationTest extends TestCase
         $this->assertSame('Integ Prueba Original', $this->obtenerPermiso($this->idPermiso)['nombre']);
     }
 
-    // Caso 7 (E5): Nombre que ya usa otro permiso activo
     public function testRechazaNombreDeOtroPermiso(): void
     {
         $this->prepararPermiso();

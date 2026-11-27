@@ -15,26 +15,13 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-ROL-02: El sistema debe listar los roles registrados, ocultando los roles protegidos
- * (nivel 1 Super Usuario y nivel 2), y permitir filtrarlos por nombre tanto desde el
- * buscador de la tabla como desde el reporte.
- *
- * Escenarios:
- *  E1. Listado general sin filtros.
- *  E2. Búsqueda por nombre desde la tabla.
- *  E3. Reporte filtrado por nombre.
- *  E4. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitRoles')]
 #[Group('consultarRoles')]
 class ConsultarRolesTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
-    /** Sentencias que el modelo intentó preparar sobre la base de datos general. */
     protected array $sentenciasBdGeneral = [];
 
     protected function tearDown(): void
@@ -48,11 +35,6 @@ class ConsultarRolesTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * Los roles viven en la base de datos de seguridad (conexSG). El PDO simulado se inyecta
-     * en "instanciaSG"; la conexión general ("instancia") se reemplaza por un PDO que falla,
-     * de modo que si el modelo consulta por error la base de datos general la prueba lo detecta.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $pdoGeneral = $this->createMock(PDO::class);
@@ -66,16 +48,6 @@ class ConsultarRolesTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoGeneral);
     }
 
-    /**
-     * Crea el PDO simulado de la base de datos de seguridad.
-     *
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = []): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -163,7 +135,6 @@ class ConsultarRolesTest extends TestCase
         ];
     }
 
-    // Caso 1 (E1): Listado exitoso que excluye los roles protegidos de nivel 1 y 2
     public function testConsultaExitosa(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -182,7 +153,6 @@ class ConsultarRolesTest extends TestCase
         $this->assertSame([], $sentencia['params']);
     }
 
-    // Caso 2 (E1): Listado vacío cuando solo existen roles protegidos
     public function testConsultaSinRegistros(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -195,7 +165,6 @@ class ConsultarRolesTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 3 (E2): La búsqueda desde la tabla filtra por nombre del rol
     public function testBusquedaPorNombre(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -211,7 +180,6 @@ class ConsultarRolesTest extends TestCase
         $this->assertSame('%Entre%', $sentencia['params'][':f1']);
     }
 
-    // Caso 4 (E3): El reporte sin filtros lista todos los roles visibles
     public function testReporteSinFiltros(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -224,8 +192,6 @@ class ConsultarRolesTest extends TestCase
         $this->assertCount(2, $resultado['datos']);
     }
 
-    // Caso 5 (E3): El reporte filtrado por nombre aplica el filtro en la consulta
-    // (el controlador envía el campo "nombre" desde el modal de reporte)
     public function testReporteFiltradoPorNombre(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -242,7 +208,6 @@ class ConsultarRolesTest extends TestCase
         );
     }
 
-    // Caso 6 (E4): Error de base de datos devuelve mensaje controlado
     public function testErrorBaseDatos(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [

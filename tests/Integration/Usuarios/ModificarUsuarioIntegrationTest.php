@@ -15,19 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-USU-04 (integración): Modificar usuarios en la BD de seguridad real.
- *
- * Escenarios:
- *  E1. Modificación válida sin cambiar contraseña ni rol.
- *  E2. Modificación con nueva contraseña.
- *  E3. Cambio de rol de un usuario de nivel 3 (se borran sus excepciones de permisos).
- *  E4. Intento de cambiar rol/contraseña a un usuario de nivel 1 o 2.
- *  E5. Cédula, correo o teléfono de un usuario eliminado.
- *  E6. Cédula, correo o teléfono de otro usuario activo.
- *  E7. Rol inexistente.
- *  E8. El usuario a modificar no existe o fue eliminado.
- */
 #[Group('integ')]
 #[Group('usuarios')]
 #[Group('usuariosModificar')]
@@ -36,7 +23,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
     private ?PDO $pdo = null;
     private ModeloUsuarios $modelo;
 
-    /** Roles creados para la prueba: ['nivel1' => id, 'nivel2' => id, 'nivel3' => id, 'nivel3b' => id] */
     private array $roles = [];
 
     private string $claveInicial = 'ClaveInicial.123';
@@ -82,12 +68,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas:
-     * todo lo que crean las pruebas se identifica con la cédula "9999xxxx" y con roles cuyo
-     * nombre empieza por "Integ Usuarios", y se elimina antes y después de cada prueba.
-     * Así los usuarios propios del sistema (Admin, Soporte, ...) nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -117,9 +97,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un usuario directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearUsuario(array $datos = []): int
     {
         $base = [
@@ -161,10 +138,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         return $stmt->fetch();
     }
 
-    /**
-     * Devuelve ids de permisos que se muestran en la pantalla de permisos de usuario
-     * (los módulos 1, 2, 3, 4, 5 y 8 se excluyen en ModeloPermisos::permisosUsuarios).
-     */
     private function obtenerPermisosVisibles(int $cantidad): array
     {
         $stmt = $this->pdo->query("SELECT id_permiso FROM permisos WHERE id_modulo NOT IN (1, 2, 3, 4, 5, 8) ORDER BY id_permiso ASC LIMIT {$cantidad}");
@@ -181,7 +154,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $stmt->execute([':permiso' => $idPermiso, ':usuario' => $idUsuario, ':tipo' => $tipo]);
     }
 
-    /** @return array<int,int> id_permiso => tipo */
     private function obtenerExcepciones(int $idUsuario): array
     {
         $stmt = $this->pdo->prepare("SELECT id_permiso, tipo FROM excepciones WHERE id_usuario = :id ORDER BY id_permiso");
@@ -220,7 +192,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         ], $sobrescribir);
     }
 
-    // Caso 1 (E1): Se actualizan los datos y la contraseña se mantiene
     public function testModificacionExitosaSinContraseña(): void
     {
         $this->prepararUsuario();
@@ -239,7 +210,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame($hashAnterior, $usuario['pass_hash'], 'La contraseña no debe cambiar si no se envía.');
     }
 
-    // Caso 2 (E1): Se puede cambiar la cédula por una que nadie usa
     public function testCambioDeCedulaLibre(): void
     {
         $this->prepararUsuario();
@@ -250,7 +220,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame('99990029', $this->obtenerUsuario($this->idUsuario)['cedulaUsuario']);
     }
 
-    // Caso 3 (E2): La contraseña nueva queda cifrada en la BD
     public function testModificacionConNuevaContraseña(): void
     {
         $this->prepararUsuario();
@@ -263,7 +232,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertFalse(password_verify($this->claveInicial, $usuario['pass_hash']));
     }
 
-    // Caso 4 (E3): Al cambiar el rol se eliminan las excepciones de permisos del usuario
     public function testCambioDeRolEliminaExcepciones(): void
     {
         $this->prepararUsuario();
@@ -277,7 +245,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame([], $this->obtenerExcepciones($this->idUsuario));
     }
 
-    // Caso 5 (E3): Si el rol no cambia, las excepciones se conservan
     public function testSinCambioDeRolConservaExcepciones(): void
     {
         $this->prepararUsuario();
@@ -289,7 +256,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame([$permiso => 1], $this->obtenerExcepciones($this->idUsuario));
     }
 
-    // Caso 6 (E4): A un usuario de nivel 1 no se le cambia ni el rol ni la contraseña
     public function testNivel1ConservaRolYContraseña(): void
     {
         $this->prepararUsuario('nivel1');
@@ -307,7 +273,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame('Nuevo Nombre', $usuario['nombreUsuario'], 'Los demás datos sí se actualizan.');
     }
 
-    // Caso 7 (E4): A un usuario de nivel 2 no se le cambia ni el rol ni la contraseña
     public function testNivel2ConservaRolYContraseña(): void
     {
         $this->prepararUsuario('nivel2');
@@ -324,7 +289,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame($hashAnterior, $usuario['pass_hash']);
     }
 
-    // Caso 8 (E5): Cédula que pertenece a un usuario eliminado
     public function testRechazaCedulaDeUsuarioEliminado(): void
     {
         $this->prepararUsuario();
@@ -337,7 +301,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame('99990020', $this->obtenerUsuario($this->idUsuario)['cedulaUsuario']);
     }
 
-    // Caso 9 (E5): Correo que pertenece a un usuario eliminado
     public function testRechazaCorreoDeUsuarioEliminado(): void
     {
         $this->prepararUsuario();
@@ -350,7 +313,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame('original@integ.test', $this->obtenerUsuario($this->idUsuario)['correo']);
     }
 
-    // Caso 10 (E5): Teléfono que pertenece a un usuario eliminado
     public function testRechazaTelefonoDeUsuarioEliminado(): void
     {
         $this->prepararUsuario();
@@ -363,7 +325,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame('0414-9990020', $this->obtenerUsuario($this->idUsuario)['telefonoUsuario']);
     }
 
-    // Caso 11 (E6): Cédula de otro usuario activo
     public function testRechazaCedulaDeOtroUsuarioActivo(): void
     {
         $this->prepararUsuario();
@@ -376,7 +337,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame('Original', $this->obtenerUsuario($this->idUsuario)['nombreUsuario'], 'La transacción debe revertirse.');
     }
 
-    // Caso 12 (E6): Correo de otro usuario activo
     public function testRechazaCorreoDeOtroUsuarioActivo(): void
     {
         $this->prepararUsuario();
@@ -389,7 +349,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame('original@integ.test', $this->obtenerUsuario($this->idUsuario)['correo']);
     }
 
-    // Caso 13 (E6): Teléfono de otro usuario activo
     public function testRechazaTelefonoDeOtroUsuarioActivo(): void
     {
         $this->prepararUsuario();
@@ -402,7 +361,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame('0414-9990020', $this->obtenerUsuario($this->idUsuario)['telefonoUsuario']);
     }
 
-    // Caso 14 (E7): Rol inexistente
     public function testRechazaRolInexistente(): void
     {
         $this->prepararUsuario();
@@ -416,7 +374,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame('Original', $usuario['nombreUsuario']);
     }
 
-    // Caso 15 (E8): Id de un usuario que no existe
     public function testRechazaUsuarioInexistente(): void
     {
         $this->prepararUsuario();
@@ -427,7 +384,6 @@ class ModificarUsuarioIntegrationTest extends TestCase
         $this->assertSame('Original', $this->obtenerUsuario($this->idUsuario)['nombreUsuario']);
     }
 
-    // Caso 16 (E8): Un usuario eliminado no se puede modificar
     public function testRechazaUsuarioEliminado(): void
     {
         $this->prepararUsuario();

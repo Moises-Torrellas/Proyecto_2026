@@ -17,18 +17,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-MOD-03 (integración): Modificar el nombre y la descripción de un módulo activo en la
- * BD de seguridad real. El nombre debe seguir siendo único entre los módulos activos y
- * los textos se guardan en formato título.
- *
- * Escenarios:
- *  E1. Modificación válida de nombre y descripción.
- *  E2. Se conserva el mismo nombre del módulo.
- *  E3. Módulo inexistente o inactivo.
- *  E4. Nombre que ya usa otro módulo.
- *  E5. Datos con formato inválido.
- */
 #[Group('integ')]
 #[Group('modulos')]
 #[Group('modulosModificar')]
@@ -75,12 +63,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar
-     * tablas. Los módulos del sistema nunca se modifican: las pruebas crean sus propios
-     * módulos (nombre "Integ Modulos ..."), un rol "Integ Modulos Rol" y un usuario con
-     * cédula "9999xxxx", y los borran junto con sus registros de bitácora.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -98,9 +80,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    /**
-     * Inserta un módulo directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearModulo(string $nombre, int $estatus = 1, string $descripcion = 'Modulo De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO modulos (nombre_modulo, descripcion, icono, estatus) VALUES (:nombre, :descripcion, 'circle-minus', :estatus)");
@@ -120,7 +99,6 @@ class ModificarModuloIntegrationTest extends TestCase
         return $this->modelo->ProcesarDatos(array_merge(['accion' => 'modificar'], $datos));
     }
 
-    // Caso 1 (E1): El nombre y la descripción se guardan en formato título sin espacios sobrantes
     public function testModificacionExitosa(): void
     {
         $id = $this->crearModulo('Integ Modulos Alfa');
@@ -134,7 +112,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame('Gestiona Las Pruebas', $modulo['descripcion']);
     }
 
-    // Caso 2 (E1): La modificación no cambia el icono ni el estatus del módulo
     public function testModificacionConservaIconoYEstatus(): void
     {
         $id = $this->crearModulo('Integ Modulos Alfa');
@@ -147,7 +124,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame(1, (int)$modulo['estatus']);
     }
 
-    // Caso 3 (E1): El nuevo nombre se ve en el listado del módulo y en la bitácora
     public function testNuevoNombreSeReflejaEnConsultas(): void
     {
         $id = $this->crearModulo('Integ Modulos Alfa');
@@ -171,7 +147,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame('Integ Modulos Gamma', $bitacora[0]['nombre_modulo']);
     }
 
-    // Caso 4 (E2): Conservar el propio nombre y cambiar solo la descripción es válido
     public function testConservarPropioNombre(): void
     {
         $id = $this->crearModulo('Integ Modulos Alfa');
@@ -182,7 +157,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame('Nueva Descripcion', $this->obtenerModulo($id)['descripcion']);
     }
 
-    // Caso 5 (E3): Un id que no existe devuelve INVALID_ID
     public function testModuloInexistente(): void
     {
         $resultado = $this->modificar(['id' => '99999999', 'nombre' => 'Integ Modulos Gamma', 'descripcion' => 'Descripcion']);
@@ -192,7 +166,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame(0, (int)$this->pdo->query("SELECT COUNT(*) FROM modulos WHERE nombre_modulo = 'Integ Modulos Gamma'")->fetchColumn());
     }
 
-    // Caso 6 (E3): Un módulo inactivo no se puede modificar
     public function testModuloInactivo(): void
     {
         $id = $this->crearModulo('Integ Modulos Alfa', 0);
@@ -203,7 +176,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame('Integ Modulos Alfa', $this->obtenerModulo($id)['nombre_modulo']);
     }
 
-    // Caso 7 (E3): Sin id no se modifica ningún módulo
     public function testSinId(): void
     {
         $resultado = $this->modificar(['nombre' => 'Integ Modulos Gamma', 'descripcion' => 'Descripcion']);
@@ -211,7 +183,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame(INVALID_ID, $resultado['codigo']);
     }
 
-    // Caso 8 (E4): El nombre de otro módulo activo se rechaza y no se cambia nada
     public function testNombreDeOtroModulo(): void
     {
         $this->crearModulo('Integ Modulos Alfa');
@@ -227,7 +198,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame('Descripcion Original', $modulo['descripcion']);
     }
 
-    // Caso 9 (E4): El nombre de un módulo del sistema también se rechaza
     public function testNombreDeModuloDelSistema(): void
     {
         $id = $this->crearModulo('Integ Modulos Alfa');
@@ -238,7 +208,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame('Integ Modulos Alfa', $this->obtenerModulo($id)['nombre_modulo']);
     }
 
-    // Caso 10 (E4): El nombre de un módulo inactivo sí puede reutilizarse
     public function testNombreDeModuloInactivo(): void
     {
         $this->crearModulo('Integ Modulos Alfa', 0);
@@ -250,7 +219,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame('Integ Modulos Alfa', $this->obtenerModulo($id)['nombre_modulo']);
     }
 
-    // Caso 11 (E5): Un nombre con números se rechaza antes de llegar a la BD
     public function testNombreInvalido(): void
     {
         $id = $this->crearModulo('Integ Modulos Alfa');
@@ -265,7 +233,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame('Integ Modulos Alfa', $this->obtenerModulo($id)['nombre_modulo']);
     }
 
-    // Caso 12 (E5): Una descripción con caracteres especiales se rechaza
     public function testDescripcionInvalida(): void
     {
         $id = $this->crearModulo('Integ Modulos Alfa');
@@ -280,7 +247,6 @@ class ModificarModuloIntegrationTest extends TestCase
         $this->assertSame('Modulo De Prueba', $this->obtenerModulo($id)['descripcion']);
     }
 
-    // Caso 13 (E5): Un id con intento de inyección SQL se rechaza
     public function testIdConInyeccion(): void
     {
         $id = $this->crearModulo('Integ Modulos Alfa');

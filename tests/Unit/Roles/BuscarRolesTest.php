@@ -15,23 +15,13 @@ if (!defined('INVALID_ID')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-ROL-06: El sistema debe permitir consultar el detalle (nombre y descripción) de un rol.
- *
- * Escenarios:
- *  E1. Buscar un rol existente.
- *  E2. Buscar un rol inexistente.
- *  E3. Falla de la base de datos.
- */
 #[Group('unit')]
 #[Group('unitRoles')]
 #[Group('buscarRoles')]
 class BuscarRolesTest extends TestCase
 {
-    /** Registro de las sentencias ejecutadas: ['sql' => string, 'params' => array] */
     protected array $sentencias = [];
 
-    /** Sentencias que el modelo intentó preparar sobre la base de datos general. */
     protected array $sentenciasBdGeneral = [];
 
     protected function tearDown(): void
@@ -45,11 +35,6 @@ class BuscarRolesTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * Los roles viven en la base de datos de seguridad (conexSG). El PDO simulado se inyecta
-     * en "instanciaSG"; la conexión general ("instancia") se reemplaza por un PDO que falla,
-     * de modo que si el modelo consulta por error la base de datos general la prueba lo detecta.
-     */
     protected function inyectarPdoMock(PDO $pdoMock): void
     {
         $pdoGeneral = $this->createMock(PDO::class);
@@ -63,16 +48,6 @@ class BuscarRolesTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdoGeneral);
     }
 
-    /**
-     * Crea el PDO simulado de la base de datos de seguridad.
-     *
-     * @param array $conteos   Resultados de las verificaciones de existencia (trait VerificarExistencia):
-     *                         'tabla.columna.estatus' => int   (usar 'null' cuando no se filtra por estatus)
-     *                         'propia.columna'        => int   (verificarExistenciaPropia)
-     *                         Cualquier verificación no indicada devuelve 0 (no existe).
-     * @param array $respuestas Fragmento de SQL => ['fetchAll' => , 'error' => Exception]
-     *                         Se usa el primer fragmento contenido en la sentencia (el orden importa).
-     */
     protected function crearPdoMock(array $conteos = [], array $respuestas = []): PDO
     {
         $pdoMock = $this->createMock(PDO::class);
@@ -152,7 +127,6 @@ class BuscarRolesTest extends TestCase
         return null;
     }
 
-    // Caso 1 (E1): Buscar un rol existente devuelve sus datos
     public function testBuscarExitoso(): void
     {
         $fila = ['nombre_rol' => 'Entrenador', 'id_rol' => 3, 'descripcion' => 'Dirige los entrenamientos'];
@@ -167,7 +141,6 @@ class BuscarRolesTest extends TestCase
         $this->assertSame([':id' => 3], $this->sentenciaEjecutada('FROM `roles`')['params']);
     }
 
-    // Caso 2 (E2): Buscar un rol inexistente devuelve datos vacíos
     public function testBuscarNoEncontrado(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [
@@ -180,7 +153,6 @@ class BuscarRolesTest extends TestCase
         $this->assertSame([], $resultado['datos']);
     }
 
-    // Caso 3 (E3): Error de base de datos al buscar
     public function testErrorBaseDatosAlBuscar(): void
     {
         $this->inyectarPdoMock($this->crearPdoMock([], [

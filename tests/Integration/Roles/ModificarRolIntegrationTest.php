@@ -15,17 +15,6 @@ if (!defined('EMPTY_SELECTION')) {
     require_once dirname(__DIR__, 3) . '/config/config.php';
 }
 
-/**
- * RF-ROL-04 (integración): Modificar el nombre y la descripción de un rol en la BD de
- * seguridad real. El nombre no puede pertenecer a otro rol.
- *
- * Escenarios:
- *  E1. Modificación con nombre y descripción.
- *  E2. Modificación solo del nombre (se conserva la descripción).
- *  E3. El rol conserva su propio nombre.
- *  E4. Rol inexistente.
- *  E5. Nombre ya usado por otro rol.
- */
 #[Group('integ')]
 #[Group('roles')]
 #[Group('rolesModificar')]
@@ -35,7 +24,6 @@ class ModificarRolIntegrationTest extends TestCase
     private ModeloRoles $modelo;
 
     private int $modulo;
-    /** @var int[] Tres permisos de prueba del módulo de prueba */
     private array $permisos = [];
 
     private int $idRol;
@@ -79,14 +67,6 @@ class ModificarRolIntegrationTest extends TestCase
         $reflector->getProperty('instancia')->setValue(null, $pdo);
     }
 
-    /**
-     * Las pruebas trabajan contra la base de datos de seguridad real (_DB_NAME_SG_) sin vaciar tablas.
-     * Todo lo que crean las pruebas se identifica y se elimina antes y después de cada prueba:
-     * - roles cuyo nombre empieza por "Integ Roles",
-     * - el módulo "Integ Roles Modulo" y sus permisos (clave "integ_rol_..."),
-     * - usuarios con cédula "9999xxxx".
-     * Los roles, permisos y usuarios propios del sistema nunca se modifican.
-     */
     private function limpiarDatosPrueba(): void
     {
         if (!$this->pdo) {
@@ -120,9 +100,6 @@ class ModificarRolIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * Inserta un rol directamente en la BD (sin pasar por el modelo) y devuelve su id.
-     */
     private function crearRol(string $nombre, int $nivel = 3, string $descripcion = 'Descripcion De Prueba'): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO roles (nombre_rol, descripcion, nivel_rol, estatus) VALUES (:nombre, :descripcion, :nivel, 1)");
@@ -152,7 +129,6 @@ class ModificarRolIntegrationTest extends TestCase
         }
     }
 
-    /** @return int[] ids de permisos asignados al rol, ordenados */
     private function permisosDelRol(int $idRol): array
     {
         $stmt = $this->pdo->prepare("SELECT id_permiso FROM permisos_rol WHERE id_rol = :rol ORDER BY id_permiso");
@@ -189,7 +165,6 @@ class ModificarRolIntegrationTest extends TestCase
         ], $datos));
     }
 
-    // Caso 1 (E1): Se actualizan nombre y descripción
     public function testModificacionExitosa(): void
     {
         $this->prepararRol();
@@ -203,7 +178,6 @@ class ModificarRolIntegrationTest extends TestCase
         $this->assertSame(3, (int)$rol['nivel_rol'], 'El nivel del rol no cambia.');
     }
 
-    // Caso 2 (E1): Modificar el rol no toca sus permisos ni sus usuarios
     public function testModificarNoAfectaPermisosNiUsuarios(): void
     {
         $this->prepararRol();
@@ -218,7 +192,6 @@ class ModificarRolIntegrationTest extends TestCase
         $this->assertSame($this->idRol, (int)$stmt->fetchColumn());
     }
 
-    // Caso 3 (E2): Sin descripción se conserva la que tenía
     public function testModificacionSoloNombre(): void
     {
         $this->prepararRol();
@@ -231,7 +204,6 @@ class ModificarRolIntegrationTest extends TestCase
         $this->assertSame('Descripcion Original', $rol['descripcion']);
     }
 
-    // Caso 4 (E3): Guardar con su mismo nombre no se considera duplicado
     public function testConservaSuPropioNombre(): void
     {
         $this->prepararRol();
@@ -242,7 +214,6 @@ class ModificarRolIntegrationTest extends TestCase
         $this->assertSame('Otra Descripcion', $this->obtenerRol($this->idRol)['descripcion']);
     }
 
-    // Caso 5 (E4): Un rol que no existe
     public function testRechazaRolInexistente(): void
     {
         $this->idRol = 99999999;
@@ -254,7 +225,6 @@ class ModificarRolIntegrationTest extends TestCase
         $this->assertSame(0, $this->contarRoles('Integ Roles Cambiado'));
     }
 
-    // Caso 6 (E5): Nombre que ya usa otro rol
     public function testRechazaNombreDeOtroRol(): void
     {
         $this->prepararRol();
